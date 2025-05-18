@@ -167,16 +167,6 @@ export class UIText extends UIElement implements UIMicroTransformable {
   private renderTextLines(lines: UITextLine[]): void {
     let currentY = this.padding.top;
 
-    //TODO: debug - remove it
-    this.context.fillStyle = "#CCCCCC";
-    this.context.fillRect(
-      0,
-      0,
-      this.context.canvas.width,
-      this.context.canvas.height,
-    );
-    //----------------
-
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       let currentX = this.padding.left;

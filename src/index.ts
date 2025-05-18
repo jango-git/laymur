@@ -1,13 +1,10 @@
-export { UIConstraintPower } from "./Constraints/UIConstraintPower";
-export { UIConstraintRule } from "./Constraints/UIConstraintRule";
-
 export * from "./Builders/UIConstraint2DBuilder";
 export * from "./Builders/UIConstraintBuilder";
 export * from "./Builders/UIElementBuilder";
 export * from "./Constraints/UIAspectConstraint";
-export * from "./Constraints/UIConstraintOrientation";
-export * from "./Constraints/UIConstraintPower";
-export * from "./Constraints/UIConstraintRule";
+export { UIConstraintOrientation } from "./Constraints/UIConstraintOrientation";
+export { UIConstraintPower } from "./Constraints/UIConstraintPower";
+export { UIConstraintRule } from "./Constraints/UIConstraintRule";
 export * from "./Constraints/UICoverConstraint";
 export * from "./Constraints/UIFitConstraint";
 export * from "./Constraints/UIHeightConstraint";
