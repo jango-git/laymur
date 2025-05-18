@@ -1,9 +1,11 @@
 import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
 import { UILayer } from "../Layers/UILayer";
+import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
   addElement,
   hSymbol,
   layerSymbol,
+  readMicroSymbol,
   readVariablesSymbol,
   removeElement,
   suggestVariable,
@@ -17,6 +19,10 @@ import {
   wrapTextLines,
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
+import {
+  UIMicroTransformable,
+  UIMicroTransformations,
+} from "../Miscellaneous/UIMicroTransformations";
 import { UIElement } from "./UIElement";
 import {
   UITextChunk,
@@ -33,7 +39,9 @@ export interface UITextParameters {
   defaultStyle: Partial<UITextStyle>;
 }
 
-export class UIText extends UIElement {
+export class UIText extends UIElement implements UIMicroTransformable {
+  private readonly micro: UIMicroTransformations;
+
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
 
@@ -72,6 +80,7 @@ export class UIText extends UIElement {
     const textBlockSize = calculateTextBlockSize(wrappedLines);
 
     super(layer, 0, 0, textBlockSize.width, textBlockSize.height);
+    this.micro = new UIMicroTransformations(this);
 
     this.size = textBlockSize;
     this.padding = resolvePadding(parameters.padding);
@@ -104,11 +113,14 @@ export class UIText extends UIElement {
   }
 
   [readVariablesSymbol](): void {
-    this.object.position.x = this.x;
-    this.object.position.y = this.y;
-
-    this.object.scale.x = this.width;
-    this.object.scale.y = this.height;
+    applyMicroTransformations(
+      this.object,
+      this.micro,
+      this.x,
+      this.y,
+      this.width,
+      this.height,
+    );
 
     const currentAspect = this.width / this.height;
     if (this.lastSuggestedAspect !== currentAspect) {
@@ -121,6 +133,10 @@ export class UIText extends UIElement {
         this.width / targetAspect,
       );
     }
+  }
+
+  [readMicroSymbol](): void {
+    this[readVariablesSymbol]();
   }
 
   private renderText(

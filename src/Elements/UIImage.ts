@@ -1,15 +1,22 @@
 import { DoubleSide, Mesh, MeshBasicMaterial, Texture } from "three";
 import { UILayer } from "../Layers/UILayer";
+import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
   addElement,
   layerSymbol,
+  readMicroSymbol,
   readVariablesSymbol,
   removeElement,
 } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
+import {
+  UIMicroTransformable,
+  UIMicroTransformations,
+} from "../Miscellaneous/UIMicroTransformations";
 import { UIElement } from "./UIElement";
 
-export class UIImage extends UIElement {
+export class UIImage extends UIElement implements UIMicroTransformable {
+  public readonly micro: UIMicroTransformations;
   private readonly object: Mesh;
 
   public constructor(layer: UILayer, texture: Texture) {
@@ -21,6 +28,7 @@ export class UIImage extends UIElement {
     }
 
     super(layer, 0, 0, width, height);
+    this.micro = new UIMicroTransformations(this);
 
     const material = new MeshBasicMaterial({
       map: texture,
@@ -38,9 +46,17 @@ export class UIImage extends UIElement {
   }
 
   [readVariablesSymbol](): void {
-    this.object.position.x = this.x;
-    this.object.position.y = this.y;
-    this.object.scale.x = this.width;
-    this.object.scale.y = this.height;
+    applyMicroTransformations(
+      this.object,
+      this.micro,
+      this.x,
+      this.y,
+      this.width,
+      this.height,
+    );
+  }
+
+  [readMicroSymbol](): void {
+    this[readVariablesSymbol]();
   }
 }

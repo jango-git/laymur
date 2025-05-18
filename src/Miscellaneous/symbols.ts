@@ -6,6 +6,7 @@ export const hSymbol = Symbol("hSymbol");
 
 export const layerSymbol = Symbol("layerSymbol");
 export const readVariablesSymbol = Symbol("readVariablesSymbol");
+export const readMicroSymbol = Symbol("readMicroSymbol");
 
 export const addElement = Symbol("addElement");
 export const removeElement = Symbol("removeElement");
