@@ -4,12 +4,19 @@ import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
+  addRawConstraint,
   layerSymbol,
   removeConstraint,
+  removeRawConstraint,
+  resizeSymbol,
   wSymbol,
   xSymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
+import {
+  resolveOrientation,
+  UIConstraintOrientation,
+} from "./UIConstraintOrientation";
 import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
@@ -19,6 +26,7 @@ export interface UIHorizontalDistanceParameters {
   distance: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
+  orientation: UIConstraintOrientation;
 }
 
 interface InnerParameters {
@@ -27,6 +35,7 @@ interface InnerParameters {
   distance: number;
   strength: number;
   operator: Operator;
+  orientation: UIConstraintOrientation;
 }
 
 export class UIHorizontalDistanceConstraint extends UIConstraint {
@@ -47,8 +56,14 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
       distance: parameters?.distance ?? 0,
       strength: powerToStrength(parameters?.power),
       operator: ruleToOperator(parameters?.rule),
+      orientation: resolveOrientation(parameters?.orientation),
     };
-    this.rebuildConstraint();
+    this.elementTwo[layerSymbol][addConstraint](this);
+    if (
+      this.elementTwo[layerSymbol].orientation & this.parameters.orientation
+    ) {
+      this.rebuildConstraints();
+    }
   }
 
   public get distance(): number {
@@ -58,20 +73,29 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
   public set distance(value: number) {
     if (value === this.parameters.distance) return;
     this.parameters.distance = value;
-    this.rebuildConstraint();
+    this.rebuildConstraints();
   }
 
   public destroy(): void {
     this.destroyConstraints();
+    this.elementTwo[layerSymbol][removeConstraint](this);
+  }
+
+  [resizeSymbol](orientation: UIConstraintOrientation): void {
+    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      else this.destroyConstraints();
+    }
   }
 
   private destroyConstraints(): void {
     if (this.constraint) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraint);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraint);
+      this.constraint = undefined;
     }
   }
 
-  private rebuildConstraint(): void {
+  private rebuildConstraints(): void {
     this.destroyConstraints();
 
     const expressionOne = new Expression(this.elementOne[xSymbol]).plus(
@@ -93,6 +117,6 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
       this.parameters.strength,
     );
 
-    this.elementTwo[layerSymbol][addConstraint](this.constraint);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraint);
   }
 }

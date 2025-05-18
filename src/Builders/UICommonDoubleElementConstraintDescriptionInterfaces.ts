@@ -1,4 +1,8 @@
 import {
+  isUIConstraintOrientation,
+  UIConstraintOrientation,
+} from "../Constraints/UIConstraintOrientation";
+import {
   isUIConstraintPower,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
@@ -31,6 +35,7 @@ export interface UICommonProportionalConstraintDescription
   proportion: AtLeastOneNumber;
   power?: AtLeastOnePower;
   rule?: AtLeastOneRule;
+  orientation?: UIConstraintOrientation;
 }
 
 export interface UICommonDistanceConstraintDescription
@@ -40,6 +45,7 @@ export interface UICommonDistanceConstraintDescription
   anchorTwo?: AtLeastOneNumber;
   power?: AtLeastOnePower;
   rule?: AtLeastOneRule;
+  orientation?: UIConstraintOrientation;
 }
 
 export interface UICommonCoverConstraintDescription
@@ -47,11 +53,6 @@ export interface UICommonCoverConstraintDescription
   isStrict: boolean;
   anchor?: AtLeastOneNumber;
 }
-
-export type UIAnyCommonDoubleElementConstraintDescription =
-  | UICommonProportionalConstraintDescription
-  | UICommonDistanceConstraintDescription
-  | UICommonCoverConstraintDescription;
 
 export function isAtLeastOneNumber(obj: unknown): obj is AtLeastOneNumber {
   return (
@@ -106,7 +107,8 @@ export function isUICommonDistanceConstraintDescription(
     (!("anchorTwo" in obj) ||
       ("anchorTwo" in obj && isAtLeastOneNumber(obj.anchorTwo))) &&
     (!("power" in obj) || isAtLeastOnePower(obj.power)) &&
-    (!("rule" in obj) || isAtLeastOneRule(obj.rule))
+    (!("rule" in obj) || isAtLeastOneRule(obj.rule)) &&
+    (!("orientation" in obj) || isUIConstraintOrientation(obj.orientation))
   );
 }
 
@@ -118,7 +120,8 @@ export function isUICommonProportionalConstraintDescription(
     "proportion" in obj &&
     isAtLeastOneNumber(obj.proportion) &&
     (!("power" in obj) || isAtLeastOnePower(obj.power)) &&
-    (!("rule" in obj) || isAtLeastOneRule(obj.rule))
+    (!("rule" in obj) || isAtLeastOneRule(obj.rule)) &&
+    (!("orientation" in obj) || isUIConstraintOrientation(obj.orientation))
   );
 }
 

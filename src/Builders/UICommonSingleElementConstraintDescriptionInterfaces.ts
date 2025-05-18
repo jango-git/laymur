@@ -1,3 +1,4 @@
+import { UIConstraintOrientation } from "../Constraints/UIConstraintOrientation";
 import {
   isUIConstraintPower,
   UIConstraintPower,
@@ -12,22 +13,18 @@ export interface UICommonSingleElementConstraintDescription {
   element: UIElement;
   power?: UIConstraintPower;
   rule?: UIConstraintRule;
+  orientation?: UIConstraintOrientation;
 }
 
 export interface UIKeepAspectConstraintDescription
   extends UICommonSingleElementConstraintDescription {
   keepAspect: boolean;
-  keepWidth?: boolean;
 }
 
 export interface UIKeepSizeConstraintDescription
   extends UICommonSingleElementConstraintDescription {
   keepSize: boolean;
 }
-
-export type UIAnyCommonSingleElementConstraintDescription =
-  | UIKeepAspectConstraintDescription
-  | UIKeepSizeConstraintDescription;
 
 export function isUICommonSingleElementConstraintDescription(
   obj: unknown,
@@ -48,8 +45,7 @@ export function isUIKeepAspectConstraintDescription(
   return (
     isUICommonSingleElementConstraintDescription(obj) &&
     "keepAspect" in obj &&
-    typeof obj.keepAspect === "boolean" &&
-    (!("keepWidth" in obj) || typeof obj.keepWidth === "boolean")
+    typeof obj.keepAspect === "boolean"
   );
 }
 

@@ -22,11 +22,13 @@ export class UIConstraintBuilder2D {
         width: parameters.width,
         power: parameters.powerHorizontal,
         rule: parameters.ruleHorizontal,
+        orientation: parameters.orientationHorizontal,
       }),
       height: new UIHeightConstraint(parameters.element, {
         height: parameters.height,
         power: parameters.powerVertical,
         rule: parameters.ruleVertical,
+        orientation: parameters.orientationVertical,
       }),
     };
   }
@@ -44,6 +46,7 @@ export class UIConstraintBuilder2D {
           distance: parameters.distanceHorizontal,
           power: parameters.powerHorizontal,
           rule: parameters.ruleHorizontal,
+          orientation: parameters.orientationHorizontal,
         },
       ),
       vertical: new UIVerticalDistanceConstraint(
@@ -55,6 +58,7 @@ export class UIConstraintBuilder2D {
           distance: parameters.distanceVertical,
           power: parameters.powerVertical,
           rule: parameters.ruleVertical,
+          orientation: parameters.orientationVertical,
         },
       ),
     };
@@ -71,6 +75,7 @@ export class UIConstraintBuilder2D {
           proportion: parameters.proportionHorizontal,
           power: parameters.powerHorizontal,
           rule: parameters.ruleHorizontal,
+          orientation: parameters.orientationHorizontal,
         },
       ),
       vertical: new UIVerticalProportionConstraint(
@@ -80,6 +85,7 @@ export class UIConstraintBuilder2D {
           proportion: parameters.proportionVertical,
           power: parameters.powerVertical,
           rule: parameters.ruleVertical,
+          orientation: parameters.orientationVertical,
         },
       ),
     };

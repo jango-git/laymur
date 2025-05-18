@@ -7,16 +7,22 @@ import {
   Variable,
 } from "kiwi.js";
 import { Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three";
+import { UIConstraint } from "../Constraints/UIConstraint";
+import { UIConstraintOrientation } from "../Constraints/UIConstraintOrientation";
 import { UIElement } from "../Elements/UIElement";
+import { assertSize } from "../Miscellaneous/asserts";
 import {
   addConstraint,
   addElement,
+  addRawConstraint,
   addVariable,
   hSymbol,
   readVariablesSymbol,
   removeConstraint,
   removeElement,
+  removeRawConstraint,
   removeVariable,
+  resizeSymbol,
   suggestVariable,
   wSymbol,
   xSymbol,
@@ -36,9 +42,17 @@ export class UILayer {
   private constraintH?: Constraint;
   private isUpdateVariablesRequired = false;
 
+  private orientationPrivate: UIConstraintOrientation =
+    UIConstraintOrientation.portrait;
+
   private readonly scene: Scene = new Scene();
   private readonly camera: OrthographicCamera = new OrthographicCamera();
   private readonly elements: UIElement[] = [];
+  private readonly constraints: UIConstraint[] = [];
+
+  public get orientation(): UIConstraintOrientation {
+    return this.orientationPrivate;
+  }
 
   public destroy(): void {
     for (const element of this.elements) {
@@ -77,12 +91,22 @@ export class UILayer {
     }
   }
 
-  [addConstraint](constraint: Constraint): void {
+  [addConstraint](constraint: UIConstraint): void {
+    const index = this.constraints.indexOf(constraint);
+    if (index === -1) this.constraints.push(constraint);
+  }
+
+  [removeConstraint](constraint: UIConstraint): void {
+    const index = this.constraints.indexOf(constraint);
+    if (index !== -1) this.constraints.splice(index, 1);
+  }
+
+  [addRawConstraint](constraint: Constraint): void {
     this.solver.addConstraint(constraint);
     this.isUpdateVariablesRequired = true;
   }
 
-  [removeConstraint](constraint: Constraint): void {
+  [removeRawConstraint](constraint: Constraint): void {
     this.solver.removeConstraint(constraint);
     this.isUpdateVariablesRequired = true;
   }
@@ -103,6 +127,8 @@ export class UILayer {
   }
 
   public resize(width: number, height: number): void {
+    assertSize(width, height);
+
     this.camera.near = 0;
     this.camera.far = 1024;
     this.camera.bottom = 0;
@@ -111,6 +137,18 @@ export class UILayer {
     this.camera.top = Math.max(height, 8);
     this.camera.updateProjectionMatrix();
     this.rebuildConstraints();
+
+    const lastOrientation = this.orientationPrivate;
+    this.orientationPrivate =
+      width > height
+        ? UIConstraintOrientation.landscape
+        : UIConstraintOrientation.portrait;
+
+    if (lastOrientation !== this.orientationPrivate) {
+      for (const constraint of this.constraints) {
+        constraint[resizeSymbol](this.orientationPrivate);
+      }
+    }
   }
 
   private rebuildConstraints(): void {

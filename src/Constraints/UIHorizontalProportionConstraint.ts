@@ -4,11 +4,18 @@ import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
+  addRawConstraint,
   layerSymbol,
   removeConstraint,
+  removeRawConstraint,
+  resizeSymbol,
   wSymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
+import {
+  resolveOrientation,
+  UIConstraintOrientation,
+} from "./UIConstraintOrientation";
 import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
@@ -16,12 +23,14 @@ export interface UIHorizontalProportionParameters {
   proportion: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
+  orientation: UIConstraintOrientation;
 }
 
 interface InnerParameters {
   proportion: number;
   strength: number;
   operator: Operator;
+  orientation: UIConstraintOrientation;
 }
 
 export class UIHorizontalProportionConstraint extends UIConstraint {
@@ -40,8 +49,14 @@ export class UIHorizontalProportionConstraint extends UIConstraint {
       proportion: parameters?.proportion ?? 1,
       strength: powerToStrength(parameters?.power),
       operator: ruleToOperator(parameters?.rule),
+      orientation: resolveOrientation(parameters?.orientation),
     };
-    this.rebuildConstraint();
+    this.elementTwo[layerSymbol][addConstraint](this);
+    if (
+      this.elementTwo[layerSymbol].orientation & this.parameters.orientation
+    ) {
+      this.rebuildConstraints();
+    }
   }
 
   public get proportion(): number {
@@ -51,23 +66,30 @@ export class UIHorizontalProportionConstraint extends UIConstraint {
   public set proportion(value: number) {
     if (value === this.parameters.proportion) return;
     this.parameters.proportion = value;
-    this.rebuildConstraint();
+    this.rebuildConstraints();
   }
 
   public destroy(): void {
     this.destroyConstraints();
+    this.elementTwo[layerSymbol][removeConstraint](this);
+  }
+
+  [resizeSymbol](orientation: UIConstraintOrientation): void {
+    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      else this.destroyConstraints();
+    }
   }
 
   private destroyConstraints(): void {
     if (this.constraint) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraint);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraint);
+      this.constraint = undefined;
     }
   }
 
-  private rebuildConstraint(): void {
-    if (this.constraint) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraint);
-    }
+  private rebuildConstraints(): void {
+    this.destroyConstraints();
 
     const expressionOne = new Expression(this.elementOne[wSymbol]).multiply(
       this.parameters.proportion,
@@ -81,6 +103,6 @@ export class UIHorizontalProportionConstraint extends UIConstraint {
       this.parameters.strength,
     );
 
-    this.elementTwo[layerSymbol][addConstraint](this.constraint);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraint);
   }
 }

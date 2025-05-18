@@ -13,3 +13,9 @@ export function assertSameLayer(
     throw new Error("Elements must be on the same layer");
   }
 }
+
+export function assertSize(width: number, height: number): void {
+  if (width <= 0 || height <= 0) {
+    throw new Error("Size must be positive");
+  }
+}

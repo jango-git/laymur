@@ -11,7 +11,6 @@ import {
   isUICommonCoverConstraintDescription,
   isUICommonDistanceConstraintDescription,
   isUICommonProportionalConstraintDescription,
-  UIAnyCommonDoubleElementConstraintDescription,
   UICommonCoverConstraintDescription,
   UICommonDistanceConstraintDescription,
   UICommonProportionalConstraintDescription,
@@ -19,14 +18,16 @@ import {
 import {
   isUIKeepAspectConstraintDescription,
   isUIKeepSizeConstraintDescription,
-  UIAnyCommonSingleElementConstraintDescription,
   UIKeepAspectConstraintDescription,
   UIKeepSizeConstraintDescription,
 } from "./UICommonSingleElementConstraintDescriptionInterfaces";
 
 export type UIAnyCommonConstraintDescription =
-  | UIAnyCommonSingleElementConstraintDescription
-  | UIAnyCommonDoubleElementConstraintDescription;
+  | UICommonProportionalConstraintDescription
+  | UICommonDistanceConstraintDescription
+  | UICommonCoverConstraintDescription
+  | UIKeepAspectConstraintDescription
+  | UIKeepSizeConstraintDescription;
 
 export class UIConstraintBuilder {
   public static fromDescription(
@@ -75,19 +76,9 @@ export class UIConstraintBuilder {
       new UIAspectConstraint(value.element, {
         power: value.power,
         rule: value.rule,
+        orientation: value.orientation,
       }),
     );
-
-    if (value.keepWidth) {
-      const newKey = key.replace(/(KeepAspect|Keep)$/, "") + "KeepWidth";
-      constraints.set(
-        newKey,
-        new UIWidthConstraint(value.element, {
-          power: value.power,
-          rule: value.rule,
-        }),
-      );
-    }
   }
 
   private static buildKeepSizeConstraint(
@@ -102,6 +93,7 @@ export class UIConstraintBuilder {
       new UIWidthConstraint(value.element, {
         power: value.power,
         rule: value.rule,
+        orientation: value.orientation,
       }),
     );
     constraints.set(
@@ -109,6 +101,7 @@ export class UIConstraintBuilder {
       new UIHeightConstraint(value.element, {
         power: value.power,
         rule: value.rule,
+        orientation: value.orientation,
       }),
     );
   }
@@ -130,6 +123,7 @@ export class UIConstraintBuilder {
           anchorTwo: value.anchorTwo?.x,
           power: value.power?.x,
           rule: value.rule?.x,
+          orientation: value.orientation,
         }),
       );
     }
@@ -145,6 +139,7 @@ export class UIConstraintBuilder {
           anchorTwo: value.anchorTwo?.y,
           power: value.power?.y,
           rule: value.rule?.y,
+          orientation: value.orientation,
         }),
       );
     }
@@ -171,6 +166,7 @@ export class UIConstraintBuilder {
             proportion: value.proportion.x,
             power: value.power?.x,
             rule: value.rule?.x,
+            orientation: value.orientation,
           },
         ),
       );
@@ -188,6 +184,7 @@ export class UIConstraintBuilder {
           proportion: value.proportion.y,
           power: value.power?.y,
           rule: value.rule?.y,
+          orientation: value.orientation,
         }),
       );
     }

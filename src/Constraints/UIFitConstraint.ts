@@ -4,29 +4,28 @@ import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
+  addRawConstraint,
   hSymbol,
   layerSymbol,
   removeConstraint,
+  removeRawConstraint,
+  resizeSymbol,
   wSymbol,
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
+import { UIConstraintOrientation } from "./UIConstraintOrientation";
 
 export interface UIFitParameters {
   isStrict: boolean;
   horizontalAnchor: number;
   verticalAnchor: number;
-}
-
-interface InnerParameters {
-  isStrict: boolean;
-  horizontalAnchor: number;
-  verticalAnchor: number;
+  orientation: UIConstraintOrientation;
 }
 
 export class UIFitConstraint extends UIConstraint {
-  private readonly parameters: InnerParameters;
+  private readonly parameters: UIFitParameters;
 
   private constraintX?: Constraint;
   private constraintY?: Constraint;
@@ -48,33 +47,52 @@ export class UIFitConstraint extends UIConstraint {
       isStrict: parameters?.isStrict ?? true,
       horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
       verticalAnchor: parameters?.verticalAnchor ?? 0.5,
+      orientation: parameters?.orientation ?? UIConstraintOrientation.always,
     };
-    this.rebuildConstraint();
+    this.elementTwo[layerSymbol][addConstraint](this);
+    if (
+      this.elementTwo[layerSymbol].orientation & this.parameters.orientation
+    ) {
+      this.rebuildConstraints();
+    }
   }
 
   public destroy(): void {
     this.destroyConstraints();
+    this.elementTwo[layerSymbol][removeConstraint](this);
+  }
+
+  [resizeSymbol](orientation: UIConstraintOrientation): void {
+    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      else this.destroyConstraints();
+    }
   }
 
   private destroyConstraints(): void {
     if (this.constraintX) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraintX);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintX);
+      this.constraintX = undefined;
     }
     if (this.constraintY) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraintY);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintY);
+      this.constraintY = undefined;
     }
     if (this.constraintW) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraintW);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintW);
+      this.constraintW = undefined;
     }
     if (this.constraintH) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraintH);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintH);
+      this.constraintH = undefined;
     }
     if (this.constraintStrict) {
-      this.elementTwo[layerSymbol][removeConstraint](this.constraintStrict);
+      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintStrict);
+      this.constraintStrict = undefined;
     }
   }
 
-  private rebuildConstraint(): void {
+  private rebuildConstraints(): void {
     this.destroyConstraints();
 
     this.constraintX = new Constraint(
@@ -117,11 +135,11 @@ export class UIFitConstraint extends UIConstraint {
       new Expression(this.elementTwo[hSymbol]),
     );
 
-    this.elementTwo[layerSymbol][addConstraint](this.constraintX);
-    this.elementTwo[layerSymbol][addConstraint](this.constraintY);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraintX);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraintY);
 
-    this.elementTwo[layerSymbol][addConstraint](this.constraintW);
-    this.elementTwo[layerSymbol][addConstraint](this.constraintH);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraintW);
+    this.elementTwo[layerSymbol][addRawConstraint](this.constraintH);
 
     if (this.parameters.isStrict !== false) {
       this.constraintStrict = new Constraint(
@@ -131,7 +149,7 @@ export class UIFitConstraint extends UIConstraint {
         Strength.strong,
       );
 
-      this.elementTwo[layerSymbol][addConstraint](this.constraintStrict);
+      this.elementTwo[layerSymbol][addRawConstraint](this.constraintStrict);
     }
   }
 }

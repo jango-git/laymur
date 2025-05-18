@@ -2,12 +2,19 @@ import { Constraint, Expression, Operator } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import {
   addConstraint,
+  addRawConstraint,
   hSymbol,
   layerSymbol,
   removeConstraint,
+  removeRawConstraint,
+  resizeSymbol,
   wSymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
+import {
+  resolveOrientation,
+  UIConstraintOrientation,
+} from "./UIConstraintOrientation";
 import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
@@ -15,12 +22,14 @@ export interface UIAspectParameters {
   aspect: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
+  orientation: UIConstraintOrientation;
 }
 
 interface InnerParameters {
   aspect: number;
   strength: number;
   operator: Operator;
+  orientation: UIConstraintOrientation;
 }
 
 export class UIAspectConstraint extends UIConstraint {
@@ -36,8 +45,12 @@ export class UIAspectConstraint extends UIConstraint {
       aspect: parameters?.aspect ?? this.element.width / this.element.height,
       strength: powerToStrength(parameters?.power),
       operator: ruleToOperator(parameters?.rule),
+      orientation: resolveOrientation(parameters?.orientation),
     };
-    this.rebuildConstraint();
+    this.element[layerSymbol][addConstraint](this);
+    if (this.element[layerSymbol].orientation & this.parameters.orientation) {
+      this.rebuildConstraints();
+    }
   }
 
   public get aspect(): number {
@@ -47,20 +60,29 @@ export class UIAspectConstraint extends UIConstraint {
   public set aspect(value: number) {
     if (value === this.parameters.aspect) return;
     this.parameters.aspect = value;
-    this.rebuildConstraint();
+    this.rebuildConstraints();
   }
 
   public destroy(): void {
     this.destroyConstraints();
+    this.element[layerSymbol][removeConstraint](this);
+  }
+
+  [resizeSymbol](orientation: UIConstraintOrientation): void {
+    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      else this.destroyConstraints();
+    }
   }
 
   private destroyConstraints(): void {
     if (this.constraint) {
-      this.element[layerSymbol][removeConstraint](this.constraint);
+      this.element[layerSymbol][removeRawConstraint](this.constraint);
+      this.constraint = undefined;
     }
   }
 
-  private rebuildConstraint(): void {
+  private rebuildConstraints(): void {
     this.destroyConstraints();
 
     const expression = new Expression(this.element[wSymbol]).plus(
@@ -73,6 +95,6 @@ export class UIAspectConstraint extends UIConstraint {
       0,
       this.parameters.strength,
     );
-    this.element[layerSymbol][addConstraint](this.constraint);
+    this.element[layerSymbol][addRawConstraint](this.constraint);
   }
 }

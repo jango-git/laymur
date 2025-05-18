@@ -7,12 +7,16 @@ export const hSymbol = Symbol("hSymbol");
 export const layerSymbol = Symbol("layerSymbol");
 export const readVariablesSymbol = Symbol("readVariablesSymbol");
 export const readMicroSymbol = Symbol("readMicroSymbol");
+export const resizeSymbol = Symbol("resizeSymbol");
 
 export const addElement = Symbol("addElement");
 export const removeElement = Symbol("removeElement");
 
 export const addConstraint = Symbol("addConstraint");
 export const removeConstraint = Symbol("removeConstraint");
+
+export const addRawConstraint = Symbol("addRawConstraint");
+export const removeRawConstraint = Symbol("removeRawConstraint");
 
 export const addVariable = Symbol("addVariable");
 export const removeVariable = Symbol("removeVariable");
