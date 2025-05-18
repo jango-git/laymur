@@ -5,13 +5,13 @@ import {
   PlaneGeometry,
   Texture,
 } from "three";
+import { UILayer } from "../Layers/UILayer";
 import {
   addElement,
   layerSymbol,
   readVariablesSymbol,
   removeElement,
-} from "../symbols";
-import { UILayer } from "../UILayer";
+} from "../Miscellaneous/symbols";
 import { UIElement } from "./UIElement";
 
 const geometry = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);

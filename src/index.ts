@@ -1,6 +1,8 @@
 export { UIConstraintPower } from "./Constraints/UIConstraintPower";
 export { UIConstraintRule } from "./Constraints/UIConstraintRule";
 
+export * from "./Builders/UIConstraintBuilder";
+export * from "./Builders/UIElementBuilder";
 export * from "./Constraints/UIAspectConstraint";
 export * from "./Constraints/UICoverConstraint";
 export * from "./Constraints/UIFitConstraint";
@@ -12,5 +14,4 @@ export * from "./Constraints/UIVerticalProportionConstraint";
 export * from "./Constraints/UIWidthConstraint";
 export * from "./Elements/UIImage";
 export * from "./Elements/UIText";
-export * from "./UIBuilder";
-export * from "./UILayer";
+export * from "./Layers/UILayer";

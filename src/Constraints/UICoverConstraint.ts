@@ -1,5 +1,6 @@
 import { Constraint, Expression, Operator, Strength } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
+import { UILayer } from "../Layers/UILayer";
 import {
   addConstraint,
   hSymbol,
@@ -8,8 +9,7 @@ import {
   wSymbol,
   xSymbol,
   ySymbol,
-} from "../symbols";
-import { UILayer } from "../UILayer";
+} from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
 
 export interface UICoverParameters {

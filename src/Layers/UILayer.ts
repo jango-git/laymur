@@ -7,7 +7,7 @@ import {
   Variable,
 } from "kiwi.js";
 import { Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three";
-import { UIElement } from "./Elements/UIElement";
+import { UIElement } from "../Elements/UIElement";
 import {
   addConstraint,
   addElement,
@@ -21,7 +21,7 @@ import {
   wSymbol,
   xSymbol,
   ySymbol,
-} from "./symbols";
+} from "../Miscellaneous/symbols";
 
 export class UILayer {
   public readonly [xSymbol]: Variable = new Variable();

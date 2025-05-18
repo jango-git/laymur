@@ -1,12 +1,12 @@
 import { Constraint, Expression, Operator } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
-import { UILayer } from "../UILayer";
+import { UILayer } from "../Layers/UILayer";
 import {
   addConstraint,
   hSymbol,
   layerSymbol,
   removeConstraint,
-} from "../symbols";
+} from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
 import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";

@@ -6,7 +6,7 @@ import {
   layerSymbol,
   removeConstraint,
   wSymbol,
-} from "../symbols";
+} from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
 import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";

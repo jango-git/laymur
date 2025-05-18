@@ -5,6 +5,7 @@ import {
   MeshBasicMaterial,
   PlaneGeometry,
 } from "three";
+import { UILayer } from "../Layers/UILayer";
 import {
   addElement,
   hSymbol,
@@ -12,23 +13,24 @@ import {
   readVariablesSymbol,
   removeElement,
   suggestVariable,
-} from "../symbols";
-import { UILayer } from "../UILayer";
+} from "../Miscellaneous/symbols";
+import { UIElement } from "./UIElement";
 import {
-  calculateTextBlockSize,
-  measureTextChunk,
-  resolvePadding,
-  resolveTextStyle,
-  splitText,
   UITextChunk,
   UITextLine,
   UITextPadding,
   UITextSize,
   UITextSpan,
   UITextStyle,
+} from "./UITextInterfaces";
+import {
+  calculateTextBlockSize,
+  measureTextChunk,
+  resolvePadding,
+  resolveTextStyle,
+  splitText,
   wrapTextLines,
-} from "../UITextCalculator";
-import { UIElement } from "./UIElement";
+} from "./UITextTools";
 
 const geometry = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);
 
@@ -118,7 +120,9 @@ export class UIText extends UIElement {
     const currentAspect = this.width / this.height;
     if (this.lastSuggestedAspect !== currentAspect) {
       this.lastSuggestedAspect = currentAspect;
-      const targetAspect = this.size.width / this.size.height;
+      const targetAspect =
+        (this.size.width + this.padding.left + this.padding.right) /
+        (this.size.height + this.padding.top + this.padding.bottom);
       this[layerSymbol][suggestVariable](
         this[hSymbol],
         this.width / targetAspect,

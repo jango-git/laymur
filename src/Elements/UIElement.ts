@@ -3,7 +3,7 @@ import {
   powerToStrength,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
-import { UILayer } from "../UILayer";
+import { UILayer } from "../Layers/UILayer";
 import {
   addVariable,
   hSymbol,
@@ -13,7 +13,7 @@ import {
   wSymbol,
   xSymbol,
   ySymbol,
-} from "../symbols";
+} from "../Miscellaneous/symbols";
 
 export abstract class UIElement {
   public readonly [layerSymbol]: UILayer;

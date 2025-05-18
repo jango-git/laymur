@@ -1,59 +1,11 @@
-export interface UITextStyle {
-  color: string;
-  fontFamily: string;
-  fontSize: number;
-  fontStyle: "normal" | "italic" | "oblique";
-  fontWeight: "normal" | "bold" | "bolder" | "lighter" | number;
-  lineHeight: number;
-
-  shadowOffsetX: number;
-  shadowOffsetY: number;
-  shadowBlur: number;
-  shadowColor: string;
-  enableShadow: boolean;
-
-  strokeColor: string;
-  strokeWidth: number;
-  enableStroke: boolean;
-}
-
-export interface UITextPadding {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
-}
-
-export interface UITextSize {
-  width: number;
-  height: number;
-}
-
-export interface UIChunkMetrics {
-  width: number;
-  height: number;
-  baseline: number;
-  lineHeight: number;
-}
-
-export interface UITextChunk {
-  text: string;
-  style: UITextStyle;
-  metrics: UIChunkMetrics;
-}
-
-export interface UITextLine {
-  chunks: UITextChunk[];
-  width: number;
-  height: number;
-  baseline: number;
-  lineHeight: number;
-}
-
-export interface UITextSpan {
-  text: string;
-  style?: Partial<UITextStyle>;
-}
+import {
+  UIChunkMetrics,
+  UITextChunk,
+  UITextLine,
+  UITextPadding,
+  UITextSize,
+  UITextStyle,
+} from "./UITextInterfaces";
 
 export function resolvePadding(
   padding?: Partial<UITextPadding> | number,
