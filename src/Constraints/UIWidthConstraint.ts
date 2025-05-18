@@ -11,9 +11,9 @@ import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
 export interface UIWidthParameters {
-  width?: number;
-  power?: UIConstraintPower;
-  rule?: UIConstraintRule;
+  width: number;
+  power: UIConstraintPower;
+  rule: UIConstraintRule;
 }
 
 interface InnerParameters {
@@ -28,13 +28,13 @@ export class UIWidthConstraint extends UIConstraint {
 
   public constructor(
     private readonly element: UIElement,
-    parameters: UIWidthParameters = {},
+    parameters?: Partial<UIWidthParameters>,
   ) {
     super();
     this.parameters = {
-      width: parameters.width ?? 100,
-      strength: powerToStrength(parameters.power),
-      operator: ruleToOperator(parameters.rule),
+      width: parameters?.width ?? 100,
+      strength: powerToStrength(parameters?.power),
+      operator: ruleToOperator(parameters?.rule),
     };
     this.rebuildConstraint();
   }

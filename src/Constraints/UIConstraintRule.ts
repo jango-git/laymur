@@ -18,3 +18,7 @@ export function ruleToOperator(rule?: UIConstraintRule): Operator {
       return Operator.Eq;
   }
 }
+
+export function isUIConstraintRule(obj: unknown): obj is UIConstraintRule {
+  return obj !== null && Object.values(UIConstraintRule).some((v) => v === obj);
+}

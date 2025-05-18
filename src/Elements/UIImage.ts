@@ -1,10 +1,4 @@
-import {
-  DoubleSide,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneGeometry,
-  Texture,
-} from "three";
+import { DoubleSide, Mesh, MeshBasicMaterial, Texture } from "three";
 import { UILayer } from "../Layers/UILayer";
 import {
   addElement,
@@ -12,9 +6,8 @@ import {
   readVariablesSymbol,
   removeElement,
 } from "../Miscellaneous/symbols";
+import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
-
-const geometry = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);
 
 export class UIImage extends UIElement {
   private readonly object: Mesh;

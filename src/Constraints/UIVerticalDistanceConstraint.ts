@@ -13,11 +13,11 @@ import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
 export interface UIVerticalDistanceParameters {
-  anchorOne?: number;
-  anchorTwo?: number;
-  distance?: number;
-  power?: UIConstraintPower;
-  rule?: UIConstraintRule;
+  anchorOne: number;
+  anchorTwo: number;
+  distance: number;
+  power: UIConstraintPower;
+  rule: UIConstraintRule;
 }
 
 interface InnerParameters {
@@ -35,15 +35,15 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
   public constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters: UIVerticalDistanceParameters = {},
+    parameters?: Partial<UIVerticalDistanceParameters>,
   ) {
     super();
     this.parameters = {
-      anchorOne: parameters.anchorOne ?? 0.5,
-      anchorTwo: parameters.anchorTwo ?? 0.5,
-      distance: parameters.distance ?? 0,
-      strength: powerToStrength(parameters.power),
-      operator: ruleToOperator(parameters.rule),
+      anchorOne: parameters?.anchorOne ?? 0.5,
+      anchorTwo: parameters?.anchorTwo ?? 0.5,
+      distance: parameters?.distance ?? 0,
+      strength: powerToStrength(parameters?.power),
+      operator: ruleToOperator(parameters?.rule),
     };
     this.rebuildConstraint();
   }

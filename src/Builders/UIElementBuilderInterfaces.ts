@@ -24,7 +24,7 @@ export type UIAnyElementDescription =
   | UITextDescription
   | UITextEnancedDescription;
 
-export function isUIImageDescription(obj?: unknown): obj is UIImageDescription {
+export function isUIImageDescription(obj: unknown): obj is UIImageDescription {
   return (
     obj !== null &&
     typeof obj === "object" &&
@@ -33,7 +33,7 @@ export function isUIImageDescription(obj?: unknown): obj is UIImageDescription {
   );
 }
 
-export function isUITextDescription(obj?: unknown): obj is UITextDescription {
+export function isUITextDescription(obj: unknown): obj is UITextDescription {
   return (
     obj !== null &&
     typeof obj === "object" &&
@@ -43,7 +43,7 @@ export function isUITextDescription(obj?: unknown): obj is UITextDescription {
 }
 
 export function isUITextEnhancedDescription(
-  obj?: unknown,
+  obj: unknown,
 ): obj is UITextEnancedDescription {
   return (
     obj !== null &&

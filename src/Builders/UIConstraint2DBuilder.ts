@@ -5,16 +5,18 @@ import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceC
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
 import {
-  UIDistance2DParameters,
-  UIDistance2DResult,
-  UIProportional2DParameters,
-  UIProportional2DResult,
-  UISize2DParameters,
-  UISize2DResult,
+  UIDistance2DConstraint,
+  UIDistance2DConstraintParameters,
+  UIProportion2DConstraintParameters,
+  UIProprtion2DConstraint,
+  UISize2DConstraint,
+  UISize2DConstraintParameters,
 } from "./UIConstraint2DBuilderInterfaces";
 
 export class UIConstraintBuilder2D {
-  public static size2D(parameters: UISize2DParameters): UISize2DResult {
+  public static size2D(
+    parameters: UISize2DConstraintParameters,
+  ): UISize2DConstraint {
     return {
       width: new UIWidthConstraint(parameters.element, {
         width: parameters.width,
@@ -30,8 +32,8 @@ export class UIConstraintBuilder2D {
   }
 
   public static distance2D(
-    parameters: UIDistance2DParameters,
-  ): UIDistance2DResult {
+    parameters: UIDistance2DConstraintParameters,
+  ): UIDistance2DConstraint {
     return {
       horizontal: new UIHorizontalDistanceConstraint(
         parameters.elementOne,
@@ -59,8 +61,8 @@ export class UIConstraintBuilder2D {
   }
 
   public static proportional2D(
-    parameters: UIProportional2DParameters,
-  ): UIProportional2DResult {
+    parameters: UIProportion2DConstraintParameters,
+  ): UIProprtion2DConstraint {
     return {
       horizontal: new UIHorizontalProportionConstraint(
         parameters.elementOne,

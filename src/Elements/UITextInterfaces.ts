@@ -1,5 +1,6 @@
 export interface UITextStyle {
   color: string;
+
   fontFamily: string;
   fontSize: number;
   fontStyle: "normal" | "italic" | "oblique";

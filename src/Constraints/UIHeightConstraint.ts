@@ -11,9 +11,9 @@ import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
 export interface UIHeightParameters {
-  height?: number;
-  power?: UIConstraintPower;
-  rule?: UIConstraintRule;
+  height: number;
+  power: UIConstraintPower;
+  rule: UIConstraintRule;
 }
 
 interface InnerParameters {
@@ -28,13 +28,13 @@ export class UIHeightConstraint extends UIConstraint {
 
   public constructor(
     private readonly element: UIElement,
-    parameters: UIHeightParameters = {},
+    parameters?: Partial<UIHeightParameters>,
   ) {
     super();
     this.parameters = {
-      height: parameters.height ?? 100,
-      strength: powerToStrength(parameters.power),
-      operator: ruleToOperator(parameters.rule),
+      height: parameters?.height ?? 100,
+      strength: powerToStrength(parameters?.power),
+      operator: ruleToOperator(parameters?.rule),
     };
     this.rebuildConstraint();
   }

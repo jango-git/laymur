@@ -33,3 +33,9 @@ export function powerToStrength(power?: UIConstraintPower): number {
       return Strength.create(1000, 1000, 1000);
   }
 }
+
+export function isUIConstraintPower(obj: unknown): obj is UIConstraintPower {
+  return (
+    obj !== null && Object.values(UIConstraintPower).some((v) => v === obj)
+  );
+}

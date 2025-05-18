@@ -15,7 +15,7 @@ export class UIElementBuilder {
     description:
       | Map<string, UIAnyElementDescription>
       | Record<string, UIAnyElementDescription>,
-  ): Map<string, UIElement> {
+  ): Record<string, UIElement> {
     const entries =
       description instanceof Map
         ? description.entries()
@@ -43,6 +43,6 @@ export class UIElementBuilder {
       elements.set(key, element);
     }
 
-    return elements;
+    return Object.fromEntries(elements);
   }
 }

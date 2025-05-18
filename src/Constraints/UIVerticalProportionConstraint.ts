@@ -12,9 +12,9 @@ import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
 export interface UIVerticalProportionParameters {
-  proportion?: number;
-  power?: UIConstraintPower;
-  rule?: UIConstraintRule;
+  proportion: number;
+  power: UIConstraintPower;
+  rule: UIConstraintRule;
 }
 
 interface InnerParameters {
@@ -30,13 +30,13 @@ export class UIVerticalProportionConstraint extends UIConstraint {
   public constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters: UIVerticalProportionParameters = {},
+    parameters?: Partial<UIVerticalProportionParameters>,
   ) {
     super();
     this.parameters = {
-      proportion: parameters.proportion ?? 1,
-      strength: powerToStrength(parameters.power),
-      operator: ruleToOperator(parameters.rule),
+      proportion: parameters?.proportion ?? 1,
+      strength: powerToStrength(parameters?.power),
+      operator: ruleToOperator(parameters?.rule),
     };
     this.rebuildConstraint();
   }

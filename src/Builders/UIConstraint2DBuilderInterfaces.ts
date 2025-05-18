@@ -9,7 +9,7 @@ import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 
-export interface UISize2DParameters {
+export interface UISize2DConstraintParameters {
   element: UIElement;
   width: number;
   height: number;
@@ -19,7 +19,7 @@ export interface UISize2DParameters {
   ruleVertical?: UIConstraintRule;
 }
 
-export interface UIDistance2DParameters {
+export interface UIDistance2DConstraintParameters {
   elementOne: UIElement | UILayer;
   elementTwo: UIElement;
   anchorHorizontalOne?: number;
@@ -34,7 +34,7 @@ export interface UIDistance2DParameters {
   ruleVertical?: UIConstraintRule;
 }
 
-export interface UIProportional2DParameters {
+export interface UIProportion2DConstraintParameters {
   elementOne: UIElement | UILayer;
   elementTwo: UIElement;
   proportionHorizontal?: number;
@@ -45,17 +45,17 @@ export interface UIProportional2DParameters {
   ruleVertical?: UIConstraintRule;
 }
 
-export interface UISize2DResult {
+export interface UISize2DConstraint {
   width: UIWidthConstraint;
   height: UIHeightConstraint;
 }
 
-export interface UIDistance2DResult {
+export interface UIDistance2DConstraint {
   horizontal: UIHorizontalDistanceConstraint;
   vertical: UIVerticalDistanceConstraint;
 }
 
-export interface UIProportional2DResult {
+export interface UIProprtion2DConstraint {
   horizontal: UIHorizontalProportionConstraint;
   vertical: UIVerticalProportionConstraint;
 }

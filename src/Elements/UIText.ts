@@ -1,10 +1,4 @@
-import {
-  CanvasTexture,
-  FrontSide,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneGeometry,
-} from "three";
+import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
 import { UILayer } from "../Layers/UILayer";
 import {
   addElement,
@@ -14,6 +8,15 @@ import {
   removeElement,
   suggestVariable,
 } from "../Miscellaneous/symbols";
+import {
+  calculateTextBlockSize,
+  measureTextChunk,
+  resolvePadding,
+  resolveTextStyle,
+  splitText,
+  wrapTextLines,
+} from "../Miscellaneous/textTools";
+import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 import {
   UITextChunk,
@@ -23,16 +26,6 @@ import {
   UITextSpan,
   UITextStyle,
 } from "./UITextInterfaces";
-import {
-  calculateTextBlockSize,
-  measureTextChunk,
-  resolvePadding,
-  resolveTextStyle,
-  splitText,
-  wrapTextLines,
-} from "./UITextTools";
-
-const geometry = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);
 
 export interface UITextParameters {
   maxWidth: number;

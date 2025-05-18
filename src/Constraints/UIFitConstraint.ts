@@ -13,9 +13,9 @@ import {
 import { UIConstraint } from "./UIConstraint";
 
 export interface UIFitParameters {
-  isStrict?: boolean;
-  horizontalAnchor?: number;
-  verticalAnchor?: number;
+  isStrict: boolean;
+  horizontalAnchor: number;
+  verticalAnchor: number;
 }
 
 interface InnerParameters {
@@ -38,13 +38,13 @@ export class UIFitConstraint extends UIConstraint {
   public constructor(
     private readonly under: UIElement | UILayer,
     private readonly over: UIElement,
-    parameters: UIFitParameters = {},
+    parameters?: Partial<UIFitParameters>,
   ) {
     super();
     this.parameters = {
-      isStrict: parameters.isStrict ?? true,
-      horizontalAnchor: parameters.horizontalAnchor ?? 0.5,
-      verticalAnchor: parameters.verticalAnchor ?? 0.5,
+      isStrict: parameters?.isStrict ?? true,
+      horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
+      verticalAnchor: parameters?.verticalAnchor ?? 0.5,
     };
     this.rebuildConstraint();
   }

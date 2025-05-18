@@ -12,9 +12,9 @@ import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
 import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
 
 export interface UIAspectParameters {
-  aspect?: number;
-  power?: UIConstraintPower;
-  rule?: UIConstraintRule;
+  aspect: number;
+  power: UIConstraintPower;
+  rule: UIConstraintRule;
 }
 
 interface InnerParameters {
@@ -29,13 +29,13 @@ export class UIAspectConstraint extends UIConstraint {
 
   public constructor(
     private readonly element: UIElement,
-    parameters: UIAspectParameters = {},
+    parameters?: Partial<UIAspectParameters>,
   ) {
     super();
     this.parameters = {
-      aspect: parameters.aspect ?? this.element.width / this.element.height,
-      strength: powerToStrength(parameters.power),
-      operator: ruleToOperator(parameters.rule),
+      aspect: parameters?.aspect ?? this.element.width / this.element.height,
+      strength: powerToStrength(parameters?.power),
+      operator: ruleToOperator(parameters?.rule),
     };
     this.rebuildConstraint();
   }
