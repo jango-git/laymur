@@ -18,7 +18,6 @@ export function applyMicroTransformations(
   const dx = micro.x;
   const dy = micro.y;
 
-  // Применяем трансформации
   object.position.x = centerX + dx;
   object.position.y = centerY + dy;
 
@@ -33,29 +32,3 @@ export function applyMicroTransformations(
   object.position.x -= scaledOffsetX;
   object.position.y -= scaledOffsetY;
 }
-// export function applyMicroTransformations(
-//   object: Object3D,
-//   micro: UIMicroTransformations,
-//   x: number,
-//   y: number,
-//   width: number,
-//   height: number,
-// ): void {
-//   const originalX = x;
-//   const originalY = y;
-//   const originalScaleX = width;
-//   const originalScaleY = height;
-
-//   const microPositionX = micro.x;
-//   const microPositionY = micro.y;
-
-//   const microScaleX = micro.scaleX;
-//   const microScaleY = micro.scaleY;
-
-//   const microAnchorX = micro.anchorX;
-//   const microAnchorY = micro.anchorY;
-
-//   const microRotation = micro.rotation;
-
-//   //todo
-// }
