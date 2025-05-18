@@ -1,6 +1,7 @@
 import { Constraint, Expression, Operator } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
+import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
   layerSymbol,
@@ -38,6 +39,8 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     parameters?: Partial<UIHorizontalDistanceParameters>,
   ) {
     super();
+    assertSameLayer(elementOne, elementTwo);
+
     this.parameters = {
       anchorOne: parameters?.anchorOne ?? 0.5,
       anchorTwo: parameters?.anchorTwo ?? 0.5,

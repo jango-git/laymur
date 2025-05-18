@@ -1,5 +1,6 @@
 import { UIAspectConstraint } from "../Constraints/UIAspectConstraint";
 import { UIConstraint } from "../Constraints/UIConstraint";
+import { UICoverConstraint } from "../Constraints/UICoverConstraint";
 import { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
 import { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDistanceConstraint";
 import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalProportionConstraint";
@@ -7,9 +8,11 @@ import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceC
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
 import {
+  isUICommonCoverConstraintDescription,
   isUICommonDistanceConstraintDescription,
   isUICommonProportionalConstraintDescription,
   UIAnyCommonDoubleElementConstraintDescription,
+  UICommonCoverConstraintDescription,
   UICommonDistanceConstraintDescription,
   UICommonProportionalConstraintDescription,
 } from "./UICommonDoubleElementConstraintDescriptionInterfaces";
@@ -52,6 +55,8 @@ export class UIConstraintBuilder {
           value,
           constraints,
         );
+      } else if (isUICommonCoverConstraintDescription(value)) {
+        UIConstraintBuilder.buildCoverConstraint(key, value, constraints);
       } else {
         throw new Error("Unknown ui constraint type");
       }
@@ -74,8 +79,9 @@ export class UIConstraintBuilder {
     );
 
     if (value.keepWidth) {
+      const newKey = key.replace(/(KeepAspect|Keep)$/, "") + "KeepWidth";
       constraints.set(
-        `${key}KeepWidth`,
+        newKey,
         new UIWidthConstraint(value.element, {
           power: value.power,
           rule: value.rule,
@@ -89,15 +95,17 @@ export class UIConstraintBuilder {
     value: UIKeepSizeConstraintDescription,
     constraints: Map<string, UIConstraint>,
   ): void {
+    const newKeyWidth = key.replace(/(KeepSize|Keep)$/, "") + "KeepWidth";
+    const newKeyHeight = key.replace(/(KeepSize|Keep)$/, "") + "KeepHeight";
     constraints.set(
-      `${key}KeepWidth`,
+      newKeyWidth,
       new UIWidthConstraint(value.element, {
         power: value.power,
         rule: value.rule,
       }),
     );
     constraints.set(
-      `${key}KeepHeight`,
+      newKeyHeight,
       new UIHeightConstraint(value.element, {
         power: value.power,
         rule: value.rule,
@@ -110,22 +118,31 @@ export class UIConstraintBuilder {
     value: UICommonDistanceConstraintDescription,
     constraints: Map<string, UIConstraint>,
   ): void {
-    if (value.distance.x !== null) {
+    if (typeof value.distance.x === "number") {
+      const newKey =
+        key.replace(/(HorizontalDistance|Distance)$/, "") +
+        "HorizontalDistance";
       constraints.set(
-        `${key}HorizontalDistance`,
+        newKey,
         new UIHorizontalDistanceConstraint(value.elementOne, value.elementTwo, {
           distance: value.distance.x,
+          anchorOne: value.anchorOne?.x,
+          anchorTwo: value.anchorTwo?.x,
           power: value.power?.x,
           rule: value.rule?.x,
         }),
       );
     }
 
-    if (value.distance.y !== null) {
+    if (typeof value.distance.y === "number") {
+      const newKey =
+        key.replace(/(VerticalDistance|Distance)$/, "") + "VerticalDistance";
       constraints.set(
-        `${key}VerticalDistance`,
+        newKey,
         new UIVerticalDistanceConstraint(value.elementOne, value.elementTwo, {
           distance: value.distance.y,
+          anchorOne: value.anchorOne?.y,
+          anchorTwo: value.anchorTwo?.y,
           power: value.power?.y,
           rule: value.rule?.y,
         }),
@@ -138,9 +155,15 @@ export class UIConstraintBuilder {
     value: UICommonProportionalConstraintDescription,
     constraints: Map<string, UIConstraint>,
   ): void {
-    if (value.proportion.x !== null) {
+    if (typeof value.proportion.x === "number") {
+      const newKey =
+        key.replace(
+          /(HorizontalProportional|HorizontalProportion|Proportional|Proportion)$/,
+          "",
+        ) + "HorizontalProportion";
+
       constraints.set(
-        `${key}HorizontalProportional`,
+        newKey,
         new UIHorizontalProportionConstraint(
           value.elementOne,
           value.elementTwo,
@@ -153,15 +176,35 @@ export class UIConstraintBuilder {
       );
     }
 
-    if (value.proportion.y !== null) {
+    if (typeof value.proportion.y === "number") {
+      const newKey =
+        key.replace(
+          /(VerticalProportional|VerticalProportion|Proportional|Proportion)$/,
+          "",
+        ) + "VerticalProportion";
       constraints.set(
-        `${key}VerticalProportional`,
+        newKey,
         new UIVerticalProportionConstraint(value.elementOne, value.elementTwo, {
-          proportion: value.proportion.x,
-          power: value.power?.x,
-          rule: value.rule?.x,
+          proportion: value.proportion.y,
+          power: value.power?.y,
+          rule: value.rule?.y,
         }),
       );
     }
+  }
+
+  private static buildCoverConstraint(
+    key: string,
+    value: UICommonCoverConstraintDescription,
+    constraints: Map<string, UIConstraint>,
+  ): void {
+    constraints.set(
+      key,
+      new UICoverConstraint(value.elementOne, value.elementTwo, {
+        isStrict: value.isStrict,
+        horizontalAnchor: value.anchor?.x,
+        verticalAnchor: value.anchor?.y,
+      }),
+    );
   }
 }

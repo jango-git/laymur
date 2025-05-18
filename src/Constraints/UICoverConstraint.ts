@@ -1,6 +1,7 @@
 import { Constraint, Expression, Operator, Strength } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
+import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
   hSymbol,
@@ -36,11 +37,13 @@ export class UICoverConstraint extends UIConstraint {
   private constraintStrict?: Constraint;
 
   public constructor(
-    private readonly under: UIElement | UILayer,
-    private readonly over: UIElement,
+    private readonly elementOne: UIElement | UILayer,
+    private readonly elementTwo: UIElement,
     parameters?: Partial<UICoverParameters>,
   ) {
     super();
+    assertSameLayer(elementOne, elementTwo);
+
     this.parameters = {
       isStrict: parameters?.isStrict ?? true,
       horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
@@ -55,19 +58,19 @@ export class UICoverConstraint extends UIConstraint {
 
   private destroyConstraints(): void {
     if (this.constraintX) {
-      this.over[layerSymbol][removeConstraint](this.constraintX);
+      this.elementTwo[layerSymbol][removeConstraint](this.constraintX);
     }
     if (this.constraintY) {
-      this.over[layerSymbol][removeConstraint](this.constraintY);
+      this.elementTwo[layerSymbol][removeConstraint](this.constraintY);
     }
     if (this.constraintW) {
-      this.over[layerSymbol][removeConstraint](this.constraintW);
+      this.elementTwo[layerSymbol][removeConstraint](this.constraintW);
     }
     if (this.constraintH) {
-      this.over[layerSymbol][removeConstraint](this.constraintH);
+      this.elementTwo[layerSymbol][removeConstraint](this.constraintH);
     }
     if (this.constraintStrict) {
-      this.over[layerSymbol][removeConstraint](this.constraintStrict);
+      this.elementTwo[layerSymbol][removeConstraint](this.constraintStrict);
     }
   }
 
@@ -75,60 +78,60 @@ export class UICoverConstraint extends UIConstraint {
     this.destroyConstraints();
 
     this.constraintX = new Constraint(
-      new Expression(this.under[xSymbol]).plus(
-        new Expression(this.under[wSymbol]).multiply(
+      new Expression(this.elementOne[xSymbol]).plus(
+        new Expression(this.elementOne[wSymbol]).multiply(
           this.parameters.horizontalAnchor,
         ),
       ),
       Operator.Eq,
-      new Expression(this.over[xSymbol]).plus(
-        new Expression(this.over[wSymbol]).multiply(
+      new Expression(this.elementTwo[xSymbol]).plus(
+        new Expression(this.elementTwo[wSymbol]).multiply(
           this.parameters.horizontalAnchor,
         ),
       ),
     );
 
     this.constraintY = new Constraint(
-      new Expression(this.under[ySymbol]).plus(
-        new Expression(this.under[hSymbol]).multiply(
+      new Expression(this.elementOne[ySymbol]).plus(
+        new Expression(this.elementOne[hSymbol]).multiply(
           this.parameters.verticalAnchor,
         ),
       ),
       Operator.Eq,
-      new Expression(this.over[ySymbol]).plus(
-        new Expression(this.over[hSymbol]).multiply(
+      new Expression(this.elementTwo[ySymbol]).plus(
+        new Expression(this.elementTwo[hSymbol]).multiply(
           this.parameters.verticalAnchor,
         ),
       ),
     );
 
     this.constraintW = new Constraint(
-      new Expression(this.under[wSymbol]),
+      new Expression(this.elementOne[wSymbol]),
       Operator.Le,
-      new Expression(this.over[wSymbol]),
+      new Expression(this.elementTwo[wSymbol]),
     );
 
     this.constraintH = new Constraint(
-      new Expression(this.under[hSymbol]),
+      new Expression(this.elementOne[hSymbol]),
       Operator.Le,
-      new Expression(this.over[hSymbol]),
+      new Expression(this.elementTwo[hSymbol]),
     );
 
-    this.over[layerSymbol][addConstraint](this.constraintX);
-    this.over[layerSymbol][addConstraint](this.constraintY);
+    this.elementTwo[layerSymbol][addConstraint](this.constraintX);
+    this.elementTwo[layerSymbol][addConstraint](this.constraintY);
 
-    this.over[layerSymbol][addConstraint](this.constraintW);
-    this.over[layerSymbol][addConstraint](this.constraintH);
+    this.elementTwo[layerSymbol][addConstraint](this.constraintW);
+    this.elementTwo[layerSymbol][addConstraint](this.constraintH);
 
     if (this.parameters.isStrict !== false) {
       this.constraintStrict = new Constraint(
-        new Expression(this.under[hSymbol]),
+        new Expression(this.elementOne[hSymbol]),
         Operator.Eq,
-        new Expression(this.over[hSymbol]),
+        new Expression(this.elementTwo[hSymbol]),
         Strength.strong,
       );
 
-      this.over[layerSymbol][addConstraint](this.constraintStrict);
+      this.elementTwo[layerSymbol][addConstraint](this.constraintStrict);
     }
   }
 }

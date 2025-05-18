@@ -42,9 +42,16 @@ export interface UICommonDistanceConstraintDescription
   rule?: AtLeastOneRule;
 }
 
+export interface UICommonCoverConstraintDescription
+  extends UICommonDoubleElementConstraintDescription {
+  isStrict: boolean;
+  anchor?: AtLeastOneNumber;
+}
+
 export type UIAnyCommonDoubleElementConstraintDescription =
   | UICommonProportionalConstraintDescription
-  | UICommonDistanceConstraintDescription;
+  | UICommonDistanceConstraintDescription
+  | UICommonCoverConstraintDescription;
 
 export function isAtLeastOneNumber(obj: unknown): obj is AtLeastOneNumber {
   return (
@@ -112,5 +119,16 @@ export function isUICommonProportionalConstraintDescription(
     isAtLeastOneNumber(obj.proportion) &&
     (!("power" in obj) || isAtLeastOnePower(obj.power)) &&
     (!("rule" in obj) || isAtLeastOneRule(obj.rule))
+  );
+}
+
+export function isUICommonCoverConstraintDescription(
+  obj: unknown,
+): obj is UICommonCoverConstraintDescription {
+  return (
+    isUICommonDoubleElementConstraintDescription(obj) &&
+    "isStrict" in obj &&
+    typeof obj.isStrict === "boolean" &&
+    (!("anchor" in obj) || ("anchor" in obj && isAtLeastOneNumber(obj.anchor)))
   );
 }

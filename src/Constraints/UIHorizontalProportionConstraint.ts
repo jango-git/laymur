@@ -1,6 +1,7 @@
 import { Constraint, Expression, Operator } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
+import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraint,
   layerSymbol,
@@ -33,6 +34,8 @@ export class UIHorizontalProportionConstraint extends UIConstraint {
     parameters?: Partial<UIHorizontalProportionParameters>,
   ) {
     super();
+    assertSameLayer(elementOne, elementTwo);
+
     this.parameters = {
       proportion: parameters?.proportion ?? 1,
       strength: powerToStrength(parameters?.power),

@@ -1,6 +1,7 @@
 export { UIConstraintPower } from "./Constraints/UIConstraintPower";
 export { UIConstraintRule } from "./Constraints/UIConstraintRule";
 
+export * from "./Builders/UIConstraint2DBuilder";
 export * from "./Builders/UIConstraintBuilder";
 export * from "./Builders/UIElementBuilder";
 export * from "./Constraints/UIAspectConstraint";

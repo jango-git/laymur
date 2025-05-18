@@ -1,3 +1,4 @@
+import { Texture } from "three";
 import { UIElement } from "../Elements/UIElement";
 import { UIImage } from "../Elements/UIImage";
 import { UIText } from "../Elements/UIText";
@@ -13,8 +14,8 @@ export class UIElementBuilder {
   public static fromDescription(
     layer: UILayer,
     description:
-      | Map<string, UIAnyElementDescription>
-      | Record<string, UIAnyElementDescription>,
+      | Map<string, UIAnyElementDescription | Texture | String>
+      | Record<string, UIAnyElementDescription | Texture | String>,
   ): Record<string, UIElement> {
     const entries =
       description instanceof Map
@@ -26,8 +27,12 @@ export class UIElementBuilder {
       if (elements.has(key)) throw new Error("Element already exists");
       let element: UIElement;
 
-      if (isUIImageDescription(value)) {
+      if (value instanceof Texture) {
+        element = new UIImage(layer, value);
+      } else if (isUIImageDescription(value)) {
         element = new UIImage(layer, value.texture);
+      } else if (typeof value === "string") {
+        element = new UIText(layer, [value]);
       } else if (isUITextDescription(value)) {
         element = new UIText(layer, [value.text], {
           defaultStyle: value.style,
