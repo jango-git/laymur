@@ -18,10 +18,10 @@ import {
 export abstract class UIElement {
   public readonly [layerSymbol]: UILayer;
 
-  public [xSymbol] = new Variable();
-  public [ySymbol] = new Variable();
-  public [wSymbol] = new Variable();
-  public [hSymbol] = new Variable();
+  public [xSymbol] = new Variable("x");
+  public [ySymbol] = new Variable("y");
+  public [wSymbol] = new Variable("width");
+  public [hSymbol] = new Variable("height");
 
   public constructor(
     layer: UILayer,

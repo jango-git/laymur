@@ -15,7 +15,10 @@ import {
   ySymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
-import { UIConstraintOrientation } from "./UIConstraintOrientation";
+import {
+  resolveOrientation,
+  UIConstraintOrientation,
+} from "./UIConstraintOrientation";
 
 export interface UIFitParameters {
   isStrict: boolean;
@@ -47,7 +50,7 @@ export class UIFitConstraint extends UIConstraint {
       isStrict: parameters?.isStrict ?? true,
       horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
       verticalAnchor: parameters?.verticalAnchor ?? 0.5,
-      orientation: parameters?.orientation ?? UIConstraintOrientation.always,
+      orientation: resolveOrientation(parameters?.orientation),
     };
     this.elementTwo[layerSymbol][addConstraint](this);
     if (
@@ -64,7 +67,8 @@ export class UIFitConstraint extends UIConstraint {
 
   [resizeSymbol](orientation: UIConstraintOrientation): void {
     if (this.parameters.orientation !== UIConstraintOrientation.always) {
-      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      if (orientation === this.parameters.orientation)
+        this.rebuildConstraints();
       else this.destroyConstraints();
     }
   }

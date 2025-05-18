@@ -1,7 +1,7 @@
 export enum UIConstraintOrientation {
-  landscape = 1 << 0,
-  portrait = 1 << 1,
-  always = (1 << 0) | (1 << 1),
+  landscape = 1,
+  portrait = 2,
+  always = 3,
 }
 
 export function resolveOrientation(

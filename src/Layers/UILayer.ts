@@ -50,6 +50,9 @@ export class UILayer {
   private readonly elements: UIElement[] = [];
   private readonly constraints: UIConstraint[] = [];
 
+  private addConstraintQueue: Constraint[] = [];
+  private removeConstraintQueue: Constraint[] = [];
+
   public get orientation(): UIConstraintOrientation {
     return this.orientationPrivate;
   }
@@ -63,6 +66,8 @@ export class UILayer {
   public render(renderer: WebGLRenderer): void {
     if (this.isUpdateVariablesRequired) {
       this.isUpdateVariablesRequired = false;
+
+      this.flushConstraints();
       this.solver.updateVariables();
 
       for (const element of this.elements) {
@@ -78,7 +83,6 @@ export class UILayer {
     if (index === -1) {
       this.elements.push(element);
       this.scene.add(object);
-      this.isUpdateVariablesRequired = true;
     }
   }
 
@@ -87,7 +91,6 @@ export class UILayer {
     if (index !== -1) {
       this.elements.splice(index, 1);
       this.scene.remove(raw);
-      this.isUpdateVariablesRequired = true;
     }
   }
 
@@ -102,17 +105,17 @@ export class UILayer {
   }
 
   [addRawConstraint](constraint: Constraint): void {
-    this.solver.addConstraint(constraint);
+    this.addConstraintQueue.push(constraint);
     this.isUpdateVariablesRequired = true;
   }
 
   [removeRawConstraint](constraint: Constraint): void {
-    this.solver.removeConstraint(constraint);
+    this.removeConstraintQueue.push(constraint);
     this.isUpdateVariablesRequired = true;
   }
 
-  [addVariable](variable: Variable, strength: Strength): void {
-    this.solver.addEditVariable(variable, strength as number);
+  [addVariable](variable: Variable, strength: number): void {
+    this.solver.addEditVariable(variable, strength);
     this.isUpdateVariablesRequired = true;
   }
 
@@ -128,14 +131,16 @@ export class UILayer {
 
   public resize(width: number, height: number): void {
     assertSize(width, height);
+    this.flushConstraints();
 
     this.camera.near = 0;
     this.camera.far = 1024;
     this.camera.bottom = 0;
     this.camera.left = 0;
-    this.camera.right = Math.max(width, 8);
-    this.camera.top = Math.max(height, 8);
+    this.camera.right = width;
+    this.camera.top = height;
     this.camera.updateProjectionMatrix();
+
     this.rebuildConstraints();
 
     const lastOrientation = this.orientationPrivate;
@@ -151,11 +156,24 @@ export class UILayer {
     }
   }
 
+  private flushConstraints(): void {
+    for (const constraint of this.removeConstraintQueue) {
+      this.solver.removeConstraint(constraint);
+    }
+
+    for (const constraint of this.addConstraintQueue) {
+      this.solver.addConstraint(constraint);
+    }
+
+    this.removeConstraintQueue = [];
+    this.addConstraintQueue = [];
+  }
+
   private rebuildConstraints(): void {
-    if (this.constraintX) this.solver.removeConstraint(this.constraintX);
-    if (this.constraintY) this.solver.removeConstraint(this.constraintY);
-    if (this.constraintW) this.solver.removeConstraint(this.constraintW);
-    if (this.constraintH) this.solver.removeConstraint(this.constraintH);
+    if (this.constraintX) this[removeRawConstraint](this.constraintX);
+    if (this.constraintY) this[removeRawConstraint](this.constraintY);
+    if (this.constraintW) this[removeRawConstraint](this.constraintW);
+    if (this.constraintH) this[removeRawConstraint](this.constraintH);
 
     this.constraintX = new Constraint(
       new Expression(this[xSymbol]),
@@ -185,11 +203,9 @@ export class UILayer {
       Strength.required,
     );
 
-    this.solver.addConstraint(this.constraintX);
-    this.solver.addConstraint(this.constraintY);
-    this.solver.addConstraint(this.constraintW);
-    this.solver.addConstraint(this.constraintH);
-
-    this.isUpdateVariablesRequired = true;
+    this[addRawConstraint](this.constraintX);
+    this[addRawConstraint](this.constraintY);
+    this[addRawConstraint](this.constraintW);
+    this[addRawConstraint](this.constraintH);
   }
 }

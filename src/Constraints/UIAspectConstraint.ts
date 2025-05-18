@@ -70,7 +70,8 @@ export class UIAspectConstraint extends UIConstraint {
 
   [resizeSymbol](orientation: UIConstraintOrientation): void {
     if (this.parameters.orientation !== UIConstraintOrientation.always) {
-      if (orientation & this.parameters.orientation) this.rebuildConstraints();
+      if (orientation === this.parameters.orientation)
+        this.rebuildConstraints();
       else this.destroyConstraints();
     }
   }
