@@ -1,4 +1,3 @@
-import { UIConstraintOrientation } from "../Constraints/UIConstraintOrientation";
 import { UIConstraintPower } from "../Constraints/UIConstraintPower";
 import { UIConstraintRule } from "../Constraints/UIConstraintRule";
 import { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
@@ -9,6 +8,7 @@ import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProport
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
+import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 export interface UISize2DConstraintParameters {
   element: UIElement;
@@ -18,8 +18,8 @@ export interface UISize2DConstraintParameters {
   powerVertical?: UIConstraintPower;
   ruleHorizontal?: UIConstraintRule;
   ruleVertical?: UIConstraintRule;
-  orientationHorizontal?: UIConstraintOrientation;
-  orientationVertical?: UIConstraintOrientation;
+  orientationHorizontal?: UIOrientation;
+  orientationVertical?: UIOrientation;
 }
 
 export interface UIDistance2DConstraintParameters {
@@ -35,8 +35,8 @@ export interface UIDistance2DConstraintParameters {
   powerVertical?: UIConstraintPower;
   ruleHorizontal?: UIConstraintRule;
   ruleVertical?: UIConstraintRule;
-  orientationHorizontal?: UIConstraintOrientation;
-  orientationVertical?: UIConstraintOrientation;
+  orientationHorizontal?: UIOrientation;
+  orientationVertical?: UIOrientation;
 }
 
 export interface UIProportion2DConstraintParameters {
@@ -48,8 +48,8 @@ export interface UIProportion2DConstraintParameters {
   powerVertical?: UIConstraintPower;
   ruleHorizontal?: UIConstraintRule;
   ruleVertical?: UIConstraintRule;
-  orientationHorizontal?: UIConstraintOrientation;
-  orientationVertical?: UIConstraintOrientation;
+  orientationHorizontal?: UIOrientation;
+  orientationVertical?: UIOrientation;
 }
 
 export interface UISize2DConstraint {

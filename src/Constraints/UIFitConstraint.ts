@@ -13,17 +13,17 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import { UIConstraint } from "./UIConstraint";
 import {
   resolveOrientation,
-  UIConstraintOrientation,
-} from "./UIConstraintOrientation";
+  UIOrientation,
+} from "../Miscellaneous/UIOrientation";
+import { UIConstraint } from "./UIConstraint";
 
 export interface UIFitParameters {
   isStrict: boolean;
   horizontalAnchor: number;
   verticalAnchor: number;
-  orientation: UIConstraintOrientation;
+  orientation: UIOrientation;
 }
 
 export class UIFitConstraint extends UIConstraint {
@@ -55,7 +55,7 @@ export class UIFitConstraint extends UIConstraint {
     this.layer[addConstraintSymbol](this);
 
     if (
-      this.parameters.orientation === UIConstraintOrientation.always ||
+      this.parameters.orientation === UIOrientation.always ||
       this.parameters.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
@@ -67,8 +67,8 @@ export class UIFitConstraint extends UIConstraint {
     this.layer[removeConstraintSymbol](this);
   }
 
-  [resizeSymbol](orientation: UIConstraintOrientation): void {
-    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+  [resizeSymbol](orientation: UIOrientation): void {
+    if (this.parameters.orientation !== UIOrientation.always) {
       if (orientation === this.parameters.orientation) this.buildConstraints();
       else this.destroyConstraints();
     }

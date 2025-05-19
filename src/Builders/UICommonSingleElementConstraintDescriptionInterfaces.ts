@@ -1,4 +1,3 @@
-import { UIConstraintOrientation } from "../Constraints/UIConstraintOrientation";
 import {
   isUIConstraintPower,
   UIConstraintPower,
@@ -8,12 +7,13 @@ import {
   UIConstraintRule,
 } from "../Constraints/UIConstraintRule";
 import { UIElement } from "../Elements/UIElement";
+import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 export interface UICommonSingleElementConstraintDescription {
   element: UIElement;
   power?: UIConstraintPower;
   rule?: UIConstraintRule;
-  orientation?: UIConstraintOrientation;
+  orientation?: UIOrientation;
 }
 
 export interface UIWidthConstraintDescription

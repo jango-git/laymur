@@ -8,11 +8,11 @@ import {
   resizeSymbol,
   widthSymbol,
 } from "../Miscellaneous/symbols";
-import { UIConstraint } from "./UIConstraint";
 import {
   resolveOrientation,
-  UIConstraintOrientation,
-} from "./UIConstraintOrientation";
+  UIOrientation,
+} from "../Miscellaneous/UIOrientation";
+import { UIConstraint } from "./UIConstraint";
 import {
   convertPowerToStrength,
   resolvePower,
@@ -28,7 +28,7 @@ export interface UIWidthParameters {
   width: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
-  orientation: UIConstraintOrientation;
+  orientation: UIOrientation;
 }
 
 export class UIWidthConstraint extends UIConstraint {
@@ -51,7 +51,7 @@ export class UIWidthConstraint extends UIConstraint {
     this.layer[addConstraintSymbol](this);
 
     if (
-      this.parameters.orientation === UIConstraintOrientation.always ||
+      this.parameters.orientation === UIOrientation.always ||
       this.parameters.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
@@ -63,8 +63,8 @@ export class UIWidthConstraint extends UIConstraint {
     this.layer[removeConstraintSymbol](this);
   }
 
-  public [resizeSymbol](orientation: UIConstraintOrientation): void {
-    if (this.parameters.orientation !== UIConstraintOrientation.always) {
+  public [resizeSymbol](orientation: UIOrientation): void {
+    if (this.parameters.orientation !== UIOrientation.always) {
       if (orientation === this.parameters.orientation) this.buildConstraints();
       else this.destroyConstraints();
     }
