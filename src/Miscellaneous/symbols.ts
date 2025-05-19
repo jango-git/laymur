@@ -8,14 +8,14 @@ export const resizeSymbol = Symbol("resizeSymbol");
 export const readVariablesSymbol = Symbol("readVariablesSymbol");
 export const readMicroSymbol = Symbol("readMicroSymbol");
 
-export const addElementSymbol = Symbol("addElementSymbol");
-export const removeElementSymbol = Symbol("removeElementSymbol");
+export const addUIElementSymbol = Symbol("addUIElementSymbol");
+export const removeUIElementSymbol = Symbol("removeUIElementSymbol");
+
+export const addUIConstraintSymbol = Symbol("addConstraintSymbol");
+export const removeUIConstraintSymbol = Symbol("removeUIConstraintSymbol");
 
 export const addConstraintSymbol = Symbol("addConstraintSymbol");
 export const removeConstraintSymbol = Symbol("removeConstraintSymbol");
-
-export const addRawConstraintSymbol = Symbol("addRawConstraintSymbol");
-export const removeRawConstraintSymbol = Symbol("removeRawConstraintSymbol");
 
 export const addVariableSymbol = Symbol("addVariableSymbol");
 export const removeVariableSymbol = Symbol("removeVariableSymbol");

@@ -1,14 +1,11 @@
-import {
-  isUIConstraintPower,
-  UIConstraintPower,
-} from "../Constraints/UIConstraintPower";
-import {
-  isUIConstraintRule,
-  UIConstraintRule,
-} from "../Constraints/UIConstraintRule";
+import type { UIConstraintPower } from "../Constraints/UIConstraintPower";
+import { isUIConstraintPower } from "../Constraints/UIConstraintPower";
+import type { UIConstraintRule } from "../Constraints/UIConstraintRule";
+import { isUIConstraintRule } from "../Constraints/UIConstraintRule";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
-import { isUIOrientation, UIOrientation } from "../Miscellaneous/UIOrientation";
+import type { UIOrientation } from "../Miscellaneous/UIOrientation";
+import { isUIOrientation } from "../Miscellaneous/UIOrientation";
 
 export type AtLeastOneNumber =
   | { x?: number; y: number }

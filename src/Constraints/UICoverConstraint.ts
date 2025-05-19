@@ -1,13 +1,11 @@
 import { Constraint, Expression, Operator, Strength } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
-import { UILayer } from "../Layers/UILayer";
+import type { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraintSymbol,
-  addRawConstraintSymbol,
   heightSymbol,
   removeConstraintSymbol,
-  removeRawConstraintSymbol,
   resizeSymbol,
   widthSymbol,
   xSymbol,
@@ -35,13 +33,20 @@ export class UICoverConstraint extends UIConstraint {
   private constraintH?: Constraint;
   private constraintStrict?: Constraint;
 
-  public constructor(
+  constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
     parameters?: Partial<UICoverParameters>,
   ) {
     assertSameLayer(elementOne, elementTwo);
-    super(elementTwo.layer);
+    super(
+      elementTwo.layer,
+      new Set(
+        elementOne instanceof UIElement
+          ? [elementOne, elementTwo]
+          : [elementTwo],
+      ),
+    );
 
     this.parameters = {
       isStrict: parameters?.isStrict ?? true,
@@ -50,25 +55,26 @@ export class UICoverConstraint extends UIConstraint {
       orientation: resolveOrientation(parameters?.orientation),
     };
 
-    this.layer[addConstraintSymbol](this);
-
     if (
-      this.parameters.orientation === UIOrientation.always ||
+      this.parameters.orientation === UIOrientation.ALWAYS ||
       this.parameters.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
     }
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.destroyConstraints();
-    this.layer[removeConstraintSymbol](this);
+    super.destroy();
   }
 
   public [resizeSymbol](orientation: UIOrientation): void {
-    if (this.parameters.orientation !== UIOrientation.always) {
-      if (orientation === this.parameters.orientation) this.buildConstraints();
-      else this.destroyConstraints();
+    if (this.parameters.orientation !== UIOrientation.ALWAYS) {
+      if (orientation === this.parameters.orientation) {
+        this.buildConstraints();
+      } else {
+        this.destroyConstraints();
+      }
     }
   }
 
@@ -113,11 +119,11 @@ export class UICoverConstraint extends UIConstraint {
       new Expression(this.elementTwo[heightSymbol]),
     );
 
-    this.layer[addRawConstraintSymbol](this.constraintX);
-    this.layer[addRawConstraintSymbol](this.constraintY);
+    this.layer[addConstraintSymbol](this, this.constraintX);
+    this.layer[addConstraintSymbol](this, this.constraintY);
 
-    this.layer[addRawConstraintSymbol](this.constraintW);
-    this.layer[addRawConstraintSymbol](this.constraintH);
+    this.layer[addConstraintSymbol](this, this.constraintW);
+    this.layer[addConstraintSymbol](this, this.constraintH);
 
     if (!this.parameters.isStrict) {
       this.constraintStrict = new Constraint(
@@ -127,29 +133,29 @@ export class UICoverConstraint extends UIConstraint {
         Strength.strong,
       );
 
-      this.layer[addRawConstraintSymbol](this.constraintStrict);
+      this.layer[addConstraintSymbol](this, this.constraintStrict);
     }
   }
 
   protected destroyConstraints(): void {
     if (this.constraintX) {
-      this.layer[removeRawConstraintSymbol](this.constraintX);
+      this.layer[removeConstraintSymbol](this, this.constraintX);
       this.constraintX = undefined;
     }
     if (this.constraintY) {
-      this.layer[removeRawConstraintSymbol](this.constraintY);
+      this.layer[removeConstraintSymbol](this, this.constraintY);
       this.constraintY = undefined;
     }
     if (this.constraintW) {
-      this.layer[removeRawConstraintSymbol](this.constraintW);
+      this.layer[removeConstraintSymbol](this, this.constraintW);
       this.constraintW = undefined;
     }
     if (this.constraintH) {
-      this.layer[removeRawConstraintSymbol](this.constraintH);
+      this.layer[removeConstraintSymbol](this, this.constraintH);
       this.constraintH = undefined;
     }
     if (this.constraintStrict) {
-      this.layer[removeRawConstraintSymbol](this.constraintStrict);
+      this.layer[removeConstraintSymbol](this, this.constraintStrict);
       this.constraintStrict = undefined;
     }
   }

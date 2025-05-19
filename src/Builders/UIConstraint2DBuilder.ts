@@ -4,7 +4,7 @@ import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalPro
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
-import {
+import type {
   UIDistance2DConstraint,
   UIDistance2DConstraintParameters,
   UIProportion2DConstraintParameters,

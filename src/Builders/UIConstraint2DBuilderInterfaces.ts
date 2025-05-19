@@ -1,14 +1,14 @@
-import { UIConstraintPower } from "../Constraints/UIConstraintPower";
-import { UIConstraintRule } from "../Constraints/UIConstraintRule";
-import { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
-import { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
-import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
-import { UIElement } from "../Elements/UIElement";
-import { UILayer } from "../Layers/UILayer";
-import { UIOrientation } from "../Miscellaneous/UIOrientation";
+import type { UIConstraintPower } from "../Constraints/UIConstraintPower";
+import type { UIConstraintRule } from "../Constraints/UIConstraintRule";
+import type { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
+import type { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDistanceConstraint";
+import type { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalProportionConstraint";
+import type { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
+import type { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
+import type { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
+import type { UIElement } from "../Elements/UIElement";
+import type { UILayer } from "../Layers/UILayer";
+import type { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 export interface UISize2DConstraintParameters {
   element: UIElement;

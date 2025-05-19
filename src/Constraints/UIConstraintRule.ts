@@ -1,9 +1,9 @@
 import { Operator } from "kiwi.js";
 
 export enum UIConstraintRule {
-  equal = Operator.Eq,
-  less = Operator.Le,
-  greater = Operator.Ge,
+  EQUAL = Operator.Eq,
+  LESS = Operator.Le,
+  GREATER = Operator.Ge,
 }
 
 export function isUIConstraintRule(obj: unknown): obj is UIConstraintRule {
@@ -11,16 +11,16 @@ export function isUIConstraintRule(obj: unknown): obj is UIConstraintRule {
 }
 
 export function resolveRule(rule?: UIConstraintRule): UIConstraintRule {
-  return rule ?? UIConstraintRule.equal;
+  return rule ?? UIConstraintRule.EQUAL;
 }
 
 export function convertRuleToOperator(rule?: UIConstraintRule): Operator {
   switch (rule) {
-    case UIConstraintRule.equal:
+    case UIConstraintRule.EQUAL:
       return Operator.Eq;
-    case UIConstraintRule.less:
+    case UIConstraintRule.LESS:
       return Operator.Le;
-    case UIConstraintRule.greater:
+    case UIConstraintRule.GREATER:
       return Operator.Ge;
     default:
       return Operator.Eq;

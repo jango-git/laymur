@@ -1,5 +1,5 @@
-import { Object3D } from "three";
-import { UIMicroTransformations } from "./UIMicroTransformations";
+import type { Object3D } from "three";
+import type { UIMicroTransformations } from "./UIMicroTransformations";
 
 export function applyMicroTransformations(
   object: Object3D,

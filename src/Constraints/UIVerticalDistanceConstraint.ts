@@ -1,13 +1,11 @@
 import { Constraint, Expression } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
-import { UILayer } from "../Layers/UILayer";
+import type { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraintSymbol,
-  addRawConstraintSymbol,
   heightSymbol,
   removeConstraintSymbol,
-  removeRawConstraintSymbol,
   resizeSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
@@ -16,16 +14,10 @@ import {
   UIOrientation,
 } from "../Miscellaneous/UIOrientation";
 import { UIConstraint } from "./UIConstraint";
-import {
-  convertPowerToStrength,
-  resolvePower,
-  UIConstraintPower,
-} from "./UIConstraintPower";
-import {
-  convertRuleToOperator,
-  resolveRule,
-  UIConstraintRule,
-} from "./UIConstraintRule";
+import type { UIConstraintPower } from "./UIConstraintPower";
+import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
+import type { UIConstraintRule } from "./UIConstraintRule";
+import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
 export interface UIVerticalDistanceParameters {
   anchorOne: number;
@@ -40,13 +32,20 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
   private readonly parameters: UIVerticalDistanceParameters;
   private constraint?: Constraint;
 
-  public constructor(
+  constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
     parameters?: Partial<UIVerticalDistanceParameters>,
   ) {
-    super(elementTwo.layer);
     assertSameLayer(elementOne, elementTwo);
+    super(
+      elementTwo.layer,
+      new Set(
+        elementOne instanceof UIElement
+          ? [elementOne, elementTwo]
+          : [elementTwo],
+      ),
+    );
 
     this.parameters = {
       anchorOne: parameters?.anchorOne ?? 0.5,
@@ -57,25 +56,26 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
       orientation: resolveOrientation(parameters?.orientation),
     };
 
-    this.layer[addConstraintSymbol](this);
-
     if (
-      this.parameters.orientation === UIOrientation.always ||
+      this.parameters.orientation === UIOrientation.ALWAYS ||
       this.parameters.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
     }
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.destroyConstraints();
-    this.layer[removeConstraintSymbol](this);
+    super.destroy();
   }
 
   public [resizeSymbol](orientation: UIOrientation): void {
-    if (this.parameters.orientation !== UIOrientation.always) {
-      if (orientation === this.parameters.orientation) this.buildConstraints();
-      else this.destroyConstraints();
+    if (this.parameters.orientation !== UIOrientation.ALWAYS) {
+      if (orientation === this.parameters.orientation) {
+        this.buildConstraints();
+      } else {
+        this.destroyConstraints();
+      }
     }
   }
 
@@ -99,12 +99,12 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
       convertPowerToStrength(this.parameters.power),
     );
 
-    this.layer[addRawConstraintSymbol](this.constraint);
+    this.layer[addConstraintSymbol](this, this.constraint);
   }
 
   protected destroyConstraints(): void {
     if (this.constraint) {
-      this.layer[removeRawConstraintSymbol](this.constraint);
+      this.layer[removeConstraintSymbol](this, this.constraint);
       this.constraint = undefined;
     }
   }

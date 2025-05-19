@@ -1,20 +1,14 @@
-import { DoubleSide, Mesh, MeshBasicMaterial, Texture } from "three";
-import { UILayer } from "../Layers/UILayer";
+import type { Texture } from "three";
+import { FrontSide, Mesh, MeshBasicMaterial } from "three";
+import type { UILayer } from "../Layers/UILayer";
 import { assertSize } from "../Miscellaneous/asserts";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
-import {
-  addElementSymbol,
-  readMicroSymbol,
-  readVariablesSymbol,
-  removeElementSymbol,
-} from "../Miscellaneous/symbols";
+import { readMicroSymbol, readVariablesSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement {
-  protected readonly object: Mesh;
-
-  public constructor(layer: UILayer, texture: Texture) {
+  constructor(layer: UILayer, texture: Texture) {
     const width = texture.image?.width;
     const height = texture.image?.height;
 
@@ -24,23 +18,16 @@ export class UIImage extends UIElement {
       `Invalid image dimensions - texture "${texture.name || "unnamed"}" has invalid width (${width}) or height (${height}). Image dimensions must be non-zero positive numbers.`,
     );
 
-    super(layer, 0, 0, width, height);
-
     const material = new MeshBasicMaterial({
       map: texture,
       transparent: true,
-      side: DoubleSide,
+      side: FrontSide,
     });
 
-    this.object = new Mesh(geometry, material);
+    const object = new Mesh(geometry, material);
+    super(layer, object, 0, 0, width, height);
 
-    this.layer[addElementSymbol](this, this.object);
     this[readVariablesSymbol]();
-  }
-
-  public destroy(): void {
-    super.destroy();
-    this.layer[removeElementSymbol](this, this.object);
   }
 
   public [readVariablesSymbol](): void {

@@ -1,8 +1,9 @@
 import { Texture } from "three";
-import {
-  isUITextSpan,
+import type {
   UITextSpan,
-  UITextStyle,
+  UITextStyle} from "../Elements/UITextInterfaces";
+import {
+  isUITextSpan
 } from "../Elements/UITextInterfaces";
 
 export interface UIImageDescription {

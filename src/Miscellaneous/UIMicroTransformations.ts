@@ -5,16 +5,19 @@ export interface UIMicroTransformable {
   [readMicroSymbol](): void;
 }
 
+const DEFAULT_ANCHOR = 0.5;
+const DEFAULT_SCALE = 1;
+
 export class UIMicroTransformations {
   private positionXPrivate = 0;
   private positionYPrivate = 0;
-  private anchorXPrivate = 0.5;
-  private anchorYPrivate = 0.5;
-  private scaleXPrivate = 1;
-  private scaleYPrivate = 1;
+  private anchorXPrivate = DEFAULT_ANCHOR;
+  private anchorYPrivate = DEFAULT_ANCHOR;
+  private scaleXPrivate = DEFAULT_SCALE;
+  private scaleYPrivate = DEFAULT_SCALE;
   private rotationPrivate = 0;
 
-  public constructor(private readonly owner: UIMicroTransformable) {}
+  constructor(private readonly owner: UIMicroTransformable) {}
 
   public get x(): number {
     return this.positionXPrivate;

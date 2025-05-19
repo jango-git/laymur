@@ -1,11 +1,9 @@
 import { Constraint, Expression } from "kiwi.js";
-import { UIElement } from "../Elements/UIElement";
+import type { UIElement } from "../Elements/UIElement";
 import {
   addConstraintSymbol,
-  addRawConstraintSymbol,
   heightSymbol,
   removeConstraintSymbol,
-  removeRawConstraintSymbol,
   resizeSymbol,
   widthSymbol,
 } from "../Miscellaneous/symbols";
@@ -14,16 +12,10 @@ import {
   UIOrientation,
 } from "../Miscellaneous/UIOrientation";
 import { UIConstraint } from "./UIConstraint";
-import {
-  convertPowerToStrength,
-  resolvePower,
-  UIConstraintPower,
-} from "./UIConstraintPower";
-import {
-  convertRuleToOperator,
-  resolveRule,
-  UIConstraintRule,
-} from "./UIConstraintRule";
+import type { UIConstraintPower } from "./UIConstraintPower";
+import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
+import type { UIConstraintRule } from "./UIConstraintRule";
+import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
 export interface UIAspectParameters {
   aspect: number;
@@ -36,11 +28,11 @@ export class UIAspectConstraint extends UIConstraint {
   private readonly parameters: UIAspectParameters;
   private constraint?: Constraint;
 
-  public constructor(
+  constructor(
     private readonly element: UIElement,
     parameters?: Partial<UIAspectParameters>,
   ) {
-    super(element.layer);
+    super(element.layer, new Set([element]));
 
     this.parameters = {
       aspect: parameters?.aspect ?? this.element.width / this.element.height,
@@ -49,25 +41,26 @@ export class UIAspectConstraint extends UIConstraint {
       orientation: resolveOrientation(parameters?.orientation),
     };
 
-    this.layer[addConstraintSymbol](this);
-
     if (
-      this.parameters.orientation === UIOrientation.always ||
+      this.parameters.orientation === UIOrientation.ALWAYS ||
       this.parameters.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
     }
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.destroyConstraints();
-    this.layer[removeConstraintSymbol](this);
+    super.destroy();
   }
 
   public [resizeSymbol](orientation: UIOrientation): void {
-    if (this.parameters.orientation !== UIOrientation.always) {
-      if (orientation === this.parameters.orientation) this.buildConstraints();
-      else this.destroyConstraints();
+    if (this.parameters.orientation !== UIOrientation.ALWAYS) {
+      if (orientation === this.parameters.orientation) {
+        this.buildConstraints();
+      } else {
+        this.destroyConstraints();
+      }
     }
   }
 
@@ -85,12 +78,12 @@ export class UIAspectConstraint extends UIConstraint {
       convertPowerToStrength(this.parameters.power),
     );
 
-    this.layer[addRawConstraintSymbol](this.constraint);
+    this.layer[addConstraintSymbol](this, this.constraint);
   }
 
   protected destroyConstraints(): void {
     if (this.constraint) {
-      this.layer[removeRawConstraintSymbol](this.constraint);
+      this.layer[removeConstraintSymbol](this, this.constraint);
       this.constraint = undefined;
     }
   }

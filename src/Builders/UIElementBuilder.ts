@@ -1,13 +1,14 @@
 import { Texture } from "three";
-import { UIElement } from "../Elements/UIElement";
+import type { UIElement } from "../Elements/UIElement";
 import { UIImage } from "../Elements/UIImage";
 import { UIText } from "../Elements/UIText";
-import { UILayer } from "../Layers/UILayer";
+import type { UILayer } from "../Layers/UILayer";
+import type {
+  UIAnyElementDescription} from "./UIElementBuilderInterfaces";
 import {
   isUIImageDescription,
   isUITextDescription,
-  isUITextEnhancedDescription,
-  UIAnyElementDescription,
+  isUITextEnhancedDescription
 } from "./UIElementBuilderInterfaces";
 
 export class UIElementBuilder {
@@ -25,9 +26,9 @@ export class UIElementBuilder {
 
     for (const [key, value] of entries) {
       if (elements.has(key))
-        throw new Error(
+        {throw new Error(
           `Duplicate element key "${key}" - each UI element must have a unique identifier`,
-        );
+        );}
       let element: UIElement;
 
       if (value instanceof Texture) {

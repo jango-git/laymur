@@ -1,25 +1,25 @@
 import { Variable } from "kiwi.js";
-import { Object3D } from "three";
+import type { Object3D } from "three";
 import {
   convertPowerToStrength,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
-import { UILayer } from "../Layers/UILayer";
+import type { UILayer } from "../Layers/UILayer";
 import {
+  addUIElementSymbol,
   addVariableSymbol,
   heightSymbol,
   readMicroSymbol,
   readVariablesSymbol,
+  removeUIElementSymbol,
   removeVariableSymbol,
   suggestVariableSymbol,
   widthSymbol,
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import {
-  UIMicroTransformable,
-  UIMicroTransformations,
-} from "../Miscellaneous/UIMicroTransformations";
+import type { UIMicroTransformable } from "../Miscellaneous/UIMicroTransformations";
+import { UIMicroTransformations } from "../Miscellaneous/UIMicroTransformations";
 
 export abstract class UIElement implements UIMicroTransformable {
   public readonly micro = new UIMicroTransformations(this);
@@ -29,30 +29,35 @@ export abstract class UIElement implements UIMicroTransformable {
   public [widthSymbol] = new Variable("width");
   public [heightSymbol] = new Variable("height");
 
-  protected abstract object: Object3D;
-
-  public constructor(
+  constructor(
     public readonly layer: UILayer,
+    protected readonly object: Object3D,
     x: number,
     y: number,
     w: number,
     h: number,
   ) {
+    this.layer[addUIElementSymbol](this, this.object);
+
     this.layer[addVariableSymbol](
+      this,
       this[xSymbol],
-      convertPowerToStrength(UIConstraintPower.p7),
+      convertPowerToStrength(UIConstraintPower.P7),
     );
     this.layer[addVariableSymbol](
+      this,
       this[ySymbol],
-      convertPowerToStrength(UIConstraintPower.p7),
+      convertPowerToStrength(UIConstraintPower.P7),
     );
     this.layer[addVariableSymbol](
+      this,
       this[widthSymbol],
-      convertPowerToStrength(UIConstraintPower.p5),
+      convertPowerToStrength(UIConstraintPower.P5),
     );
     this.layer[addVariableSymbol](
+      this,
       this[heightSymbol],
-      convertPowerToStrength(UIConstraintPower.p5),
+      convertPowerToStrength(UIConstraintPower.P5),
     );
 
     this[xSymbol].setValue(x);
@@ -60,10 +65,10 @@ export abstract class UIElement implements UIMicroTransformable {
     this[widthSymbol].setValue(w);
     this[heightSymbol].setValue(h);
 
-    this.layer[suggestVariableSymbol](this[xSymbol], x);
-    this.layer[suggestVariableSymbol](this[ySymbol], y);
-    this.layer[suggestVariableSymbol](this[widthSymbol], w);
-    this.layer[suggestVariableSymbol](this[heightSymbol], h);
+    this.layer[suggestVariableSymbol](this, this[xSymbol], x);
+    this.layer[suggestVariableSymbol](this, this[ySymbol], y);
+    this.layer[suggestVariableSymbol](this, this[widthSymbol], w);
+    this.layer[suggestVariableSymbol](this, this[heightSymbol], h);
   }
 
   public get x(): number {
@@ -87,19 +92,19 @@ export abstract class UIElement implements UIMicroTransformable {
   }
 
   public set x(value: number) {
-    this.layer[suggestVariableSymbol](this[xSymbol], value);
+    this.layer[suggestVariableSymbol](this, this[xSymbol], value);
   }
 
   public set y(value: number) {
-    this.layer[suggestVariableSymbol](this[ySymbol], value);
+    this.layer[suggestVariableSymbol](this, this[ySymbol], value);
   }
 
   public set width(value: number) {
-    this.layer[suggestVariableSymbol](this[widthSymbol], value);
+    this.layer[suggestVariableSymbol](this, this[widthSymbol], value);
   }
 
   public set height(value: number) {
-    this.layer[suggestVariableSymbol](this[heightSymbol], value);
+    this.layer[suggestVariableSymbol](this, this[heightSymbol], value);
   }
 
   public set zIndex(value: number) {
@@ -107,10 +112,11 @@ export abstract class UIElement implements UIMicroTransformable {
   }
 
   public destroy(): void {
-    this.layer[removeVariableSymbol](this[xSymbol]);
-    this.layer[removeVariableSymbol](this[ySymbol]);
-    this.layer[removeVariableSymbol](this[widthSymbol]);
-    this.layer[removeVariableSymbol](this[heightSymbol]);
+    this.layer[removeVariableSymbol](this, this[xSymbol]);
+    this.layer[removeVariableSymbol](this, this[ySymbol]);
+    this.layer[removeVariableSymbol](this, this[widthSymbol]);
+    this.layer[removeVariableSymbol](this, this[heightSymbol]);
+    this.layer[removeUIElementSymbol](this);
   }
 
   public abstract [readVariablesSymbol](): void;

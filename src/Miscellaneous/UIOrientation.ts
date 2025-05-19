@@ -1,7 +1,7 @@
 export enum UIOrientation {
-  landscape = 1,
-  portrait = 2,
-  always = 3,
+  LANDSCAPE,
+  PORTRAIT,
+  ALWAYS,
 }
 
 export function isUIOrientation(obj: unknown): obj is UIOrientation {
@@ -9,5 +9,5 @@ export function isUIOrientation(obj: unknown): obj is UIOrientation {
 }
 
 export function resolveOrientation(orientation?: UIOrientation): UIOrientation {
-  return orientation ?? UIOrientation.always;
+  return orientation ?? UIOrientation.ALWAYS;
 }

@@ -1,12 +1,10 @@
 import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
-import { UILayer } from "../Layers/UILayer";
+import type { UILayer } from "../Layers/UILayer";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
-  addElementSymbol,
   heightSymbol,
   readMicroSymbol,
   readVariablesSymbol,
-  removeElementSymbol,
   suggestVariableSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -20,7 +18,7 @@ import {
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
-import {
+import type {
   UITextChunk,
   UITextPadding,
   UITextSize,
@@ -35,16 +33,13 @@ export interface UITextParameters {
 }
 
 export class UIText extends UIElement {
-  protected readonly object: Mesh;
-
-  private canvas: HTMLCanvasElement;
-  private context: CanvasRenderingContext2D;
-  private texture: CanvasTexture;
-  private size: UITextSize;
-  private padding: UITextPadding;
+  private readonly context: CanvasRenderingContext2D;
+  private readonly texture: CanvasTexture;
+  private readonly textBlockSize: UITextSize;
+  private readonly padding: UITextPadding;
   private lastSuggestedAspect = 0;
 
-  public constructor(
+  constructor(
     layer: UILayer,
     spans: (UITextSpan | string)[],
     parameters: Partial<UITextParameters> = {},
@@ -71,28 +66,26 @@ export class UIText extends UIElement {
     const wrappedLines = wrapTextLines(parameters.maxWidth ?? 1024, chunks);
     const textBlockSize = calculateTextBlockSize(wrappedLines);
 
-    super(layer, 0, 0, textBlockSize.width, textBlockSize.height);
+    const padding = resolvePadding(parameters.padding);
 
-    this.size = textBlockSize;
-    this.padding = resolvePadding(parameters.padding);
+    canvas.width = textBlockSize.width + padding.left + padding.right;
+    canvas.height = textBlockSize.height + padding.top + padding.bottom;
 
-    canvas.width = textBlockSize.width + this.padding.left + this.padding.right;
-    canvas.height =
-      textBlockSize.height + this.padding.top + this.padding.bottom;
-
-    this.canvas = canvas;
-    this.context = context;
-
-    this.texture = new CanvasTexture(this.canvas);
+    const texture = new CanvasTexture(canvas);
 
     const material = new MeshBasicMaterial({
-      map: this.texture,
+      map: texture,
       transparent: true,
       side: FrontSide,
     });
 
-    this.object = new Mesh(geometry, material);
-    this.layer[addElementSymbol](this, this.object);
+    const object = new Mesh(geometry, material);
+    super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
+
+    this.texture = texture;
+    this.textBlockSize = textBlockSize;
+    this.context = context;
+    this.padding = padding;
 
     renderTextLines(
       this.padding.top,
@@ -105,9 +98,8 @@ export class UIText extends UIElement {
   }
 
   public destroy(): void {
-    super.destroy();
-    this.layer[removeElementSymbol](this, this.object);
     this.texture.dispose();
+    super.destroy();
   }
 
   public [readVariablesSymbol](): void {
@@ -123,10 +115,13 @@ export class UIText extends UIElement {
     const currentAspect = this.width / this.height;
     if (this.lastSuggestedAspect !== currentAspect) {
       this.lastSuggestedAspect = currentAspect;
+
       const targetAspect =
-        (this.size.width + this.padding.left + this.padding.right) /
-        (this.size.height + this.padding.top + this.padding.bottom);
+        (this.textBlockSize.width + this.padding.left + this.padding.right) /
+        (this.textBlockSize.height + this.padding.top + this.padding.bottom);
+
       this.layer[suggestVariableSymbol](
+        this,
         this[heightSymbol],
         this.width / targetAspect,
       );

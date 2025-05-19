@@ -1,13 +1,15 @@
+import type {
+  UIConstraintPower} from "../Constraints/UIConstraintPower";
 import {
-  isUIConstraintPower,
-  UIConstraintPower,
+  isUIConstraintPower
 } from "../Constraints/UIConstraintPower";
+import type {
+  UIConstraintRule} from "../Constraints/UIConstraintRule";
 import {
-  isUIConstraintRule,
-  UIConstraintRule,
+  isUIConstraintRule
 } from "../Constraints/UIConstraintRule";
 import { UIElement } from "../Elements/UIElement";
-import { UIOrientation } from "../Miscellaneous/UIOrientation";
+import type { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 export interface UICommonSingleElementConstraintDescription {
   element: UIElement;

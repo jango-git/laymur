@@ -1,5 +1,5 @@
 import { UIAspectConstraint } from "../Constraints/UIAspectConstraint";
-import { UIConstraint } from "../Constraints/UIConstraint";
+import type { UIConstraint } from "../Constraints/UIConstraint";
 import { UICoverConstraint } from "../Constraints/UICoverConstraint";
 import { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
 import { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDistanceConstraint";
@@ -7,23 +7,27 @@ import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalPro
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
-import {
-  isUICommonCoverConstraintDescription,
-  isUICommonDistanceConstraintDescription,
-  isUICommonProportionalConstraintDescription,
+import type {
   UICommonCoverConstraintDescription,
   UICommonDistanceConstraintDescription,
   UICommonProportionalConstraintDescription,
 } from "./UICommonDoubleElementConstraintDescriptionInterfaces";
 import {
-  isUIHeightConstraintDescription,
-  isUIKeepAspectConstraintDescription,
-  isUIKeepSizeConstraintDescription,
-  isUIWidthConstraintDescription,
+  isUICommonCoverConstraintDescription,
+  isUICommonDistanceConstraintDescription,
+  isUICommonProportionalConstraintDescription,
+} from "./UICommonDoubleElementConstraintDescriptionInterfaces";
+import type {
   UIHeightConstraintDescription,
   UIKeepAspectConstraintDescription,
   UIKeepSizeConstraintDescription,
   UIWidthConstraintDescription,
+} from "./UICommonSingleElementConstraintDescriptionInterfaces";
+import {
+  isUIHeightConstraintDescription,
+  isUIKeepAspectConstraintDescription,
+  isUIKeepSizeConstraintDescription,
+  isUIWidthConstraintDescription,
 } from "./UICommonSingleElementConstraintDescriptionInterfaces";
 
 export type UIAnyCommonConstraintDescription =
@@ -48,10 +52,11 @@ export class UIConstraintBuilder {
     const constraints = new Map<string, UIConstraint>();
 
     for (const [key, value] of entries) {
-      if (constraints.has(key))
+      if (constraints.has(key)) {
         throw new Error(
           `Duplicate constraint key "${key}" - each constraint must have a unique identifier`,
         );
+      }
 
       if (isUIWidthConstraintDescription(value)) {
         UIConstraintBuilder.buildWidthConstraint(key, value, constraints);

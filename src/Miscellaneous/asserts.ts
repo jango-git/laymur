@@ -1,4 +1,4 @@
-import { UIElement } from "../Elements/UIElement";
+import type { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 
 export function assertSameLayer(
