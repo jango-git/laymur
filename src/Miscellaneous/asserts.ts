@@ -10,12 +10,12 @@ export function assertSameLayer(
     (elementOne instanceof UILayer ? elementOne : elementOne[layerSymbol]) !==
     elementTwo[layerSymbol]
   ) {
-    throw new Error("Elements must be on the same layer");
+    throw new Error(`Elements must be on the same layer - element "${elementTwo.constructor.name}" cannot interact with elements from a different layer`);
   }
 }
 
 export function assertSize(width: number, height: number): void {
   if (width <= 0 || height <= 0) {
-    throw new Error("Size must be positive");
+    throw new Error(`Invalid dimensions: width (${width}) and height (${height}) must both be positive numbers greater than 0`);
   }
 }

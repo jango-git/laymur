@@ -24,7 +24,7 @@ export class UIImage extends UIElement implements UIMicroTransformable {
     const height = texture.image?.height;
 
     if (!width || !height) {
-      throw new Error("Invalid width/height");
+      throw new Error(`Invalid image dimensions - texture "${texture.name || 'unnamed'}" has invalid width (${width}) or height (${height}). Image dimensions must be non-zero positive numbers.`);
     }
 
     super(layer, 0, 0, width, height);

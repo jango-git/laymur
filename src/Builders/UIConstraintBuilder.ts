@@ -42,7 +42,7 @@ export class UIConstraintBuilder {
     const constraints = new Map<string, UIConstraint>();
 
     for (const [key, value] of entries) {
-      if (constraints.has(key)) throw new Error("Constraint already exists");
+      if (constraints.has(key)) throw new Error(`Duplicate constraint key "${key}" - each constraint must have a unique identifier`);
 
       if (isUIKeepAspectConstraintDescription(value)) {
         UIConstraintBuilder.buildKeepAspectConstraint(key, value, constraints);
@@ -59,7 +59,7 @@ export class UIConstraintBuilder {
       } else if (isUICommonCoverConstraintDescription(value)) {
         UIConstraintBuilder.buildCoverConstraint(key, value, constraints);
       } else {
-        throw new Error("Unknown ui constraint type");
+        throw new Error(`Invalid constraint type for "${key}". Expected one of: KeepAspect, KeepSize, Distance, Proportional, or Cover constraint`);
       }
     }
 

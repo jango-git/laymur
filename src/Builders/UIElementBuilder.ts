@@ -24,7 +24,10 @@ export class UIElementBuilder {
     const elements = new Map<string, UIElement>();
 
     for (const [key, value] of entries) {
-      if (elements.has(key)) throw new Error("Element already exists");
+      if (elements.has(key))
+        throw new Error(
+          `Duplicate element key "${key}" - each UI element must have a unique identifier`,
+        );
       let element: UIElement;
 
       if (value instanceof Texture) {
@@ -42,7 +45,9 @@ export class UIElementBuilder {
           defaultStyle: value.defaultStyle,
         });
       } else {
-        throw new Error("Unknown ui element type");
+        throw new Error(
+          `Invalid UI element type for "${key}". Expected one of: Texture, UIImage, String, UITextDescription, or UITextEnhancedDescription`,
+        );
       }
 
       elements.set(key, element);
