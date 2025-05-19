@@ -16,6 +16,16 @@ export interface UICommonSingleElementConstraintDescription {
   orientation?: UIConstraintOrientation;
 }
 
+export interface UIWidthConstraintDescription
+  extends UICommonSingleElementConstraintDescription {
+  width: number;
+}
+
+export interface UIHeightConstraintDescription
+  extends UICommonSingleElementConstraintDescription {
+  height: number;
+}
+
 export interface UIKeepAspectConstraintDescription
   extends UICommonSingleElementConstraintDescription {
   keepAspect: boolean;
@@ -36,6 +46,26 @@ export function isUICommonSingleElementConstraintDescription(
     obj.element instanceof UIElement &&
     (!("power" in obj) || isUIConstraintPower(obj.power)) &&
     (!("rule" in obj) || isUIConstraintRule(obj.rule))
+  );
+}
+
+export function isUIWidthConstraintDescription(
+  obj: unknown,
+): obj is UIWidthConstraintDescription {
+  return (
+    isUICommonSingleElementConstraintDescription(obj) &&
+    "width" in obj &&
+    typeof obj.width === "number"
+  );
+}
+
+export function isUIHeightConstraintDescription(
+  obj: unknown,
+): obj is UIHeightConstraintDescription {
+  return (
+    isUICommonSingleElementConstraintDescription(obj) &&
+    "height" in obj &&
+    typeof obj.height === "number"
   );
 }
 

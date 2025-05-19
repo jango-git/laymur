@@ -16,16 +16,22 @@ import {
   UICommonProportionalConstraintDescription,
 } from "./UICommonDoubleElementConstraintDescriptionInterfaces";
 import {
+  isUIHeightConstraintDescription,
   isUIKeepAspectConstraintDescription,
   isUIKeepSizeConstraintDescription,
+  isUIWidthConstraintDescription,
+  UIHeightConstraintDescription,
   UIKeepAspectConstraintDescription,
   UIKeepSizeConstraintDescription,
+  UIWidthConstraintDescription,
 } from "./UICommonSingleElementConstraintDescriptionInterfaces";
 
 export type UIAnyCommonConstraintDescription =
   | UICommonProportionalConstraintDescription
   | UICommonDistanceConstraintDescription
   | UICommonCoverConstraintDescription
+  | UIWidthConstraintDescription
+  | UIHeightConstraintDescription
   | UIKeepAspectConstraintDescription
   | UIKeepSizeConstraintDescription;
 
@@ -42,9 +48,16 @@ export class UIConstraintBuilder {
     const constraints = new Map<string, UIConstraint>();
 
     for (const [key, value] of entries) {
-      if (constraints.has(key)) throw new Error(`Duplicate constraint key "${key}" - each constraint must have a unique identifier`);
+      if (constraints.has(key))
+        throw new Error(
+          `Duplicate constraint key "${key}" - each constraint must have a unique identifier`,
+        );
 
-      if (isUIKeepAspectConstraintDescription(value)) {
+      if (isUIWidthConstraintDescription(value)) {
+        UIConstraintBuilder.buildWidthConstraint(key, value, constraints);
+      } else if (isUIHeightConstraintDescription(value)) {
+        UIConstraintBuilder.buildHeightConstraint(key, value, constraints);
+      } else if (isUIKeepAspectConstraintDescription(value)) {
         UIConstraintBuilder.buildKeepAspectConstraint(key, value, constraints);
       } else if (isUIKeepSizeConstraintDescription(value)) {
         UIConstraintBuilder.buildKeepSizeConstraint(key, value, constraints);
@@ -59,11 +72,45 @@ export class UIConstraintBuilder {
       } else if (isUICommonCoverConstraintDescription(value)) {
         UIConstraintBuilder.buildCoverConstraint(key, value, constraints);
       } else {
-        throw new Error(`Invalid constraint type for "${key}". Expected one of: KeepAspect, KeepSize, Distance, Proportional, or Cover constraint`);
+        throw new Error(
+          `Invalid constraint type for "${key}". Expected one of: Width, Height, KeepAspect, KeepSize, Distance, Proportional, or Cover constraint`,
+        );
       }
     }
 
     return Object.fromEntries(constraints);
+  }
+
+  private static buildWidthConstraint(
+    key: string,
+    value: UIWidthConstraintDescription,
+    constraints: Map<string, UIConstraint>,
+  ): void {
+    constraints.set(
+      key,
+      new UIWidthConstraint(value.element, {
+        width: value.width,
+        power: value.power,
+        rule: value.rule,
+        orientation: value.orientation,
+      }),
+    );
+  }
+
+  private static buildHeightConstraint(
+    key: string,
+    value: UIHeightConstraintDescription,
+    constraints: Map<string, UIConstraint>,
+  ): void {
+    constraints.set(
+      key,
+      new UIHeightConstraint(value.element, {
+        height: value.height,
+        power: value.power,
+        rule: value.rule,
+        orientation: value.orientation,
+      }),
+    );
   }
 
   private static buildKeepAspectConstraint(

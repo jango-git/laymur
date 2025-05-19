@@ -41,6 +41,7 @@ export class UILayer {
   private constraintW?: Constraint;
   private constraintH?: Constraint;
   private isUpdateVariablesRequired = false;
+  private isNeedToResize = false;
 
   private orientationPrivate: UIConstraintOrientation =
     UIConstraintOrientation.portrait;
@@ -50,8 +51,8 @@ export class UILayer {
   private readonly elements: UIElement[] = [];
   private readonly constraints: UIConstraint[] = [];
 
-  private addConstraintQueue: Constraint[] = [];
-  private removeConstraintQueue: Constraint[] = [];
+  private addConstraintQueue: Set<Constraint> = new Set();
+  private removeConstraintQueue: Set<Constraint> = new Set();
 
   public get orientation(): UIConstraintOrientation {
     return this.orientationPrivate;
@@ -66,6 +67,12 @@ export class UILayer {
   public render(renderer: WebGLRenderer): void {
     if (this.isUpdateVariablesRequired) {
       this.isUpdateVariablesRequired = false;
+      if (this.isNeedToResize) {
+        this.isNeedToResize = false;
+        for (const constraint of this.constraints) {
+          constraint[resizeSymbol](this.orientationPrivate);
+        }
+      }
 
       this.flushConstraints();
       this.solver.updateVariables();
@@ -105,13 +112,21 @@ export class UILayer {
   }
 
   [addRawConstraint](constraint: Constraint): void {
-    this.addConstraintQueue.push(constraint);
-    this.isUpdateVariablesRequired = true;
+    if (this.removeConstraintQueue.has(constraint)) {
+      this.removeConstraintQueue.delete(constraint);
+    } else {
+      this.addConstraintQueue.add(constraint);
+      this.isUpdateVariablesRequired = true;
+    }
   }
 
   [removeRawConstraint](constraint: Constraint): void {
-    this.removeConstraintQueue.push(constraint);
-    this.isUpdateVariablesRequired = true;
+    if (this.addConstraintQueue.has(constraint)) {
+      this.addConstraintQueue.delete(constraint);
+    } else {
+      this.removeConstraintQueue.add(constraint);
+      this.isUpdateVariablesRequired = true;
+    }
   }
 
   [addVariable](variable: Variable, strength: number): void {
@@ -131,7 +146,6 @@ export class UILayer {
 
   public resize(width: number, height: number): void {
     assertSize(width, height);
-    this.flushConstraints();
 
     this.camera.near = -1025;
     this.camera.far = 1026;
@@ -142,6 +156,7 @@ export class UILayer {
     this.camera.updateProjectionMatrix();
 
     this.rebuildConstraints();
+    this.flushConstraints();
 
     const lastOrientation = this.orientationPrivate;
     this.orientationPrivate =
@@ -150,9 +165,7 @@ export class UILayer {
         : UIConstraintOrientation.portrait;
 
     if (lastOrientation !== this.orientationPrivate) {
-      for (const constraint of this.constraints) {
-        constraint[resizeSymbol](this.orientationPrivate);
-      }
+      this.isNeedToResize = true;
     }
   }
 
@@ -165,8 +178,8 @@ export class UILayer {
       this.solver.addConstraint(constraint);
     }
 
-    this.removeConstraintQueue = [];
-    this.addConstraintQueue = [];
+    this.removeConstraintQueue = new Set();
+    this.addConstraintQueue = new Set();
   }
 
   private rebuildConstraints(): void {
