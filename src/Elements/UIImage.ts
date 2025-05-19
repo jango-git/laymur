@@ -1,51 +1,49 @@
 import { DoubleSide, Mesh, MeshBasicMaterial, Texture } from "three";
 import { UILayer } from "../Layers/UILayer";
+import { assertSize } from "../Miscellaneous/asserts";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
-  addElement,
-  layerSymbol,
+  addElementSymbol,
   readMicroSymbol,
   readVariablesSymbol,
-  removeElement,
+  removeElementSymbol,
 } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
-import {
-  UIMicroTransformable,
-  UIMicroTransformations,
-} from "../Miscellaneous/UIMicroTransformations";
 import { UIElement } from "./UIElement";
 
-export class UIImage extends UIElement implements UIMicroTransformable {
-  public readonly micro: UIMicroTransformations;
+export class UIImage extends UIElement {
   protected readonly object: Mesh;
 
   public constructor(layer: UILayer, texture: Texture) {
     const width = texture.image?.width;
     const height = texture.image?.height;
 
-    if (!width || !height) {
-      throw new Error(`Invalid image dimensions - texture "${texture.name || 'unnamed'}" has invalid width (${width}) or height (${height}). Image dimensions must be non-zero positive numbers.`);
-    }
+    assertSize(
+      width,
+      height,
+      `Invalid image dimensions - texture "${texture.name || "unnamed"}" has invalid width (${width}) or height (${height}). Image dimensions must be non-zero positive numbers.`,
+    );
 
     super(layer, 0, 0, width, height);
-    this.micro = new UIMicroTransformations(this);
 
     const material = new MeshBasicMaterial({
       map: texture,
       transparent: true,
       side: DoubleSide,
     });
+
     this.object = new Mesh(geometry, material);
 
-    this[layerSymbol][addElement](this, this.object);
+    this.layer[addElementSymbol](this, this.object);
     this[readVariablesSymbol]();
   }
 
   public destroy(): void {
-    this[layerSymbol][removeElement](this, this.object);
+    super.destroy();
+    this.layer[removeElementSymbol](this, this.object);
   }
 
-  [readVariablesSymbol](): void {
+  public [readVariablesSymbol](): void {
     applyMicroTransformations(
       this.object,
       this.micro,
@@ -56,7 +54,7 @@ export class UIImage extends UIElement implements UIMicroTransformable {
     );
   }
 
-  [readMicroSymbol](): void {
+  public [readMicroSymbol](): void {
     this[readVariablesSymbol]();
   }
 }

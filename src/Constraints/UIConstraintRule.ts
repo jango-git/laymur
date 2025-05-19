@@ -6,7 +6,15 @@ export enum UIConstraintRule {
   greater = Operator.Ge,
 }
 
-export function ruleToOperator(rule?: UIConstraintRule): Operator {
+export function isUIConstraintRule(obj: unknown): obj is UIConstraintRule {
+  return obj !== null && Object.values(UIConstraintRule).some((v) => v === obj);
+}
+
+export function resolveRule(rule?: UIConstraintRule): UIConstraintRule {
+  return rule ?? UIConstraintRule.equal;
+}
+
+export function convertRuleToOperator(rule?: UIConstraintRule): Operator {
   switch (rule) {
     case UIConstraintRule.equal:
       return Operator.Eq;
@@ -17,8 +25,4 @@ export function ruleToOperator(rule?: UIConstraintRule): Operator {
     default:
       return Operator.Eq;
   }
-}
-
-export function isUIConstraintRule(obj: unknown): obj is UIConstraintRule {
-  return obj !== null && Object.values(UIConstraintRule).some((v) => v === obj);
 }

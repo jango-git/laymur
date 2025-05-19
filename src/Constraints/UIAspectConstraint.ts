@@ -1,22 +1,29 @@
-import { Constraint, Expression, Operator } from "kiwi.js";
+import { Constraint, Expression } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import {
-  addConstraint,
-  addRawConstraint,
-  hSymbol,
-  layerSymbol,
-  removeConstraint,
-  removeRawConstraint,
+  addConstraintSymbol,
+  addRawConstraintSymbol,
+  heightSymbol,
+  removeConstraintSymbol,
+  removeRawConstraintSymbol,
   resizeSymbol,
-  wSymbol,
+  widthSymbol,
 } from "../Miscellaneous/symbols";
 import { UIConstraint } from "./UIConstraint";
 import {
   resolveOrientation,
   UIConstraintOrientation,
 } from "./UIConstraintOrientation";
-import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
-import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
+import {
+  convertPowerToStrength,
+  resolvePower,
+  UIConstraintPower,
+} from "./UIConstraintPower";
+import {
+  convertRuleToOperator,
+  resolveRule,
+  UIConstraintRule,
+} from "./UIConstraintRule";
 
 export interface UIAspectParameters {
   aspect: number;
@@ -25,77 +32,66 @@ export interface UIAspectParameters {
   orientation: UIConstraintOrientation;
 }
 
-interface InnerParameters {
-  aspect: number;
-  strength: number;
-  operator: Operator;
-  orientation: UIConstraintOrientation;
-}
-
 export class UIAspectConstraint extends UIConstraint {
-  private readonly parameters: InnerParameters;
+  private readonly parameters: UIAspectParameters;
   private constraint?: Constraint;
 
   public constructor(
     private readonly element: UIElement,
     parameters?: Partial<UIAspectParameters>,
   ) {
-    super();
+    super(element.layer);
+
     this.parameters = {
       aspect: parameters?.aspect ?? this.element.width / this.element.height,
-      strength: powerToStrength(parameters?.power),
-      operator: ruleToOperator(parameters?.rule),
+      power: resolvePower(parameters?.power),
+      rule: resolveRule(parameters?.rule),
       orientation: resolveOrientation(parameters?.orientation),
     };
-    this.element[layerSymbol][addConstraint](this);
-    if (this.element[layerSymbol].orientation & this.parameters.orientation) {
-      this.rebuildConstraints();
+
+    this.layer[addConstraintSymbol](this);
+
+    if (
+      this.parameters.orientation === UIConstraintOrientation.always ||
+      this.parameters.orientation === this.layer.orientation
+    ) {
+      this.buildConstraints();
     }
-  }
-
-  public get aspect(): number {
-    return this.parameters.aspect;
-  }
-
-  public set aspect(value: number) {
-    if (value === this.parameters.aspect) return;
-    this.parameters.aspect = value;
-    this.rebuildConstraints();
   }
 
   public destroy(): void {
     this.destroyConstraints();
-    this.element[layerSymbol][removeConstraint](this);
+    this.layer[removeConstraintSymbol](this);
   }
 
-  [resizeSymbol](orientation: UIConstraintOrientation): void {
+  public [resizeSymbol](orientation: UIConstraintOrientation): void {
     if (this.parameters.orientation !== UIConstraintOrientation.always) {
-      if (orientation === this.parameters.orientation)
-        this.rebuildConstraints();
+      if (orientation === this.parameters.orientation) this.buildConstraints();
       else this.destroyConstraints();
     }
   }
 
-  private destroyConstraints(): void {
-    if (this.constraint) {
-      this.element[layerSymbol][removeRawConstraint](this.constraint);
-      this.constraint = undefined;
-    }
-  }
-
-  private rebuildConstraints(): void {
-    this.destroyConstraints();
-
-    const expression = new Expression(this.element[wSymbol]).plus(
-      new Expression(this.element[hSymbol]).multiply(-this.parameters.aspect),
+  protected buildConstraints(): void {
+    const expression = new Expression(this.element[widthSymbol]).plus(
+      new Expression(this.element[heightSymbol]).multiply(
+        -this.parameters.aspect,
+      ),
     );
 
     this.constraint = new Constraint(
       expression,
-      this.parameters.operator,
+      convertRuleToOperator(this.parameters.rule),
       0,
-      this.parameters.strength,
+      convertPowerToStrength(this.parameters.power),
     );
-    this.element[layerSymbol][addRawConstraint](this.constraint);
+
+    this.layer[addRawConstraintSymbol](this.constraint);
+  }
+
+  protected destroyConstraints(): void {
+    if (this.constraint) {
+      this.layer[removeRawConstraintSymbol](this.constraint);
+      this.constraint = undefined;
+    }
   }
 }

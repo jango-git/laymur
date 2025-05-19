@@ -11,7 +11,17 @@ export enum UIConstraintPower {
   p7 = 7,
 }
 
-export function powerToStrength(power?: UIConstraintPower): number {
+export function isUIConstraintPower(obj: unknown): obj is UIConstraintPower {
+  return (
+    obj !== null && Object.values(UIConstraintPower).some((v) => v === obj)
+  );
+}
+
+export function resolvePower(power?: UIConstraintPower): UIConstraintPower {
+  return power ?? UIConstraintPower.p0;
+}
+
+export function convertPowerToStrength(power?: UIConstraintPower): number {
   switch (power) {
     case UIConstraintPower.p0:
       return Strength.create(1000, 1000, 1000);
@@ -32,10 +42,4 @@ export function powerToStrength(power?: UIConstraintPower): number {
     default:
       return Strength.create(1000, 1000, 1000);
   }
-}
-
-export function isUIConstraintPower(obj: unknown): obj is UIConstraintPower {
-  return (
-    obj !== null && Object.values(UIConstraintPower).some((v) => v === obj)
-  );
 }

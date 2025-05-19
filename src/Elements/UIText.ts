@@ -2,31 +2,26 @@ import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
 import { UILayer } from "../Layers/UILayer";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
-  addElement,
-  hSymbol,
-  layerSymbol,
+  addElementSymbol,
+  heightSymbol,
   readMicroSymbol,
   readVariablesSymbol,
-  removeElement,
-  suggestVariable,
+  removeElementSymbol,
+  suggestVariableSymbol,
 } from "../Miscellaneous/symbols";
 import {
   calculateTextBlockSize,
   measureTextChunk,
+  renderTextLines,
   resolvePadding,
   resolveTextStyle,
   splitText,
   wrapTextLines,
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
-import {
-  UIMicroTransformable,
-  UIMicroTransformations,
-} from "../Miscellaneous/UIMicroTransformations";
 import { UIElement } from "./UIElement";
 import {
   UITextChunk,
-  UITextLine,
   UITextPadding,
   UITextSize,
   UITextSpan,
@@ -39,15 +34,12 @@ export interface UITextParameters {
   defaultStyle: Partial<UITextStyle>;
 }
 
-export class UIText extends UIElement implements UIMicroTransformable {
+export class UIText extends UIElement {
   protected readonly object: Mesh;
-  private readonly micro: UIMicroTransformations;
 
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
-
   private texture: CanvasTexture;
-
   private size: UITextSize;
   private padding: UITextPadding;
   private lastSuggestedAspect = 0;
@@ -80,7 +72,6 @@ export class UIText extends UIElement implements UIMicroTransformable {
     const textBlockSize = calculateTextBlockSize(wrappedLines);
 
     super(layer, 0, 0, textBlockSize.width, textBlockSize.height);
-    this.micro = new UIMicroTransformations(this);
 
     this.size = textBlockSize;
     this.padding = resolvePadding(parameters.padding);
@@ -101,18 +92,25 @@ export class UIText extends UIElement implements UIMicroTransformable {
     });
 
     this.object = new Mesh(geometry, material);
-    this[layerSymbol][addElement](this, this.object);
+    this.layer[addElementSymbol](this, this.object);
 
-    this.renderTextLines(wrappedLines);
+    renderTextLines(
+      this.padding.top,
+      this.padding.left,
+      wrappedLines,
+      this.context,
+    );
+    this.texture.needsUpdate = true;
     this[readVariablesSymbol]();
   }
 
   public destroy(): void {
-    this[layerSymbol][removeElement](this, this.object);
+    super.destroy();
+    this.layer[removeElementSymbol](this, this.object);
     this.texture.dispose();
   }
 
-  [readVariablesSymbol](): void {
+  public [readVariablesSymbol](): void {
     applyMicroTransformations(
       this.object,
       this.micro,
@@ -128,56 +126,14 @@ export class UIText extends UIElement implements UIMicroTransformable {
       const targetAspect =
         (this.size.width + this.padding.left + this.padding.right) /
         (this.size.height + this.padding.top + this.padding.bottom);
-      this[layerSymbol][suggestVariable](
-        this[hSymbol],
+      this.layer[suggestVariableSymbol](
+        this[heightSymbol],
         this.width / targetAspect,
       );
     }
   }
 
-  [readMicroSymbol](): void {
+  public [readMicroSymbol](): void {
     this[readVariablesSymbol]();
-  }
-
-  private renderText(
-    x: number,
-    y: number,
-    text: string,
-    style: UITextStyle,
-  ): void {
-    this.context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
-
-    if (style.enableShadow) {
-      this.context.shadowOffsetX = style.shadowOffsetX;
-      this.context.shadowOffsetY = style.shadowOffsetY;
-      this.context.shadowBlur = style.shadowBlur;
-      this.context.shadowColor = style.shadowColor;
-    }
-
-    if (style.enableStroke) {
-      this.context.strokeStyle = style.strokeColor;
-      this.context.lineWidth = style.strokeWidth;
-      this.context.strokeText(text, x, y);
-    }
-
-    this.context.fillStyle = style.color;
-    this.context.fillText(text, x, y);
-  }
-
-  private renderTextLines(lines: UITextLine[]): void {
-    let currentY = this.padding.top;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      let currentX = this.padding.left;
-      currentY += i === 0 ? line.height : line.lineHeight;
-
-      for (const chunk of line.chunks) {
-        this.renderText(currentX, currentY, chunk.text, chunk.style);
-        currentX += chunk.metrics.width;
-      }
-    }
-
-    this.texture.needsUpdate = true;
   }
 }

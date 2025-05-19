@@ -198,3 +198,49 @@ export function calculateTextBlockSize(lines: UITextLine[]): UITextSize {
     height: totalHeight,
   };
 }
+
+export function renderText(
+  x: number,
+  y: number,
+  text: string,
+  style: UITextStyle,
+  context: CanvasRenderingContext2D,
+): void {
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+
+  if (style.enableShadow) {
+    context.shadowOffsetX = style.shadowOffsetX;
+    context.shadowOffsetY = style.shadowOffsetY;
+    context.shadowBlur = style.shadowBlur;
+    context.shadowColor = style.shadowColor;
+  }
+
+  if (style.enableStroke) {
+    context.strokeStyle = style.strokeColor;
+    context.lineWidth = style.strokeWidth;
+    context.strokeText(text, x, y);
+  }
+
+  context.fillStyle = style.color;
+  context.fillText(text, x, y);
+}
+
+export function renderTextLines(
+  paddingTop: number,
+  paddingLeft: number,
+  lines: UITextLine[],
+  context: CanvasRenderingContext2D,
+): void {
+  let currentY = paddingTop;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    let currentX = paddingLeft;
+    currentY += i === 0 ? line.height : line.lineHeight;
+
+    for (const chunk of line.chunks) {
+      renderText(currentX, currentY, chunk.text, chunk.style, context);
+      currentX += chunk.metrics.width;
+    }
+  }
+}

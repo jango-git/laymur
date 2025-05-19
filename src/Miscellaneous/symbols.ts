@@ -1,23 +1,22 @@
 export const xSymbol = Symbol("xSymbol");
 export const ySymbol = Symbol("ySymbol");
 
-export const wSymbol = Symbol("wSymbol");
-export const hSymbol = Symbol("hSymbol");
+export const widthSymbol = Symbol("widthSymbol");
+export const heightSymbol = Symbol("heightSymbol");
 
-export const layerSymbol = Symbol("layerSymbol");
+export const resizeSymbol = Symbol("resizeSymbol");
 export const readVariablesSymbol = Symbol("readVariablesSymbol");
 export const readMicroSymbol = Symbol("readMicroSymbol");
-export const resizeSymbol = Symbol("resizeSymbol");
 
-export const addElement = Symbol("addElement");
-export const removeElement = Symbol("removeElement");
+export const addElementSymbol = Symbol("addElementSymbol");
+export const removeElementSymbol = Symbol("removeElementSymbol");
 
-export const addConstraint = Symbol("addConstraint");
-export const removeConstraint = Symbol("removeConstraint");
+export const addConstraintSymbol = Symbol("addConstraintSymbol");
+export const removeConstraintSymbol = Symbol("removeConstraintSymbol");
 
-export const addRawConstraint = Symbol("addRawConstraint");
-export const removeRawConstraint = Symbol("removeRawConstraint");
+export const addRawConstraintSymbol = Symbol("addRawConstraintSymbol");
+export const removeRawConstraintSymbol = Symbol("removeRawConstraintSymbol");
 
-export const addVariable = Symbol("addVariable");
-export const removeVariable = Symbol("removeVariable");
-export const suggestVariable = Symbol("suggestVariable");
+export const addVariableSymbol = Symbol("addVariableSymbol");
+export const removeVariableSymbol = Symbol("removeVariableSymbol");
+export const suggestVariableSymbol = Symbol("suggestVariableSymbol");

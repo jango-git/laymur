@@ -4,12 +4,6 @@ export enum UIConstraintOrientation {
   always = 3,
 }
 
-export function resolveOrientation(
-  orientation?: UIConstraintOrientation,
-): UIConstraintOrientation {
-  return orientation ?? UIConstraintOrientation.always;
-}
-
 export function isUIConstraintOrientation(
   obj: unknown,
 ): obj is UIConstraintOrientation {
@@ -17,4 +11,10 @@ export function isUIConstraintOrientation(
     obj !== null &&
     Object.values(UIConstraintOrientation).some((v) => v === obj)
   );
+}
+
+export function resolveOrientation(
+  orientation?: UIConstraintOrientation,
+): UIConstraintOrientation {
+  return orientation ?? UIConstraintOrientation.always;
 }

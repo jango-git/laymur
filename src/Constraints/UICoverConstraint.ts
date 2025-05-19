@@ -3,14 +3,13 @@ import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
-  addConstraint,
-  addRawConstraint,
-  hSymbol,
-  layerSymbol,
-  removeConstraint,
-  removeRawConstraint,
+  addConstraintSymbol,
+  addRawConstraintSymbol,
+  heightSymbol,
+  removeConstraintSymbol,
+  removeRawConstraintSymbol,
   resizeSymbol,
-  wSymbol,
+  widthSymbol,
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
@@ -32,10 +31,8 @@ export class UICoverConstraint extends UIConstraint {
 
   private constraintX?: Constraint;
   private constraintY?: Constraint;
-
   private constraintW?: Constraint;
   private constraintH?: Constraint;
-
   private constraintStrict?: Constraint;
 
   public constructor(
@@ -43,8 +40,8 @@ export class UICoverConstraint extends UIConstraint {
     private readonly elementTwo: UIElement,
     parameters?: Partial<UICoverParameters>,
   ) {
-    super();
     assertSameLayer(elementOne, elementTwo);
+    super(elementTwo.layer);
 
     this.parameters = {
       isStrict: parameters?.isStrict ?? true,
@@ -52,62 +49,39 @@ export class UICoverConstraint extends UIConstraint {
       verticalAnchor: parameters?.verticalAnchor ?? 0.5,
       orientation: resolveOrientation(parameters?.orientation),
     };
-    this.elementTwo[layerSymbol][addConstraint](this);
+
+    this.layer[addConstraintSymbol](this);
+
     if (
-      this.elementTwo[layerSymbol].orientation & this.parameters.orientation
+      this.parameters.orientation === UIConstraintOrientation.always ||
+      this.parameters.orientation === this.layer.orientation
     ) {
-      this.rebuildConstraints();
+      this.buildConstraints();
     }
   }
 
   public destroy(): void {
     this.destroyConstraints();
-    this.elementTwo[layerSymbol][removeConstraint](this);
+    this.layer[removeConstraintSymbol](this);
   }
 
-  [resizeSymbol](orientation: UIConstraintOrientation): void {
+  public [resizeSymbol](orientation: UIConstraintOrientation): void {
     if (this.parameters.orientation !== UIConstraintOrientation.always) {
-      if (orientation === this.parameters.orientation)
-        this.rebuildConstraints();
+      if (orientation === this.parameters.orientation) this.buildConstraints();
       else this.destroyConstraints();
     }
   }
 
-  private destroyConstraints(): void {
-    if (this.constraintX) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintX);
-      this.constraintX = undefined;
-    }
-    if (this.constraintY) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintY);
-      this.constraintY = undefined;
-    }
-    if (this.constraintW) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintW);
-      this.constraintW = undefined;
-    }
-    if (this.constraintH) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintH);
-      this.constraintH = undefined;
-    }
-    if (this.constraintStrict) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraintStrict);
-      this.constraintStrict = undefined;
-    }
-  }
-
-  private rebuildConstraints(): void {
-    this.destroyConstraints();
-
+  protected buildConstraints(): void {
     this.constraintX = new Constraint(
       new Expression(this.elementOne[xSymbol]).plus(
-        new Expression(this.elementOne[wSymbol]).multiply(
+        new Expression(this.elementOne[widthSymbol]).multiply(
           this.parameters.horizontalAnchor,
         ),
       ),
       Operator.Eq,
       new Expression(this.elementTwo[xSymbol]).plus(
-        new Expression(this.elementTwo[wSymbol]).multiply(
+        new Expression(this.elementTwo[widthSymbol]).multiply(
           this.parameters.horizontalAnchor,
         ),
       ),
@@ -115,45 +89,68 @@ export class UICoverConstraint extends UIConstraint {
 
     this.constraintY = new Constraint(
       new Expression(this.elementOne[ySymbol]).plus(
-        new Expression(this.elementOne[hSymbol]).multiply(
+        new Expression(this.elementOne[heightSymbol]).multiply(
           this.parameters.verticalAnchor,
         ),
       ),
       Operator.Eq,
       new Expression(this.elementTwo[ySymbol]).plus(
-        new Expression(this.elementTwo[hSymbol]).multiply(
+        new Expression(this.elementTwo[heightSymbol]).multiply(
           this.parameters.verticalAnchor,
         ),
       ),
     );
 
     this.constraintW = new Constraint(
-      new Expression(this.elementOne[wSymbol]),
+      new Expression(this.elementOne[widthSymbol]),
       Operator.Le,
-      new Expression(this.elementTwo[wSymbol]),
+      new Expression(this.elementTwo[widthSymbol]),
     );
 
     this.constraintH = new Constraint(
-      new Expression(this.elementOne[hSymbol]),
+      new Expression(this.elementOne[heightSymbol]),
       Operator.Le,
-      new Expression(this.elementTwo[hSymbol]),
+      new Expression(this.elementTwo[heightSymbol]),
     );
 
-    this.elementTwo[layerSymbol][addRawConstraint](this.constraintX);
-    this.elementTwo[layerSymbol][addRawConstraint](this.constraintY);
+    this.layer[addRawConstraintSymbol](this.constraintX);
+    this.layer[addRawConstraintSymbol](this.constraintY);
 
-    this.elementTwo[layerSymbol][addRawConstraint](this.constraintW);
-    this.elementTwo[layerSymbol][addRawConstraint](this.constraintH);
+    this.layer[addRawConstraintSymbol](this.constraintW);
+    this.layer[addRawConstraintSymbol](this.constraintH);
 
-    if (this.parameters.isStrict !== false) {
+    if (!this.parameters.isStrict) {
       this.constraintStrict = new Constraint(
-        new Expression(this.elementOne[hSymbol]),
+        new Expression(this.elementOne[heightSymbol]),
         Operator.Eq,
-        new Expression(this.elementTwo[hSymbol]),
+        new Expression(this.elementTwo[heightSymbol]),
         Strength.strong,
       );
 
-      this.elementTwo[layerSymbol][addRawConstraint](this.constraintStrict);
+      this.layer[addRawConstraintSymbol](this.constraintStrict);
+    }
+  }
+
+  protected destroyConstraints(): void {
+    if (this.constraintX) {
+      this.layer[removeRawConstraintSymbol](this.constraintX);
+      this.constraintX = undefined;
+    }
+    if (this.constraintY) {
+      this.layer[removeRawConstraintSymbol](this.constraintY);
+      this.constraintY = undefined;
+    }
+    if (this.constraintW) {
+      this.layer[removeRawConstraintSymbol](this.constraintW);
+      this.constraintW = undefined;
+    }
+    if (this.constraintH) {
+      this.layer[removeRawConstraintSymbol](this.constraintH);
+      this.constraintH = undefined;
+    }
+    if (this.constraintStrict) {
+      this.layer[removeRawConstraintSymbol](this.constraintStrict);
+      this.constraintStrict = undefined;
     }
   }
 }

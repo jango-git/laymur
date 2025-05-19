@@ -12,19 +12,19 @@ import { UIConstraintOrientation } from "../Constraints/UIConstraintOrientation"
 import { UIElement } from "../Elements/UIElement";
 import { assertSize } from "../Miscellaneous/asserts";
 import {
-  addConstraint,
-  addElement,
-  addRawConstraint,
-  addVariable,
-  hSymbol,
+  addConstraintSymbol,
+  addElementSymbol,
+  addRawConstraintSymbol,
+  addVariableSymbol,
+  heightSymbol,
   readVariablesSymbol,
-  removeConstraint,
-  removeElement,
-  removeRawConstraint,
-  removeVariable,
+  removeConstraintSymbol,
+  removeElementSymbol,
+  removeRawConstraintSymbol,
+  removeVariableSymbol,
   resizeSymbol,
-  suggestVariable,
-  wSymbol,
+  suggestVariableSymbol,
+  widthSymbol,
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
@@ -32,8 +32,8 @@ import {
 export class UILayer {
   public readonly [xSymbol]: Variable = new Variable();
   public readonly [ySymbol]: Variable = new Variable();
-  public readonly [wSymbol]: Variable = new Variable();
-  public readonly [hSymbol]: Variable = new Variable();
+  public readonly [widthSymbol]: Variable = new Variable();
+  public readonly [heightSymbol]: Variable = new Variable();
 
   private readonly solver: Solver = new Solver();
   private constraintX?: Constraint;
@@ -85,7 +85,7 @@ export class UILayer {
     renderer.render(this.scene, this.camera);
   }
 
-  [addElement](element: UIElement, object: Object3D): void {
+  [addElementSymbol](element: UIElement, object: Object3D): void {
     const index = this.elements.indexOf(element);
     if (index === -1) {
       this.elements.push(element);
@@ -93,7 +93,7 @@ export class UILayer {
     }
   }
 
-  [removeElement](element: UIElement, raw: Object3D): void {
+  [removeElementSymbol](element: UIElement, raw: Object3D): void {
     const index = this.elements.indexOf(element);
     if (index !== -1) {
       this.elements.splice(index, 1);
@@ -101,17 +101,17 @@ export class UILayer {
     }
   }
 
-  [addConstraint](constraint: UIConstraint): void {
+  [addConstraintSymbol](constraint: UIConstraint): void {
     const index = this.constraints.indexOf(constraint);
     if (index === -1) this.constraints.push(constraint);
   }
 
-  [removeConstraint](constraint: UIConstraint): void {
+  [removeConstraintSymbol](constraint: UIConstraint): void {
     const index = this.constraints.indexOf(constraint);
     if (index !== -1) this.constraints.splice(index, 1);
   }
 
-  [addRawConstraint](constraint: Constraint): void {
+  [addRawConstraintSymbol](constraint: Constraint): void {
     if (this.removeConstraintQueue.has(constraint)) {
       this.removeConstraintQueue.delete(constraint);
     } else {
@@ -120,7 +120,7 @@ export class UILayer {
     }
   }
 
-  [removeRawConstraint](constraint: Constraint): void {
+  [removeRawConstraintSymbol](constraint: Constraint): void {
     if (this.addConstraintQueue.has(constraint)) {
       this.addConstraintQueue.delete(constraint);
     } else {
@@ -129,17 +129,17 @@ export class UILayer {
     }
   }
 
-  [addVariable](variable: Variable, strength: number): void {
+  [addVariableSymbol](variable: Variable, strength: number): void {
     this.solver.addEditVariable(variable, strength);
     this.isUpdateVariablesRequired = true;
   }
 
-  [removeVariable](variable: Variable): void {
+  [removeVariableSymbol](variable: Variable): void {
     this.solver.removeEditVariable(variable);
     this.isUpdateVariablesRequired = true;
   }
 
-  [suggestVariable](variable: Variable, value: number): void {
+  [suggestVariableSymbol](variable: Variable, value: number): void {
     this.solver.suggestValue(variable, value);
     this.isUpdateVariablesRequired = true;
   }
@@ -183,10 +183,10 @@ export class UILayer {
   }
 
   private rebuildConstraints(): void {
-    if (this.constraintX) this[removeRawConstraint](this.constraintX);
-    if (this.constraintY) this[removeRawConstraint](this.constraintY);
-    if (this.constraintW) this[removeRawConstraint](this.constraintW);
-    if (this.constraintH) this[removeRawConstraint](this.constraintH);
+    if (this.constraintX) this[removeRawConstraintSymbol](this.constraintX);
+    if (this.constraintY) this[removeRawConstraintSymbol](this.constraintY);
+    if (this.constraintW) this[removeRawConstraintSymbol](this.constraintW);
+    if (this.constraintH) this[removeRawConstraintSymbol](this.constraintH);
 
     this.constraintX = new Constraint(
       new Expression(this[xSymbol]),
@@ -203,22 +203,22 @@ export class UILayer {
     );
 
     this.constraintW = new Constraint(
-      new Expression(this[wSymbol]),
+      new Expression(this[widthSymbol]),
       Operator.Eq,
       this.camera.right,
       Strength.required,
     );
 
     this.constraintH = new Constraint(
-      new Expression(this[hSymbol]),
+      new Expression(this[heightSymbol]),
       Operator.Eq,
       this.camera.top,
       Strength.required,
     );
 
-    this[addRawConstraint](this.constraintX);
-    this[addRawConstraint](this.constraintY);
-    this[addRawConstraint](this.constraintW);
-    this[addRawConstraint](this.constraintH);
+    this[addRawConstraintSymbol](this.constraintX);
+    this[addRawConstraintSymbol](this.constraintY);
+    this[addRawConstraintSymbol](this.constraintW);
+    this[addRawConstraintSymbol](this.constraintH);
   }
 }

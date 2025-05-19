@@ -1,14 +1,13 @@
-import { Constraint, Expression, Operator } from "kiwi.js";
+import { Constraint, Expression } from "kiwi.js";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
-  addConstraint,
-  addRawConstraint,
-  hSymbol,
-  layerSymbol,
-  removeConstraint,
-  removeRawConstraint,
+  addConstraintSymbol,
+  addRawConstraintSymbol,
+  heightSymbol,
+  removeConstraintSymbol,
+  removeRawConstraintSymbol,
   resizeSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
@@ -17,8 +16,16 @@ import {
   resolveOrientation,
   UIConstraintOrientation,
 } from "./UIConstraintOrientation";
-import { powerToStrength, UIConstraintPower } from "./UIConstraintPower";
-import { ruleToOperator, UIConstraintRule } from "./UIConstraintRule";
+import {
+  convertPowerToStrength,
+  resolvePower,
+  UIConstraintPower,
+} from "./UIConstraintPower";
+import {
+  convertRuleToOperator,
+  resolveRule,
+  UIConstraintRule,
+} from "./UIConstraintRule";
 
 export interface UIVerticalDistanceParameters {
   anchorOne: number;
@@ -29,17 +36,8 @@ export interface UIVerticalDistanceParameters {
   orientation: UIConstraintOrientation;
 }
 
-interface InnerParameters {
-  anchorOne: number;
-  anchorTwo: number;
-  distance: number;
-  strength: number;
-  operator: Operator;
-  orientation: UIConstraintOrientation;
-}
-
 export class UIVerticalDistanceConstraint extends UIConstraint {
-  private readonly parameters: InnerParameters;
+  private readonly parameters: UIVerticalDistanceParameters;
   private constraint?: Constraint;
 
   public constructor(
@@ -47,77 +45,67 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
     private readonly elementTwo: UIElement,
     parameters?: Partial<UIVerticalDistanceParameters>,
   ) {
-    super();
+    super(elementTwo.layer);
     assertSameLayer(elementOne, elementTwo);
 
     this.parameters = {
       anchorOne: parameters?.anchorOne ?? 0.5,
       anchorTwo: parameters?.anchorTwo ?? 0.5,
       distance: parameters?.distance ?? 0,
-      strength: powerToStrength(parameters?.power),
-      operator: ruleToOperator(parameters?.rule),
+      power: resolvePower(parameters?.power),
+      rule: resolveRule(parameters?.rule),
       orientation: resolveOrientation(parameters?.orientation),
     };
-    this.elementTwo[layerSymbol][addConstraint](this);
+
+    this.layer[addConstraintSymbol](this);
+
     if (
-      this.elementTwo[layerSymbol].orientation & this.parameters.orientation
+      this.parameters.orientation === UIConstraintOrientation.always ||
+      this.parameters.orientation === this.layer.orientation
     ) {
-      this.rebuildConstraints();
+      this.buildConstraints();
     }
-  }
-
-  public get distance(): number {
-    return this.parameters.distance;
-  }
-
-  public set distance(value: number) {
-    if (value === this.parameters.distance) return;
-    this.parameters.distance = value;
-    this.rebuildConstraints();
   }
 
   public destroy(): void {
     this.destroyConstraints();
-    this.elementTwo[layerSymbol][removeConstraint](this);
+    this.layer[removeConstraintSymbol](this);
   }
 
-  [resizeSymbol](orientation: UIConstraintOrientation): void {
+  public [resizeSymbol](orientation: UIConstraintOrientation): void {
     if (this.parameters.orientation !== UIConstraintOrientation.always) {
-      if (orientation === this.parameters.orientation)
-        this.rebuildConstraints();
+      if (orientation === this.parameters.orientation) this.buildConstraints();
       else this.destroyConstraints();
     }
   }
 
-  private destroyConstraints(): void {
-    if (this.constraint) {
-      this.elementTwo[layerSymbol][removeRawConstraint](this.constraint);
-      this.constraint = undefined;
-    }
-  }
-
-  private rebuildConstraints(): void {
-    this.destroyConstraints();
-
+  protected buildConstraints(): void {
     const expressionOne = new Expression(this.elementOne[ySymbol]).plus(
-      new Expression(this.elementOne[hSymbol]).multiply(
+      new Expression(this.elementOne[heightSymbol]).multiply(
         this.parameters.anchorOne,
       ),
     );
 
     const expressionTwo = new Expression(this.elementTwo[ySymbol]).plus(
-      new Expression(this.elementTwo[hSymbol]).multiply(
+      new Expression(this.elementTwo[heightSymbol]).multiply(
         this.parameters.anchorTwo,
       ),
     );
 
     this.constraint = new Constraint(
       expressionTwo.minus(expressionOne),
-      this.parameters.operator,
+      convertRuleToOperator(this.parameters.rule),
       this.parameters.distance,
-      this.parameters.strength,
+      convertPowerToStrength(this.parameters.power),
     );
 
-    this.elementTwo[layerSymbol][addRawConstraint](this.constraint);
+    this.layer[addRawConstraintSymbol](this.constraint);
+  }
+
+  protected destroyConstraints(): void {
+    if (this.constraint) {
+      this.layer[removeRawConstraintSymbol](this.constraint);
+      this.constraint = undefined;
+    }
   }
 }
