@@ -107,6 +107,14 @@ export class UIText extends UIElement implements UIMicroTransformable {
     this[readVariablesSymbol]();
   }
 
+  public get zIndex(): number {
+    return this.object.position.z;
+  }
+
+  public set zIndex(value: number) {
+    this.object.position.z = value;
+  }
+
   public destroy(): void {
     this[layerSymbol][removeElement](this, this.object);
     this.texture.dispose();

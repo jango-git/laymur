@@ -133,8 +133,8 @@ export class UILayer {
     assertSize(width, height);
     this.flushConstraints();
 
-    this.camera.near = 0;
-    this.camera.far = 1024;
+    this.camera.near = -1025;
+    this.camera.far = 1026;
     this.camera.bottom = 0;
     this.camera.left = 0;
     this.camera.right = width;
