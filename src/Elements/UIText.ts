@@ -40,12 +40,12 @@ export interface UITextParameters {
 }
 
 export class UIText extends UIElement implements UIMicroTransformable {
+  protected readonly object: Mesh;
   private readonly micro: UIMicroTransformations;
 
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
 
-  private readonly object: Mesh;
   private texture: CanvasTexture;
 
   private size: UITextSize;
@@ -105,14 +105,6 @@ export class UIText extends UIElement implements UIMicroTransformable {
 
     this.renderTextLines(wrappedLines);
     this[readVariablesSymbol]();
-  }
-
-  public get zIndex(): number {
-    return this.object.position.z;
-  }
-
-  public set zIndex(value: number) {
-    this.object.position.z = value;
   }
 
   public destroy(): void {

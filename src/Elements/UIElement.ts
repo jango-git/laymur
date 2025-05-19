@@ -1,4 +1,5 @@
 import { Variable } from "kiwi.js";
+import { Object3D } from "three";
 import {
   powerToStrength,
   UIConstraintPower,
@@ -22,6 +23,8 @@ export abstract class UIElement {
   public [ySymbol] = new Variable("y");
   public [wSymbol] = new Variable("width");
   public [hSymbol] = new Variable("height");
+
+  protected abstract object: Object3D;
 
   public constructor(
     layer: UILayer,
@@ -76,6 +79,10 @@ export abstract class UIElement {
     return this[hSymbol].value();
   }
 
+  public get zIndex(): number {
+    return this.object.position.z;
+  }
+
   public set x(value: number) {
     this[layerSymbol][suggestVariable](this[xSymbol], value);
   }
@@ -90,6 +97,10 @@ export abstract class UIElement {
 
   public set height(value: number) {
     this[layerSymbol][suggestVariable](this[hSymbol], value);
+  }
+
+  public set zIndex(value: number) {
+    this.object.position.z = value;
   }
 
   public abstract destroy(): void;

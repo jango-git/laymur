@@ -17,7 +17,7 @@ import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement implements UIMicroTransformable {
   public readonly micro: UIMicroTransformations;
-  private readonly object: Mesh;
+  protected readonly object: Mesh;
 
   public constructor(layer: UILayer, texture: Texture) {
     const width = texture.image?.width;
@@ -39,14 +39,6 @@ export class UIImage extends UIElement implements UIMicroTransformable {
 
     this[layerSymbol][addElement](this, this.object);
     this[readVariablesSymbol]();
-  }
-
-  public get zIndex(): number {
-    return this.object.position.z;
-  }
-
-  public set zIndex(value: number) {
-    this.object.position.z = value;
   }
 
   public destroy(): void {
