@@ -10,13 +10,15 @@ import type { Object3D, WebGLRenderer } from "three";
 import { OrthographicCamera, Scene } from "three";
 import type { UIConstraint } from "../Constraints/UIConstraint";
 import { UIElement } from "../Elements/UIElement";
-import { assertSize } from "../Miscellaneous/asserts";
 import {
   addConstraintSymbol,
   addUIConstraintSymbol,
   addUIElementSymbol,
   addVariableSymbol,
+  disableConstraintSymbol,
+  enableConstraintSymbol,
   heightSymbol,
+  readVariablesSymbol,
   removeConstraintSymbol,
   removeUIConstraintSymbol,
   removeUIElementSymbol,
@@ -27,6 +29,8 @@ import {
   ySymbol,
 } from "../Miscellaneous/symbols";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
+
+const MAX_Z_INDEX = 1000;
 
 interface UIElementDependencies {
   object: Object3D;
@@ -59,6 +63,7 @@ export abstract class UILayer {
   protected constraintH?: Constraint;
 
   protected orientationPrivate = UIOrientation.PORTRAIT;
+  protected needsRecalculation = false;
 
   public get orientation(): UIOrientation {
     return this.orientationPrivate;
@@ -180,6 +185,7 @@ export abstract class UILayer {
 
     dependencies.constraints.add(constraint);
     this.solver.addConstraint(constraint);
+    this.needsRecalculation = true;
   }
 
   public [removeConstraintSymbol](
@@ -197,6 +203,7 @@ export abstract class UILayer {
 
     dependencies.constraints.delete(constraint);
     this.solver.removeConstraint(constraint);
+    this.needsRecalculation = true;
   }
 
   public [addVariableSymbol](
@@ -261,9 +268,38 @@ export abstract class UILayer {
     }
 
     this.solver.suggestValue(variable, value);
+    this.needsRecalculation = true;
   }
 
-  protected buildConstraints(): void {
+  public render(renderer: WebGLRenderer): void {
+    if (this.needsRecalculation) {
+      this.solver.updateVariables();
+
+      for (const element of this.elements.keys()) {
+        element[readVariablesSymbol]();
+      }
+    }
+
+    renderer.render(this.scene, this.camera);
+  }
+
+  public resize(width: number, height: number): void {
+    this.applyCameraSize(width, height);
+    this.rebuildLayerConstraints(width, height);
+    this.updateOrientation(width, height);
+  }
+
+  protected applyCameraSize(width: number, height: number): void {
+    this.camera.near = -MAX_Z_INDEX;
+    this.camera.far = 0;
+    this.camera.bottom = 0;
+    this.camera.left = 0;
+    this.camera.right = width;
+    this.camera.top = height;
+    this.camera.updateProjectionMatrix();
+  }
+
+  protected rebuildLayerConstraints(width: number, height: number): void {
     if (this.constraintX) {
       this.solver.removeConstraint(this.constraintX);
     }
@@ -294,14 +330,14 @@ export abstract class UILayer {
     this.constraintW = new Constraint(
       new Expression(this[widthSymbol]),
       Operator.Eq,
-      this.camera.right,
+      width,
       Strength.required,
     );
 
     this.constraintH = new Constraint(
       new Expression(this[heightSymbol]),
       Operator.Eq,
-      this.camera.top,
+      height,
       Strength.required,
     );
 
@@ -309,19 +345,23 @@ export abstract class UILayer {
     this.solver.addConstraint(this.constraintY);
     this.solver.addConstraint(this.constraintW);
     this.solver.addConstraint(this.constraintH);
+
+    this.needsRecalculation = true;
   }
 
-  protected applyCameraSize(width: number, height: number): void {
-    assertSize(width, height);
+  protected updateOrientation(width: number, height: number): void {
+    const lastOrientation = this.orientationPrivate;
+    this.orientationPrivate =
+      width > height ? UIOrientation.LANDSCAPE : UIOrientation.PORTRAIT;
 
-    this.camera.near = -1025;
-    this.camera.far = 1026;
-    this.camera.bottom = 0;
-    this.camera.left = 0;
-    this.camera.right = width;
-    this.camera.top = height;
-    this.camera.updateProjectionMatrix();
+    if (lastOrientation !== this.orientationPrivate) {
+      for (const constraint of this.constraints.keys()) {
+        constraint[disableConstraintSymbol](this.orientationPrivate);
+      }
+
+      for (const constraint of this.constraints.keys()) {
+        constraint[enableConstraintSymbol](this.orientationPrivate);
+      }
+    }
   }
-
-  public abstract render(renderer: WebGLRenderer): void;
 }

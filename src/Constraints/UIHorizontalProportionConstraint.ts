@@ -4,8 +4,9 @@ import type { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraintSymbol,
+  disableConstraintSymbol,
+  enableConstraintSymbol,
   removeConstraintSymbol,
-  resizeSymbol,
   widthSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -64,13 +65,21 @@ export class UIHorizontalProportionConstraint extends UIConstraint {
     super.destroy();
   }
 
-  public [resizeSymbol](orientation: UIOrientation): void {
-    if (this.parameters.orientation !== UIOrientation.ALWAYS) {
-      if (orientation === this.parameters.orientation) {
-        this.buildConstraints();
-      } else {
-        this.destroyConstraints();
-      }
+  public [disableConstraintSymbol](orientation: UIOrientation): void {
+    if (
+      this.parameters.orientation !== UIOrientation.ALWAYS &&
+      orientation !== this.parameters.orientation
+    ) {
+      this.destroyConstraints();
+    }
+  }
+
+  public [enableConstraintSymbol](orientation: UIOrientation): void {
+    if (
+      this.parameters.orientation !== UIOrientation.ALWAYS &&
+      orientation === this.parameters.orientation
+    ) {
+      this.buildConstraints();
     }
   }
 

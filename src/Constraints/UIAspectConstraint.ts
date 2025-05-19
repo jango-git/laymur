@@ -2,9 +2,10 @@ import { Constraint, Expression } from "kiwi.js";
 import type { UIElement } from "../Elements/UIElement";
 import {
   addConstraintSymbol,
+  disableConstraintSymbol,
+  enableConstraintSymbol,
   heightSymbol,
   removeConstraintSymbol,
-  resizeSymbol,
   widthSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -54,13 +55,21 @@ export class UIAspectConstraint extends UIConstraint {
     super.destroy();
   }
 
-  public [resizeSymbol](orientation: UIOrientation): void {
-    if (this.parameters.orientation !== UIOrientation.ALWAYS) {
-      if (orientation === this.parameters.orientation) {
-        this.buildConstraints();
-      } else {
-        this.destroyConstraints();
-      }
+  public [disableConstraintSymbol](newOrientation: UIOrientation): void {
+    if (
+      this.parameters.orientation !== UIOrientation.ALWAYS &&
+      newOrientation !== this.parameters.orientation
+    ) {
+      this.destroyConstraints();
+    }
+  }
+
+  public [enableConstraintSymbol](newOrientation: UIOrientation): void {
+    if (
+      this.parameters.orientation !== UIOrientation.ALWAYS &&
+      newOrientation === this.parameters.orientation
+    ) {
+      this.buildConstraints();
     }
   }
 

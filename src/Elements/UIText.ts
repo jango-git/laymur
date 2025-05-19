@@ -97,7 +97,7 @@ export class UIText extends UIElement {
     this[readVariablesSymbol]();
   }
 
-  public destroy(): void {
+  public override destroy(): void {
     this.texture.dispose();
     super.destroy();
   }
