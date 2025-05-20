@@ -32,15 +32,20 @@ import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
 
+interface VariableDescription {
+  strength: number;
+  suggestedValue: number;
+}
+
 interface UIElementDependencies {
   object: Object3D;
-  variables: Set<Variable>;
+  variables: Map<Variable, VariableDescription>;
   constraints: Set<UIConstraint>;
 }
 
 interface UIConstraintDependencies {
   elements: Set<UIElement>;
-  variables: Set<Variable>;
+  variables: Map<Variable, VariableDescription>;
   constraints: Set<Constraint>;
 }
 
@@ -52,7 +57,7 @@ export abstract class UILayer {
 
   protected readonly scene = new Scene();
   protected readonly camera = new OrthographicCamera();
-  protected readonly solver = new Solver();
+  protected solver? = new Solver();
 
   protected elements = new Map<UIElement, UIElementDependencies>();
   protected constraints = new Map<UIConstraint, UIConstraintDependencies>();
@@ -85,7 +90,7 @@ export abstract class UILayer {
 
     this.elements.set(element, {
       object,
-      variables: new Set(),
+      variables: new Map(),
       constraints: new Set(),
     });
 
@@ -133,7 +138,7 @@ export abstract class UILayer {
 
     this.constraints.set(constraint, {
       elements,
-      variables: new Set(),
+      variables: new Map(),
       constraints: new Set(),
     });
   }
@@ -184,7 +189,7 @@ export abstract class UILayer {
     }
 
     dependencies.constraints.add(constraint);
-    this.solver.addConstraint(constraint);
+    this.solver?.addConstraint(constraint);
     this.needsRecalculation = true;
   }
 
@@ -202,7 +207,7 @@ export abstract class UILayer {
     }
 
     dependencies.constraints.delete(constraint);
-    this.solver.removeConstraint(constraint);
+    this.solver?.removeConstraint(constraint);
     this.needsRecalculation = true;
   }
 
@@ -224,8 +229,11 @@ export abstract class UILayer {
       throw new Error("Variable already exists");
     }
 
-    dependencies.variables.add(variable);
-    this.solver.addEditVariable(variable, strength);
+    dependencies.variables.set(variable, {
+      strength,
+      suggestedValue: variable.value(),
+    });
+    this.solver?.addEditVariable(variable, strength);
   }
 
   public [removeVariableSymbol](
@@ -246,7 +254,7 @@ export abstract class UILayer {
     }
 
     dependencies.variables.delete(variable);
-    this.solver.removeEditVariable(variable);
+    this.solver?.removeEditVariable(variable);
   }
 
   public [suggestVariableSymbol](
@@ -263,17 +271,23 @@ export abstract class UILayer {
       throw new Error("Before suggesting variable you need to add it's owner");
     }
 
-    if (!dependencies.variables.has(variable)) {
+    const description = dependencies.variables.get(variable);
+
+    if (!description) {
       throw new Error("Variable does not exist");
     }
 
-    this.solver.suggestValue(variable, value);
-    this.needsRecalculation = true;
+    if (description.suggestedValue !== value) {
+      description.suggestedValue = value;
+      this.solver?.suggestValue(variable, value);
+      this.needsRecalculation = true;
+    }
   }
 
   public render(renderer: WebGLRenderer): void {
     if (this.needsRecalculation) {
-      this.solver.updateVariables();
+      this.needsRecalculation = false;
+      this.solver?.updateVariables();
 
       for (const element of this.elements.keys()) {
         element[readVariablesSymbol]();
@@ -287,6 +301,7 @@ export abstract class UILayer {
     this.applyCameraSize(width, height);
     this.rebuildLayerConstraints(width, height);
     this.updateOrientation(width, height);
+    this.needsRecalculation = true;
   }
 
   protected applyCameraSize(width: number, height: number): void {
@@ -301,16 +316,20 @@ export abstract class UILayer {
 
   protected rebuildLayerConstraints(width: number, height: number): void {
     if (this.constraintX) {
-      this.solver.removeConstraint(this.constraintX);
+      this.solver?.removeConstraint(this.constraintX);
+      this.constraintX = undefined;
     }
     if (this.constraintY) {
-      this.solver.removeConstraint(this.constraintY);
+      this.solver?.removeConstraint(this.constraintY);
+      this.constraintY = undefined;
     }
     if (this.constraintW) {
-      this.solver.removeConstraint(this.constraintW);
+      this.solver?.removeConstraint(this.constraintW);
+      this.constraintW = undefined;
     }
     if (this.constraintH) {
-      this.solver.removeConstraint(this.constraintH);
+      this.solver?.removeConstraint(this.constraintH);
+      this.constraintH = undefined;
     }
 
     this.constraintX = new Constraint(
@@ -341,12 +360,10 @@ export abstract class UILayer {
       Strength.required,
     );
 
-    this.solver.addConstraint(this.constraintX);
-    this.solver.addConstraint(this.constraintY);
-    this.solver.addConstraint(this.constraintW);
-    this.solver.addConstraint(this.constraintH);
-
-    this.needsRecalculation = true;
+    this.solver?.addConstraint(this.constraintX);
+    this.solver?.addConstraint(this.constraintY);
+    this.solver?.addConstraint(this.constraintW);
+    this.solver?.addConstraint(this.constraintH);
   }
 
   protected updateOrientation(width: number, height: number): void {
@@ -355,12 +372,45 @@ export abstract class UILayer {
       width > height ? UIOrientation.LANDSCAPE : UIOrientation.PORTRAIT;
 
     if (lastOrientation !== this.orientationPrivate) {
+      this.solver = undefined;
+
+      for (const constraint of this.constraints.keys()) {
+        constraint[enableConstraintSymbol](this.orientationPrivate);
+      }
       for (const constraint of this.constraints.keys()) {
         constraint[disableConstraintSymbol](this.orientationPrivate);
       }
 
-      for (const constraint of this.constraints.keys()) {
-        constraint[enableConstraintSymbol](this.orientationPrivate);
+      this.solver = new Solver();
+      const descriptions = [
+        ...this.elements.values(),
+        ...this.constraints.values(),
+      ];
+
+      for (const description of descriptions) {
+        for (const [key, value] of description.variables.entries()) {
+          this.solver.addEditVariable(key, value.strength);
+          this.solver.suggestValue(key, value.suggestedValue);
+        }
+      }
+
+      if (this.constraintX) {
+        this.solver.addConstraint(this.constraintX);
+      }
+      if (this.constraintY) {
+        this.solver.addConstraint(this.constraintY);
+      }
+      if (this.constraintW) {
+        this.solver.addConstraint(this.constraintW);
+      }
+      if (this.constraintH) {
+        this.solver.addConstraint(this.constraintH);
+      }
+
+      for (const dependency of this.constraints.values()) {
+        for (const constraint of dependency.constraints.values()) {
+          this.solver.addConstraint(constraint);
+        }
       }
     }
   }
