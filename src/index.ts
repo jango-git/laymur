@@ -1,6 +1,7 @@
 export * from "./Builders/UIConstraint2DBuilder";
 export * from "./Builders/UIConstraintBuilder";
 export * from "./Builders/UIElementBuilder";
+export * from "./Builders/UIStackConstraintBuilder";
 export * from "./Constraints/UIAspectConstraint";
 export { UIConstraintPower } from "./Constraints/UIConstraintPower";
 export { UIConstraintRule } from "./Constraints/UIConstraintRule";
@@ -12,6 +13,7 @@ export * from "./Constraints/UIHorizontalProportionConstraint";
 export * from "./Constraints/UIVerticalDistanceConstraint";
 export * from "./Constraints/UIVerticalProportionConstraint";
 export * from "./Constraints/UIWidthConstraint";
+export * from "./Elements/UIDummy";
 export * from "./Elements/UIImage";
 export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";

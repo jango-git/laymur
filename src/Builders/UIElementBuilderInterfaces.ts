@@ -1,10 +1,6 @@
 import { Texture } from "three";
-import type {
-  UITextSpan,
-  UITextStyle} from "../Elements/UITextInterfaces";
-import {
-  isUITextSpan
-} from "../Elements/UITextInterfaces";
+import type { UITextSpan, UITextStyle } from "../Elements/UITextInterfaces";
+import { isUITextSpan } from "../Elements/UITextInterfaces";
 
 export interface UIImageDescription {
   texture: Texture;
@@ -20,10 +16,16 @@ export interface UITextEnancedDescription {
   defaultStyle?: Partial<UITextStyle>;
 }
 
+export interface UIDummyDescription {
+  width?: number;
+  height?: number;
+}
+
 export type UIAnyElementDescription =
   | UIImageDescription
   | UITextDescription
-  | UITextEnancedDescription;
+  | UITextEnancedDescription
+  | UIDummyDescription;
 
 export function isUIImageDescription(obj: unknown): obj is UIImageDescription {
   return (
@@ -52,5 +54,14 @@ export function isUITextEnhancedDescription(
     "spans" in obj &&
     Array.isArray(obj.spans) &&
     obj.spans.every((span) => typeof span === "string" || isUITextSpan(span))
+  );
+}
+
+export function isUIDummyDescription(obj: unknown): obj is UIDummyDescription {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    (!("width" in obj) || typeof obj.width === "number") &&
+    (!("height" in obj) || typeof obj.height === "number")
   );
 }

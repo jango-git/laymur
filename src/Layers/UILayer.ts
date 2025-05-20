@@ -111,8 +111,8 @@ export abstract class UILayer {
       throw new Error("Constraints should be removed before removing element");
     }
 
-    this.scene.remove(dependencies.object);
     this.elements.delete(element);
+    this.scene.remove(dependencies.object);
   }
 
   public [addUIConstraintSymbol](

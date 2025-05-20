@@ -1,14 +1,15 @@
 import { Texture } from "three";
+import { UIDummy } from "../Elements/UIDummy";
 import type { UIElement } from "../Elements/UIElement";
 import { UIImage } from "../Elements/UIImage";
 import { UIText } from "../Elements/UIText";
 import type { UILayer } from "../Layers/UILayer";
-import type {
-  UIAnyElementDescription} from "./UIElementBuilderInterfaces";
+import type { UIAnyElementDescription } from "./UIElementBuilderInterfaces";
 import {
+  isUIDummyDescription,
   isUIImageDescription,
   isUITextDescription,
-  isUITextEnhancedDescription
+  isUITextEnhancedDescription,
 } from "./UIElementBuilderInterfaces";
 
 export class UIElementBuilder {
@@ -25,10 +26,11 @@ export class UIElementBuilder {
     const elements = new Map<string, UIElement>();
 
     for (const [key, value] of entries) {
-      if (elements.has(key))
-        {throw new Error(
+      if (elements.has(key)) {
+        throw new Error(
           `Duplicate element key "${key}" - each UI element must have a unique identifier`,
-        );}
+        );
+      }
       let element: UIElement;
 
       if (value instanceof Texture) {
@@ -45,6 +47,8 @@ export class UIElementBuilder {
         element = new UIText(layer, value.spans, {
           defaultStyle: value.defaultStyle,
         });
+      } else if (isUIDummyDescription(value)) {
+        element = new UIDummy(layer, value.width, value.height);
       } else {
         throw new Error(
           `Invalid UI element type for "${key}". Expected one of: Texture, UIImage, String, UITextDescription, or UITextEnhancedDescription`,
