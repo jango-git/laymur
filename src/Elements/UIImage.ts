@@ -1,13 +1,14 @@
-import type { Material, Texture } from "three";
-import { FrontSide, Mesh, MeshBasicMaterial } from "three";
+import type { Texture } from "three";
+import { Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
+import { UIEnhancedMaterial } from "../Materials/UIEnhancedMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
 import { flushTransformSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement {
-  private readonly material: Material;
+  public readonly material: UIEnhancedMaterial;
 
   constructor(layer: UILayer, texture: Texture) {
     const width = texture.image?.width;
@@ -19,14 +20,11 @@ export class UIImage extends UIElement {
       `Invalid image dimensions - texture "${texture.name || "unnamed"}" has invalid width (${width}) or height (${height}). Image dimensions must be non-zero positive numbers.`,
     );
 
-    const material = new MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: FrontSide,
-    });
-
+    const material = new UIEnhancedMaterial(texture);
     const object = new Mesh(geometry, material);
+
     super(layer, object, 0, 0, width, height);
+
     this.material = material;
     this[flushTransformSymbol]();
   }

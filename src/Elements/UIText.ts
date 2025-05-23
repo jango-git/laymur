@@ -1,6 +1,7 @@
 import type { Material } from "three";
-import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
+import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
+import { UIMaterial } from "../Materials/UIMaterial";
 import {
   flushTransformSymbol,
   heightSymbol,
@@ -80,13 +81,9 @@ export class UIText extends UIElement {
 
     const texture = new CanvasTexture(canvas);
 
-    const material = new MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: FrontSide,
-    });
-
+    const material = new UIMaterial(texture);
     const object = new Mesh(geometry, material);
+
     super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
 
     this.texture = texture;
