@@ -1,16 +1,20 @@
+import { Eventail } from "eventail";
 import { Variable } from "kiwi.js";
-import type { Object3D } from "three";
+import { type Object3D } from "three";
 import {
   convertPowerToStrength,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
 import type { UILayer } from "../Layers/UILayer";
+import { testElement } from "../Miscellaneous/math";
+import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
   addUIElementSymbol,
   addVariableSymbol,
+  clickSymbol,
+  flushTransformSymbol,
   heightSymbol,
-  readMicroSymbol,
-  readVariablesSymbol,
+  needsRecalculation,
   removeUIElementSymbol,
   removeVariableSymbol,
   suggestVariableSymbol,
@@ -18,25 +22,31 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import type { UIMicroTransformable } from "../Miscellaneous/UIMicroTransformations";
 import { UIMicroTransformations } from "../Miscellaneous/UIMicroTransformations";
 
-export abstract class UIElement implements UIMicroTransformable {
-  public readonly micro = new UIMicroTransformations(this);
+export enum UIElementEvent {
+  CLICK = "click",
+}
+
+export abstract class UIElement extends Eventail {
+  public readonly micro = new UIMicroTransformations();
+  public interactable = false;
 
   public [xSymbol] = new Variable("x");
   public [ySymbol] = new Variable("y");
   public [widthSymbol] = new Variable("width");
   public [heightSymbol] = new Variable("height");
+  public [needsRecalculation] = false;
 
   constructor(
     public readonly layer: UILayer,
     protected readonly object: Object3D,
     x: number,
     y: number,
-    w: number,
-    h: number,
+    width: number,
+    height: number,
   ) {
+    super();
     this.layer[addUIElementSymbol](this, this.object);
 
     this.layer[addVariableSymbol](
@@ -62,13 +72,13 @@ export abstract class UIElement implements UIMicroTransformable {
 
     this[xSymbol].setValue(x);
     this[ySymbol].setValue(y);
-    this[widthSymbol].setValue(w);
-    this[heightSymbol].setValue(h);
+    this[widthSymbol].setValue(width);
+    this[heightSymbol].setValue(height);
 
     this.layer[suggestVariableSymbol](this, this[xSymbol], x);
     this.layer[suggestVariableSymbol](this, this[ySymbol], y);
-    this.layer[suggestVariableSymbol](this, this[widthSymbol], w);
-    this.layer[suggestVariableSymbol](this, this[heightSymbol], h);
+    this.layer[suggestVariableSymbol](this, this[widthSymbol], width);
+    this.layer[suggestVariableSymbol](this, this[heightSymbol], height);
   }
 
   public get x(): number {
@@ -119,6 +129,30 @@ export abstract class UIElement implements UIMicroTransformable {
     this.layer[removeUIElementSymbol](this);
   }
 
-  public abstract [readVariablesSymbol](): void;
-  public abstract [readMicroSymbol](): void;
+  public [flushTransformSymbol](): void {
+    if (this[needsRecalculation] || this.micro[needsRecalculation]) {
+      applyMicroTransformations(
+        this.object,
+        this.micro,
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+      );
+
+      this[needsRecalculation] = false;
+      this.micro[needsRecalculation] = false;
+    }
+  }
+
+  public [clickSymbol](x: number, y: number): boolean {
+    if (this.interactable) {
+      this[flushTransformSymbol]();
+      if (testElement(this.x, this.y, this.width, this.height, x, y)) {
+        this.emit(UIElementEvent.CLICK, this);
+        return true;
+      }
+    }
+    return false;
+  }
 }

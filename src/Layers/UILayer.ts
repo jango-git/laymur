@@ -15,10 +15,12 @@ import {
   addUIConstraintSymbol,
   addUIElementSymbol,
   addVariableSymbol,
+  clickSymbol,
   disableConstraintSymbol,
   enableConstraintSymbol,
+  flushTransformSymbol,
   heightSymbol,
-  readVariablesSymbol,
+  needsRecalculation,
   removeConstraintSymbol,
   removeUIConstraintSymbol,
   removeUIElementSymbol,
@@ -37,13 +39,13 @@ interface VariableDescription {
   suggestedValue: number;
 }
 
-interface UIElementDependencies {
+interface UIElementDescription {
   object: Object3D;
   variables: Map<Variable, VariableDescription>;
   constraints: Set<UIConstraint>;
 }
 
-interface UIConstraintDependencies {
+interface UIConstraintDescription {
   elements: Set<UIElement>;
   variables: Map<Variable, VariableDescription>;
   constraints: Set<Constraint>;
@@ -59,8 +61,8 @@ export abstract class UILayer {
   protected readonly camera = new OrthographicCamera();
   protected solver? = new Solver();
 
-  protected elements = new Map<UIElement, UIElementDependencies>();
-  protected constraints = new Map<UIConstraint, UIConstraintDependencies>();
+  protected elements = new Map<UIElement, UIElementDescription>();
+  protected constraints = new Map<UIConstraint, UIConstraintDescription>();
 
   protected constraintX?: Constraint;
   protected constraintY?: Constraint;
@@ -290,10 +292,13 @@ export abstract class UILayer {
       this.solver?.updateVariables();
 
       for (const element of this.elements.keys()) {
-        element[readVariablesSymbol]();
+        element[needsRecalculation] = true;
       }
     }
 
+    for (const element of this.elements.keys()) {
+      element[flushTransformSymbol]();
+    }
     renderer.render(this.scene, this.camera);
   }
 
@@ -411,6 +416,18 @@ export abstract class UILayer {
         for (const constraint of dependency.constraints.values()) {
           this.solver.addConstraint(constraint);
         }
+      }
+    }
+  }
+
+  protected clickInternal(x: number, y: number): void {
+    const elements = [...this.elements.keys()]
+      .filter((e: UIElement) => e.interactable)
+      .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
+
+    for (const element of elements) {
+      if (element[clickSymbol](x, y)) {
+        break;
       }
     }
   }

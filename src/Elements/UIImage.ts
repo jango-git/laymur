@@ -2,8 +2,7 @@ import type { Texture } from "three";
 import { FrontSide, Mesh, MeshBasicMaterial } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { assertSize } from "../Miscellaneous/asserts";
-import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
-import { readMicroSymbol, readVariablesSymbol } from "../Miscellaneous/symbols";
+import { flushTransformSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
@@ -26,22 +25,6 @@ export class UIImage extends UIElement {
 
     const object = new Mesh(geometry, material);
     super(layer, object, 0, 0, width, height);
-
-    this[readVariablesSymbol]();
-  }
-
-  public [readVariablesSymbol](): void {
-    applyMicroTransformations(
-      this.object,
-      this.micro,
-      this.x,
-      this.y,
-      this.width,
-      this.height,
-    );
-  }
-
-  public [readMicroSymbol](): void {
-    this[readVariablesSymbol]();
+    this[flushTransformSymbol]();
   }
 }

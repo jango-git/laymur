@@ -1,10 +1,8 @@
 import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
 import type { UILayer } from "../Layers/UILayer";
-import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
 import {
+  flushTransformSymbol,
   heightSymbol,
-  readMicroSymbol,
-  readVariablesSymbol,
   suggestVariableSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -94,7 +92,7 @@ export class UIText extends UIElement {
       this.context,
     );
     this.texture.needsUpdate = true;
-    this[readVariablesSymbol]();
+    this[flushTransformSymbol]();
   }
 
   public override destroy(): void {
@@ -102,15 +100,8 @@ export class UIText extends UIElement {
     super.destroy();
   }
 
-  public [readVariablesSymbol](): void {
-    applyMicroTransformations(
-      this.object,
-      this.micro,
-      this.x,
-      this.y,
-      this.width,
-      this.height,
-    );
+  public override [flushTransformSymbol](): void {
+    super[flushTransformSymbol]();
 
     const currentAspect = this.width / this.height;
     if (this.lastSuggestedAspect !== currentAspect) {
@@ -126,9 +117,5 @@ export class UIText extends UIElement {
         this.width / targetAspect,
       );
     }
-  }
-
-  public [readMicroSymbol](): void {
-    this[readVariablesSymbol]();
   }
 }

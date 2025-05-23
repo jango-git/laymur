@@ -4,9 +4,6 @@ export const ySymbol = Symbol("ySymbol");
 export const widthSymbol = Symbol("widthSymbol");
 export const heightSymbol = Symbol("heightSymbol");
 
-export const readVariablesSymbol = Symbol("readVariablesSymbol");
-export const readMicroSymbol = Symbol("readMicroSymbol");
-
 export const addUIElementSymbol = Symbol("addUIElementSymbol");
 export const removeUIElementSymbol = Symbol("removeUIElementSymbol");
 
@@ -22,3 +19,8 @@ export const suggestVariableSymbol = Symbol("suggestVariableSymbol");
 
 export const disableConstraintSymbol = Symbol("disableConstraintSymbol");
 export const enableConstraintSymbol = Symbol("enableConstraintSymbol");
+
+export const needsRecalculation = Symbol("needsRecalculation");
+export const flushTransformSymbol = Symbol("flushTransformSymbol");
+
+export const clickSymbol = Symbol("clickSymbol");

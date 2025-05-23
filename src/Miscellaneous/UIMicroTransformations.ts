@@ -1,93 +1,102 @@
 import { MathUtils } from "three";
-import { readMicroSymbol } from "./symbols";
+import { needsRecalculation } from "./symbols";
 
-export interface UIMicroTransformable {
-  [readMicroSymbol](): void;
-}
-
+const DEFAULT_POSITION = 0;
 const DEFAULT_ANCHOR = 0.5;
 const DEFAULT_SCALE = 1;
+const DEFAULT_ROTATION = 0;
 
 export class UIMicroTransformations {
-  private positionXPrivate = 0;
-  private positionYPrivate = 0;
-  private anchorXPrivate = DEFAULT_ANCHOR;
-  private anchorYPrivate = DEFAULT_ANCHOR;
-  private scaleXPrivate = DEFAULT_SCALE;
-  private scaleYPrivate = DEFAULT_SCALE;
-  private rotationPrivate = 0;
+  public [needsRecalculation] = false;
 
-  constructor(private readonly owner: UIMicroTransformable) {}
+  private positionXInternal = DEFAULT_POSITION;
+  private positionYInternal = DEFAULT_POSITION;
+  private anchorXInternal = DEFAULT_ANCHOR;
+  private anchorYInternal = DEFAULT_ANCHOR;
+  private scaleXInternal = DEFAULT_SCALE;
+  private scaleYInternal = DEFAULT_SCALE;
+  private rotationInternal = DEFAULT_ROTATION;
 
   public get x(): number {
-    return this.positionXPrivate;
+    return this.positionXInternal;
   }
 
   public get y(): number {
-    return this.positionYPrivate;
+    return this.positionYInternal;
   }
 
   public get anchorX(): number {
-    return this.anchorXPrivate;
+    return this.anchorXInternal;
   }
 
   public get anchorY(): number {
-    return this.anchorYPrivate;
+    return this.anchorYInternal;
   }
 
   public get scaleX(): number {
-    return this.scaleXPrivate;
+    return this.scaleXInternal;
   }
 
   public get scaleY(): number {
-    return this.scaleYPrivate;
+    return this.scaleYInternal;
   }
 
   public get angle(): number {
-    return MathUtils.radToDeg(this.rotationPrivate);
+    return MathUtils.radToDeg(this.rotationInternal);
   }
 
   public get rotation(): number {
-    return this.rotationPrivate;
+    return this.rotationInternal;
   }
 
   public set x(value: number) {
-    this.positionXPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.positionXInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set y(value: number) {
-    this.positionYPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.positionYInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set anchorX(value: number) {
-    this.anchorXPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.anchorXInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set anchorY(value: number) {
-    this.anchorYPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.anchorYInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set scaleX(value: number) {
-    this.scaleXPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.scaleXInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set scaleY(value: number) {
-    this.scaleYPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.scaleYInternal = value;
+    this[needsRecalculation] = true;
   }
 
   public set angle(value: number) {
-    this.rotationPrivate = MathUtils.degToRad(value);
-    this.owner[readMicroSymbol]();
+    this.rotationInternal = MathUtils.degToRad(value);
+    this[needsRecalculation] = true;
   }
 
   public set rotation(value: number) {
-    this.rotationPrivate = value;
-    this.owner[readMicroSymbol]();
+    this.rotationInternal = value;
+    this[needsRecalculation] = true;
+  }
+
+  public reset(): void {
+    this.positionXInternal = DEFAULT_POSITION;
+    this.positionYInternal = DEFAULT_POSITION;
+    this.anchorXInternal = DEFAULT_ANCHOR;
+    this.anchorYInternal = DEFAULT_ANCHOR;
+    this.scaleXInternal = DEFAULT_SCALE;
+    this.scaleYInternal = DEFAULT_SCALE;
+    this.rotationInternal = DEFAULT_ROTATION;
+    this[needsRecalculation] = true;
   }
 }
