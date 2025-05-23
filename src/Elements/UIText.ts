@@ -1,3 +1,4 @@
+import type { Material } from "three";
 import { CanvasTexture, FrontSide, Mesh, MeshBasicMaterial } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import {
@@ -31,8 +32,12 @@ export interface UITextParameters {
 }
 
 export class UIText extends UIElement {
+  private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
+
   private readonly texture: CanvasTexture;
+  private readonly material: Material;
+
   private readonly textBlockSize: UITextSize;
   private readonly padding: UITextPadding;
   private lastSuggestedAspect = 0;
@@ -43,7 +48,11 @@ export class UIText extends UIElement {
     parameters: Partial<UITextParameters> = {},
   ) {
     const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d")!;
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Failed to create canvas context");
+    }
 
     const chunks: UITextChunk[] = [];
 
@@ -81,8 +90,12 @@ export class UIText extends UIElement {
     super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
 
     this.texture = texture;
-    this.textBlockSize = textBlockSize;
+    this.material = material;
+
+    this.canvas = canvas;
     this.context = context;
+
+    this.textBlockSize = textBlockSize;
     this.padding = padding;
 
     renderTextLines(
@@ -96,7 +109,9 @@ export class UIText extends UIElement {
   }
 
   public override destroy(): void {
+    this.material.dispose();
     this.texture.dispose();
+    this.canvas.remove();
     super.destroy();
   }
 

@@ -22,6 +22,7 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
+import { UIBehavior } from "../Miscellaneous/UIBehavior";
 import { UIMicroTransformations } from "../Miscellaneous/UIMicroTransformations";
 
 export enum UIElementEvent {
@@ -30,7 +31,7 @@ export enum UIElementEvent {
 
 export abstract class UIElement extends Eventail {
   public readonly micro = new UIMicroTransformations();
-  public interactable = false;
+  public behavior = UIBehavior.VISIBLE;
 
   public [xSymbol] = new Variable("x");
   public [ySymbol] = new Variable("y");
@@ -146,13 +147,16 @@ export abstract class UIElement extends Eventail {
   }
 
   public [clickSymbol](x: number, y: number): boolean {
-    if (this.interactable) {
-      this[flushTransformSymbol]();
-      if (testElement(this.x, this.y, this.width, this.height, x, y)) {
-        this.emit(UIElementEvent.CLICK, this);
-        return true;
-      }
+    if (this.behavior !== UIBehavior.INTERACTIVE) {
+      return false;
     }
+
+    this[flushTransformSymbol]();
+    if (testElement(this.x, this.y, this.width, this.height, x, y)) {
+      this.emit(UIElementEvent.CLICK, this);
+      return true;
+    }
+
     return false;
   }
 }

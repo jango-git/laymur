@@ -30,6 +30,7 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
+import { UIBehavior } from "../Miscellaneous/UIBehavior";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
@@ -52,6 +53,8 @@ interface UIConstraintDescription {
 }
 
 export abstract class UILayer {
+  public behavior = UIBehavior.VISIBLE;
+
   public readonly [xSymbol]: Variable = new Variable();
   public readonly [ySymbol]: Variable = new Variable();
   public readonly [widthSymbol]: Variable = new Variable();
@@ -77,11 +80,12 @@ export abstract class UILayer {
   }
 
   public destroy(): void {
-    if (this.constraints.size > 0) {
-      throw new Error("Constraints should be removed before destroying");
+    this.solver = undefined;
+    for (const constraint of this.constraints.keys()) {
+      constraint.destroy();
     }
-    if (this.elements.size > 0) {
-      throw new Error("Elements should be removed before destroying");
+    for (const element of this.elements.keys()) {
+      element.destroy();
     }
   }
 
@@ -287,6 +291,10 @@ export abstract class UILayer {
   }
 
   public render(renderer: WebGLRenderer): void {
+    if (this.behavior === UIBehavior.HIDDEN) {
+      return;
+    }
+
     if (this.needsRecalculation) {
       this.needsRecalculation = false;
       this.solver?.updateVariables();
@@ -297,12 +305,32 @@ export abstract class UILayer {
     }
 
     for (const element of this.elements.keys()) {
+      element[needsRecalculation] = true;
+    }
+
+    for (const element of this.elements.keys()) {
       element[flushTransformSymbol]();
     }
     renderer.render(this.scene, this.camera);
   }
 
-  public resize(width: number, height: number): void {
+  protected clickInternal(x: number, y: number): void {
+    if (this.behavior !== UIBehavior.INTERACTIVE) {
+      return;
+    }
+
+    const elements = [...this.elements.keys()]
+      .filter((e: UIElement) => e.behavior === UIBehavior.INTERACTIVE)
+      .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
+
+    for (const element of elements) {
+      if (element[clickSymbol](x, y)) {
+        break;
+      }
+    }
+  }
+
+  protected resizeInternal(width: number, height: number): void {
     this.applyCameraSize(width, height);
     this.rebuildLayerConstraints(width, height);
     this.updateOrientation(width, height);
@@ -416,18 +444,6 @@ export abstract class UILayer {
         for (const constraint of dependency.constraints.values()) {
           this.solver.addConstraint(constraint);
         }
-      }
-    }
-  }
-
-  protected clickInternal(x: number, y: number): void {
-    const elements = [...this.elements.keys()]
-      .filter((e: UIElement) => e.interactable)
-      .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
-
-    for (const element of elements) {
-      if (element[clickSymbol](x, y)) {
-        break;
       }
     }
   }

@@ -18,4 +18,6 @@ export { UIElementEvent } from "./Elements/UIElement";
 export * from "./Elements/UIImage";
 export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
+export * from "./Layers/UIManualLayer";
+export * from "./Miscellaneous/UIBehavior";
 export { UIOrientation } from "./Miscellaneous/UIOrientation";
