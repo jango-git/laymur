@@ -31,13 +31,14 @@ export enum UIElementEvent {
 
 export abstract class UIElement extends Eventail {
   public readonly micro = new UIMicroTransformations();
-  public behavior = UIBehavior.VISIBLE;
 
   public [xSymbol] = new Variable("x");
   public [ySymbol] = new Variable("y");
   public [widthSymbol] = new Variable("width");
   public [heightSymbol] = new Variable("height");
   public [needsRecalculation] = false;
+
+  protected behaviorInternal = UIBehavior.VISIBLE;
 
   constructor(
     public readonly layer: UILayer,
@@ -102,6 +103,10 @@ export abstract class UIElement extends Eventail {
     return this.object.position.z;
   }
 
+  public get behavior(): UIBehavior {
+    return this.behaviorInternal;
+  }
+
   public set x(value: number) {
     this.layer[suggestVariableSymbol](this, this[xSymbol], value);
   }
@@ -120,6 +125,11 @@ export abstract class UIElement extends Eventail {
 
   public set zIndex(value: number) {
     this.object.position.z = value;
+  }
+
+  public set behavior(value: UIBehavior) {
+    this.behaviorInternal = value;
+    this.object.visible = value !== UIBehavior.HIDDEN;
   }
 
   public destroy(): void {
