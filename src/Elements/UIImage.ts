@@ -3,7 +3,7 @@ import { Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIEnhancedMaterial } from "../Materials/UIEnhancedMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
-import { flushTransformSymbol } from "../Miscellaneous/symbols";
+import { flushTransformSymbol, materialSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
@@ -21,7 +21,7 @@ export class UIImage extends UIElement {
     );
 
     const material = new UIEnhancedMaterial(texture);
-    const object = new Mesh(geometry, material);
+    const object = new Mesh(geometry, material[materialSymbol]);
 
     super(layer, object, 0, 0, width, height);
 
@@ -30,7 +30,7 @@ export class UIImage extends UIElement {
   }
 
   public override destroy(): void {
-    this.material.dispose();
+    this.material[materialSymbol].dispose();
     super.destroy();
   }
 }

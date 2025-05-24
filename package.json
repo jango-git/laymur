@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "tiny ui three js library",
   "scripts": {
     "clean": "rm -rf dist",

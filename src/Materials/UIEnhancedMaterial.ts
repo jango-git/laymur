@@ -1,11 +1,15 @@
 import type { Texture } from "three";
-import { Matrix3, ShaderMaterial, UniformsUtils } from "three";
+import { Color, Matrix3, ShaderMaterial, UniformsUtils } from "three";
+import { materialSymbol } from "../Miscellaneous/symbols";
 
-export class UIEnhancedMaterial extends ShaderMaterial {
+export class UIEnhancedMaterial {
+  public readonly [materialSymbol]: ShaderMaterial;
   constructor(texture: Texture) {
     const uniforms = UniformsUtils.merge([
       {
         map: { value: texture },
+        opacity: { value: 1.0 },
+        color: { value: new Color(1.0, 1.0, 1.0) },
         uvTransform: { value: new Matrix3() },
         saturation: { value: 1.0 },
         brightness: { value: 1.0 },
@@ -24,6 +28,8 @@ export class UIEnhancedMaterial extends ShaderMaterial {
 
     const fragmentShader = /* glsl */ `
       uniform sampler2D map;
+      uniform float opacity;
+      uniform vec3 color;
       uniform float saturation;
       uniform float brightness;
       uniform float hue;
@@ -56,11 +62,11 @@ export class UIEnhancedMaterial extends ShaderMaterial {
         hsv.z = hsv.z * brightness;
 
         vec3 rgb = hsv2rgb(hsv);
-        gl_FragColor = vec4(rgb, gl_FragColor.a);
+        gl_FragColor = vec4(rgb * color, gl_FragColor.a * opacity);
       }
     `;
 
-    super({
+    this[materialSymbol] = new ShaderMaterial({
       uniforms,
       vertexShader,
       fragmentShader,
@@ -70,27 +76,43 @@ export class UIEnhancedMaterial extends ShaderMaterial {
     });
   }
 
+  public get color(): Color {
+    return this[materialSymbol].uniforms.color.value;
+  }
+
+  public get opacity(): number {
+    return this[materialSymbol].uniforms.opacity.value;
+  }
+
   public get saturation(): number {
-    return this.uniforms.saturation.value;
+    return this[materialSymbol].uniforms.saturation.value;
   }
 
   public get brightness(): number {
-    return this.uniforms.brightness.value;
+    return this[materialSymbol].uniforms.brightness.value;
   }
 
   public get hue(): number {
-    return this.uniforms.hue.value;
+    return this[materialSymbol].uniforms.hue.value;
+  }
+
+  public set color(value: Color) {
+    this[materialSymbol].uniforms.color.value = value;
   }
 
   public set saturation(value: number) {
-    this.uniforms.saturation.value = value;
+    this[materialSymbol].uniforms.saturation.value = value;
   }
 
   public set brightness(value: number) {
-    this.uniforms.brightness.value = value;
+    this[materialSymbol].uniforms.brightness.value = value;
   }
 
   public set hue(value: number) {
-    this.uniforms.hue.value = value;
+    this[materialSymbol].uniforms.hue.value = value;
+  }
+
+  public set opacity(value: number) {
+    this[materialSymbol].uniforms.opacity.value = value;
   }
 }

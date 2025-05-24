@@ -24,3 +24,4 @@ export const needsRecalculation = Symbol("needsRecalculation");
 export const flushTransformSymbol = Symbol("flushTransformSymbol");
 
 export const clickSymbol = Symbol("clickSymbol");
+export const materialSymbol = Symbol("materialSymbol");

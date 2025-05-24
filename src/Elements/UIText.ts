@@ -1,10 +1,10 @@
-import type { Material } from "three";
 import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
-import { UIMaterial } from "../Materials/UIMaterial";
+import { UIEnhancedMaterial } from "../Materials/UIEnhancedMaterial";
 import {
   flushTransformSymbol,
   heightSymbol,
+  materialSymbol,
   suggestVariableSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -25,7 +25,6 @@ import type {
   UITextSpan,
   UITextStyle,
 } from "./UITextInterfaces";
-
 export interface UITextParameters {
   maxWidth: number;
   padding: Partial<UITextPadding>;
@@ -33,12 +32,11 @@ export interface UITextParameters {
 }
 
 export class UIText extends UIElement {
+  public readonly material: UIEnhancedMaterial;
+
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
-
   private readonly texture: CanvasTexture;
-  private readonly material: Material;
-
   private readonly textBlockSize: UITextSize;
   private readonly padding: UITextPadding;
   private lastSuggestedAspect = 0;
@@ -81,8 +79,8 @@ export class UIText extends UIElement {
 
     const texture = new CanvasTexture(canvas);
 
-    const material = new UIMaterial(texture);
-    const object = new Mesh(geometry, material);
+    const material = new UIEnhancedMaterial(texture);
+    const object = new Mesh(geometry, material[materialSymbol]);
 
     super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
 
@@ -106,7 +104,7 @@ export class UIText extends UIElement {
   }
 
   public override destroy(): void {
-    this.material.dispose();
+    this.material[materialSymbol].dispose();
     this.texture.dispose();
     this.canvas.remove();
     super.destroy();
