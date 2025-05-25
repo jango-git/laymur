@@ -1,4 +1,4 @@
-import type { WebGLRenderer } from "three";
+import type { Color, WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import {
@@ -103,6 +103,22 @@ export class UIText extends UIElement {
 
     this.texture.needsUpdate = true;
     this.flushTransform();
+  }
+
+  public get color(): Color {
+    return this.material.color;
+  }
+
+  public get opacity(): number {
+    return this.material.opacity;
+  }
+
+  public set color(value: Color) {
+    this.material.color = value;
+  }
+
+  public set opacity(value: number) {
+    this.material.opacity = value;
   }
 
   public override destroy(): void {
