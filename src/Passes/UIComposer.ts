@@ -32,6 +32,10 @@ export class UIComposer {
   }
 
   public render(renderer: WebGLRenderer, texture: Texture): Texture {
+    if (this.passes.length === 0) {
+      return texture;
+    }
+
     if (this.passes.every((p) => !p.needsUpdate)) {
       return this.fromRenderTarget.texture;
     }
