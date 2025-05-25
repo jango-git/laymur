@@ -7,7 +7,7 @@ import {
   Variable,
 } from "kiwi.js";
 import type { Object3D, WebGLRenderer } from "three";
-import { OrthographicCamera, Scene } from "three";
+import { Color, OrthographicCamera, Scene } from "three";
 import type { UIConstraint } from "../Constraints/UIConstraint";
 import { UIElement } from "../Elements/UIElement";
 import {
@@ -34,6 +34,7 @@ import { UIBehavior } from "../Miscellaneous/UIBehavior";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
+export const color = new Color(0x000000);
 
 interface VariableDescription {
   strength: number;
@@ -296,6 +297,8 @@ export abstract class UILayer {
     }
 
     const originalRenderTarget = renderer.getRenderTarget();
+    const originalClearColor = renderer.getClearColor(color);
+    const originalClearAlpha = renderer.getClearAlpha();
 
     if (this.needsRecalculation) {
       this.needsRecalculation = false;
@@ -315,6 +318,8 @@ export abstract class UILayer {
     }
 
     renderer.setRenderTarget(originalRenderTarget);
+    renderer.setClearColor(originalClearColor);
+    renderer.setClearAlpha(originalClearAlpha);
     renderer.render(this.scene, this.camera);
   }
 
