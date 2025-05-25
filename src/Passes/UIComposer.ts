@@ -1,14 +1,31 @@
 import type { Texture, WebGLRenderer } from "three";
-import { WebGLRenderTarget } from "three";
+import {
+  LinearFilter,
+  RGBAFormat,
+  UnsignedByteType,
+  WebGLRenderTarget,
+} from "three";
 import { UIDrawPass } from "./UIDrawPass";
 import type { UIPass } from "./UIPass";
 
 export class UIComposer {
   public readonly passes: UIPass[] = [];
-
   private readonly drawPass = new UIDrawPass();
-  private fromRenderTarget = new WebGLRenderTarget(2, 2);
-  private toRenderTarget = new WebGLRenderTarget(2, 2);
+  private fromRenderTarget: WebGLRenderTarget;
+  private toRenderTarget: WebGLRenderTarget;
+
+  constructor() {
+    const parameters = {
+      format: RGBAFormat,
+      minFilter: LinearFilter,
+      magFilter: LinearFilter,
+      type: UnsignedByteType,
+      depthBuffer: false,
+      stencilBuffer: false,
+    };
+    this.fromRenderTarget = new WebGLRenderTarget(1, 1, parameters);
+    this.toRenderTarget = new WebGLRenderTarget(1, 1, parameters);
+  }
 
   public calculatePadding(): number {
     return this.passes.reduce((a, p) => Math.max(a, p.padding), 0);
