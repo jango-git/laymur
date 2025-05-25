@@ -8,15 +8,22 @@ export function applyMicroTransformations(
   y: number,
   width: number,
   height: number,
+  padding: number,
 ): void {
-  const anchorOffsetX = width * micro.anchorX;
-  const anchorOffsetY = height * micro.anchorY;
+  const realX = x - padding;
+  const realY = y - padding;
 
-  const centerX = x + anchorOffsetX;
-  const centerY = y + anchorOffsetY;
+  const realWidth = width + padding * 2;
+  const realHeight = height + padding * 2;
 
-  let localX = x - centerX;
-  let localY = y - centerY;
+  const anchorOffsetX = realWidth * micro.anchorX;
+  const anchorOffsetY = realHeight * micro.anchorY;
+
+  const centerX = realX + anchorOffsetX;
+  const centerY = realY + anchorOffsetY;
+
+  let localX = realX - centerX;
+  let localY = realY - centerY;
 
   localX *= micro.scaleX;
   localY *= micro.scaleY;
@@ -33,6 +40,6 @@ export function applyMicroTransformations(
   object.position.x = localX + centerX;
   object.position.y = localY + centerY;
   object.rotation.z = micro.rotation;
-  object.scale.x = width * micro.scaleX;
-  object.scale.y = height * micro.scaleY;
+  object.scale.x = realWidth * micro.scaleX;
+  object.scale.y = realHeight * micro.scaleY;
 }

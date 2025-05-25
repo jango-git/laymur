@@ -13,6 +13,7 @@ export * from "./Constraints/UIHorizontalProportionConstraint";
 export * from "./Constraints/UIVerticalDistanceConstraint";
 export * from "./Constraints/UIVerticalProportionConstraint";
 export * from "./Constraints/UIWidthConstraint";
+export * from "./Effects/UIPassHSV";
 export * from "./Elements/UIDummy";
 export { UIElementEvent } from "./Elements/UIElement";
 export * from "./Elements/UIImage";

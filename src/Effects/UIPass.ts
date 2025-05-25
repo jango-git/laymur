@@ -1,0 +1,17 @@
+import type { Texture, WebGLRenderer } from "three";
+
+export interface UIPassRenderParameters {
+  width: number;
+  height: number;
+  padding: number;
+}
+
+export abstract class UIPass {
+  public abstract get padding(): number;
+  public abstract get needsUpdate(): boolean;
+  public abstract render(
+    renderer: WebGLRenderer,
+    texture: Texture,
+    parameters: UIPassRenderParameters,
+  ): void;
+}

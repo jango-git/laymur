@@ -1,10 +1,10 @@
+import type { WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
+import { UIMaterial } from "../Effects/UIMaterial";
 import type { UILayer } from "../Layers/UILayer";
-import { UIEnhancedMaterial } from "../Materials/UIEnhancedMaterial";
 import {
-  flushTransformSymbol,
   heightSymbol,
-  materialSymbol,
+  renderSymbol,
   suggestVariableSymbol,
 } from "../Miscellaneous/symbols";
 import {
@@ -32,11 +32,12 @@ export interface UITextParameters {
 }
 
 export class UIText extends UIElement {
-  public readonly material: UIEnhancedMaterial;
+  private readonly material: UIMaterial;
+  private readonly texture: CanvasTexture;
 
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
-  private readonly texture: CanvasTexture;
+
   private readonly textBlockSize: UITextSize;
   private readonly padding: UITextPadding;
   private lastSuggestedAspect = 0;
@@ -79,13 +80,13 @@ export class UIText extends UIElement {
 
     const texture = new CanvasTexture(canvas);
 
-    const material = new UIEnhancedMaterial(texture);
-    const object = new Mesh(geometry, material[materialSymbol]);
+    const material = new UIMaterial(texture);
+    const object = new Mesh(geometry, material);
 
     super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
 
-    this.texture = texture;
     this.material = material;
+    this.texture = texture;
 
     this.canvas = canvas;
     this.context = context;
@@ -99,19 +100,20 @@ export class UIText extends UIElement {
       wrappedLines,
       this.context,
     );
+
     this.texture.needsUpdate = true;
-    this[flushTransformSymbol]();
+    this.flushTransform();
   }
 
   public override destroy(): void {
-    this.material[materialSymbol].dispose();
+    this.material.dispose();
     this.texture.dispose();
     this.canvas.remove();
     super.destroy();
   }
 
-  public override [flushTransformSymbol](): void {
-    super[flushTransformSymbol]();
+  public override flushTransform(): void {
+    super.flushTransform();
 
     const currentAspect = this.width / this.height;
     if (this.lastSuggestedAspect !== currentAspect) {
@@ -127,5 +129,10 @@ export class UIText extends UIElement {
         this.width / targetAspect,
       );
     }
+  }
+
+  public [renderSymbol](renderer: WebGLRenderer): void {
+    this.flushTransform();
+    this.material.map = this.composer.render(renderer, this.texture);
   }
 }

@@ -21,7 +21,6 @@ export const disableConstraintSymbol = Symbol("disableConstraintSymbol");
 export const enableConstraintSymbol = Symbol("enableConstraintSymbol");
 
 export const needsRecalculation = Symbol("needsRecalculation");
-export const flushTransformSymbol = Symbol("flushTransformSymbol");
+export const renderSymbol = Symbol("renderSymbol");
 
 export const clickSymbol = Symbol("clickSymbol");
-export const materialSymbol = Symbol("materialSymbol");

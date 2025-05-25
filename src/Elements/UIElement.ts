@@ -1,10 +1,13 @@
 import { Eventail } from "eventail";
 import { Variable } from "kiwi.js";
+import type { WebGLRenderer } from "three";
 import { type Object3D } from "three";
 import {
   convertPowerToStrength,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
+import { UIComposer } from "../Effects/UIComposer";
+import type { UIPass } from "../Effects/UIPass";
 import type { UILayer } from "../Layers/UILayer";
 import { testElement } from "../Miscellaneous/math";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
@@ -12,11 +15,11 @@ import {
   addUIElementSymbol,
   addVariableSymbol,
   clickSymbol,
-  flushTransformSymbol,
   heightSymbol,
   needsRecalculation,
   removeUIElementSymbol,
   removeVariableSymbol,
+  renderSymbol,
   suggestVariableSymbol,
   widthSymbol,
   xSymbol,
@@ -39,6 +42,7 @@ export abstract class UIElement extends Eventail {
   public [needsRecalculation] = false;
 
   protected behaviorInternal = UIBehavior.VISIBLE;
+  protected readonly composer = new UIComposer();
 
   constructor(
     public readonly layer: UILayer,
@@ -81,6 +85,10 @@ export abstract class UIElement extends Eventail {
     this.layer[suggestVariableSymbol](this, this[ySymbol], y);
     this.layer[suggestVariableSymbol](this, this[widthSymbol], width);
     this.layer[suggestVariableSymbol](this, this[heightSymbol], height);
+  }
+
+  public get passes(): UIPass[] {
+    return this.composer.passes;
   }
 
   public get x(): number {
@@ -133,6 +141,7 @@ export abstract class UIElement extends Eventail {
   }
 
   public destroy(): void {
+    this.composer.destroy();
     this.layer[removeVariableSymbol](this, this[xSymbol]);
     this.layer[removeVariableSymbol](this, this[ySymbol]);
     this.layer[removeVariableSymbol](this, this[widthSymbol]);
@@ -140,7 +149,21 @@ export abstract class UIElement extends Eventail {
     this.layer[removeUIElementSymbol](this);
   }
 
-  public [flushTransformSymbol](): void {
+  public [clickSymbol](x: number, y: number): boolean {
+    if (this.behavior !== UIBehavior.INTERACTIVE) {
+      return false;
+    }
+
+    this.flushTransform();
+    if (testElement(this.x, this.y, this.width, this.height, x, y)) {
+      this.emit(UIElementEvent.CLICK, this);
+      return true;
+    }
+
+    return false;
+  }
+
+  protected flushTransform(): void {
     if (this[needsRecalculation] || this.micro[needsRecalculation]) {
       applyMicroTransformations(
         this.object,
@@ -149,6 +172,7 @@ export abstract class UIElement extends Eventail {
         this.y,
         this.width,
         this.height,
+        this.composer.calculatePadding(),
       );
 
       this[needsRecalculation] = false;
@@ -156,17 +180,5 @@ export abstract class UIElement extends Eventail {
     }
   }
 
-  public [clickSymbol](x: number, y: number): boolean {
-    if (this.behavior !== UIBehavior.INTERACTIVE) {
-      return false;
-    }
-
-    this[flushTransformSymbol]();
-    if (testElement(this.x, this.y, this.width, this.height, x, y)) {
-      this.emit(UIElementEvent.CLICK, this);
-      return true;
-    }
-
-    return false;
-  }
+  protected abstract [renderSymbol](renderer: WebGLRenderer): void;
 }

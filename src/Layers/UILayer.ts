@@ -18,13 +18,13 @@ import {
   clickSymbol,
   disableConstraintSymbol,
   enableConstraintSymbol,
-  flushTransformSymbol,
   heightSymbol,
   needsRecalculation,
   removeConstraintSymbol,
   removeUIConstraintSymbol,
   removeUIElementSymbol,
   removeVariableSymbol,
+  renderSymbol,
   suggestVariableSymbol,
   widthSymbol,
   xSymbol,
@@ -295,6 +295,8 @@ export abstract class UILayer {
       return;
     }
 
+    const originalRenderTarget = renderer.getRenderTarget();
+
     if (this.needsRecalculation) {
       this.needsRecalculation = false;
       this.solver?.updateVariables();
@@ -309,8 +311,10 @@ export abstract class UILayer {
     }
 
     for (const element of this.elements.keys()) {
-      element[flushTransformSymbol]();
+      element[renderSymbol](renderer);
     }
+
+    renderer.setRenderTarget(originalRenderTarget);
     renderer.render(this.scene, this.camera);
   }
 
