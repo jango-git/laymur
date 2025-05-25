@@ -21,3 +21,5 @@ export * from "./Layers/UIFullScreenLayer";
 export * from "./Layers/UIManualLayer";
 export * from "./Miscellaneous/UIBehavior";
 export { UIOrientation } from "./Miscellaneous/UIOrientation";
+export * from "./Passes/UIFullScreenQuad";
+export * from "./Passes/UIPass";
