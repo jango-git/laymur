@@ -33,7 +33,7 @@ export class UIComposer {
 
   public render(renderer: WebGLRenderer, texture: Texture): Texture {
     if (this.passes.every((p) => !p.needsUpdate)) {
-      return texture;
+      return this.fromRenderTarget.texture;
     }
 
     const padding = this.calculatePadding();
