@@ -15,20 +15,24 @@ export function applyMicroTransformations(
   const centerX = x + anchorOffsetX;
   const centerY = y + anchorOffsetY;
 
-  const dx = micro.x;
-  const dy = micro.y;
+  let localX = x - centerX;
+  let localY = y - centerY;
 
-  object.position.x = centerX + dx;
-  object.position.y = centerY + dy;
+  localX *= micro.scaleX;
+  localY *= micro.scaleY;
 
-  object.scale.x = micro.scaleX * width;
-  object.scale.y = micro.scaleY * height;
+  const cos = Math.cos(micro.rotation);
+  const sin = Math.sin(micro.rotation);
 
+  localX = localX * cos - localY * sin;
+  localY = localX * sin + localY * cos;
+
+  localX += micro.x;
+  localY += micro.y;
+
+  object.position.x = localX + centerX;
+  object.position.y = localY + centerY;
   object.rotation.z = micro.rotation;
-
-  const scaledOffsetX = micro.anchorX * micro.scaleX * width;
-  const scaledOffsetY = micro.anchorY * micro.scaleY * height;
-
-  object.position.x -= scaledOffsetX;
-  object.position.y -= scaledOffsetY;
+  object.scale.x = width * micro.scaleX;
+  object.scale.y = height * micro.scaleY;
 }
