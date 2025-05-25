@@ -1,6 +1,5 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
-import { UIMaterial } from "../Effects/UIMaterial";
 import type { UILayer } from "../Layers/UILayer";
 import {
   heightSymbol,
@@ -17,6 +16,7 @@ import {
   wrapTextLines,
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
+import { UIMaterial } from "../Passes/UIMaterial";
 import { UIElement } from "./UIElement";
 import type {
   UITextChunk,

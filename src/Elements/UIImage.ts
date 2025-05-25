@@ -1,10 +1,10 @@
 import type { Texture, WebGLRenderer } from "three";
 import { Mesh } from "three";
-import { UIMaterial } from "../Effects/UIMaterial";
 import type { UILayer } from "../Layers/UILayer";
 import { assertSize } from "../Miscellaneous/asserts";
 import { renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
+import { UIMaterial } from "../Passes/UIMaterial";
 import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement {

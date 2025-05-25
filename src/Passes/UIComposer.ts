@@ -37,7 +37,11 @@ export class UIComposer {
 
     for (const pass of this.passes) {
       renderer.setRenderTarget(this.toRenderTarget);
-      pass.render(renderer, this.fromRenderTarget.texture);
+      pass.render(renderer, this.fromRenderTarget.texture, {
+        width,
+        height,
+        padding,
+      });
       this.reverseTargets();
     }
 

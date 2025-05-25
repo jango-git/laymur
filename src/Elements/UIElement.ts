@@ -6,8 +6,6 @@ import {
   convertPowerToStrength,
   UIConstraintPower,
 } from "../Constraints/UIConstraintPower";
-import { UIComposer } from "../Effects/UIComposer";
-import type { UIPass } from "../Effects/UIPass";
 import type { UILayer } from "../Layers/UILayer";
 import { testElement } from "../Miscellaneous/math";
 import { applyMicroTransformations } from "../Miscellaneous/microTransformationTools";
@@ -27,6 +25,8 @@ import {
 } from "../Miscellaneous/symbols";
 import { UIBehavior } from "../Miscellaneous/UIBehavior";
 import { UIMicroTransformations } from "../Miscellaneous/UIMicroTransformations";
+import { UIComposer } from "../Passes/UIComposer";
+import type { UIPass } from "../Passes/UIPass";
 
 export enum UIElementEvent {
   CLICK = "click",
