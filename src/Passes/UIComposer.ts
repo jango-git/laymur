@@ -48,12 +48,20 @@ export class UIComposer {
     this.toRenderTarget.setSize(widthWithPadding, heightWithPadding);
     this.drawPass.setPadding(width, height, padding);
 
+    renderer.setClearColor(0x000000, 0);
+
+    renderer.setRenderTarget(this.fromRenderTarget);
+    renderer.clearColor();
+
     renderer.setRenderTarget(this.toRenderTarget);
+    renderer.clearColor();
+
     this.drawPass.render(renderer, texture);
     this.reverseTargets();
 
     for (const pass of this.passes) {
       renderer.setRenderTarget(this.toRenderTarget);
+      renderer.clearColor();
       pass.render(renderer, this.fromRenderTarget.texture, {
         width,
         height,
