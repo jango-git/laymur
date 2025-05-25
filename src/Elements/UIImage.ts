@@ -9,7 +9,7 @@ import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement {
   private readonly material: UIMaterial;
-  private readonly texture: Texture;
+  private readonly textureInternal: Texture;
 
   constructor(layer: UILayer, texture: Texture) {
     const width = texture.image?.width;
@@ -27,9 +27,13 @@ export class UIImage extends UIElement {
     super(layer, object, 0, 0, width, height);
 
     this.material = material;
-    this.texture = texture;
+    this.textureInternal = texture;
 
     this.flushTransform();
+  }
+
+  public get texture(): Texture {
+    return this.material.getTexture();
   }
 
   public get color(): Color {
@@ -38,6 +42,10 @@ export class UIImage extends UIElement {
 
   public get opacity(): number {
     return this.material.getOpacity();
+  }
+
+  public set texture(value: Texture) {
+    this.material.setTexture(value);
   }
 
   public set color(value: Color) {
@@ -55,6 +63,8 @@ export class UIImage extends UIElement {
 
   public [renderSymbol](renderer: WebGLRenderer): void {
     this.flushTransform();
-    this.material.setTexture(this.composer.render(renderer, this.texture));
+    this.material.setTexture(
+      this.composer.render(renderer, this.textureInternal),
+    );
   }
 }

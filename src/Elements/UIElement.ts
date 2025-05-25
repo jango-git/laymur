@@ -33,6 +33,7 @@ export enum UIElementEvent {
 }
 
 export abstract class UIElement extends Eventail {
+  public name = "";
   public readonly micro = new UIMicroTransformations();
 
   public [xSymbol] = new Variable("x");
