@@ -1,5 +1,5 @@
 import type { Texture, WebGLRenderer } from "three";
-import { Matrix3, ShaderMaterial, UniformsUtils } from "three";
+import { Color, Matrix3, ShaderMaterial, UniformsUtils } from "three";
 import { UIFullScreenQuad } from "./UIFullScreenQuad";
 
 export class UIDrawPass {
@@ -11,26 +11,31 @@ export class UIDrawPass {
         uniforms: UniformsUtils.merge([
           {
             map: { value: null },
+            opacity: { value: 1.0 },
+            color: { value: new Color(1.0, 1.0, 1.0) },
             uvTransform: { value: new Matrix3() },
           },
         ]),
         vertexShader: /* glsl */ `
-        uniform mat3 uvTransform;
-        varying vec2 vUv;
-        void main() {
-          vUv = (uvTransform * vec3(uv, 1)).xy;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
+          uniform mat3 uvTransform;
+          varying vec2 vUv;
+          void main() {
+            vUv = (uvTransform * vec3(uv, 1)).xy;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
         fragmentShader: /* glsl */ `
-        uniform sampler2D map;
-        varying vec2 vUv;
+          uniform sampler2D map;
+          uniform float opacity;
+          uniform vec3 color;
+          varying vec2 vUv;
 
-        void main() {
-          gl_FragColor = texture2D(map, vUv);
-          #include <colorspace_fragment>
-        }
-      `,
+          void main() {
+            vec4 textureColor = texture2D(map, vUv);
+            gl_FragColor = vec4(textureColor.rgb * color, textureColor.a * opacity);
+            #include <colorspace_fragment>
+          }
+        `,
         transparent: true,
         fog: false,
         lights: false,
@@ -54,6 +59,7 @@ export class UIDrawPass {
 
   public render(renderer: WebGLRenderer, texture: Texture): void {
     this.screen.material.uniforms.map.value = texture;
+    this.screen.material.uniformsNeedUpdate = true;
     this.screen.render(renderer);
   }
 }
