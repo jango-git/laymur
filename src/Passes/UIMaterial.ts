@@ -10,9 +10,6 @@ export class UIMaterial extends ShaderMaterial {
           opacity: { value: 1.0 },
           color: { value: new Color(1.0, 1.0, 1.0) },
           uvTransform: { value: new Matrix3() },
-          saturation: { value: 1.0 },
-          brightness: { value: 1.0 },
-          hue: { value: 0.0 },
         },
       ]),
       vertexShader: /* glsl */ `
@@ -27,39 +24,12 @@ export class UIMaterial extends ShaderMaterial {
         uniform sampler2D map;
         uniform float opacity;
         uniform vec3 color;
-        uniform float saturation;
-        uniform float brightness;
-        uniform float hue;
         varying vec2 vUv;
 
-        vec3 rgb2hsv(vec3 c) {
-          vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-          vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-          vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-          float d = q.x - min(q.w, q.y);
-          float e = 1.0e-10;
-          return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-        }
-
-        vec3 hsv2rgb(vec3 c) {
-          vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-          vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-          return c.z * mix(K.xxx, clamp(p - K. xxx, 0.0, 1.0), c.y);
-        }
-
         void main() {
-          gl_FragColor = texture2D(map, vUv);
-
+          vec4 textureColor = texture2D(map, vUv);
+          gl_FragColor = vec4(textureColor.rgb * color, textureColor.a * opacity);
           #include <colorspace_fragment>
-
-          vec3 hsv = rgb2hsv(gl_FragColor.rgb);
-
-          hsv.x = fract(hsv.x + hue);
-          hsv.y = clamp(hsv.y * saturation, 0.0, 1.0);
-          hsv.z = hsv.z * brightness;
-
-          vec3 rgb = hsv2rgb(hsv);
-          gl_FragColor = vec4(rgb * color, gl_FragColor.a * opacity);
         }
       `,
       transparent: true,
@@ -68,19 +38,39 @@ export class UIMaterial extends ShaderMaterial {
     });
   }
 
-  public get map(): Color {
+  public getTexture(): Texture {
     return this.uniforms.map.value;
   }
 
-  public get color(): Color {
+  public getColor(): Color {
     return this.uniforms.color.value;
   }
 
-  public set map(value: Texture) {
-    this.uniforms.map.value = value;
+  public getOpacity(): number {
+    return this.uniforms.opacity.value;
   }
 
-  public set color(value: Color) {
+  public getUVTransform(): Matrix3 {
+    return this.uniforms.uvTransform.value;
+  }
+
+  public setTexture(value: Texture): void {
+    this.uniforms.map.value = value;
+    this.uniformsNeedUpdate = true;
+  }
+
+  public setColor(value: Color): void {
     this.uniforms.color.value = value;
+    this.uniformsNeedUpdate = true;
+  }
+
+  public setOpacity(value: number): void {
+    this.uniforms.opacity.value = value;
+    this.uniformsNeedUpdate = true;
+  }
+
+  public setUVTransform(value: Matrix3): void {
+    this.uniforms.uvTransform.value = value;
+    this.uniformsNeedUpdate = true;
   }
 }

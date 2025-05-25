@@ -106,19 +106,19 @@ export class UIText extends UIElement {
   }
 
   public get color(): Color {
-    return this.material.color;
+    return this.material.getColor();
   }
 
   public get opacity(): number {
-    return this.material.opacity;
+    return this.material.getOpacity();
   }
 
   public set color(value: Color) {
-    this.material.color = value;
+    this.material.setColor(value);
   }
 
   public set opacity(value: number) {
-    this.material.opacity = value;
+    this.material.setOpacity(value);
   }
 
   public override destroy(): void {
@@ -149,6 +149,6 @@ export class UIText extends UIElement {
 
   public [renderSymbol](renderer: WebGLRenderer): void {
     this.flushTransform();
-    this.material.map = this.composer.render(renderer, this.texture);
+    this.material.setTexture(this.composer.render(renderer, this.texture));
   }
 }
