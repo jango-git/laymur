@@ -44,10 +44,6 @@ export class UIImage extends UIElement {
     return this.material.getOpacity();
   }
 
-  public set texture(value: Texture) {
-    this.material.setTexture(value);
-  }
-
   public set color(value: Color) {
     this.material.setColor(value);
   }
