@@ -2,12 +2,14 @@ import { Texture } from "three";
 import { UIDummy } from "../Elements/UIDummy";
 import type { UIElement } from "../Elements/UIElement";
 import { UIImage } from "../Elements/UIImage";
+import { UIProgress } from "../Elements/UIProgress";
 import { UIText } from "../Elements/UIText";
 import type { UILayer } from "../Layers/UILayer";
 import type { UIAnyElementDescription } from "./UIElementBuilderInterfaces";
 import {
   isUIDummyDescription,
   isUIImageDescription,
+  isUIProgressDescription,
   isUITextDescription,
   isUITextEnhancedDescription,
 } from "./UIElementBuilderInterfaces";
@@ -39,6 +41,8 @@ export class UIElementBuilder {
         element = new UIImage(layer, value.texture);
       } else if (typeof value === "string") {
         element = new UIText(layer, [value]);
+      } else if (isUIProgressDescription(value)) {
+        element = new UIProgress(layer, value.background, value.foreground);
       } else if (isUITextDescription(value)) {
         element = new UIText(layer, [value.text], {
           defaultStyle: value.style,

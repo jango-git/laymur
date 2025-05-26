@@ -9,6 +9,8 @@ import {
 import type { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 export abstract class UIConstraint {
+  public name = "";
+
   constructor(
     public readonly layer: UILayer,
     elements: Set<UIElement>,

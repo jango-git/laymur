@@ -8,7 +8,7 @@ export class UIProgressMaterial extends ShaderMaterial {
         {
           map: { value: backgroundTexture },
           foreground: { value: foregroundTexture },
-          progress: { value: 0 },
+          progress: { value: 1 },
         },
       ]),
       vertexShader: /* glsl */ `

@@ -50,6 +50,14 @@ export class UIProgress extends UIElement {
     this.flushTransform();
   }
 
+  public get background(): Texture {
+    return this.textureBackground;
+  }
+
+  public get foreground(): Texture {
+    return this.textureForeground;
+  }
+
   public get progress(): number {
     return this.material.uniforms.progress.value;
   }

@@ -6,6 +6,11 @@ export interface UIImageDescription {
   texture: Texture;
 }
 
+export interface UIProgressDescription {
+  background: Texture;
+  foreground: Texture;
+}
+
 export interface UITextDescription {
   text: string;
   style?: Partial<UITextStyle>;
@@ -23,6 +28,7 @@ export interface UIDummyDescription {
 
 export type UIAnyElementDescription =
   | UIImageDescription
+  | UIProgressDescription
   | UITextDescription
   | UITextEnancedDescription
   | UIDummyDescription;
@@ -33,6 +39,19 @@ export function isUIImageDescription(obj: unknown): obj is UIImageDescription {
     typeof obj === "object" &&
     "texture" in obj &&
     obj.texture instanceof Texture
+  );
+}
+
+export function isUIProgressDescription(
+  obj: unknown,
+): obj is UIProgressDescription {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    "background" in obj &&
+    obj.background instanceof Texture &&
+    "foreground" in obj &&
+    obj.foreground instanceof Texture
   );
 }
 
