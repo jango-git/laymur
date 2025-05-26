@@ -241,6 +241,7 @@ export abstract class UILayer {
       suggestedValue: variable.value(),
     });
     this.solver?.addEditVariable(variable, strength);
+    this.needsRecalculation = true;
   }
 
   public [removeVariableSymbol](
@@ -262,6 +263,7 @@ export abstract class UILayer {
 
     dependencies.variables.delete(variable);
     this.solver?.removeEditVariable(variable);
+    this.needsRecalculation = true;
   }
 
   public [suggestVariableSymbol](

@@ -143,10 +143,10 @@ export abstract class UIElement extends Eventail {
 
   public destroy(): void {
     this.composer.destroy();
-    this.layer[removeVariableSymbol](this, this[xSymbol]);
-    this.layer[removeVariableSymbol](this, this[ySymbol]);
-    this.layer[removeVariableSymbol](this, this[widthSymbol]);
     this.layer[removeVariableSymbol](this, this[heightSymbol]);
+    this.layer[removeVariableSymbol](this, this[widthSymbol]);
+    this.layer[removeVariableSymbol](this, this[ySymbol]);
+    this.layer[removeVariableSymbol](this, this[xSymbol]);
     this.layer[removeUIElementSymbol](this);
   }
 
