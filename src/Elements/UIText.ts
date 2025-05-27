@@ -46,7 +46,7 @@ export class UIText extends UIElement {
 
   constructor(
     layer: UILayer,
-    spans: (UITextSpan | string)[],
+    spans: (UITextSpan | string)[] | UITextSpan | string,
     parameters: Partial<UITextOptions> = {},
   ) {
     const canvas = document.createElement("canvas");
@@ -57,8 +57,9 @@ export class UIText extends UIElement {
     }
 
     const chunks: UITextChunk[] = [];
+    const processedSpans = Array.isArray(spans) ? spans : [spans];
 
-    for (const span of spans) {
+    for (const span of processedSpans) {
       const isSpanString = typeof span === "string";
       const spanText = isSpanString ? span : span.text;
       const style = resolveTextStyle(

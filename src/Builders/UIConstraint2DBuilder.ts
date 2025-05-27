@@ -89,7 +89,7 @@ export class UIConstraint2DBuilder {
     };
   }
 
-  public static proportional(
+  public static proportion(
     elementOne: UIElement | UILayer,
     elementTwo: UIElement,
     options: Partial<UIConstraintProportion2DOptions>,
