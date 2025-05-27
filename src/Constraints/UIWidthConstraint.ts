@@ -17,7 +17,9 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-export interface UIWidthParameters {
+const DEFAULT_WIDTH = 100;
+
+export interface UIWidthOptions {
   width: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
@@ -25,17 +27,17 @@ export interface UIWidthParameters {
 }
 
 export class UIWidthConstraint extends UIConstraint {
-  private readonly parameters: UIWidthParameters;
+  private readonly parameters: UIWidthOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly element: UIElement,
-    parameters?: Partial<UIWidthParameters>,
+    parameters?: Partial<UIWidthOptions>,
   ) {
     super(element.layer, new Set([element]));
 
     this.parameters = {
-      width: parameters?.width ?? 100,
+      width: parameters?.width ?? DEFAULT_WIDTH,
       power: resolvePower(parameters?.power),
       rule: resolveRule(parameters?.rule),
       orientation: resolveOrientation(parameters?.orientation),

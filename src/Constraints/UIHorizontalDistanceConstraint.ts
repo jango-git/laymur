@@ -20,7 +20,9 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-export interface UIHorizontalDistanceParameters {
+const DEFAULT_ANCHOR = 0.5;
+
+export interface UIHorizontalDistanceOptions {
   anchorOne: number;
   anchorTwo: number;
   distance: number;
@@ -30,13 +32,13 @@ export interface UIHorizontalDistanceParameters {
 }
 
 export class UIHorizontalDistanceConstraint extends UIConstraint {
-  private readonly parameters: UIHorizontalDistanceParameters;
+  private readonly parameters: UIHorizontalDistanceOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters?: Partial<UIHorizontalDistanceParameters>,
+    parameters?: Partial<UIHorizontalDistanceOptions>,
   ) {
     assertSameLayer(elementOne, elementTwo);
     super(
@@ -49,8 +51,8 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     );
 
     this.parameters = {
-      anchorOne: parameters?.anchorOne ?? 0.5,
-      anchorTwo: parameters?.anchorTwo ?? 0.5,
+      anchorOne: parameters?.anchorOne ?? DEFAULT_ANCHOR,
+      anchorTwo: parameters?.anchorTwo ?? DEFAULT_ANCHOR,
       distance: parameters?.distance ?? 0,
       power: resolvePower(parameters?.power),
       rule: resolveRule(parameters?.rule),

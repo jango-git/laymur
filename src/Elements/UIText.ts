@@ -25,11 +25,13 @@ import type {
   UITextSpan,
   UITextStyle,
 } from "./UITextInterfaces";
-export interface UITextParameters {
+export interface UITextOptions {
   maxWidth: number;
   padding: Partial<UITextPadding>;
   defaultStyle: Partial<UITextStyle>;
 }
+
+const DEFAULT_LINE_SIZE = 1024;
 
 export class UIText extends UIElement {
   private readonly material: UIMaterial;
@@ -45,7 +47,7 @@ export class UIText extends UIElement {
   constructor(
     layer: UILayer,
     spans: (UITextSpan | string)[],
-    parameters: Partial<UITextParameters> = {},
+    parameters: Partial<UITextOptions> = {},
   ) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -70,7 +72,10 @@ export class UIText extends UIElement {
       }
     }
 
-    const wrappedLines = wrapTextLines(parameters.maxWidth ?? 1024, chunks);
+    const wrappedLines = wrapTextLines(
+      parameters.maxWidth ?? DEFAULT_LINE_SIZE,
+      chunks,
+    );
     const textBlockSize = calculateTextBlockSize(wrappedLines);
 
     const padding = resolvePadding(parameters.padding);

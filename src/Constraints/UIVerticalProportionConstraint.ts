@@ -19,7 +19,7 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-export interface UIVerticalProportionParameters {
+export interface UIVerticalProportionOptions {
   proportion: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
@@ -27,13 +27,13 @@ export interface UIVerticalProportionParameters {
 }
 
 export class UIVerticalProportionConstraint extends UIConstraint {
-  private readonly parameters: UIVerticalProportionParameters;
+  private readonly parameters: UIVerticalProportionOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters?: Partial<UIVerticalProportionParameters>,
+    parameters?: Partial<UIVerticalProportionOptions>,
   ) {
     assertSameLayer(elementOne, elementTwo);
     super(

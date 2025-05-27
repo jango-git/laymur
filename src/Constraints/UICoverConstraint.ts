@@ -18,7 +18,9 @@ import {
 } from "../Miscellaneous/UIOrientation";
 import { UIConstraint } from "./UIConstraint";
 
-export interface UICoverParameters {
+const DEFAULT_ANCHOR = 0.5;
+
+export interface UICoverOptions {
   isStrict: boolean;
   horizontalAnchor: number;
   verticalAnchor: number;
@@ -26,7 +28,7 @@ export interface UICoverParameters {
 }
 
 export class UICoverConstraint extends UIConstraint {
-  private readonly parameters: UICoverParameters;
+  private readonly parameters: UICoverOptions;
 
   private constraintX?: Constraint;
   private constraintY?: Constraint;
@@ -37,7 +39,7 @@ export class UICoverConstraint extends UIConstraint {
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters?: Partial<UICoverParameters>,
+    parameters?: Partial<UICoverOptions>,
   ) {
     assertSameLayer(elementOne, elementTwo);
     super(
@@ -51,8 +53,8 @@ export class UICoverConstraint extends UIConstraint {
 
     this.parameters = {
       isStrict: parameters?.isStrict ?? true,
-      horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
-      verticalAnchor: parameters?.verticalAnchor ?? 0.5,
+      horizontalAnchor: parameters?.horizontalAnchor ?? DEFAULT_ANCHOR,
+      verticalAnchor: parameters?.verticalAnchor ?? DEFAULT_ANCHOR,
       orientation: resolveOrientation(parameters?.orientation),
     };
 

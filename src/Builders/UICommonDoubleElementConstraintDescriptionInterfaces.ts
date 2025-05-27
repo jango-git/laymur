@@ -1,7 +1,11 @@
-import type { UIConstraintPower } from "../Constraints/UIConstraintPower";
-import { isUIConstraintPower } from "../Constraints/UIConstraintPower";
-import type { UIConstraintRule } from "../Constraints/UIConstraintRule";
-import { isUIConstraintRule } from "../Constraints/UIConstraintRule";
+import {
+  isUIConstraintPower,
+  type UIConstraintPower,
+} from "../Constraints/UIConstraintPower";
+import {
+  isUIConstraintRule,
+  type UIConstraintRule,
+} from "../Constraints/UIConstraintRule";
 import { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 import type { UIOrientation } from "../Miscellaneous/UIOrientation";

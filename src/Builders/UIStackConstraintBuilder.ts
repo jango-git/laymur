@@ -6,7 +6,7 @@ import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProport
 import { UIDummy } from "../Elements/UIDummy";
 import type { UIElement } from "../Elements/UIElement";
 
-export interface UIStackConstraintBuilderParameters {
+export interface UIStackConstraintBuilderOptions {
   offset: number;
   elements: UIElement[];
   power?: UIConstraintPower;
@@ -30,35 +30,35 @@ export interface UIStackConstraintBuilderVerticalResult {
 
 export class UIStackConstraintBuilder {
   public static buildHorizontal(
-    parameters: UIStackConstraintBuilderParameters,
+    options: UIStackConstraintBuilderOptions,
   ): UIStackConstraintBuilderHorizontalResult {
     const distanceConstraints = [];
     const proportionConstraints = [];
     const centerConstraints = [];
 
-    for (let i = 0; i < parameters.elements.length - 1; i++) {
-      const element = parameters.elements[i];
-      const nextElement = parameters.elements[i + 1];
+    for (let i = 0; i < options.elements.length - 1; i++) {
+      const element = options.elements[i];
+      const nextElement = options.elements[i + 1];
 
       distanceConstraints.push(
         new UIHorizontalDistanceConstraint(element, nextElement, {
           anchorOne: 1,
           anchorTwo: 0,
-          distance: parameters.offset,
-          power: parameters.power,
+          distance: options.offset,
+          power: options.power,
         }),
       );
 
       proportionConstraints.push(
         new UIHorizontalProportionConstraint(element, nextElement, {
-          power: parameters.power,
+          power: options.power,
         }),
       );
 
-      if (parameters.keepAlignment !== false) {
+      if (options.keepAlignment !== false) {
         centerConstraints.push(
           new UIVerticalDistanceConstraint(element, nextElement, {
-            power: parameters.power,
+            power: options.power,
             anchorOne: 0,
             anchorTwo: 0,
           }),
@@ -68,10 +68,10 @@ export class UIStackConstraintBuilder {
 
     return {
       dummy:
-        parameters.createDummy !== false
+        options.createDummy !== false
           ? UIStackConstraintBuilder.createDummy(
-              parameters.elements[0],
-              parameters.elements[parameters.elements.length - 1],
+              options.elements[0],
+              options.elements[options.elements.length - 1],
             )
           : undefined,
       distanceConstraints,
@@ -81,35 +81,35 @@ export class UIStackConstraintBuilder {
   }
 
   public static buildVertical(
-    parameters: UIStackConstraintBuilderParameters,
+    options: UIStackConstraintBuilderOptions,
   ): UIStackConstraintBuilderVerticalResult {
     const distanceConstraints = [];
     const proportionConstraints = [];
     const centerConstraints = [];
 
-    for (let i = 0; i < parameters.elements.length - 1; i++) {
-      const element = parameters.elements[i];
-      const nextElement = parameters.elements[i + 1];
+    for (let i = 0; i < options.elements.length - 1; i++) {
+      const element = options.elements[i];
+      const nextElement = options.elements[i + 1];
 
       distanceConstraints.push(
         new UIVerticalDistanceConstraint(element, nextElement, {
           anchorOne: 1,
           anchorTwo: 0,
-          distance: parameters.offset,
-          power: parameters.power,
+          distance: options.offset,
+          power: options.power,
         }),
       );
 
       proportionConstraints.push(
         new UIVerticalProportionConstraint(element, nextElement, {
-          power: parameters.power,
+          power: options.power,
         }),
       );
 
-      if (parameters.keepAlignment !== false) {
+      if (options.keepAlignment !== false) {
         centerConstraints.push(
           new UIHorizontalDistanceConstraint(element, nextElement, {
-            power: parameters.power,
+            power: options.power,
           }),
         );
       }
@@ -117,10 +117,10 @@ export class UIStackConstraintBuilder {
 
     return {
       dummy:
-        parameters.createDummy !== false
+        options.createDummy !== false
           ? UIStackConstraintBuilder.createDummy(
-              parameters.elements[0],
-              parameters.elements[parameters.elements.length - 1],
+              options.elements[0],
+              options.elements[options.elements.length - 1],
             )
           : undefined,
       distanceConstraints,

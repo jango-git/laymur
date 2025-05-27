@@ -18,7 +18,7 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-export interface UIAspectParameters {
+export interface UIAspectOptions {
   aspect: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
@@ -26,12 +26,12 @@ export interface UIAspectParameters {
 }
 
 export class UIAspectConstraint extends UIConstraint {
-  private readonly parameters: UIAspectParameters;
+  private readonly parameters: UIAspectOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly element: UIElement,
-    parameters?: Partial<UIAspectParameters>,
+    parameters?: Partial<UIAspectOptions>,
   ) {
     super(element.layer, new Set([element]));
 

@@ -17,7 +17,9 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-export interface UIHeightParameters {
+const DEFAULT_HEIGHT = 100;
+
+export interface UIHeightOptions {
   height: number;
   power: UIConstraintPower;
   rule: UIConstraintRule;
@@ -25,17 +27,17 @@ export interface UIHeightParameters {
 }
 
 export class UIHeightConstraint extends UIConstraint {
-  private readonly parameters: UIHeightParameters;
+  private readonly parameters: UIHeightOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly element: UIElement,
-    parameters?: Partial<UIHeightParameters>,
+    parameters?: Partial<UIHeightOptions>,
   ) {
     super(element.layer, new Set([element]));
 
     this.parameters = {
-      height: parameters?.height ?? 100,
+      height: parameters?.height ?? DEFAULT_HEIGHT,
       power: resolvePower(parameters?.power),
       rule: resolveRule(parameters?.rule),
       orientation: resolveOrientation(parameters?.orientation),

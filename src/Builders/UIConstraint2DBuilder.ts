@@ -1,93 +1,115 @@
+import type { UIConstraintPower } from "../Constraints/UIConstraintPower";
+import type { UIConstraintRule } from "../Constraints/UIConstraintRule";
 import { UIHeightConstraint } from "../Constraints/UIHeightConstraint";
 import { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDistanceConstraint";
 import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalProportionConstraint";
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
-import type {
-  UIDistance2DConstraint,
-  UIDistance2DConstraintParameters,
-  UIProportion2DConstraintParameters,
-  UIProprtion2DConstraint,
-  UISize2DConstraint,
-  UISize2DConstraintParameters,
-} from "./UIConstraint2DBuilderInterfaces";
+import type { UIElement } from "../Elements/UIElement";
+import type { UILayer } from "../Layers/UILayer";
+import type { UIOrientation } from "../Miscellaneous/UIOrientation";
 
-export class UIConstraintBuilder2D {
-  public static size2D(
-    parameters: UISize2DConstraintParameters,
-  ): UISize2DConstraint {
+export interface UIType2D<T> {
+  x?: T;
+  y?: T;
+}
+
+interface UIConstraint2DOptions {
+  power: UIType2D<UIConstraintPower>;
+  rule: UIType2D<UIConstraintRule>;
+  orientation: UIType2D<UIOrientation>;
+}
+
+export interface UIConstraintSize2DOptions extends UIConstraint2DOptions {
+  size: UIType2D<number>;
+}
+
+export interface UIConstraintSize2DOptions extends UIConstraint2DOptions {
+  anchorOne: UIType2D<number>;
+  anchorTwo: UIType2D<number>;
+  distance: UIType2D<number>;
+}
+
+export interface UIConstraintProportion2DOptions extends UIConstraint2DOptions {
+  proportion: UIType2D<number>;
+}
+
+export interface UIConstraint2DResult<TX, TY> {
+  x: TX;
+  y: TY;
+}
+
+export class UIConstraint2DBuilder {
+  public static size(
+    element: UIElement,
+    options: Partial<UIConstraintSize2DOptions>,
+  ): UIConstraint2DResult<UIWidthConstraint, UIHeightConstraint> {
     return {
-      width: new UIWidthConstraint(parameters.element, {
-        width: parameters.width,
-        power: parameters.powerHorizontal,
-        rule: parameters.ruleHorizontal,
-        orientation: parameters.orientationHorizontal,
+      x: new UIWidthConstraint(element, {
+        width: options.size?.x,
+        power: options.power?.x,
+        rule: options.rule?.x,
+        orientation: options.orientation?.x,
       }),
-      height: new UIHeightConstraint(parameters.element, {
-        height: parameters.height,
-        power: parameters.powerVertical,
-        rule: parameters.ruleVertical,
-        orientation: parameters.orientationVertical,
+      y: new UIHeightConstraint(element, {
+        height: options.size?.y,
+        power: options.power?.y,
+        rule: options.rule?.y,
+        orientation: options.orientation?.y,
       }),
     };
   }
 
-  public static distance2D(
-    parameters: UIDistance2DConstraintParameters,
-  ): UIDistance2DConstraint {
+  public static distance(
+    elementOne: UIElement | UILayer,
+    elementTwo: UIElement,
+    options: Partial<UIConstraintSize2DOptions>,
+  ): UIConstraint2DResult<
+    UIHorizontalDistanceConstraint,
+    UIVerticalDistanceConstraint
+  > {
     return {
-      horizontal: new UIHorizontalDistanceConstraint(
-        parameters.elementOne,
-        parameters.elementTwo,
-        {
-          anchorOne: parameters.anchorHorizontalOne,
-          anchorTwo: parameters.anchorHorizontalTwo,
-          distance: parameters.distanceHorizontal,
-          power: parameters.powerHorizontal,
-          rule: parameters.ruleHorizontal,
-          orientation: parameters.orientationHorizontal,
-        },
-      ),
-      vertical: new UIVerticalDistanceConstraint(
-        parameters.elementOne,
-        parameters.elementTwo,
-        {
-          anchorOne: parameters.anchorVerticalOne,
-          anchorTwo: parameters.anchorVerticalTwo,
-          distance: parameters.distanceVertical,
-          power: parameters.powerVertical,
-          rule: parameters.ruleVertical,
-          orientation: parameters.orientationVertical,
-        },
-      ),
+      x: new UIHorizontalDistanceConstraint(elementOne, elementTwo, {
+        anchorOne: options.anchorOne?.x,
+        anchorTwo: options.anchorTwo?.x,
+        distance: options.distance?.x,
+        power: options.power?.x,
+        rule: options.rule?.x,
+        orientation: options.orientation?.x,
+      }),
+      y: new UIVerticalDistanceConstraint(elementOne, elementTwo, {
+        anchorOne: options.anchorOne?.y,
+        anchorTwo: options.anchorTwo?.y,
+        distance: options.distance?.y,
+        power: options.power?.y,
+        rule: options.rule?.y,
+        orientation: options.orientation?.y,
+      }),
     };
   }
 
-  public static proportional2D(
-    parameters: UIProportion2DConstraintParameters,
-  ): UIProprtion2DConstraint {
+  public static proportional(
+    elementOne: UIElement | UILayer,
+    elementTwo: UIElement,
+    options: Partial<UIConstraintProportion2DOptions>,
+  ): UIConstraint2DResult<
+    UIHorizontalProportionConstraint,
+    UIVerticalProportionConstraint
+  > {
     return {
-      horizontal: new UIHorizontalProportionConstraint(
-        parameters.elementOne,
-        parameters.elementTwo,
-        {
-          proportion: parameters.proportionHorizontal,
-          power: parameters.powerHorizontal,
-          rule: parameters.ruleHorizontal,
-          orientation: parameters.orientationHorizontal,
-        },
-      ),
-      vertical: new UIVerticalProportionConstraint(
-        parameters.elementOne,
-        parameters.elementTwo,
-        {
-          proportion: parameters.proportionVertical,
-          power: parameters.powerVertical,
-          rule: parameters.ruleVertical,
-          orientation: parameters.orientationVertical,
-        },
-      ),
+      x: new UIHorizontalProportionConstraint(elementOne, elementTwo, {
+        proportion: options.proportion?.x,
+        power: options.power?.x,
+        rule: options.rule?.x,
+        orientation: options.orientation?.x,
+      }),
+      y: new UIVerticalProportionConstraint(elementOne, elementTwo, {
+        proportion: options.proportion?.y,
+        power: options.power?.y,
+        rule: options.rule?.y,
+        orientation: options.orientation?.y,
+      }),
     };
   }
 }

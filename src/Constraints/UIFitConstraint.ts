@@ -18,7 +18,9 @@ import {
 } from "../Miscellaneous/UIOrientation";
 import { UIConstraint } from "./UIConstraint";
 
-export interface UIFitParameters {
+const DEFAULT_ANCHOR = 0.5;
+
+export interface UIFitOptions {
   isStrict: boolean;
   horizontalAnchor: number;
   verticalAnchor: number;
@@ -26,7 +28,7 @@ export interface UIFitParameters {
 }
 
 export class UIFitConstraint extends UIConstraint {
-  private readonly parameters: UIFitParameters;
+  private readonly parameters: UIFitOptions;
 
   private constraintX?: Constraint;
   private constraintY?: Constraint;
@@ -39,7 +41,7 @@ export class UIFitConstraint extends UIConstraint {
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
-    parameters?: Partial<UIFitParameters>,
+    parameters?: Partial<UIFitOptions>,
   ) {
     super(
       elementTwo.layer,
@@ -53,8 +55,8 @@ export class UIFitConstraint extends UIConstraint {
 
     this.parameters = {
       isStrict: parameters?.isStrict ?? true,
-      horizontalAnchor: parameters?.horizontalAnchor ?? 0.5,
-      verticalAnchor: parameters?.verticalAnchor ?? 0.5,
+      horizontalAnchor: parameters?.horizontalAnchor ?? DEFAULT_ANCHOR,
+      verticalAnchor: parameters?.verticalAnchor ?? DEFAULT_ANCHOR,
       orientation: resolveOrientation(parameters?.orientation),
     };
 
