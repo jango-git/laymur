@@ -5,11 +5,18 @@ import { UIHorizontalDistanceConstraint } from "../Constraints/UIHorizontalDista
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
 import type { UIElement } from "../Elements/UIElement";
+import type { UIOrientation } from "../Miscellaneous/UIOrientation";
+
+export interface UIConstraintContainerBuilderOptions {
+  power: UIConstraintPower;
+  orientation: UIOrientation;
+}
 
 export class UIConstraintContainerBuilder {
   public static build(
     container: UIElement,
     children: UIElement[],
+    options: Partial<UIConstraintContainerBuilderOptions> = {},
   ): {
     horizontalDistances: UIHorizontalDistanceConstraint[];
     verticalDistances: UIVerticalDistanceConstraint[];
@@ -26,12 +33,16 @@ export class UIConstraintContainerBuilder {
           anchorTwo: 0,
           distance: 0,
           rule: UIConstraintRule.LESS,
+          power: options.power,
+          orientation: options.orientation,
         }),
         new UIHorizontalDistanceConstraint(container, element, {
           anchorOne: 1,
           anchorTwo: 1,
           distance: 0,
           rule: UIConstraintRule.GREATER,
+          power: options.power,
+          orientation: options.orientation,
         }),
       );
 
@@ -41,12 +52,16 @@ export class UIConstraintContainerBuilder {
           anchorTwo: 0,
           distance: 0,
           rule: UIConstraintRule.LESS,
+          power: options.power,
+          orientation: options.orientation,
         }),
         new UIVerticalDistanceConstraint(container, element, {
           anchorOne: 1,
           anchorTwo: 1,
           distance: 0,
           rule: UIConstraintRule.GREATER,
+          power: options.power,
+          orientation: options.orientation,
         }),
       );
     }
