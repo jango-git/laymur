@@ -103,6 +103,7 @@ export class UIConstraintStackBuilder {
           anchorTwo: 0,
           distance: options.distance,
           power: options.power,
+          orientation: options.orientation,
         }),
       );
 
@@ -110,6 +111,7 @@ export class UIConstraintStackBuilder {
         proportions.push(
           new constructors.proportionConstraint(element, nextElement, {
             power: options.power,
+            orientation: options.orientation,
           }),
         );
       }
@@ -120,6 +122,7 @@ export class UIConstraintStackBuilder {
             power: options.power,
             anchorOne: 0,
             anchorTwo: 0,
+            orientation: options.orientation,
           }),
         );
       }
