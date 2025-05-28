@@ -11,7 +11,7 @@ import {
   isUIImageDescription,
   isUIProgressDescription,
   isUITextDescription,
-  isUITextEnhancedDescription,
+  isUITextMultiSpanDescription,
 } from "./UIElementBuilderInterfaces";
 
 export class UIElementBuilder {
@@ -47,7 +47,7 @@ export class UIElementBuilder {
         element = new UIText(layer, [value.text], {
           defaultStyle: value.style,
         });
-      } else if (isUITextEnhancedDescription(value)) {
+      } else if (isUITextMultiSpanDescription(value)) {
         element = new UIText(layer, value.spans, {
           defaultStyle: value.defaultStyle,
         });

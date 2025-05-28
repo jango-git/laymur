@@ -16,7 +16,7 @@ export interface UITextDescription {
   style?: Partial<UITextStyle>;
 }
 
-export interface UITextEnancedDescription {
+export interface UITextMultiSpanDescription {
   spans: (UITextSpan | string)[];
   defaultStyle?: Partial<UITextStyle>;
 }
@@ -30,7 +30,7 @@ export type UIAnyElementDescription =
   | UIImageDescription
   | UIProgressDescription
   | UITextDescription
-  | UITextEnancedDescription
+  | UITextMultiSpanDescription
   | UIDummyDescription;
 
 export function isUIImageDescription(obj: unknown): obj is UIImageDescription {
@@ -64,9 +64,9 @@ export function isUITextDescription(obj: unknown): obj is UITextDescription {
   );
 }
 
-export function isUITextEnhancedDescription(
+export function isUITextMultiSpanDescription(
   obj: unknown,
-): obj is UITextEnancedDescription {
+): obj is UITextMultiSpanDescription {
   return (
     obj !== null &&
     typeof obj === "object" &&
