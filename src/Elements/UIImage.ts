@@ -1,10 +1,10 @@
 import type { Color, Texture, WebGLRenderer } from "three";
 import { Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
+import { UIMaterial } from "../Materials/UIMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
 import { renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
-import { UIMaterial } from "../Passes/UIMaterial";
 import { UIElement } from "./UIElement";
 
 export class UIImage extends UIElement {
@@ -59,8 +59,12 @@ export class UIImage extends UIElement {
 
   public [renderSymbol](renderer: WebGLRenderer): void {
     this.flushTransform();
-    this.material.setTexture(
-      this.composer.render(renderer, this.textureInternal),
+
+    (this.object as Mesh).material = this.composer.renderByMaterial(
+      renderer,
+      this.textureInternal.image.width,
+      this.textureInternal.image.height,
+      this.material,
     );
   }
 }

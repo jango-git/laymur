@@ -1,4 +1,4 @@
-import type { ShaderMaterial, WebGLRenderer } from "three";
+import type { Material, WebGLRenderer } from "three";
 import { Mesh, OrthographicCamera, Scene } from "three";
 import { geometry } from "../Miscellaneous/threeInstances";
 
@@ -10,7 +10,7 @@ export class UIFullScreenQuad {
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   constructor(
-    private materialInternal: ShaderMaterial,
+    private materialInternal?: Material,
     private paddingHorizontalInternal = 0,
     private paddingVerticalInternal = 0,
   ) {
@@ -25,7 +25,7 @@ export class UIFullScreenQuad {
     return this.paddingVerticalInternal;
   }
 
-  public get material(): ShaderMaterial {
+  public get material(): Material | undefined {
     return this.materialInternal;
   }
 
@@ -43,12 +43,17 @@ export class UIFullScreenQuad {
     }
   }
 
-  public set material(value: ShaderMaterial) {
+  public set material(value: Material) {
     this.materialInternal = value;
   }
 
-  public render(renderer: WebGLRenderer): void {
-    mesh.material = this.materialInternal;
+  public render(renderer: WebGLRenderer, material?: Material): void {
+    const currentMaterial = material ?? this.materialInternal;
+    if (!currentMaterial) {
+      throw new Error("You cannot render without a material");
+    }
+
+    mesh.material = currentMaterial;
     renderer.render(scene, this.camera);
   }
 

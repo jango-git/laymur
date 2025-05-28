@@ -1,6 +1,7 @@
 import type { Color, WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
+import { UIMaterial } from "../Materials/UIMaterial";
 import {
   heightSymbol,
   renderSymbol,
@@ -16,7 +17,6 @@ import {
   wrapTextLines,
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
-import { UIMaterial } from "../Passes/UIMaterial";
 import { UIElement } from "./UIElement";
 import type {
   UITextChunk,
@@ -155,6 +155,12 @@ export class UIText extends UIElement {
 
   public [renderSymbol](renderer: WebGLRenderer): void {
     this.flushTransform();
-    this.material.setTexture(this.composer.render(renderer, this.texture));
+
+    (this.object as Mesh).material = this.composer.renderByMaterial(
+      renderer,
+      this.texture.image.width,
+      this.texture.image.height,
+      this.material,
+    );
   }
 }
