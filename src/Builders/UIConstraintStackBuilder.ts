@@ -7,7 +7,6 @@ import type { UIVerticalDistanceOptions } from "../Constraints/UIVerticalDistanc
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import type { UIVerticalProportionOptions } from "../Constraints/UIVerticalProportionConstraint";
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
-import { UIDummy } from "../Elements/UIDummy";
 import type { UIElement } from "../Elements/UIElement";
 import type { UILayer } from "../Layers/UILayer";
 import type { UIOrientation } from "../Miscellaneous/UIOrientation";
@@ -25,9 +24,6 @@ export interface UIConstraintStackBuilderResult<
   TProportion,
   TCenter,
 > {
-  dummy: UIDummy;
-  dummyHorizontalConstraints: UIHorizontalDistanceConstraint[];
-  dummyVerticalConstraints: UIVerticalDistanceConstraint[];
   distanceConstraints: TDistance[];
   proportionConstraints: TProportion[];
   alignmentConstraints: TCenter[];
@@ -110,11 +106,13 @@ export class UIConstraintStackBuilder {
         }),
       );
 
-      proportions.push(
-        new constructors.proportionConstraint(element, nextElement, {
-          power: options.power,
-        }),
-      );
+      if (options.keepProportions !== false) {
+        proportions.push(
+          new constructors.proportionConstraint(element, nextElement, {
+            power: options.power,
+          }),
+        );
+      }
 
       if (options.keepAlignment !== false) {
         centers.push(
@@ -127,57 +125,10 @@ export class UIConstraintStackBuilder {
       }
     }
 
-    const dummyResult = this.buildDummy(
-      elements[0],
-      elements[elements.length - 1],
-    );
-
     return {
-      dummy: dummyResult.dummy,
-      dummyHorizontalConstraints: dummyResult.horizontalConstraints,
-      dummyVerticalConstraints: dummyResult.verticalConstraints,
       distanceConstraints: distances,
       proportionConstraints: proportions,
       alignmentConstraints: centers,
-    };
-  }
-
-  private static buildDummy(
-    firstElement: UIElement,
-    lastElement: UIElement,
-  ): {
-    dummy: UIDummy;
-    horizontalConstraints: UIHorizontalDistanceConstraint[];
-    verticalConstraints: UIVerticalDistanceConstraint[];
-  } {
-    const dummy = new UIDummy(lastElement.layer);
-
-    return {
-      dummy,
-      horizontalConstraints: [
-        new UIHorizontalDistanceConstraint(dummy, firstElement, {
-          distance: 0,
-          anchorOne: 0,
-          anchorTwo: 0,
-        }),
-        new UIHorizontalDistanceConstraint(dummy, lastElement, {
-          distance: 0,
-          anchorOne: 1,
-          anchorTwo: 1,
-        }),
-      ],
-      verticalConstraints: [
-        new UIVerticalDistanceConstraint(dummy, firstElement, {
-          distance: 0,
-          anchorOne: 0,
-          anchorTwo: 0,
-        }),
-        new UIVerticalDistanceConstraint(dummy, lastElement, {
-          distance: 0,
-          anchorOne: 1,
-          anchorTwo: 1,
-        }),
-      ],
     };
   }
 }
