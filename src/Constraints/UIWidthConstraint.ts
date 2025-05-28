@@ -17,8 +17,6 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-const DEFAULT_WIDTH = 100;
-
 export interface UIWidthOptions {
   width: number;
   power: UIConstraintPower;
@@ -27,25 +25,25 @@ export interface UIWidthOptions {
 }
 
 export class UIWidthConstraint extends UIConstraint {
-  private readonly parameters: UIWidthOptions;
+  private readonly options: UIWidthOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly element: UIElement,
-    parameters?: Partial<UIWidthOptions>,
+    options?: Partial<UIWidthOptions>,
   ) {
     super(element.layer, new Set([element]));
 
-    this.parameters = {
-      width: parameters?.width ?? DEFAULT_WIDTH,
-      power: resolvePower(parameters?.power),
-      rule: resolveRule(parameters?.rule),
-      orientation: resolveOrientation(parameters?.orientation),
+    this.options = {
+      width: options?.width ?? element.width,
+      power: resolvePower(options?.power),
+      rule: resolveRule(options?.rule),
+      orientation: resolveOrientation(options?.orientation),
     };
 
     if (
-      this.parameters.orientation === UIOrientation.ALWAYS ||
-      this.parameters.orientation === this.layer.orientation
+      this.options.orientation === UIOrientation.ALWAYS ||
+      this.options.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
     }
@@ -58,8 +56,8 @@ export class UIWidthConstraint extends UIConstraint {
 
   public [disableConstraintSymbol](orientation: UIOrientation): void {
     if (
-      this.parameters.orientation !== UIOrientation.ALWAYS &&
-      orientation !== this.parameters.orientation
+      this.options.orientation !== UIOrientation.ALWAYS &&
+      orientation !== this.options.orientation
     ) {
       this.destroyConstraints();
     }
@@ -67,8 +65,8 @@ export class UIWidthConstraint extends UIConstraint {
 
   public [enableConstraintSymbol](orientation: UIOrientation): void {
     if (
-      this.parameters.orientation !== UIOrientation.ALWAYS &&
-      orientation === this.parameters.orientation
+      this.options.orientation !== UIOrientation.ALWAYS &&
+      orientation === this.options.orientation
     ) {
       this.buildConstraints();
     }
@@ -77,9 +75,9 @@ export class UIWidthConstraint extends UIConstraint {
   protected buildConstraints(): void {
     this.constraint = new Constraint(
       new Expression(this.element[widthSymbol]),
-      convertRuleToOperator(this.parameters.rule),
-      this.parameters.width,
-      convertPowerToStrength(this.parameters.power),
+      convertRuleToOperator(this.options.rule),
+      this.options.width,
+      convertPowerToStrength(this.options.power),
     );
 
     this.layer[addConstraintSymbol](this, this.constraint);

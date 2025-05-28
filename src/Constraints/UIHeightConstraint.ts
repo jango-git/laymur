@@ -17,8 +17,6 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
-const DEFAULT_HEIGHT = 100;
-
 export interface UIHeightOptions {
   height: number;
   power: UIConstraintPower;
@@ -27,25 +25,25 @@ export interface UIHeightOptions {
 }
 
 export class UIHeightConstraint extends UIConstraint {
-  private readonly parameters: UIHeightOptions;
+  private readonly options: UIHeightOptions;
   private constraint?: Constraint;
 
   constructor(
     private readonly element: UIElement,
-    parameters?: Partial<UIHeightOptions>,
+    options?: Partial<UIHeightOptions>,
   ) {
     super(element.layer, new Set([element]));
 
-    this.parameters = {
-      height: parameters?.height ?? DEFAULT_HEIGHT,
-      power: resolvePower(parameters?.power),
-      rule: resolveRule(parameters?.rule),
-      orientation: resolveOrientation(parameters?.orientation),
+    this.options = {
+      height: options?.height ?? element.height,
+      power: resolvePower(options?.power),
+      rule: resolveRule(options?.rule),
+      orientation: resolveOrientation(options?.orientation),
     };
 
     if (
-      this.parameters.orientation === UIOrientation.ALWAYS ||
-      this.parameters.orientation === this.layer.orientation
+      this.options.orientation === UIOrientation.ALWAYS ||
+      this.options.orientation === this.layer.orientation
     ) {
       this.buildConstraints();
     }
@@ -58,8 +56,8 @@ export class UIHeightConstraint extends UIConstraint {
 
   public [disableConstraintSymbol](orientation: UIOrientation): void {
     if (
-      this.parameters.orientation !== UIOrientation.ALWAYS &&
-      orientation !== this.parameters.orientation
+      this.options.orientation !== UIOrientation.ALWAYS &&
+      orientation !== this.options.orientation
     ) {
       this.destroyConstraints();
     }
@@ -67,8 +65,8 @@ export class UIHeightConstraint extends UIConstraint {
 
   public [enableConstraintSymbol](orientation: UIOrientation): void {
     if (
-      this.parameters.orientation !== UIOrientation.ALWAYS &&
-      orientation === this.parameters.orientation
+      this.options.orientation !== UIOrientation.ALWAYS &&
+      orientation === this.options.orientation
     ) {
       this.buildConstraints();
     }
@@ -77,9 +75,9 @@ export class UIHeightConstraint extends UIConstraint {
   protected buildConstraints(): void {
     this.constraint = new Constraint(
       new Expression(this.element[heightSymbol]),
-      convertRuleToOperator(this.parameters.rule),
-      this.parameters.height,
-      convertPowerToStrength(this.parameters.power),
+      convertRuleToOperator(this.options.rule),
+      this.options.height,
+      convertPowerToStrength(this.options.power),
     );
 
     this.layer[addConstraintSymbol](this, this.constraint);
