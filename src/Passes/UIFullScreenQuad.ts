@@ -10,7 +10,6 @@ export class UIFullScreenQuad {
   private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   constructor(
-    private materialInternal?: Material,
     private paddingHorizontalInternal = 0,
     private paddingVerticalInternal = 0,
   ) {
@@ -23,10 +22,6 @@ export class UIFullScreenQuad {
 
   public get paddingVertical(): number {
     return this.paddingVerticalInternal;
-  }
-
-  public get material(): Material | undefined {
-    return this.materialInternal;
   }
 
   public set paddingHorizontal(value: number) {
@@ -43,17 +38,8 @@ export class UIFullScreenQuad {
     }
   }
 
-  public set material(value: Material) {
-    this.materialInternal = value;
-  }
-
-  public render(renderer: WebGLRenderer, material?: Material): void {
-    const currentMaterial = material ?? this.materialInternal;
-    if (!currentMaterial) {
-      throw new Error("You cannot render without a material");
-    }
-
-    mesh.material = currentMaterial;
+  public render(renderer: WebGLRenderer, material: Material): void {
+    mesh.material = material;
     renderer.render(scene, this.camera);
   }
 

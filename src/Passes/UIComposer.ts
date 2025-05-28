@@ -5,20 +5,20 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-// import { UIDrawPass } from "./UIDrawPass";
-import { UIClearMaterial } from "../Materials/UIClearMaterial";
+import { UIDefaultMaterial } from "../Materials/UIDefaultMaterial";
 import { UIFullScreenQuad } from "./UIFullScreenQuad";
 import type { UIPass } from "./UIPass";
 
 export class UIComposer {
-  public readonly defaultMaterial = new UIClearMaterial();
   public readonly passes: UIPass[] = [];
 
   private fromRenderTarget: WebGLRenderTarget;
   private toRenderTarget: WebGLRenderTarget;
 
+  private readonly defaultMaterial = new UIDefaultMaterial();
   private readonly screen = new UIFullScreenQuad();
-  private needsUpdateInternal = false;
+
+  private needsUpdateInternal = true;
 
   constructor() {
     const parameters = {
@@ -52,7 +52,7 @@ export class UIComposer {
     material: Material,
   ): Material {
     if (!this.needsUpdate) {
-      return material;
+      return this.passes.length > 0 ? this.defaultMaterial : material;
     }
 
     const padding = this.calculatePadding();
@@ -86,13 +86,14 @@ export class UIComposer {
       this.reverseTargets();
     }
 
+    this.needsUpdateInternal = false;
     this.defaultMaterial.setTexture(this.fromRenderTarget.texture);
     return this.defaultMaterial;
   }
 
   public renderByTexture(renderer: WebGLRenderer, texture: Texture): Texture {
     if (!this.needsUpdate) {
-      return texture;
+      return this.passes.length > 0 ? this.fromRenderTarget.texture : texture;
     }
 
     const padding = this.calculatePadding();
@@ -125,6 +126,7 @@ export class UIComposer {
       this.reverseTargets();
     }
 
+    this.needsUpdateInternal = false;
     return this.fromRenderTarget.texture;
   }
 

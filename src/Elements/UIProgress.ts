@@ -76,7 +76,7 @@ export class UIProgress extends UIElement {
     return this.material.getForegroundOpacity();
   }
 
-  public get commonOpacity(): number {
+  public get opacity(): number {
     return this.material.getOpacity();
   }
 
@@ -120,7 +120,7 @@ export class UIProgress extends UIElement {
     this.material.setForegroundOpacity(value);
   }
 
-  public set commonOpacity(value: number) {
+  public set opacity(value: number) {
     this.material.setOpacity(value);
   }
 

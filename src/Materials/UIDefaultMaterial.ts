@@ -1,7 +1,7 @@
 import type { Texture } from "three";
 import { ShaderMaterial, UniformsUtils } from "three";
 
-export class UIClearMaterial extends ShaderMaterial {
+export class UIDefaultMaterial extends ShaderMaterial {
   constructor(map?: Texture) {
     super({
       uniforms: UniformsUtils.merge([{ map: { value: map } }]),
