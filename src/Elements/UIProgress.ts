@@ -1,5 +1,5 @@
 import type { Color, Texture, WebGLRenderer } from "three";
-import { Mesh } from "three";
+import { MathUtils, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIProgressMaterial } from "../Materials/UIProgressMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
@@ -51,7 +51,7 @@ export class UIProgress extends UIElement {
     const object = new Mesh(geometry, material);
 
     if (options.angle) {
-      material.setAngle(options.angle);
+      material.setAngle(MathUtils.degToRad(options.angle));
     }
 
     if (options.color) {
@@ -120,7 +120,7 @@ export class UIProgress extends UIElement {
   }
 
   public get angle(): number {
-    return this.material.getAngle();
+    return MathUtils.radToDeg(this.material.getAngle());
   }
 
   public get isForwardDirection(): boolean {
@@ -173,7 +173,7 @@ export class UIProgress extends UIElement {
   }
 
   public set angle(value: number) {
-    this.material.setAngle(value);
+    this.material.setAngle(MathUtils.degToRad(value));
     this.composer.requestUpdate();
   }
 
