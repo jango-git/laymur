@@ -18,6 +18,7 @@ export * from "./Elements/UIDummy";
 export { UIElementEvent } from "./Elements/UIElement";
 export * from "./Elements/UIImage";
 export * from "./Elements/UIProgress";
+export * from "./Elements/UIScene";
 export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
 export * from "./Layers/UIManualLayer";

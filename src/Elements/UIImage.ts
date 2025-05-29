@@ -60,7 +60,7 @@ export class UIImage extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.renderByMaterial(
+    (this.object as Mesh).material = this.composer.compose(
       renderer,
       this.textureInternal.image.width,
       this.textureInternal.image.height,

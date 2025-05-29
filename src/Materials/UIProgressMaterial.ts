@@ -81,16 +81,16 @@ export class UIProgressMaterial extends ShaderMaterial {
     return this.uniforms.foreground.value;
   }
 
-  public getBackgroundColor(): Color {
-    return this.uniforms.backgroundColor.value;
+  public getBackgroundColor(): number {
+    return (this.uniforms.color.value as Color).getHex();
   }
 
-  public getForegroundColor(): Color {
-    return this.uniforms.foregroundColor.value;
+  public getForegroundColor(): number {
+    return (this.uniforms.color.value as Color).getHex();
   }
 
-  public getColor(): Color {
-    return this.uniforms.color.value;
+  public getColor(): number {
+    return (this.uniforms.color.value as Color).getHex();
   }
 
   public getBackgroundOpacity(): number {
@@ -128,18 +128,18 @@ export class UIProgressMaterial extends ShaderMaterial {
     this.uniformsNeedUpdate = true;
   }
 
-  public setBackgroundColor(value: Color): void {
-    this.uniforms.backgroundColor.value = value;
+  public setBackgroundColor(value: number): void {
+    (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 
-  public setForegroundColor(value: Color): void {
-    this.uniforms.foregroundColor.value = value;
+  public setForegroundColor(value: number): void {
+    (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 
-  public setColor(value: Color): void {
-    this.uniforms.color.value = value;
+  public setColor(value: number): void {
+    (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 

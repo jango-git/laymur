@@ -1,4 +1,4 @@
-import type { Color, Texture, WebGLRenderer } from "three";
+import type { Texture, WebGLRenderer } from "three";
 import { MathUtils, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIProgressMaterial } from "../Materials/UIProgressMaterial";
@@ -8,11 +8,13 @@ import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
 export interface UIProgressOptions {
+  progress: number;
+  isForegroundDirection: boolean;
   angle: number;
-  color: Color;
+  color: number;
   opacity: number;
-  backgroundColor: Color;
-  foregroundColor: Color;
+  backgroundColor: number;
+  foregroundColor: number;
   backgroundOpacity: number;
   foregroundOpacity: number;
 }
@@ -53,6 +55,14 @@ export class UIProgress extends UIElement {
       textureBackground,
     );
     const object = new Mesh(geometry, material);
+
+    if (options.progress) {
+      material.setProgress(options.progress);
+    }
+
+    if (options.isForegroundDirection) {
+      material.setIsForwardDirection(options.isForegroundDirection);
+    }
 
     if (options.angle) {
       material.setAngle(MathUtils.degToRad(options.angle));
@@ -106,15 +116,15 @@ export class UIProgress extends UIElement {
     return this.material.getForegroundTexture();
   }
 
-  public get backgroundColor(): Color {
+  public get backgroundColor(): number {
     return this.material.getBackgroundColor();
   }
 
-  public get foregroundColor(): Color {
+  public get foregroundColor(): number {
     return this.material.getForegroundColor();
   }
 
-  public get color(): Color {
+  public get color(): number {
     return this.material.getColor();
   }
 
@@ -143,17 +153,17 @@ export class UIProgress extends UIElement {
     this.composer.requestUpdate();
   }
 
-  public set backgroundColor(value: Color) {
+  public set backgroundColor(value: number) {
     this.material.setBackgroundColor(value);
     this.composer.requestUpdate();
   }
 
-  public set foregroundColor(value: Color) {
+  public set foregroundColor(value: number) {
     this.material.setForegroundColor(value);
     this.composer.requestUpdate();
   }
 
-  public set color(value: Color) {
+  public set color(value: number) {
     this.material.setColor(value);
     this.composer.requestUpdate();
   }
@@ -189,7 +199,7 @@ export class UIProgress extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.renderByMaterial(
+    (this.object as Mesh).material = this.composer.compose(
       renderer,
       this.imageWidth,
       this.imageHeight,

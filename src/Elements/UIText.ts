@@ -156,7 +156,7 @@ export class UIText extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.renderByMaterial(
+    (this.object as Mesh).material = this.composer.compose(
       renderer,
       this.texture.image.width,
       this.texture.image.height,

@@ -1,4 +1,4 @@
-import type { Material, Texture, WebGLRenderer } from "three";
+import type { Material, WebGLRenderer } from "three";
 import {
   LinearFilter,
   NoBlending,
@@ -57,7 +57,7 @@ export class UIComposer {
     this.needsUpdateInternal = true;
   }
 
-  public renderByMaterial(
+  public compose(
     renderer: WebGLRenderer,
     width: number,
     height: number,
@@ -114,55 +114,6 @@ export class UIComposer {
     this.needsUpdateInternal = false;
     this.defaultMaterial.setTexture(this.toRenderTarget.texture);
     return this.defaultMaterial;
-  }
-
-  public renderByTexture(renderer: WebGLRenderer, texture: Texture): Texture {
-    const hasValuablePasses = this.hasValuablePasses();
-    if (
-      (!this.needsUpdateInternal || !hasValuablePasses) &&
-      !this.hasPassesNeedingUpdate()
-    ) {
-      if (!hasValuablePasses) {
-        this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== 0;
-        this.lastPaddingInternal = 0;
-      }
-      this.needsUpdateInternal = false;
-      return hasValuablePasses ? this.toRenderTarget.texture : texture;
-    }
-
-    const padding = this.calculatePadding();
-    this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== padding;
-    this.lastPaddingInternal = padding;
-
-    const width = texture.image.width;
-    const height = texture.image.height;
-
-    const widthWithPadding = width + padding * 2;
-    const heightWithPadding = height + padding * 2;
-
-    this.fromRenderTarget.setSize(widthWithPadding, heightWithPadding);
-    this.toRenderTarget.setSize(widthWithPadding, heightWithPadding);
-    this.setScreenPadding(width, height, padding);
-
-    renderer.setClearColor(0x000000, 0);
-    const options = { width, height, padding };
-
-    for (let i = 0; i < this.passes.length; i++) {
-      const pass = this.passes[i];
-      if (pass.needsUpdate || pass.isValuable) {
-        this.reverseRenderTargets();
-        renderer.setRenderTarget(this.toRenderTarget);
-        renderer.clear(true, false, false);
-        this.passes[i].render(
-          renderer,
-          i === 0 ? texture : this.fromRenderTarget.texture,
-          options,
-        );
-      }
-    }
-
-    this.needsUpdateInternal = false;
-    return this.toRenderTarget.texture;
   }
 
   public destroy(): void {
