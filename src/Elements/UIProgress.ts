@@ -90,46 +90,57 @@ export class UIProgress extends UIElement {
 
   public set progress(value: number) {
     this.material.setProgress(value);
+    this.composer.requestUpdate();
   }
 
   public set backgroundTexture(value: Texture) {
     this.material.setBackgroundTexture(value);
+    this.composer.requestUpdate();
   }
 
   public set foregroundTexture(value: Texture) {
     this.material.setForegroundTexture(value);
+    this.composer.requestUpdate();
   }
 
   public set backgroundColor(value: Color) {
     this.material.setBackgroundColor(value);
+    this.composer.requestUpdate();
   }
 
   public set foregroundColor(value: Color) {
     this.material.setForegroundColor(value);
+    this.composer.requestUpdate();
   }
 
   public set color(value: Color) {
     this.material.setColor(value);
+    this.composer.requestUpdate();
   }
 
   public set backgroundOpacity(value: number) {
     this.material.setBackgroundOpacity(value);
+    this.composer.requestUpdate();
   }
 
   public set foregroundOpacity(value: number) {
     this.material.setForegroundOpacity(value);
+    this.composer.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
+    this.composer.requestUpdate();
   }
 
   public set angle(value: number) {
     this.material.setAngle(value);
+    this.composer.requestUpdate();
   }
 
   public set isForwardDirection(value: boolean) {
     this.material.setIsForwardDirection(value);
+    this.composer.requestUpdate();
   }
 
   public override destroy(): void {

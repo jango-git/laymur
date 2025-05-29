@@ -1,11 +1,12 @@
 import type { Material, Texture, WebGLRenderer } from "three";
 import {
   LinearFilter,
+  NoBlending,
   RGBAFormat,
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import { UIDefaultMaterial } from "../Materials/UIDefaultMaterial";
+import { UIMaterial } from "../Materials/UIMaterial";
 import { UIFullScreenQuad } from "./UIFullScreenQuad";
 import type { UIPass } from "./UIPass";
 
@@ -15,10 +16,10 @@ export class UIComposer {
   private fromRenderTarget: WebGLRenderTarget;
   private toRenderTarget: WebGLRenderTarget;
 
-  private readonly defaultMaterial = new UIDefaultMaterial();
+  private readonly defaultMaterial = new UIMaterial();
   private readonly screen = new UIFullScreenQuad();
 
-  private needsUpdateInternal = true;
+  private needsUpdateInternal = false;
 
   constructor() {
     const parameters = {
@@ -31,6 +32,8 @@ export class UIComposer {
     };
     this.fromRenderTarget = new WebGLRenderTarget(1, 1, parameters);
     this.toRenderTarget = new WebGLRenderTarget(1, 1, parameters);
+    this.fromRenderTarget.texture.generateMipmaps = false;
+    this.toRenderTarget.texture.generateMipmaps = false;
   }
 
   public get needsUpdate(): boolean {
@@ -41,7 +44,7 @@ export class UIComposer {
     this.needsUpdateInternal = true;
   }
 
-  public calculatePadding(): number {
+  public calculateRequiredPadding(): number {
     return this.passes.reduce((a, p) => Math.max(a, p.padding), 0);
   }
 
@@ -50,53 +53,55 @@ export class UIComposer {
     width: number,
     height: number,
     material: Material,
+    canOverrideBlending = true,
   ): Material {
-    if (!this.needsUpdate) {
-      return this.passes.length > 0 ? this.defaultMaterial : material;
+    if (!this.needsUpdate || !this.passes.some((p) => p.isValuable)) {
+      return this.passes.length === 0 ? material : this.defaultMaterial;
     }
 
-    const padding = this.calculatePadding();
+    const padding = this.calculateRequiredPadding();
 
     const widthWithPadding = width + padding * 2;
     const heightWithPadding = height + padding * 2;
 
     this.fromRenderTarget.setSize(widthWithPadding, heightWithPadding);
     this.toRenderTarget.setSize(widthWithPadding, heightWithPadding);
-    this.setPadding(width, height, padding);
+    this.setScreenPadding(width, height, padding);
 
     renderer.setClearColor(0x000000, 0);
-
-    renderer.setRenderTarget(this.fromRenderTarget);
-    renderer.clearColor();
-
     renderer.setRenderTarget(this.toRenderTarget);
-    renderer.clearColor();
+    renderer.clear(true, false, false);
 
+    const originalBlending = material.blending;
+    if (canOverrideBlending) {
+      material.blending = NoBlending;
+    }
     this.screen.render(renderer, material);
-    this.reverseTargets();
+    material.blending = originalBlending;
 
-    for (const pass of this.passes) {
-      renderer.setRenderTarget(this.toRenderTarget);
-      renderer.clearColor();
-      pass.render(renderer, this.fromRenderTarget.texture, {
-        width,
-        height,
-        padding,
-      });
-      this.reverseTargets();
+    const options = { width, height, padding };
+
+    for (let i = 0; i < this.passes.length; i++) {
+      const pass = this.passes[i];
+      if (pass.isValuable) {
+        this.reverseRenderTargets();
+        renderer.setRenderTarget(this.toRenderTarget);
+        renderer.clear(true, false, false);
+        this.passes[i].render(renderer, this.fromRenderTarget.texture, options);
+      }
     }
 
     this.needsUpdateInternal = false;
-    this.defaultMaterial.setTexture(this.fromRenderTarget.texture);
+    this.defaultMaterial.setTexture(this.toRenderTarget.texture);
     return this.defaultMaterial;
   }
 
   public renderByTexture(renderer: WebGLRenderer, texture: Texture): Texture {
-    if (!this.needsUpdate) {
+    if (!this.needsUpdate || !this.passes.some((p) => p.isValuable)) {
       return this.passes.length > 0 ? this.fromRenderTarget.texture : texture;
     }
 
-    const padding = this.calculatePadding();
+    const padding = this.calculateRequiredPadding();
 
     const width = texture.image.width;
     const height = texture.image.height;
@@ -106,28 +111,27 @@ export class UIComposer {
 
     this.fromRenderTarget.setSize(widthWithPadding, heightWithPadding);
     this.toRenderTarget.setSize(widthWithPadding, heightWithPadding);
-    this.setPadding(width, height, padding);
+    this.setScreenPadding(width, height, padding);
 
     renderer.setClearColor(0x000000, 0);
-
-    renderer.setRenderTarget(this.fromRenderTarget);
-    renderer.clearColor();
-
-    renderer.setRenderTarget(this.toRenderTarget);
-    renderer.clearColor();
-
     const options = { width, height, padding };
 
     for (let i = 0; i < this.passes.length; i++) {
-      const currentTexture = i === 0 ? texture : this.fromRenderTarget.texture;
-      renderer.setRenderTarget(this.toRenderTarget);
-      renderer.clearColor();
-      this.passes[i].render(renderer, currentTexture, options);
-      this.reverseTargets();
+      const pass = this.passes[i];
+      if (pass.isValuable) {
+        this.reverseRenderTargets();
+        renderer.setRenderTarget(this.toRenderTarget);
+        renderer.clear(true, false, false);
+        this.passes[i].render(
+          renderer,
+          i === 0 ? texture : this.fromRenderTarget.texture,
+          options,
+        );
+      }
     }
 
     this.needsUpdateInternal = false;
-    return this.fromRenderTarget.texture;
+    return this.toRenderTarget.texture;
   }
 
   public destroy(): void {
@@ -135,17 +139,16 @@ export class UIComposer {
     this.toRenderTarget.dispose();
   }
 
-  private setPadding(width: number, height: number, padding: number): void {
-    if (padding <= 0) {
-      this.screen.paddingHorizontal = 0;
-      this.screen.paddingVertical = 0;
-    } else {
-      this.screen.paddingHorizontal = padding / width;
-      this.screen.paddingVertical = padding / height;
-    }
+  private setScreenPadding(
+    width: number,
+    height: number,
+    padding: number,
+  ): void {
+    this.screen.paddingHorizontal = padding / width;
+    this.screen.paddingVertical = padding / height;
   }
 
-  private reverseTargets(): void {
+  private reverseRenderTargets(): void {
     const fromRenderTarget = this.fromRenderTarget;
     this.fromRenderTarget = this.toRenderTarget;
     this.toRenderTarget = fromRenderTarget;

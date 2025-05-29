@@ -1,22 +1,20 @@
 import type { Texture } from "three";
-import { Color, Matrix3, ShaderMaterial, UniformsUtils } from "three";
+import { Color, ShaderMaterial, UniformsUtils } from "three";
 
 export class UIMaterial extends ShaderMaterial {
-  constructor(map: Texture) {
+  constructor(map?: Texture) {
     super({
       uniforms: UniformsUtils.merge([
         {
           map: { value: map },
           opacity: { value: 1.0 },
           color: { value: new Color(1.0, 1.0, 1.0) },
-          uvTransform: { value: new Matrix3() },
         },
       ]),
       vertexShader: /* glsl */ `
-        uniform mat3 uvTransform;
         varying vec2 vUv;
         void main() {
-          vUv = (uvTransform * vec3(uv, 1)).xy;
+          vUv = uv;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         }
       `,
@@ -33,44 +31,35 @@ export class UIMaterial extends ShaderMaterial {
         }
       `,
       transparent: true,
-      fog: false,
       lights: false,
+      fog: false,
     });
   }
 
-  public getTexture(): Texture {
+  public getTexture(): Texture | undefined {
     return this.uniforms.map.value;
   }
 
-  public getColor(): Color {
-    return this.uniforms.color.value;
+  public getColor(): number {
+    return (this.uniforms.color.value as Color).getHex();
   }
 
   public getOpacity(): number {
     return this.uniforms.opacity.value;
   }
 
-  public getUVTransform(): Matrix3 {
-    return this.uniforms.uvTransform.value;
-  }
-
-  public setTexture(value: Texture): void {
+  public setTexture(value: Texture | undefined): void {
     this.uniforms.map.value = value;
     this.uniformsNeedUpdate = true;
   }
 
-  public setColor(value: Color): void {
-    this.uniforms.color.value = value;
+  public setColor(value: number): void {
+    (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 
   public setOpacity(value: number): void {
     this.uniforms.opacity.value = value;
-    this.uniformsNeedUpdate = true;
-  }
-
-  public setUVTransform(value: Matrix3): void {
-    this.uniforms.uvTransform.value = value;
     this.uniformsNeedUpdate = true;
   }
 }

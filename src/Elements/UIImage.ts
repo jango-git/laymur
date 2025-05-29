@@ -1,4 +1,4 @@
-import type { Color, Texture, WebGLRenderer } from "three";
+import type { Texture, WebGLRenderer } from "three";
 import { Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
@@ -33,10 +33,10 @@ export class UIImage extends UIElement {
   }
 
   public get texture(): Texture {
-    return this.material.getTexture();
+    return this.textureInternal;
   }
 
-  public get color(): Color {
+  public get color(): number {
     return this.material.getColor();
   }
 
@@ -44,12 +44,14 @@ export class UIImage extends UIElement {
     return this.material.getOpacity();
   }
 
-  public set color(value: Color) {
+  public set color(value: number) {
     this.material.setColor(value);
+    this.composer.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
+    this.composer.requestUpdate();
   }
 
   public override destroy(): void {

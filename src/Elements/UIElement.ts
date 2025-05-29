@@ -173,7 +173,7 @@ export abstract class UIElement extends Eventail {
         this.y,
         this.width,
         this.height,
-        this.composer.calculatePadding(),
+        this.composer.calculateRequiredPadding(),
       );
 
       this[needsRecalculation] = false;

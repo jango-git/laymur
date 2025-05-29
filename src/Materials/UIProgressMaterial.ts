@@ -64,8 +64,8 @@ export class UIProgressMaterial extends ShaderMaterial {
         }
       `,
       transparent: true,
-      fog: false,
       lights: false,
+      fog: false,
     });
   }
 

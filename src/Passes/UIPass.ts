@@ -9,6 +9,7 @@ export interface UIPassRenderOptions {
 export abstract class UIPass {
   public abstract get padding(): number;
   public abstract get needsUpdate(): boolean;
+  public abstract get isValuable(): boolean;
   public abstract render(
     renderer: WebGLRenderer,
     texture: Texture,

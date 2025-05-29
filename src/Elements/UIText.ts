@@ -1,4 +1,4 @@
-import type { Color, WebGLRenderer } from "three";
+import type { WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
@@ -111,7 +111,7 @@ export class UIText extends UIElement {
     this.flushTransform();
   }
 
-  public get color(): Color {
+  public get color(): number {
     return this.material.getColor();
   }
 
@@ -119,12 +119,14 @@ export class UIText extends UIElement {
     return this.material.getOpacity();
   }
 
-  public set color(value: Color) {
+  public set color(value: number) {
     this.material.setColor(value);
+    this.composer.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
+    this.composer.requestUpdate();
   }
 
   public override destroy(): void {
