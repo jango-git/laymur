@@ -7,6 +7,16 @@ import { renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
+export interface UIProgressOptions {
+  angle: number;
+  color: Color;
+  opacity: number;
+  backgroundColor: Color;
+  foregroundColor: Color;
+  backgroundOpacity: number;
+  foregroundOpacity: number;
+}
+
 export class UIProgress extends UIElement {
   private readonly material: UIProgressMaterial;
 
@@ -14,6 +24,7 @@ export class UIProgress extends UIElement {
     layer: UILayer,
     textureBackground: Texture,
     textureForeground: Texture,
+    options: Partial<UIProgressOptions> = {},
   ) {
     const backgroundWidth = textureBackground.image?.width;
     const backgroundHeight = textureBackground.image?.height;
@@ -38,6 +49,34 @@ export class UIProgress extends UIElement {
       textureForeground,
     );
     const object = new Mesh(geometry, material);
+
+    if (options.angle) {
+      material.setAngle(options.angle);
+    }
+
+    if (options.color) {
+      material.setColor(options.color);
+    }
+
+    if (options.opacity) {
+      material.setOpacity(options.opacity);
+    }
+
+    if (options.backgroundColor) {
+      material.setBackgroundColor(options.backgroundColor);
+    }
+
+    if (options.foregroundColor) {
+      material.setForegroundColor(options.foregroundColor);
+    }
+
+    if (options.backgroundOpacity) {
+      material.setBackgroundOpacity(options.backgroundOpacity);
+    }
+
+    if (options.foregroundOpacity) {
+      material.setForegroundOpacity(options.foregroundOpacity);
+    }
 
     super(layer, object, 0, 0, backgroundWidth, backgroundHeight);
     this.material = material;
