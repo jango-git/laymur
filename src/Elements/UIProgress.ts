@@ -19,22 +19,15 @@ export interface UIProgressOptions {
 
 export class UIProgress extends UIElement {
   private readonly material: UIProgressMaterial;
+  private readonly imageWidth: number;
+  private readonly imageHeight: number;
 
   constructor(
     layer: UILayer,
-    textureBackground: Texture,
     textureForeground: Texture,
+    textureBackground?: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
-    const backgroundWidth = textureBackground.image?.width;
-    const backgroundHeight = textureBackground.image?.height;
-
-    assertSize(
-      backgroundWidth,
-      backgroundHeight,
-      `Invalid image dimensions - texture "${textureBackground.name || "unnamed"}" has invalid width (${backgroundWidth}) or height (${backgroundHeight}). Image dimensions must be non-zero positive numbers.`,
-    );
-
     const foregroundWidth = textureForeground.image?.width;
     const foregroundHeight = textureForeground.image?.height;
 
@@ -44,9 +37,20 @@ export class UIProgress extends UIElement {
       `Invalid image dimensions - texture "${textureForeground.name || "unnamed"}" has invalid width (${foregroundWidth}) or height (${foregroundHeight}). Image dimensions must be non-zero positive numbers.`,
     );
 
+    const backgroundWidth = textureBackground?.image?.width;
+    const backgroundHeight = textureBackground?.image?.height;
+
+    if (textureBackground) {
+      assertSize(
+        backgroundWidth,
+        backgroundHeight,
+        `Invalid image dimensions - texture "${textureBackground.name || "unnamed"}" has invalid width (${backgroundWidth}) or height (${backgroundHeight}). Image dimensions must be non-zero positive numbers.`,
+      );
+    }
+
     const material = new UIProgressMaterial(
-      textureBackground,
       textureForeground,
+      textureBackground,
     );
     const object = new Mesh(geometry, material);
 
@@ -78,8 +82,15 @@ export class UIProgress extends UIElement {
       material.setForegroundOpacity(options.foregroundOpacity);
     }
 
-    super(layer, object, 0, 0, backgroundWidth, backgroundHeight);
+    const imageWidth = backgroundWidth ?? foregroundWidth;
+    const imageHeight = foregroundHeight ?? backgroundHeight;
+
+    super(layer, object, 0, 0, imageWidth, imageHeight);
+
     this.material = material;
+    this.imageWidth = imageWidth;
+    this.imageHeight = imageHeight;
+
     this.flushTransform();
   }
 
@@ -87,7 +98,7 @@ export class UIProgress extends UIElement {
     return this.material.getProgress();
   }
 
-  public get backgroundTexture(): Texture {
+  public get backgroundTexture(): Texture | undefined {
     return this.material.getBackgroundTexture();
   }
 
@@ -129,16 +140,6 @@ export class UIProgress extends UIElement {
 
   public set progress(value: number) {
     this.material.setProgress(value);
-    this.composer.requestUpdate();
-  }
-
-  public set backgroundTexture(value: Texture) {
-    this.material.setBackgroundTexture(value);
-    this.composer.requestUpdate();
-  }
-
-  public set foregroundTexture(value: Texture) {
-    this.material.setForegroundTexture(value);
     this.composer.requestUpdate();
   }
 
@@ -190,8 +191,8 @@ export class UIProgress extends UIElement {
   public [renderSymbol](renderer: WebGLRenderer): void {
     (this.object as Mesh).material = this.composer.renderByMaterial(
       renderer,
-      this.material.getBackgroundTexture().image.width,
-      this.material.getBackgroundTexture().image.height,
+      this.imageWidth,
+      this.imageHeight,
       this.material,
     );
     this.flushTransform();

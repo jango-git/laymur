@@ -2,11 +2,11 @@ import type { Texture } from "three";
 import { Color, ShaderMaterial, UniformsUtils } from "three";
 
 export class UIProgressMaterial extends ShaderMaterial {
-  constructor(backgroundTexture: Texture, foregroundTexture: Texture) {
+  constructor(foregroundTexture: Texture, backgroundTexture?: Texture) {
     super({
       uniforms: UniformsUtils.merge([
         {
-          map: { value: backgroundTexture },
+          background: { value: backgroundTexture },
           foreground: { value: foregroundTexture },
           progress: { value: 1 },
           backgroundColor: { value: new Color(1, 1, 1) },
@@ -27,7 +27,7 @@ export class UIProgressMaterial extends ShaderMaterial {
         }
       `,
       fragmentShader: /* glsl */ `
-        uniform sampler2D map;
+        uniform sampler2D background;
         uniform sampler2D foreground;
         uniform float progress;
         uniform vec3 backgroundColor;
@@ -41,7 +41,7 @@ export class UIProgressMaterial extends ShaderMaterial {
         varying vec2 vUv;
 
         void main() {
-          vec4 backgroundTexture = texture2D(map, vUv);
+          vec4 backgroundTexture = texture2D(background, vUv);
           vec4 foregroundTexture = texture2D(foreground, vUv);
 
           // Apply common color and opacity
@@ -73,8 +73,8 @@ export class UIProgressMaterial extends ShaderMaterial {
     return this.uniforms.progress.value;
   }
 
-  public getBackgroundTexture(): Texture {
-    return this.uniforms.map.value;
+  public getBackgroundTexture(): Texture | undefined {
+    return this.uniforms.background.value;
   }
 
   public getForegroundTexture(): Texture {
@@ -118,8 +118,8 @@ export class UIProgressMaterial extends ShaderMaterial {
     this.uniformsNeedUpdate = true;
   }
 
-  public setBackgroundTexture(value: Texture): void {
-    this.uniforms.map.value = value;
+  public setBackgroundTexture(value: Texture | undefined): void {
+    this.uniforms.background.value = value;
     this.uniformsNeedUpdate = true;
   }
 
