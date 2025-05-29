@@ -20,6 +20,8 @@ export class UIComposer {
   private readonly screen = new UIFullScreenQuad();
 
   private needsUpdateInternal = false;
+  private lastPaddingHasChangedInternal = false;
+  private lastPaddingInternal = 0;
 
   constructor() {
     const parameters = {
@@ -37,15 +39,22 @@ export class UIComposer {
   }
 
   public get needsUpdate(): boolean {
-    return this.needsUpdateInternal || this.passes.some((p) => p.needsUpdate);
+    return (
+      (this.needsUpdateInternal && this.hasValuablePasses()) ||
+      this.hasPassesNeedingUpdate()
+    );
+  }
+
+  public get lastPaddingHasChanged(): boolean {
+    return this.lastPaddingHasChangedInternal;
+  }
+
+  public get lastPadding(): number {
+    return this.lastPaddingInternal;
   }
 
   public requestUpdate(): void {
     this.needsUpdateInternal = true;
-  }
-
-  public calculateRequiredPadding(): number {
-    return this.passes.reduce((a, p) => Math.max(a, p.padding), 0);
   }
 
   public renderByMaterial(
@@ -55,11 +64,22 @@ export class UIComposer {
     material: Material,
     canOverrideBlending = true,
   ): Material {
-    if (!this.needsUpdate || !this.passes.some((p) => p.isValuable)) {
-      return this.passes.length === 0 ? material : this.defaultMaterial;
+    const hasValuablePasses = this.hasValuablePasses();
+    if (
+      (!this.needsUpdateInternal || !hasValuablePasses) &&
+      !this.hasPassesNeedingUpdate()
+    ) {
+      if (!hasValuablePasses) {
+        this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== 0;
+        this.lastPaddingInternal = 0;
+      }
+      this.needsUpdateInternal = false;
+      return hasValuablePasses ? this.defaultMaterial : material;
     }
 
-    const padding = this.calculateRequiredPadding();
+    const padding = this.calculatePadding();
+    this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== padding;
+    this.lastPaddingInternal = padding;
 
     const widthWithPadding = width + padding * 2;
     const heightWithPadding = height + padding * 2;
@@ -83,7 +103,7 @@ export class UIComposer {
 
     for (let i = 0; i < this.passes.length; i++) {
       const pass = this.passes[i];
-      if (pass.isValuable) {
+      if (pass.needsUpdate || pass.isValuable) {
         this.reverseRenderTargets();
         renderer.setRenderTarget(this.toRenderTarget);
         renderer.clear(true, false, false);
@@ -97,11 +117,22 @@ export class UIComposer {
   }
 
   public renderByTexture(renderer: WebGLRenderer, texture: Texture): Texture {
-    if (!this.needsUpdate || !this.passes.some((p) => p.isValuable)) {
-      return this.passes.length > 0 ? this.fromRenderTarget.texture : texture;
+    const hasValuablePasses = this.hasValuablePasses();
+    if (
+      (!this.needsUpdateInternal || !hasValuablePasses) &&
+      !this.hasPassesNeedingUpdate()
+    ) {
+      if (!hasValuablePasses) {
+        this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== 0;
+        this.lastPaddingInternal = 0;
+      }
+      this.needsUpdateInternal = false;
+      return hasValuablePasses ? this.toRenderTarget.texture : texture;
     }
 
-    const padding = this.calculateRequiredPadding();
+    const padding = this.calculatePadding();
+    this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== padding;
+    this.lastPaddingInternal = padding;
 
     const width = texture.image.width;
     const height = texture.image.height;
@@ -118,7 +149,7 @@ export class UIComposer {
 
     for (let i = 0; i < this.passes.length; i++) {
       const pass = this.passes[i];
-      if (pass.isValuable) {
+      if (pass.needsUpdate || pass.isValuable) {
         this.reverseRenderTargets();
         renderer.setRenderTarget(this.toRenderTarget);
         renderer.clear(true, false, false);
@@ -137,6 +168,18 @@ export class UIComposer {
   public destroy(): void {
     this.fromRenderTarget.dispose();
     this.toRenderTarget.dispose();
+  }
+
+  private hasValuablePasses(): boolean {
+    return this.passes.some((p) => p.isValuable);
+  }
+
+  private hasPassesNeedingUpdate(): boolean {
+    return this.passes.some((p) => p.needsUpdate);
+  }
+
+  private calculatePadding(): number {
+    return this.passes.reduce((a, p) => Math.max(a, p.padding), 0);
   }
 
   private setScreenPadding(

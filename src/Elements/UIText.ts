@@ -156,13 +156,12 @@ export class UIText extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    this.flushTransform();
-
     (this.object as Mesh).material = this.composer.renderByMaterial(
       renderer,
       this.texture.image.width,
       this.texture.image.height,
       this.material,
     );
+    this.flushTransform();
   }
 }

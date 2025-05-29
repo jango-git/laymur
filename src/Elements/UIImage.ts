@@ -60,13 +60,12 @@ export class UIImage extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    this.flushTransform();
-
     (this.object as Mesh).material = this.composer.renderByMaterial(
       renderer,
       this.textureInternal.image.width,
       this.textureInternal.image.height,
       this.material,
     );
+    this.flushTransform();
   }
 }

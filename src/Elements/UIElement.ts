@@ -44,6 +44,7 @@ export abstract class UIElement extends Eventail {
 
   protected behaviorInternal = UIBehavior.VISIBLE;
   protected readonly composer = new UIComposer();
+  protected lastPadding = 0;
 
   constructor(
     public readonly layer: UILayer,
@@ -165,7 +166,11 @@ export abstract class UIElement extends Eventail {
   }
 
   protected flushTransform(): void {
-    if (this[needsRecalculation] || this.micro[needsRecalculation]) {
+    if (
+      this[needsRecalculation] ||
+      this.micro[needsRecalculation] ||
+      this.composer.lastPaddingHasChanged
+    ) {
       applyMicroTransformations(
         this.object,
         this.micro,
@@ -173,7 +178,7 @@ export abstract class UIElement extends Eventail {
         this.y,
         this.width,
         this.height,
-        this.composer.calculateRequiredPadding(),
+        this.composer.lastPadding,
       );
 
       this[needsRecalculation] = false;

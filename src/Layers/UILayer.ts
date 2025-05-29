@@ -312,10 +312,6 @@ export abstract class UILayer {
     }
 
     for (const element of this.elements.keys()) {
-      element[needsRecalculation] = true;
-    }
-
-    for (const element of this.elements.keys()) {
       element[renderSymbol](renderer);
     }
 

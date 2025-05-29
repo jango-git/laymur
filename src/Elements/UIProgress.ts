@@ -149,13 +149,12 @@ export class UIProgress extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    this.flushTransform();
-
     (this.object as Mesh).material = this.composer.renderByMaterial(
       renderer,
       this.material.getBackgroundTexture().image.width,
       this.material.getBackgroundTexture().image.height,
       this.material,
     );
+    this.flushTransform();
   }
 }
