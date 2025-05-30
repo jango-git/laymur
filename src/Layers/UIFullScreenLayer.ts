@@ -9,7 +9,7 @@ export class UIFullScreenLayer extends UILayer {
   constructor() {
     super();
     window.addEventListener("resize", this.onResize);
-    window.addEventListener("click", this.onClick);
+    window.addEventListener("pointerdown", this.onClick);
     this.onResize();
   }
 
@@ -24,7 +24,7 @@ export class UIFullScreenLayer extends UILayer {
 
   public override destroy(): void {
     window.removeEventListener("resize", this.onResize);
-    window.removeEventListener("click", this.onClick);
+    window.removeEventListener("pointerdown", this.onClick);
     super.destroy();
   }
 
@@ -38,7 +38,7 @@ export class UIFullScreenLayer extends UILayer {
     this.resizeInternal(window.innerWidth * scale, window.innerHeight * scale);
   };
 
-  private readonly onClick = (event: MouseEvent): void => {
+  private readonly onClick = (event: PointerEvent): void => {
     if (this.behavior !== UIBehavior.INTERACTIVE) {
       return;
     }
@@ -47,6 +47,7 @@ export class UIFullScreenLayer extends UILayer {
       event.target instanceof HTMLElement
         ? event.target.getBoundingClientRect()
         : null;
+
     const offsetX = rect ? event.clientX - rect.left : event.clientX;
     const offsetY = rect
       ? rect.bottom - event.clientY

@@ -25,7 +25,7 @@ export default {
         drop_debugger: true,
         ecma: 2020,
         keep_fargs: false,
-        passes: 3,
+        passes: 5,
         toplevel: true,
         pure_getters: true,
         unsafe: true,
