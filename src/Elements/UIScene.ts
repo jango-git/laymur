@@ -37,7 +37,7 @@ export class UIScene extends UIElement {
   private sceneInternal: Scene;
   private cameraInternal: Camera;
 
-  constructor(layer: UILayer, options: Partial<UISceneOptions>) {
+  constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     const { resolution = DEFAULT_RESOLUTION } = options;
 
     const resolutionX =
