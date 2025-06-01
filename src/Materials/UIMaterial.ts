@@ -1,16 +1,14 @@
 import type { Texture } from "three";
-import { Color, ShaderMaterial, UniformsUtils } from "three";
+import { Color, ShaderMaterial } from "three";
 
 export class UIMaterial extends ShaderMaterial {
   constructor(map?: Texture) {
     super({
-      uniforms: UniformsUtils.merge([
-        {
-          map: { value: map },
-          opacity: { value: 1.0 },
-          color: { value: new Color(1.0, 1.0, 1.0) },
-        },
-      ]),
+      uniforms: {
+        map: { value: map },
+        opacity: { value: 1.0 },
+        color: { value: new Color(1.0, 1.0, 1.0) },
+      },
       vertexShader: /* glsl */ `
         varying vec2 vUv;
         void main() {

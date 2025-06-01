@@ -1,8 +1,8 @@
-import type { Vector2Like, WebGLRenderer } from "three";
+import type { Camera, Vector2Like, WebGLRenderer } from "three";
 import {
-  Camera,
   LinearFilter,
   Mesh,
+  PerspectiveCamera,
   RGBAFormat,
   Scene,
   UnsignedByteType,
@@ -23,11 +23,18 @@ export interface UISceneOptions {
   camera: Camera;
   resolution: Vector2Like | number;
   renderedByDefault: boolean;
+  clearColor: number;
+  clearAlpha: number;
+  autoUpdate: boolean;
 }
 
 export class UIScene extends UIElement {
   private readonly material: UIMaterial;
   private readonly renderTarget: WebGLRenderTarget;
+
+  private clearColorInternal: number;
+  private clearAlphaInternal: number;
+  private autoUpdateInternal: boolean;
 
   private needsRenderInternal = false;
 
@@ -56,7 +63,7 @@ export class UIScene extends UIElement {
       minFilter: LinearFilter,
       magFilter: LinearFilter,
       type: UnsignedByteType,
-      depthBuffer: false,
+      depthBuffer: true,
       stencilBuffer: false,
     });
 
@@ -65,8 +72,14 @@ export class UIScene extends UIElement {
 
     super(layer, object, 0, 0, resolutionX, resolutionY);
 
+    this.clearColorInternal = options.clearColor ?? 0x000000;
+    this.clearAlphaInternal = options.clearAlpha ?? 0;
+    this.autoUpdateInternal = options.autoUpdate ?? false;
+
     this.sceneInternal = options.scene ?? new Scene();
-    this.cameraInternal = options.camera ?? new Camera();
+    this.cameraInternal =
+      options.camera ??
+      new PerspectiveCamera(75, resolutionX / resolutionY, 0.1, 100);
 
     if (options.renderedByDefault) {
       this.needsRenderInternal = true;
@@ -101,6 +114,18 @@ export class UIScene extends UIElement {
     return this.cameraInternal;
   }
 
+  public get clearColor(): number {
+    return this.clearColorInternal;
+  }
+
+  public get clearAlpha(): number {
+    return this.clearAlphaInternal;
+  }
+
+  public get autoUpdate(): boolean {
+    return this.autoUpdateInternal;
+  }
+
   public get resolution(): Vector2 {
     return new Vector2(this.resolutionX, this.resolutionY);
   }
@@ -121,6 +146,18 @@ export class UIScene extends UIElement {
 
   public set camera(camera: Camera) {
     this.cameraInternal = camera;
+  }
+
+  public set clearColor(value: number) {
+    this.clearColorInternal = value;
+  }
+
+  public set clearAlpha(value: number) {
+    this.clearAlphaInternal = value;
+  }
+
+  public set autoUpdate(value: boolean) {
+    this.autoUpdateInternal = value;
   }
 
   public set resolution(value: Vector2Like | number) {
@@ -148,8 +185,9 @@ export class UIScene extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    if (this.needsRenderInternal) {
-      renderer.setClearColor(0x000000, 1);
+    if (this.needsRenderInternal || this.autoUpdateInternal) {
+      this.needsRenderInternal = false;
+      renderer.setClearColor(this.clearColorInternal, this.clearAlpha);
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
