@@ -15,7 +15,7 @@ export * from "./Constraints/UIVerticalDistanceConstraint";
 export * from "./Constraints/UIVerticalProportionConstraint";
 export * from "./Constraints/UIWidthConstraint";
 export * from "./Elements/UIDummy";
-export { UIElementEvent } from "./Elements/UIElement";
+export * from "./Elements/UIElement";
 export * from "./Elements/UIImage";
 export * from "./Elements/UIProgress";
 export * from "./Elements/UIScene";
