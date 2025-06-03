@@ -23,7 +23,7 @@ export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
 export * from "./Layers/UILayer";
 export * from "./Layers/UIManualLayer";
-export * from "./Miscellaneous/UIBehavior";
+export * from "./Miscellaneous/UIMode";
 export { UIOrientation } from "./Miscellaneous/UIOrientation";
 export * from "./Passes/UIFullScreenQuad";
 export * from "./Passes/UIPass";

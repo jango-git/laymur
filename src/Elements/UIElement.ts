@@ -23,8 +23,8 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import { UIMode } from "../Miscellaneous/UIBehavior";
 import { UIMicro, UIMicroInternal } from "../Miscellaneous/UIMicro";
+import { UIMode } from "../Miscellaneous/UIMode";
 import { UIComposer, UIComposerInternal } from "../Passes/UIComposer";
 
 export enum UIElementEvent {

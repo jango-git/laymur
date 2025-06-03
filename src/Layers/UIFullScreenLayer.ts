@@ -1,4 +1,4 @@
-import { UIMode } from "../Miscellaneous/UIBehavior";
+import { UIMode } from "../Miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 
 const DEFAULT_SCREEN_HEIGHT = 1920;
@@ -39,7 +39,7 @@ export class UIFullScreenLayer extends UILayer {
   };
 
   private readonly onClick = (event: PointerEvent): void => {
-    if (this.behavior !== UIMode.INTERACTIVE) {
+    if (this.mode !== UIMode.INTERACTIVE) {
       return;
     }
 

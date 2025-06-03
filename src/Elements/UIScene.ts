@@ -14,10 +14,10 @@ import { assertSize } from "../Miscellaneous/asserts";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
-export enum UISceneUpdateBehavior {
-  AUTO = "AUTO",
-  PROPERTY = "PROPERTY",
-  MANUAL = "MANUAL",
+export enum UISceneUpdateMode {
+  ALWAYS = "always",
+  PROPERTY_CHANGED = "property_changed",
+  MANUAL = "manual",
 }
 
 const DEFAULT_RESOLUTION_FACTOR = 0.5;
@@ -28,7 +28,7 @@ const DEFAULT_HEIGHT = 512;
 const DEFAULT_FOV = 75;
 const DEFAULT_NEAR = 0.1;
 const DEFAULT_FAR = 100;
-const DEFAULT_UPDATE_BEHAVIOR = UISceneUpdateBehavior.PROPERTY;
+const DEFAULT_UPDATE_MODE = UISceneUpdateMode.PROPERTY_CHANGED;
 const DEFAULT_CLEAR_COLOR = 0x000000;
 const DEFAULT_CLEAR_ALPHA = 0;
 const DEFAULT_RENDERED_BY_DEFAULT = false;
@@ -44,7 +44,7 @@ export interface UISceneOptions {
   useDepth: boolean;
   clearColor: number;
   clearAlpha: number;
-  updateBehavior: UISceneUpdateBehavior;
+  updateBehavior: UISceneUpdateMode;
 }
 
 export class UIScene extends UIElement {
@@ -55,7 +55,7 @@ export class UIScene extends UIElement {
   private clearAlphaInternal: number;
 
   private needsRenderInternal = false;
-  private readonly updateBehaviorInternal: UISceneUpdateBehavior;
+  private readonly updateModeInternal: UISceneUpdateMode;
   private resolutionFactorInternal: number;
 
   private sceneInternal: Scene;
@@ -113,8 +113,7 @@ export class UIScene extends UIElement {
 
     this.resolutionFactorInternal = resolutionFactor;
 
-    this.updateBehaviorInternal =
-      options.updateBehavior ?? DEFAULT_UPDATE_BEHAVIOR;
+    this.updateModeInternal = options.updateBehavior ?? DEFAULT_UPDATE_MODE;
 
     if (options.renderedByDefault ?? DEFAULT_RENDERED_BY_DEFAULT) {
       this.needsRenderInternal = true;
@@ -174,7 +173,7 @@ export class UIScene extends UIElement {
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
       this.sceneInternal = value;
-      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
         this.requestRender();
       }
     }
@@ -183,7 +182,7 @@ export class UIScene extends UIElement {
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
       this.cameraInternal = value;
-      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
         this.requestRender();
       }
     }
@@ -192,7 +191,7 @@ export class UIScene extends UIElement {
   public set clearColor(value: number) {
     if (this.clearColorInternal !== value) {
       this.clearColorInternal = value;
-      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
         this.requestRender();
       }
     }
@@ -201,7 +200,7 @@ export class UIScene extends UIElement {
   public set clearAlpha(value: number) {
     if (this.clearAlphaInternal !== value) {
       this.clearAlphaInternal = value;
-      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
         this.requestRender();
       }
     }
@@ -214,7 +213,7 @@ export class UIScene extends UIElement {
         this.width * this.resolutionFactorInternal,
         this.height * this.resolutionFactorInternal,
       );
-      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
         this.requestRender();
       }
     }
@@ -234,7 +233,7 @@ export class UIScene extends UIElement {
   protected override render(renderer: WebGLRenderer): void {
     if (
       this.needsRenderInternal ||
-      this.updateBehaviorInternal === UISceneUpdateBehavior.AUTO
+      this.updateModeInternal === UISceneUpdateMode.ALWAYS
     ) {
       this.needsRenderInternal = false;
       this.renderTarget.setSize(

@@ -31,7 +31,7 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import { UIMode } from "../Miscellaneous/UIBehavior";
+import { UIMode } from "../Miscellaneous/UIMode";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
