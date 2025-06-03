@@ -1,3 +1,4 @@
+import { Eventail } from "eventail";
 import {
   Constraint,
   Expression,
@@ -34,7 +35,8 @@ import { UIBehavior } from "../Miscellaneous/UIBehavior";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
-export const color = new Color(0x000000);
+const DEFAULT_Z_INDEX = 500;
+const clearColor = new Color(0x000000);
 
 interface VariableDescription {
   strength: number;
@@ -53,7 +55,11 @@ interface UIConstraintDescription {
   constraints: Set<Constraint>;
 }
 
-export abstract class UILayer {
+export enum UILayerEvent {
+  ORIENTATION_CHANGED = "orientationChanged",
+}
+
+export abstract class UILayer extends Eventail {
   public behavior = UIBehavior.VISIBLE;
 
   public readonly [xSymbol]: Variable = new Variable();
@@ -101,6 +107,7 @@ export abstract class UILayer {
       constraints: new Set(),
     });
 
+    object.position.z = DEFAULT_Z_INDEX;
     this.scene.add(object);
   }
 
@@ -299,7 +306,7 @@ export abstract class UILayer {
     }
 
     const originalRenderTarget = renderer.getRenderTarget();
-    const originalClearColor = renderer.getClearColor(color);
+    const originalClearColor = renderer.getClearColor(clearColor);
     const originalClearAlpha = renderer.getClearAlpha();
 
     if (this.needsRecalculation) {
@@ -452,6 +459,8 @@ export abstract class UILayer {
           this.solver.addConstraint(constraint);
         }
       }
+
+      this.emit(UILayerEvent.ORIENTATION_CHANGED, this, this.orientation);
     }
   }
 }

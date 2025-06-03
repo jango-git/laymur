@@ -1,4 +1,5 @@
 import { MathUtils } from "three";
+import type { UIElement } from "../Elements/UIElement";
 import { needsRecalculation } from "./symbols";
 
 const DEFAULT_POSITION = 0;
@@ -16,6 +17,8 @@ export class UIMicroTransformations {
   private scaleXInternal = DEFAULT_SCALE;
   private scaleYInternal = DEFAULT_SCALE;
   private rotationInternal = DEFAULT_ROTATION;
+
+  constructor(private readonly owner: UIElement) {}
 
   public get x(): number {
     return this.positionXInternal;
@@ -86,6 +89,14 @@ export class UIMicroTransformations {
 
   public set rotation(value: number) {
     this.rotationInternal = value;
+    this[needsRecalculation] = true;
+  }
+
+  public setAnchorByGlobalPosition(x: number, y: number): void {
+    const deltaX = x - this.owner.x;
+    const deltaY = y - this.owner.y;
+    this.anchorXInternal = deltaX / this.owner.width;
+    this.anchorYInternal = deltaY / this.owner.height;
     this[needsRecalculation] = true;
   }
 

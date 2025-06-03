@@ -34,7 +34,7 @@ export enum UIElementEvent {
 
 export abstract class UIElement extends Eventail {
   public name = "";
-  public readonly micro = new UIMicroTransformations();
+  public readonly micro: UIMicroTransformations;
 
   public [xSymbol] = new Variable("x");
   public [ySymbol] = new Variable("y");
@@ -55,6 +55,7 @@ export abstract class UIElement extends Eventail {
     height: number,
   ) {
     super();
+    this.micro = new UIMicroTransformations(this);
     this.layer[addUIElementSymbol](this, this.object);
 
     this.layer[addVariableSymbol](

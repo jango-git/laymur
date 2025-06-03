@@ -1,4 +1,4 @@
-import type { Camera, Vector2Like, WebGLRenderer } from "three";
+import type { Camera, WebGLRenderer } from "three";
 import {
   LinearFilter,
   Mesh,
@@ -6,27 +6,47 @@ import {
   RGBAFormat,
   Scene,
   UnsignedByteType,
-  Vector2,
   WebGLRenderTarget,
 } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
-import { renderSymbol } from "../Miscellaneous/symbols";
+import { needsRecalculation, renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
-const DEFAULT_RESOLUTION = 512;
+export enum UISceneUpdateBehavior {
+  AUTO = "AUTO",
+  PROPERTY = "PROPERTY",
+  MANUAL = "MANUAL",
+}
 
 export interface UISceneOptions {
   scene: Scene;
   camera: Camera;
-  resolution: Vector2Like | number;
+  width: number;
+  height: number;
+  resolutionFactor: number;
   renderedByDefault: boolean;
+  useDepth: boolean;
   clearColor: number;
   clearAlpha: number;
-  autoUpdate: boolean;
+  updateBehavior: UISceneUpdateBehavior;
 }
+
+const DEFAULT_RESOLUTION_FACTOR = 0.5;
+const MIN_RESOLUTION_FACTOR = 0.1;
+const MAX_RESOLUTION_FACTOR = 8;
+const DEFAULT_WIDTH = 512;
+const DEFAULT_HEIGHT = 512;
+const DEFAULT_FOV = 75;
+const DEFAULT_NEAR = 0.1;
+const DEFAULT_FAR = 100;
+const DEFAULT_UPDATE_BEHAVIOR = UISceneUpdateBehavior.PROPERTY;
+const DEFAULT_CLEAR_COLOR = 0x000000;
+const DEFAULT_CLEAR_ALPHA = 0;
+const DEFAULT_RENDERED_BY_DEFAULT = false;
+const DEFAULT_USE_DEPTH = true;
 
 export class UIScene extends UIElement {
   private readonly material: UIMaterial;
@@ -34,59 +54,75 @@ export class UIScene extends UIElement {
 
   private clearColorInternal: number;
   private clearAlphaInternal: number;
-  private autoUpdateInternal: boolean;
 
   private needsRenderInternal = false;
-
-  private resolutionX: number;
-  private resolutionY: number;
+  private readonly updateBehaviorInternal: UISceneUpdateBehavior;
+  private resolutionFactorInternal: number;
 
   private sceneInternal: Scene;
   private cameraInternal: Camera;
 
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
-    const { resolution = DEFAULT_RESOLUTION } = options;
+    const resolutionFactor =
+      options.resolutionFactor ?? DEFAULT_RESOLUTION_FACTOR;
 
-    const resolutionX =
-      typeof resolution === "number" ? resolution : resolution.x;
-    const resolutionY =
-      typeof resolution === "number" ? resolution : resolution.y;
+    if (
+      resolutionFactor < MIN_RESOLUTION_FACTOR ||
+      resolutionFactor > MAX_RESOLUTION_FACTOR
+    ) {
+      throw new Error(
+        `Invalid resolution factor: ${resolutionFactor}. Must be between ${MIN_RESOLUTION_FACTOR} and ${MAX_RESOLUTION_FACTOR}.`,
+      );
+    }
+
+    const width = options.width ?? DEFAULT_WIDTH;
+    const height = options.height ?? DEFAULT_HEIGHT;
 
     assertSize(
-      resolutionX,
-      resolutionY,
-      `Invalid resolution dimensions: width (${resolutionX}) and height (${resolutionY}) must both be greater than 0.`,
+      width,
+      height,
+      `Invalid width or height: ${width}x${height}. Must be positive.`,
     );
 
-    const renderTarget = new WebGLRenderTarget(resolutionX, resolutionY, {
-      format: RGBAFormat,
-      minFilter: LinearFilter,
-      magFilter: LinearFilter,
-      type: UnsignedByteType,
-      depthBuffer: true,
-      stencilBuffer: false,
-    });
+    const renderTarget = new WebGLRenderTarget(
+      width * resolutionFactor,
+      height * resolutionFactor,
+      {
+        format: RGBAFormat,
+        minFilter: LinearFilter,
+        magFilter: LinearFilter,
+        type: UnsignedByteType,
+        depthBuffer: options.useDepth ?? DEFAULT_USE_DEPTH,
+        stencilBuffer: false,
+      },
+    );
 
     const material = new UIMaterial(renderTarget.texture);
     const object = new Mesh(geometry, material);
 
-    super(layer, object, 0, 0, resolutionX, resolutionY);
-
-    this.clearColorInternal = options.clearColor ?? 0x000000;
-    this.clearAlphaInternal = options.clearAlpha ?? 0;
-    this.autoUpdateInternal = options.autoUpdate ?? false;
+    super(layer, object, 0, 0, width, height);
 
     this.sceneInternal = options.scene ?? new Scene();
     this.cameraInternal =
       options.camera ??
-      new PerspectiveCamera(75, resolutionX / resolutionY, 0.1, 100);
+      new PerspectiveCamera(
+        DEFAULT_FOV,
+        width / height,
+        DEFAULT_NEAR,
+        DEFAULT_FAR,
+      );
 
-    if (options.renderedByDefault) {
+    this.resolutionFactorInternal = resolutionFactor;
+
+    this.updateBehaviorInternal =
+      options.updateBehavior ?? DEFAULT_UPDATE_BEHAVIOR;
+
+    if (options.renderedByDefault ?? DEFAULT_RENDERED_BY_DEFAULT) {
       this.needsRenderInternal = true;
     }
 
-    this.resolutionX = resolutionX;
-    this.resolutionY = resolutionY;
+    this.clearColorInternal = options.clearColor ?? DEFAULT_CLEAR_COLOR;
+    this.clearAlphaInternal = options.clearAlpha ?? DEFAULT_CLEAR_ALPHA;
 
     this.renderTarget = renderTarget;
     this.material = material;
@@ -122,12 +158,8 @@ export class UIScene extends UIElement {
     return this.clearAlphaInternal;
   }
 
-  public get autoUpdate(): boolean {
-    return this.autoUpdateInternal;
-  }
-
-  public get resolution(): Vector2 {
-    return new Vector2(this.resolutionX, this.resolutionY);
+  public get resolutionFactor(): number {
+    return this.resolutionFactorInternal;
   }
 
   public set color(value: number) {
@@ -141,35 +173,51 @@ export class UIScene extends UIElement {
   }
 
   public set scene(value: Scene) {
-    this.sceneInternal = value;
+    if (this.sceneInternal !== value) {
+      this.sceneInternal = value;
+      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+        this.requestRender();
+      }
+    }
   }
 
-  public set camera(camera: Camera) {
-    this.cameraInternal = camera;
+  public set camera(value: Camera) {
+    if (this.cameraInternal !== value) {
+      this.cameraInternal = value;
+      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+        this.requestRender();
+      }
+    }
   }
 
   public set clearColor(value: number) {
-    this.clearColorInternal = value;
+    if (this.clearColorInternal !== value) {
+      this.clearColorInternal = value;
+      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+        this.requestRender();
+      }
+    }
   }
 
   public set clearAlpha(value: number) {
-    this.clearAlphaInternal = value;
+    if (this.clearAlphaInternal !== value) {
+      this.clearAlphaInternal = value;
+      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+        this.requestRender();
+      }
+    }
   }
 
-  public set autoUpdate(value: boolean) {
-    this.autoUpdateInternal = value;
-  }
-
-  public set resolution(value: Vector2Like | number) {
-    const newResolutionX = typeof value === "number" ? value : value.x;
-    const newResolutionY = typeof value === "number" ? value : value.y;
-    if (
-      this.renderTarget.width !== newResolutionX ||
-      this.renderTarget.height !== newResolutionY
-    ) {
-      this.resolutionX = newResolutionX;
-      this.resolutionY = newResolutionY;
-      this.renderTarget.setSize(newResolutionX, newResolutionY);
+  public set resolutionFactor(value: number) {
+    if (this.resolutionFactorInternal !== value) {
+      this.resolutionFactorInternal = value;
+      this.renderTarget.setSize(
+        this.width * this.resolutionFactorInternal,
+        this.height * this.resolutionFactorInternal,
+      );
+      if (this.updateBehaviorInternal === UISceneUpdateBehavior.PROPERTY) {
+        this.requestRender();
+      }
     }
   }
 
@@ -185,7 +233,16 @@ export class UIScene extends UIElement {
   }
 
   public [renderSymbol](renderer: WebGLRenderer): void {
-    if (this.needsRenderInternal || this.autoUpdateInternal) {
+    if (
+      this.needsRenderInternal ||
+      this.updateBehaviorInternal === UISceneUpdateBehavior.AUTO
+    ) {
+      if (this[needsRecalculation]) {
+        this.renderTarget.setSize(
+          this.width * this.resolutionFactorInternal,
+          this.height * this.resolutionFactorInternal,
+        );
+      }
       this.needsRenderInternal = false;
       renderer.setClearColor(this.clearColorInternal, this.clearAlpha);
       renderer.setRenderTarget(this.renderTarget);
@@ -195,8 +252,8 @@ export class UIScene extends UIElement {
 
     (this.object as Mesh).material = this.composer.compose(
       renderer,
-      this.resolutionX,
-      this.resolutionY,
+      this.width * this.resolutionFactorInternal,
+      this.height * this.resolutionFactorInternal,
       this.material,
     );
     this.flushTransform();

@@ -21,6 +21,7 @@ export * from "./Elements/UIProgress";
 export * from "./Elements/UIScene";
 export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
+export { UILayerEvent } from "./Layers/UILayer";
 export * from "./Layers/UIManualLayer";
 export * from "./Miscellaneous/UIBehavior";
 export { UIOrientation } from "./Miscellaneous/UIOrientation";
