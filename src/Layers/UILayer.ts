@@ -60,7 +60,7 @@ export enum UILayerEvent {
 }
 
 export abstract class UILayer extends Eventail {
-  public behavior = UIMode.VISIBLE;
+  public mode = UIMode.VISIBLE;
 
   public readonly [xSymbol]: Variable = new Variable();
   public readonly [ySymbol]: Variable = new Variable();
@@ -301,7 +301,7 @@ export abstract class UILayer extends Eventail {
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
-    if (this.behavior === UIMode.HIDDEN) {
+    if (this.mode === UIMode.HIDDEN) {
       return;
     }
 
@@ -329,7 +329,7 @@ export abstract class UILayer extends Eventail {
   }
 
   protected clickInternal(x: number, y: number): void {
-    if (this.behavior !== UIMode.INTERACTIVE) {
+    if (this.mode !== UIMode.INTERACTIVE) {
       return;
     }
 
