@@ -3,11 +3,6 @@ import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
 import {
-  heightSymbol,
-  renderSymbol,
-  suggestVariableSymbol,
-} from "../Miscellaneous/symbols";
-import {
   calculateTextBlockSize,
   measureTextChunk,
   renderTextLines,
@@ -42,7 +37,7 @@ export class UIText extends UIElement {
 
   private readonly textBlockSize: UITextSize;
   private readonly padding: UITextPadding;
-  private lastSuggestedAspect = 0;
+  private suggestedAspect = 0;
 
   constructor(
     layer: UILayer,
@@ -108,7 +103,7 @@ export class UIText extends UIElement {
     );
 
     this.texture.needsUpdate = true;
-    this.flushTransform();
+    this.applyTransformations();
   }
 
   public get color(): number {
@@ -121,12 +116,12 @@ export class UIText extends UIElement {
 
   public set color(value: number) {
     this.material.setColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public override destroy(): void {
@@ -136,32 +131,28 @@ export class UIText extends UIElement {
     super.destroy();
   }
 
-  public override flushTransform(): void {
-    super.flushTransform();
+  public override applyTransformations(): void {
+    super.applyTransformations();
 
     const currentAspect = this.width / this.height;
-    if (this.lastSuggestedAspect !== currentAspect) {
-      this.lastSuggestedAspect = currentAspect;
+    if (this.suggestedAspect !== currentAspect) {
+      this.suggestedAspect = currentAspect;
 
       const targetAspect =
         (this.textBlockSize.width + this.padding.left + this.padding.right) /
         (this.textBlockSize.height + this.padding.top + this.padding.bottom);
 
-      this.layer[suggestVariableSymbol](
-        this,
-        this[heightSymbol],
-        this.width / targetAspect,
-      );
+      this.height = this.width / targetAspect;
     }
   }
 
-  public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.compose(
+  protected override render(renderer: WebGLRenderer): void {
+    (this.object as Mesh).material = this.composerInternal.compose(
       renderer,
       this.texture.image.width,
       this.texture.image.height,
       this.material,
     );
-    this.flushTransform();
+    this.applyTransformations();
   }
 }

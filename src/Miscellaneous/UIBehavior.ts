@@ -1,4 +1,4 @@
-export enum UIBehavior {
+export enum UIMode {
   HIDDEN,
   VISIBLE,
   INTERACTIVE,

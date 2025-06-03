@@ -1,7 +1,7 @@
 import { Eventail } from "eventail";
 import { Variable } from "kiwi.js";
 import type { WebGLRenderer } from "three";
-import { type Object3D } from "three";
+import { MathUtils, type Object3D } from "three";
 import {
   convertPowerToStrength,
   UIConstraintPower,
@@ -23,28 +23,28 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import { UIBehavior } from "../Miscellaneous/UIBehavior";
-import { UIMicroTransformations } from "../Miscellaneous/UIMicroTransformations";
-import { UIComposer } from "../Passes/UIComposer";
-import type { UIPass } from "../Passes/UIPass";
+import { UIMode } from "../Miscellaneous/UIBehavior";
+import { UIMicro, UIMicroInternal } from "../Miscellaneous/UIMicro";
+import { UIComposer, UIComposerInternal } from "../Passes/UIComposer";
 
 export enum UIElementEvent {
   CLICK = "click",
 }
 
 export abstract class UIElement extends Eventail {
-  public name = "";
-  public readonly micro: UIMicroTransformations;
-
   public [xSymbol] = new Variable("x");
   public [ySymbol] = new Variable("y");
   public [widthSymbol] = new Variable("width");
   public [heightSymbol] = new Variable("height");
   public [needsRecalculation] = false;
 
-  protected behaviorInternal = UIBehavior.VISIBLE;
-  protected readonly composer = new UIComposer();
-  protected lastPadding = 0;
+  public name = MathUtils.generateUUID();
+  public readonly micro: UIMicro;
+  public readonly composer: UIComposer;
+  protected readonly microInternal = new UIMicroInternal();
+  protected readonly composerInternal = new UIComposerInternal();
+
+  protected modeInternal = UIMode.VISIBLE;
 
   constructor(
     public readonly layer: UILayer,
@@ -55,7 +55,9 @@ export abstract class UIElement extends Eventail {
     height: number,
   ) {
     super();
-    this.micro = new UIMicroTransformations(this);
+    this.micro = new UIMicro(this.microInternal, this);
+    this.composer = new UIComposer(this.composerInternal);
+
     this.layer[addUIElementSymbol](this, this.object);
 
     this.layer[addVariableSymbol](
@@ -90,10 +92,6 @@ export abstract class UIElement extends Eventail {
     this.layer[suggestVariableSymbol](this, this[heightSymbol], height);
   }
 
-  public get passes(): UIPass[] {
-    return this.composer.passes;
-  }
-
   public get x(): number {
     return this[xSymbol].value();
   }
@@ -114,8 +112,12 @@ export abstract class UIElement extends Eventail {
     return this.object.position.z;
   }
 
-  public get behavior(): UIBehavior {
-    return this.behaviorInternal;
+  public get mode(): UIMode {
+    return this.modeInternal;
+  }
+
+  protected get needsRecalculation(): boolean {
+    return this[needsRecalculation];
   }
 
   public set x(value: number) {
@@ -138,13 +140,13 @@ export abstract class UIElement extends Eventail {
     this.object.position.z = value;
   }
 
-  public set behavior(value: UIBehavior) {
-    this.behaviorInternal = value;
-    this.object.visible = value !== UIBehavior.HIDDEN;
+  public set mode(value: UIMode) {
+    this.modeInternal = value;
+    this.object.visible = value !== UIMode.HIDDEN;
   }
 
   public destroy(): void {
-    this.composer.destroy();
+    this.composerInternal.destroy();
     this.layer[removeVariableSymbol](this, this[heightSymbol]);
     this.layer[removeVariableSymbol](this, this[widthSymbol]);
     this.layer[removeVariableSymbol](this, this[ySymbol]);
@@ -152,12 +154,41 @@ export abstract class UIElement extends Eventail {
     this.layer[removeUIElementSymbol](this);
   }
 
+  public [renderSymbol](renderer: WebGLRenderer, deltaTime: number): void {
+    this.render(renderer, deltaTime);
+  }
+
   public [clickSymbol](x: number, y: number): boolean {
-    if (this.behavior !== UIBehavior.INTERACTIVE) {
+    return this.click(x, y);
+  }
+
+  protected applyTransformations(): void {
+    if (
+      this[needsRecalculation] ||
+      this.microInternal.needsRecalculation ||
+      this.composerInternal.paddingHasChanged
+    ) {
+      applyMicroTransformations(
+        this.object,
+        this.microInternal,
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+        this.composerInternal.padding,
+      );
+
+      this[needsRecalculation] = false;
+      this.microInternal.needsRecalculation = false;
+    }
+  }
+
+  protected click(x: number, y: number): boolean {
+    if (this.mode !== UIMode.INTERACTIVE) {
       return false;
     }
 
-    this.flushTransform();
+    this.applyTransformations();
     if (testElement(this.x, this.y, this.width, this.height, x, y)) {
       this.emit(UIElementEvent.CLICK, this);
       return true;
@@ -166,26 +197,5 @@ export abstract class UIElement extends Eventail {
     return false;
   }
 
-  protected flushTransform(): void {
-    if (
-      this[needsRecalculation] ||
-      this.micro[needsRecalculation] ||
-      this.composer.lastPaddingHasChanged
-    ) {
-      applyMicroTransformations(
-        this.object,
-        this.micro,
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        this.composer.lastPadding,
-      );
-
-      this[needsRecalculation] = false;
-      this.micro[needsRecalculation] = false;
-    }
-  }
-
-  protected abstract [renderSymbol](renderer: WebGLRenderer): void;
+  protected abstract render(renderer: WebGLRenderer, deltaTime: number): void;
 }

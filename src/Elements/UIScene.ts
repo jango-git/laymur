@@ -11,7 +11,6 @@ import {
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
-import { needsRecalculation, renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
@@ -19,19 +18,6 @@ export enum UISceneUpdateBehavior {
   AUTO = "AUTO",
   PROPERTY = "PROPERTY",
   MANUAL = "MANUAL",
-}
-
-export interface UISceneOptions {
-  scene: Scene;
-  camera: Camera;
-  width: number;
-  height: number;
-  resolutionFactor: number;
-  renderedByDefault: boolean;
-  useDepth: boolean;
-  clearColor: number;
-  clearAlpha: number;
-  updateBehavior: UISceneUpdateBehavior;
 }
 
 const DEFAULT_RESOLUTION_FACTOR = 0.5;
@@ -47,6 +33,19 @@ const DEFAULT_CLEAR_COLOR = 0x000000;
 const DEFAULT_CLEAR_ALPHA = 0;
 const DEFAULT_RENDERED_BY_DEFAULT = false;
 const DEFAULT_USE_DEPTH = true;
+
+export interface UISceneOptions {
+  scene: Scene;
+  camera: Camera;
+  width: number;
+  height: number;
+  resolutionFactor: number;
+  renderedByDefault: boolean;
+  useDepth: boolean;
+  clearColor: number;
+  clearAlpha: number;
+  updateBehavior: UISceneUpdateBehavior;
+}
 
 export class UIScene extends UIElement {
   private readonly material: UIMaterial;
@@ -127,7 +126,7 @@ export class UIScene extends UIElement {
     this.renderTarget = renderTarget;
     this.material = material;
 
-    this.flushTransform();
+    this.applyTransformations();
   }
 
   public get needsRender(): boolean {
@@ -164,12 +163,12 @@ export class UIScene extends UIElement {
 
   public set color(value: number) {
     this.material.setColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set scene(value: Scene) {
@@ -229,33 +228,31 @@ export class UIScene extends UIElement {
 
   public requestRender(): void {
     this.needsRenderInternal = true;
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
-  public [renderSymbol](renderer: WebGLRenderer): void {
+  protected override render(renderer: WebGLRenderer): void {
     if (
       this.needsRenderInternal ||
       this.updateBehaviorInternal === UISceneUpdateBehavior.AUTO
     ) {
-      if (this[needsRecalculation]) {
-        this.renderTarget.setSize(
-          this.width * this.resolutionFactorInternal,
-          this.height * this.resolutionFactorInternal,
-        );
-      }
       this.needsRenderInternal = false;
+      this.renderTarget.setSize(
+        this.width * this.resolutionFactorInternal,
+        this.height * this.resolutionFactorInternal,
+      );
       renderer.setClearColor(this.clearColorInternal, this.clearAlpha);
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
 
-    (this.object as Mesh).material = this.composer.compose(
+    (this.object as Mesh).material = this.composerInternal.compose(
       renderer,
       this.width * this.resolutionFactorInternal,
       this.height * this.resolutionFactorInternal,
       this.material,
     );
-    this.flushTransform();
+    this.applyTransformations();
   }
 }

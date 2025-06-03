@@ -24,7 +24,4 @@ export abstract class UIConstraint {
 
   public abstract [disableConstraintSymbol](orientation: UIOrientation): void;
   public abstract [enableConstraintSymbol](orientation: UIOrientation): void;
-
-  protected abstract buildConstraints(): void;
-  protected abstract destroyConstraints(): void;
 }

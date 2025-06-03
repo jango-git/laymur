@@ -3,7 +3,6 @@ import { Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
-import { renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
@@ -29,7 +28,7 @@ export class UIImage extends UIElement {
     this.material = material;
     this.textureInternal = texture;
 
-    this.flushTransform();
+    this.applyTransformations();
   }
 
   public get texture(): Texture {
@@ -46,12 +45,12 @@ export class UIImage extends UIElement {
 
   public set color(value: number) {
     this.material.setColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public override destroy(): void {
@@ -59,13 +58,13 @@ export class UIImage extends UIElement {
     super.destroy();
   }
 
-  public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.compose(
+  protected override render(renderer: WebGLRenderer): void {
+    (this.object as Mesh).material = this.composerInternal.compose(
       renderer,
       this.textureInternal.image.width,
       this.textureInternal.image.height,
       this.material,
     );
-    this.flushTransform();
+    this.applyTransformations();
   }
 }

@@ -19,7 +19,8 @@
     "declarationDir": "./dist",
     "emitDeclarationOnly": false,
     "outDir": "./dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "stripInternal": true
   },
   "include": ["src/**/*"]
 }

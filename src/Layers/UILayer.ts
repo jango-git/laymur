@@ -31,7 +31,7 @@ import {
   xSymbol,
   ySymbol,
 } from "../Miscellaneous/symbols";
-import { UIBehavior } from "../Miscellaneous/UIBehavior";
+import { UIMode } from "../Miscellaneous/UIBehavior";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
 const MAX_Z_INDEX = 1000;
@@ -60,7 +60,7 @@ export enum UILayerEvent {
 }
 
 export abstract class UILayer extends Eventail {
-  public behavior = UIBehavior.VISIBLE;
+  public behavior = UIMode.VISIBLE;
 
   public readonly [xSymbol]: Variable = new Variable();
   public readonly [ySymbol]: Variable = new Variable();
@@ -300,8 +300,8 @@ export abstract class UILayer extends Eventail {
     }
   }
 
-  public render(renderer: WebGLRenderer): void {
-    if (this.behavior === UIBehavior.HIDDEN) {
+  public render(renderer: WebGLRenderer, deltaTime: number): void {
+    if (this.behavior === UIMode.HIDDEN) {
       return;
     }
 
@@ -319,7 +319,7 @@ export abstract class UILayer extends Eventail {
     }
 
     for (const element of this.elements.keys()) {
-      element[renderSymbol](renderer);
+      element[renderSymbol](renderer, deltaTime);
     }
 
     renderer.setRenderTarget(originalRenderTarget);
@@ -329,12 +329,12 @@ export abstract class UILayer extends Eventail {
   }
 
   protected clickInternal(x: number, y: number): void {
-    if (this.behavior !== UIBehavior.INTERACTIVE) {
+    if (this.behavior !== UIMode.INTERACTIVE) {
       return;
     }
 
     const elements = [...this.elements.keys()]
-      .filter((e: UIElement) => e.behavior === UIBehavior.INTERACTIVE)
+      .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
       .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
 
     for (const element of elements) {

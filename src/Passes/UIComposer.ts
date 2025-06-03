@@ -10,7 +10,7 @@ import { UIMaterial } from "../Materials/UIMaterial";
 import { UIFullScreenQuad } from "./UIFullScreenQuad";
 import type { UIPass } from "./UIPass";
 
-export class UIComposer {
+export class UIComposerInternal {
   public readonly passes: UIPass[] = [];
 
   private fromRenderTarget: WebGLRenderTarget;
@@ -20,8 +20,8 @@ export class UIComposer {
   private readonly screen = new UIFullScreenQuad();
 
   private needsUpdateInternal = false;
-  private lastPaddingHasChangedInternal = false;
-  private lastPaddingInternal = 0;
+  private paddingHasChangedInternal = false;
+  private paddingInternal = 0;
 
   constructor() {
     const parameters = {
@@ -45,12 +45,12 @@ export class UIComposer {
     );
   }
 
-  public get lastPaddingHasChanged(): boolean {
-    return this.lastPaddingHasChangedInternal;
+  public get paddingHasChanged(): boolean {
+    return this.paddingHasChangedInternal;
   }
 
-  public get lastPadding(): number {
-    return this.lastPaddingInternal;
+  public get padding(): number {
+    return this.paddingInternal;
   }
 
   public requestUpdate(): void {
@@ -70,16 +70,16 @@ export class UIComposer {
       !this.hasPassesNeedingUpdate()
     ) {
       if (!hasValuablePasses) {
-        this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== 0;
-        this.lastPaddingInternal = 0;
+        this.paddingHasChangedInternal = this.paddingInternal !== 0;
+        this.paddingInternal = 0;
       }
       this.needsUpdateInternal = false;
       return hasValuablePasses ? this.defaultMaterial : material;
     }
 
     const padding = this.calculatePadding();
-    this.lastPaddingHasChangedInternal = this.lastPaddingInternal !== padding;
-    this.lastPaddingInternal = padding;
+    this.paddingHasChangedInternal = this.paddingInternal !== padding;
+    this.paddingInternal = padding;
 
     const widthWithPadding = width + padding * 2;
     const heightWithPadding = height + padding * 2;
@@ -146,5 +146,13 @@ export class UIComposer {
     const fromRenderTarget = this.fromRenderTarget;
     this.fromRenderTarget = this.toRenderTarget;
     this.toRenderTarget = fromRenderTarget;
+  }
+}
+
+export class UIComposer {
+  constructor(private readonly raw: UIComposerInternal) {}
+
+  public get passes(): UIPass[] {
+    return this.raw.passes;
   }
 }

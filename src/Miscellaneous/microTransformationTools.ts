@@ -1,5 +1,5 @@
 import { Matrix3, Vector3, type Object3D } from "three";
-import type { UIMicroTransformations } from "./UIMicroTransformations";
+import type { UIMicroInternal } from "./UIMicro";
 
 const tempMatrixA = new Matrix3();
 const tempMatrixB = new Matrix3();
@@ -10,7 +10,7 @@ const tempVectorA = new Vector3();
 
 export function applyMicroTransformations(
   object: Object3D,
-  micro: UIMicroTransformations,
+  micro: UIMicroInternal,
   x: number,
   y: number,
   width: number,

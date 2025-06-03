@@ -42,7 +42,9 @@ export class UIElementBuilder {
       } else if (typeof value === "string") {
         element = new UIText(layer, [value]);
       } else if (isUIProgressDescription(value)) {
-        element = new UIProgress(layer, value.background, value.foreground);
+        element = new UIProgress(layer, value.foreground, {
+          textureBackground: value.background,
+        });
       } else if (isUITextDescription(value)) {
         element = new UIText(layer, [value.text], {
           defaultStyle: value.style,

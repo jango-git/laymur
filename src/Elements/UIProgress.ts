@@ -3,11 +3,11 @@ import { MathUtils, Mesh } from "three";
 import type { UILayer } from "../Layers/UILayer";
 import { UIProgressMaterial } from "../Materials/UIProgressMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
-import { renderSymbol } from "../Miscellaneous/symbols";
 import { geometry } from "../Miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
 export interface UIProgressOptions {
+  textureBackground: Texture;
   progress: number;
   isForegroundDirection: boolean;
   angle: number;
@@ -27,7 +27,6 @@ export class UIProgress extends UIElement {
   constructor(
     layer: UILayer,
     textureForeground: Texture,
-    textureBackground?: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
     const foregroundWidth = textureForeground.image?.width;
@@ -39,20 +38,20 @@ export class UIProgress extends UIElement {
       `Invalid image dimensions - texture "${textureForeground.name || "unnamed"}" has invalid width (${foregroundWidth}) or height (${foregroundHeight}). Image dimensions must be non-zero positive numbers.`,
     );
 
-    const backgroundWidth = textureBackground?.image?.width;
-    const backgroundHeight = textureBackground?.image?.height;
+    const backgroundWidth = options.textureBackground?.image?.width;
+    const backgroundHeight = options.textureBackground?.image?.height;
 
-    if (textureBackground) {
+    if (options.textureBackground) {
       assertSize(
         backgroundWidth,
         backgroundHeight,
-        `Invalid image dimensions - texture "${textureBackground.name || "unnamed"}" has invalid width (${backgroundWidth}) or height (${backgroundHeight}). Image dimensions must be non-zero positive numbers.`,
+        `Invalid image dimensions - texture "${options.textureBackground.name || "unnamed"}" has invalid width (${backgroundWidth}) or height (${backgroundHeight}). Image dimensions must be non-zero positive numbers.`,
       );
     }
 
     const material = new UIProgressMaterial(
       textureForeground,
-      textureBackground,
+      options.textureBackground,
     );
     const object = new Mesh(geometry, material);
 
@@ -101,7 +100,7 @@ export class UIProgress extends UIElement {
     this.imageWidth = imageWidth;
     this.imageHeight = imageHeight;
 
-    this.flushTransform();
+    this.applyTransformations();
   }
 
   public get progress(): number {
@@ -150,47 +149,47 @@ export class UIProgress extends UIElement {
 
   public set progress(value: number) {
     this.material.setProgress(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set backgroundColor(value: number) {
     this.material.setBackgroundColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set foregroundColor(value: number) {
     this.material.setForegroundColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set color(value: number) {
     this.material.setColor(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set backgroundOpacity(value: number) {
     this.material.setBackgroundOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set foregroundOpacity(value: number) {
     this.material.setForegroundOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set angle(value: number) {
     this.material.setAngle(MathUtils.degToRad(value));
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public set isForwardDirection(value: boolean) {
     this.material.setIsForwardDirection(value);
-    this.composer.requestUpdate();
+    this.composerInternal.requestUpdate();
   }
 
   public override destroy(): void {
@@ -198,13 +197,13 @@ export class UIProgress extends UIElement {
     super.destroy();
   }
 
-  public [renderSymbol](renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composer.compose(
+  protected override render(renderer: WebGLRenderer): void {
+    (this.object as Mesh).material = this.composerInternal.compose(
       renderer,
       this.imageWidth,
       this.imageHeight,
       this.material,
     );
-    this.flushTransform();
+    this.applyTransformations();
   }
 }
