@@ -6,6 +6,7 @@ import { UIHorizontalProportionConstraint } from "../Constraints/UIHorizontalPro
 import { UIVerticalDistanceConstraint } from "../Constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../Constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../Constraints/UIWidthConstraint";
+import type { UIAnchor } from "../Elements/UIAnchor";
 import type { UIElement } from "../Elements/UIElement";
 import type { UILayer } from "../Layers/UILayer";
 import type { UIOrientation } from "../Miscellaneous/UIOrientation";
@@ -62,8 +63,8 @@ export class UIConstraint2DBuilder {
   }
 
   public static distance(
-    elementOne: UIElement | UILayer,
-    elementTwo: UIElement,
+    elementOne: UIElement | UIAnchor | UILayer,
+    elementTwo: UIElement | UIAnchor,
     options: Partial<UIConstraintSize2DOptions>,
   ): UIConstraint2DResult<
     UIHorizontalDistanceConstraint,
