@@ -12,6 +12,7 @@ export * from "./Constraints/UIHorizontalProportionConstraint";
 export * from "./Constraints/UIVerticalDistanceConstraint";
 export * from "./Constraints/UIVerticalProportionConstraint";
 export * from "./Constraints/UIWidthConstraint";
+export * from "./Elements/UIAnchor";
 export * from "./Elements/UIDummy";
 export * from "./Elements/UIElement";
 export * from "./Elements/UIImage";

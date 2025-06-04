@@ -1,9 +1,10 @@
+import type { UIAnchor } from "../Elements/UIAnchor";
 import type { UIElement } from "../Elements/UIElement";
 import { UILayer } from "../Layers/UILayer";
 
 export function assertSameLayer(
-  elementOne: UIElement | UILayer,
-  elementTwo: UIElement,
+  elementOne: UIElement | UIAnchor | UILayer,
+  elementTwo: UIElement | UIAnchor,
   message?: string,
 ): void {
   if (

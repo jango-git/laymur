@@ -1,4 +1,5 @@
 import { Constraint, Expression } from "kiwi.js";
+import { UIAnchor } from "../Elements/UIAnchor";
 import { UIElement } from "../Elements/UIElement";
 import type { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
@@ -63,15 +64,15 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
    * @param parameters - Configuration options
    */
   constructor(
-    private readonly elementOne: UIElement | UILayer,
-    private readonly elementTwo: UIElement,
+    private readonly elementOne: UIElement | UIAnchor | UILayer,
+    private readonly elementTwo: UIElement | UIAnchor,
     parameters?: Partial<UIVerticalDistanceOptions>,
   ) {
     assertSameLayer(elementOne, elementTwo);
     super(
       elementTwo.layer,
       new Set(
-        elementOne instanceof UIElement
+        elementOne instanceof UIElement || elementOne instanceof UIAnchor
           ? [elementOne, elementTwo]
           : [elementTwo],
       ),
@@ -140,17 +141,23 @@ export class UIVerticalDistanceConstraint extends UIConstraint {
    *
    */
   protected buildConstraints(): void {
-    const expressionOne = new Expression(this.elementOne[ySymbol]).plus(
-      new Expression(this.elementOne[heightSymbol]).multiply(
-        this.parameters.anchorOne,
-      ),
-    );
+    const expressionOne =
+      this.elementOne instanceof UIElement
+        ? new Expression(this.elementOne[ySymbol]).plus(
+            new Expression(this.elementOne[heightSymbol]).multiply(
+              this.parameters.anchorOne,
+            ),
+          )
+        : new Expression(this.elementOne[ySymbol]);
 
-    const expressionTwo = new Expression(this.elementTwo[ySymbol]).plus(
-      new Expression(this.elementTwo[heightSymbol]).multiply(
-        this.parameters.anchorTwo,
-      ),
-    );
+    const expressionTwo =
+      this.elementTwo instanceof UIElement
+        ? new Expression(this.elementTwo[ySymbol]).plus(
+            new Expression(this.elementTwo[heightSymbol]).multiply(
+              this.parameters.anchorTwo,
+            ),
+          )
+        : new Expression(this.elementTwo[ySymbol]);
 
     this.constraint = new Constraint(
       expressionTwo.minus(expressionOne),

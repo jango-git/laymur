@@ -1,4 +1,5 @@
 import { Constraint, Expression } from "kiwi.js";
+import { UIAnchor } from "../Elements/UIAnchor";
 import { UIElement } from "../Elements/UIElement";
 import type { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
@@ -63,15 +64,15 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
    * @param parameters - Configuration options
    */
   constructor(
-    private readonly elementOne: UIElement | UILayer,
-    private readonly elementTwo: UIElement,
+    private readonly elementOne: UIElement | UIAnchor | UILayer,
+    private readonly elementTwo: UIElement | UIAnchor,
     parameters?: Partial<UIHorizontalDistanceOptions>,
   ) {
     assertSameLayer(elementOne, elementTwo);
     super(
       elementTwo.layer,
       new Set(
-        elementOne instanceof UIElement
+        elementOne instanceof UIElement || elementOne instanceof UIAnchor
           ? [elementOne, elementTwo]
           : [elementTwo],
       ),
@@ -140,17 +141,23 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
    *
    */
   protected buildConstraints(): void {
-    const expressionOne = new Expression(this.elementOne[xSymbol]).plus(
-      new Expression(this.elementOne[widthSymbol]).multiply(
-        this.parameters.anchorOne,
-      ),
-    );
+    const expressionOne =
+      this.elementOne instanceof UIElement
+        ? new Expression(this.elementOne[xSymbol]).plus(
+            new Expression(this.elementOne[widthSymbol]).multiply(
+              this.parameters.anchorOne,
+            ),
+          )
+        : new Expression(this.elementOne[xSymbol]);
 
-    const expressionTwo = new Expression(this.elementTwo[xSymbol]).plus(
-      new Expression(this.elementTwo[widthSymbol]).multiply(
-        this.parameters.anchorTwo,
-      ),
-    );
+    const expressionTwo =
+      this.elementTwo instanceof UIElement
+        ? new Expression(this.elementTwo[xSymbol]).plus(
+            new Expression(this.elementTwo[widthSymbol]).multiply(
+              this.parameters.anchorTwo,
+            ),
+          )
+        : new Expression(this.elementTwo[xSymbol]);
 
     this.constraint = new Constraint(
       expressionTwo.minus(expressionOne),

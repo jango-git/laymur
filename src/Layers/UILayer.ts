@@ -10,6 +10,7 @@ import {
 import type { Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
 import type { UIConstraint } from "../Constraints/UIConstraint";
+import { UIAnchor } from "../Elements/UIAnchor";
 import { UIElement } from "../Elements/UIElement";
 import {
   addConstraintSymbol,
@@ -44,13 +45,13 @@ interface VariableDescription {
 }
 
 interface UIElementDescription {
-  object: Object3D;
+  object?: Object3D;
   variables: Map<Variable, VariableDescription>;
   constraints: Set<UIConstraint>;
 }
 
 interface UIConstraintDescription {
-  elements: Set<UIElement>;
+  elements: Set<UIElement | UIAnchor>;
   variables: Map<Variable, VariableDescription>;
   constraints: Set<Constraint>;
 }
@@ -71,7 +72,7 @@ export abstract class UILayer extends Eventail {
   protected readonly camera = new OrthographicCamera();
   protected solver? = new Solver();
 
-  protected elements = new Map<UIElement, UIElementDescription>();
+  protected elements = new Map<UIElement | UIAnchor, UIElementDescription>();
   protected constraints = new Map<UIConstraint, UIConstraintDescription>();
 
   protected constraintX?: Constraint;
@@ -104,7 +105,10 @@ export abstract class UILayer extends Eventail {
     }
   }
 
-  public [addUIElementSymbol](element: UIElement, object: Object3D): void {
+  public [addUIElementSymbol](
+    element: UIElement | UIAnchor,
+    object?: Object3D,
+  ): void {
     if (this.elements.has(element)) {
       throw new Error("Element already added");
     }
@@ -115,11 +119,13 @@ export abstract class UILayer extends Eventail {
       constraints: new Set(),
     });
 
-    object.position.z = DEFAULT_Z_INDEX;
-    this.scene.add(object);
+    if (object) {
+      object.position.z = DEFAULT_Z_INDEX;
+      this.scene.add(object);
+    }
   }
 
-  public [removeUIElementSymbol](element: UIElement): void {
+  public [removeUIElementSymbol](element: UIElement | UIAnchor): void {
     const dependencies = this.elements.get(element);
     if (dependencies === undefined) {
       throw new Error("Element not found");
@@ -134,12 +140,14 @@ export abstract class UILayer extends Eventail {
     }
 
     this.elements.delete(element);
-    this.scene.remove(dependencies.object);
+    if (dependencies.object) {
+      this.scene.remove(dependencies.object);
+    }
   }
 
   public [addUIConstraintSymbol](
     constraint: UIConstraint,
-    elements: Set<UIElement>,
+    elements: Set<UIElement | UIAnchor>,
   ): void {
     if (this.constraints.has(constraint)) {
       throw new Error("Constraint already added");
@@ -234,12 +242,12 @@ export abstract class UILayer extends Eventail {
   }
 
   public [addVariableSymbol](
-    owner: UIElement | UIConstraint,
+    owner: UIElement | UIAnchor | UIConstraint,
     variable: Variable,
     strength: number,
   ): void {
     const dependencies =
-      owner instanceof UIElement
+      owner instanceof UIElement || owner instanceof UIAnchor
         ? this.elements.get(owner)
         : this.constraints.get(owner);
 
@@ -260,11 +268,11 @@ export abstract class UILayer extends Eventail {
   }
 
   public [removeVariableSymbol](
-    owner: UIElement | UIConstraint,
+    owner: UIElement | UIAnchor | UIConstraint,
     variable: Variable,
   ): void {
     const dependencies =
-      owner instanceof UIElement
+      owner instanceof UIElement || owner instanceof UIAnchor
         ? this.elements.get(owner)
         : this.constraints.get(owner);
 
@@ -282,12 +290,12 @@ export abstract class UILayer extends Eventail {
   }
 
   public [suggestVariableSymbol](
-    owner: UIElement | UIConstraint,
+    owner: UIElement | UIAnchor | UIConstraint,
     variable: Variable,
     value: number,
   ): void {
     const dependencies =
-      owner instanceof UIElement
+      owner instanceof UIElement || owner instanceof UIAnchor
         ? this.elements.get(owner)
         : this.constraints.get(owner);
 
@@ -322,7 +330,9 @@ export abstract class UILayer extends Eventail {
       this.solver?.updateVariables();
 
       for (const element of this.elements.keys()) {
-        element[needsRecalculation] = true;
+        if (element instanceof UIElement) {
+          element[needsRecalculation] = true;
+        }
       }
     }
 
@@ -342,7 +352,11 @@ export abstract class UILayer extends Eventail {
     }
 
     const elements = [...this.elements.keys()]
-      .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
+      .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
+      .filter(
+        (e: UIElement | UIAnchor) =>
+          e instanceof UIElement && e.mode === UIMode.INTERACTIVE,
+      )
       .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
 
     for (const element of elements) {
