@@ -2,6 +2,7 @@ export * from "./Builders/UIConstraint2DBuilder";
 export * from "./Builders/UIConstraintContainerBuilder";
 export * from "./Builders/UIConstraintStackBuilder";
 export * from "./Constraints/UIAspectConstraint";
+export * from "./Constraints/UIConstraint";
 export * from "./Constraints/UIConstraintPower";
 export * from "./Constraints/UIConstraintRule";
 export * from "./Constraints/UICoverConstraint";
