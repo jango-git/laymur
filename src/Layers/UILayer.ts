@@ -86,6 +86,14 @@ export abstract class UILayer extends Eventail {
     return this.orientationPrivate;
   }
 
+  public get width(): number {
+    return this[widthSymbol].value();
+  }
+
+  public get height(): number {
+    return this[heightSymbol].value();
+  }
+
   public destroy(): void {
     this.solver = undefined;
     for (const constraint of this.constraints.keys()) {
