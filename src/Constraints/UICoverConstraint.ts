@@ -18,24 +18,58 @@ import {
 } from "../Miscellaneous/UIOrientation";
 import { UIConstraint } from "./UIConstraint";
 
+/**
+ * Default anchor value (0.5 = center) for cover constraint alignment
+ */
+
 const DEFAULT_ANCHOR = 0.5;
 
+/**
+ * Configuration options for cover constraints.
+ */
 export interface UICoverOptions {
+  /** Whether to force equal height (true) or allow stretching (false) */
   isStrict: boolean;
+  /** Horizontal anchor point (0-1) for alignment between elements */
   horizontalAnchor: number;
+  /** Vertical anchor point (0-1) for alignment between elements */
   verticalAnchor: number;
+  /** Screen orientation when this constraint should be active */
   orientation: UIOrientation;
 }
 
+/**
+ * Constraint that makes an element cover another element or layer.
+ *
+ * The covering element will:
+ * - Be aligned with the covered element using the specified anchors
+ * - Have at least the same width and height as the covered element
+ * - Optionally maintain strict proportions
+ *
+ * This is similar to CSS's "cover" object-fit behavior.
+ */
 export class UICoverConstraint extends UIConstraint {
+  /** The configuration options for this constraint */
   private readonly parameters: UICoverOptions;
 
+  /** Constraint for X-axis alignment */
   private constraintX?: Constraint;
+  /** Constraint for Y-axis alignment */
   private constraintY?: Constraint;
+  /** Constraint for width relationship */
   private constraintW?: Constraint;
+  /** Constraint for height relationship */
   private constraintH?: Constraint;
+  /** Optional constraint for maintaining strict proportions */
   private constraintStrict?: Constraint;
 
+  /**
+   * Creates a new cover constraint.
+   *
+   * @param elementOne - The element or layer to be covered (the reference)
+   * @param elementTwo - The element that will cover the reference
+   * @param parameters - Configuration options
+   */
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
@@ -66,11 +100,20 @@ export class UICoverConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Destroys this constraint, removing it from the constraint system.
+   */
   public override destroy(): void {
     this.destroyConstraints();
     super.destroy();
   }
 
+  /**
+   * Internal method to disable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [disableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.parameters.orientation !== UIOrientation.ALWAYS &&
@@ -80,6 +123,12 @@ export class UICoverConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Internal method to enable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [enableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.parameters.orientation !== UIOrientation.ALWAYS &&
@@ -89,6 +138,17 @@ export class UICoverConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Builds and adds the cover constraints to the constraint solver.
+   *
+   * Creates five constraints:
+   * 1. X alignment between the elements
+   * 2. Y alignment between the elements
+   * 3. Width covering (elementTwo width ≥ elementOne width)
+   * 4. Height covering (elementTwo height ≥ elementOne height)
+   * 5. Optional strict proportions (if isStrict = false)
+   *
+   */
   protected buildConstraints(): void {
     this.constraintX = new Constraint(
       new Expression(this.elementOne[xSymbol]).plus(
@@ -148,6 +208,10 @@ export class UICoverConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Removes all cover constraints from the constraint solver.
+   *
+   */
   protected destroyConstraints(): void {
     if (this.constraintX) {
       this.layer[removeConstraintSymbol](this, this.constraintX);

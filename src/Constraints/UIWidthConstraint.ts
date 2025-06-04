@@ -17,17 +17,38 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
+/**
+ * Configuration options for width constraints.
+ */
 export interface UIWidthOptions {
+  /** The fixed width value to constrain the element to */
   width: number;
+  /** Priority level for this constraint */
   power: UIConstraintPower;
+  /** Rule for the constraint relationship (equal, less than, greater than) */
   rule: UIConstraintRule;
+  /** Screen orientation when this constraint should be active */
   orientation: UIOrientation;
 }
 
+/**
+ * Constraint that enforces a specific width for a UI element.
+ *
+ * This constraint can be configured to require an exact width
+ * or set minimum/maximum width limits using different rules.
+ */
 export class UIWidthConstraint extends UIConstraint {
+  /** The configuration options for this constraint */
   private readonly options: UIWidthOptions;
+  /** The Kiwi.js constraint object */
   private constraint?: Constraint;
 
+  /**
+   * Creates a new width constraint.
+   *
+   * @param element - The UI element to constrain
+   * @param options - Configuration options
+   */
   constructor(
     private readonly element: UIElement,
     options?: Partial<UIWidthOptions>,
@@ -49,11 +70,20 @@ export class UIWidthConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Destroys this constraint, removing it from the constraint system.
+   */
   public override destroy(): void {
     this.destroyConstraints();
     super.destroy();
   }
 
+  /**
+   * Internal method to disable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [disableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.options.orientation !== UIOrientation.ALWAYS &&
@@ -63,6 +93,12 @@ export class UIWidthConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Internal method to enable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [enableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.options.orientation !== UIOrientation.ALWAYS &&
@@ -72,6 +108,13 @@ export class UIWidthConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Builds and adds the width constraint to the constraint solver.
+   *
+   * Creates a constraint that enforces the element's width based
+   * on the specified rule (equal to, less than, or greater than).
+   *
+   */
   protected buildConstraints(): void {
     this.constraint = new Constraint(
       new Expression(this.element[widthSymbol]),
@@ -83,6 +126,10 @@ export class UIWidthConstraint extends UIConstraint {
     this.layer[addConstraintSymbol](this, this.constraint);
   }
 
+  /**
+   * Removes the width constraint from the constraint solver.
+   *
+   */
   protected destroyConstraints(): void {
     if (this.constraint) {
       this.layer[removeConstraintSymbol](this, this.constraint);

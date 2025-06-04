@@ -20,21 +20,48 @@ import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
 import type { UIConstraintRule } from "./UIConstraintRule";
 import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
 
+/**
+ * Default anchor value (0.5 = center) for horizontal distance constraint
+ */
 const DEFAULT_ANCHOR = 0.5;
 
+/**
+ * Configuration options for horizontal distance constraints.
+ */
 export interface UIHorizontalDistanceOptions {
+  /** Horizontal anchor point (0-1) for the first element */
   anchorOne: number;
+  /** Horizontal anchor point (0-1) for the second element */
   anchorTwo: number;
+  /** The target distance between the two elements' anchor points */
   distance: number;
+  /** Priority level for this constraint */
   power: UIConstraintPower;
+  /** Rule for the constraint relationship (equal, less than, greater than) */
   rule: UIConstraintRule;
+  /** Screen orientation when this constraint should be active */
   orientation: UIOrientation;
 }
 
+/**
+ * Constraint that enforces a specific horizontal distance between two UI elements.
+ *
+ * This constraint measures the distance between two anchor points on the x-axis
+ * and ensures it matches (or is less/greater than) the specified distance value.
+ */
 export class UIHorizontalDistanceConstraint extends UIConstraint {
+  /** The configuration options for this constraint */
   private readonly parameters: UIHorizontalDistanceOptions;
+  /** The Kiwi.js constraint object */
   private constraint?: Constraint;
 
+  /**
+   * Creates a new horizontal distance constraint.
+   *
+   * @param elementOne - The first element or layer
+   * @param elementTwo - The second element
+   * @param parameters - Configuration options
+   */
   constructor(
     private readonly elementOne: UIElement | UILayer,
     private readonly elementTwo: UIElement,
@@ -67,11 +94,20 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Destroys this constraint, removing it from the constraint system.
+   */
   public override destroy(): void {
     this.destroyConstraints();
     super.destroy();
   }
 
+  /**
+   * Internal method to disable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [disableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.parameters.orientation !== UIOrientation.ALWAYS &&
@@ -81,6 +117,12 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Internal method to enable this constraint when orientation changes.
+   *
+   * @param orientation - The new screen orientation
+   * @internal
+   */
   public [enableConstraintSymbol](orientation: UIOrientation): void {
     if (
       this.parameters.orientation !== UIOrientation.ALWAYS &&
@@ -90,6 +132,13 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     }
   }
 
+  /**
+   * Builds and adds the horizontal distance constraint to the constraint solver.
+   *
+   * Creates a constraint that enforces the distance between anchor points
+   * on the x-axis of two elements based on the specified rule.
+   *
+   */
   protected buildConstraints(): void {
     const expressionOne = new Expression(this.elementOne[xSymbol]).plus(
       new Expression(this.elementOne[widthSymbol]).multiply(
@@ -113,6 +162,10 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
     this.layer[addConstraintSymbol](this, this.constraint);
   }
 
+  /**
+   * Removes the horizontal distance constraint from the constraint solver.
+   *
+   */
   protected destroyConstraints(): void {
     if (this.constraint) {
       this.layer[removeConstraintSymbol](this, this.constraint);
