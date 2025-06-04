@@ -1,7 +1,7 @@
 import { Constraint, Expression } from "kiwi.js";
 import { UIAnchor } from "../Elements/UIAnchor";
 import { UIElement } from "../Elements/UIElement";
-import type { UILayer } from "../Layers/UILayer";
+import { UILayer } from "../Layers/UILayer";
 import { assertSameLayer } from "../Miscellaneous/asserts";
 import {
   addConstraintSymbol,
@@ -142,7 +142,7 @@ export class UIHorizontalDistanceConstraint extends UIConstraint {
    */
   protected buildConstraints(): void {
     const expressionOne =
-      this.elementOne instanceof UIElement
+      this.elementOne instanceof UIElement || this.elementOne instanceof UILayer
         ? new Expression(this.elementOne[xSymbol]).plus(
             new Expression(this.elementOne[widthSymbol]).multiply(
               this.parameters.anchorOne,
