@@ -1,6 +1,6 @@
 import { Eventail } from "eventail";
 import { Variable } from "kiwi.js";
-import type { WebGLRenderer } from "three";
+import type { Object3D, WebGLRenderer } from "three";
 import { MathUtils } from "three";
 import {
   convertPowerToStrength,
@@ -39,10 +39,11 @@ export abstract class UIAnchor extends Eventail {
     public readonly layer: UILayer,
     x: number,
     y: number,
+    protected readonly object?: Object3D,
   ) {
     super();
 
-    this.layer[addUIElementSymbol](this);
+    this.layer[addUIElementSymbol](this, object);
 
     this.layer[addVariableSymbol](
       this,
