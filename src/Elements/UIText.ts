@@ -12,33 +12,60 @@ import {
   wrapTextLines,
 } from "../Miscellaneous/textTools";
 import { geometry } from "../Miscellaneous/threeInstances";
-import { UIElement } from "./UIElement";
 import type {
   UITextChunk,
   UITextPadding,
   UITextSize,
   UITextSpan,
   UITextStyle,
-} from "./UITextInterfaces";
+} from "../Miscellaneous/UITextInterfaces";
+import { UIElement } from "./UIElement";
+
+/**
+ * Options for customizing the UIText element.
+ */
 export interface UITextOptions {
+  /** Maximum width of the text block before wrapping occurs */
   maxWidth: number;
+  /** Padding around the text */
   padding: Partial<UITextPadding>;
+  /** Default style to apply to text spans that don't specify their own style */
   defaultStyle: Partial<UITextStyle>;
 }
 
+/** Default maximum line width for text if not otherwise specified */
 const DEFAULT_LINE_SIZE = 1024;
 
+/**
+ * A UI element that displays formatted text.
+ * Renders text to a canvas and displays it as a texture on a mesh.
+ */
 export class UIText extends UIElement {
+  /** Material used to render the text */
   private readonly material: UIMaterial;
+  /** Texture containing the rendered text */
   private readonly texture: CanvasTexture;
 
+  /** Canvas element used to render the text */
   private readonly canvas: HTMLCanvasElement;
+  /** 2D rendering context for the canvas */
   private readonly context: CanvasRenderingContext2D;
 
+  /** Size of the text block without padding */
   private readonly textBlockSize: UITextSize;
+  /** Padding values applied around the text */
   private readonly padding: UITextPadding;
+  /** Cached aspect ratio for performance optimization */
   private suggestedAspect = 0;
 
+  /**
+   * Creates a new text UI element.
+   *
+   * @param layer - The UI layer that contains this element
+   * @param spans - Text content to display, either as a string, text span, or array of text spans/strings
+   * @param parameters - Options to customize the text rendering
+   * @throws Error if canvas context creation fails
+   */
   constructor(
     layer: UILayer,
     spans: (UITextSpan | string)[] | UITextSpan | string,
@@ -106,24 +133,38 @@ export class UIText extends UIElement {
     this.applyTransformations();
   }
 
+  /** Gets the color tint applied to the text */
   public get color(): number {
     return this.material.getColor();
   }
 
+  /** Gets the opacity of the text */
   public get opacity(): number {
     return this.material.getOpacity();
   }
 
+  /**
+   * Sets the color tint applied to the text
+   * @param value - Color in hexadecimal format
+   */
   public set color(value: number) {
     this.material.setColor(value);
     this.composerInternal.requestUpdate();
   }
 
+  /**
+   * Sets the opacity of the text
+   * @param value - Opacity value between 0 (transparent) and 1 (opaque)
+   */
   public set opacity(value: number) {
     this.material.setOpacity(value);
     this.composerInternal.requestUpdate();
   }
 
+  /**
+   * Destroys the text element, disposing of all resources and removing it from the layer.
+   * This should be called when the element is no longer needed.
+   */
   public override destroy(): void {
     this.material.dispose();
     this.texture.dispose();
@@ -131,6 +172,12 @@ export class UIText extends UIElement {
     super.destroy();
   }
 
+  /**
+   * Applies transformations to the text element, ensuring the aspect ratio
+   * matches the rendered text to prevent distortion.
+   *
+   * This overrides the base implementation to maintain the correct aspect ratio.
+   */
   public override applyTransformations(): void {
     super.applyTransformations();
 
@@ -146,6 +193,11 @@ export class UIText extends UIElement {
     }
   }
 
+  /**
+   * Renders the text element.
+   *
+   * @param renderer - The WebGL renderer
+   */
   protected override render(renderer: WebGLRenderer): void {
     (this.object as Mesh).material = this.composerInternal.compose(
       renderer,

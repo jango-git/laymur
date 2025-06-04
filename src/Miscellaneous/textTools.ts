@@ -5,7 +5,7 @@ import type {
   UITextPadding,
   UITextSize,
   UITextStyle,
-} from "../Elements/UITextInterfaces";
+} from "./UITextInterfaces";
 
 export function resolvePadding(
   padding?: Partial<UITextPadding> | number,
