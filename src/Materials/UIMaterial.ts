@@ -31,6 +31,8 @@ export class UIMaterial extends ShaderMaterial {
       transparent: true,
       lights: false,
       fog: false,
+      depthWrite: false,
+      depthTest: false,
     });
   }
 

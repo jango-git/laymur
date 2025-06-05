@@ -51,3 +51,6 @@ export const renderSymbol = Symbol("renderSymbol");
 
 /** @internal */
 export const clickSymbol = Symbol("clickSymbol");
+
+/** @internal */
+export const sortSymbol = Symbol("sortSymbol");

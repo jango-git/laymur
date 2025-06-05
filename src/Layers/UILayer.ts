@@ -27,6 +27,7 @@ import {
   removeUIElementSymbol,
   removeVariableSymbol,
   renderSymbol,
+  sortSymbol,
   suggestVariableSymbol,
   widthSymbol,
   xSymbol,
@@ -122,6 +123,7 @@ export abstract class UILayer extends Eventail {
     if (object) {
       object.position.z = DEFAULT_Z_INDEX;
       this.scene.add(object);
+      this[sortSymbol]();
     }
   }
 
@@ -316,6 +318,12 @@ export abstract class UILayer extends Eventail {
     }
   }
 
+  public [sortSymbol](): void {
+    this.scene.children.sort(
+      (a: Object3D, b: Object3D) => a.position.z - b.position.z,
+    );
+  }
+
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.mode === UIMode.HIDDEN) {
       return;
@@ -330,9 +338,7 @@ export abstract class UILayer extends Eventail {
       this.solver?.updateVariables();
 
       for (const element of this.elements.keys()) {
-        if (element instanceof UIElement) {
-          element[needsRecalculation] = true;
-        }
+        element[needsRecalculation] = true;
       }
     }
 

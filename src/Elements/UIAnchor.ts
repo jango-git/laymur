@@ -10,9 +10,11 @@ import type { UILayer } from "../Layers/UILayer";
 import {
   addUIElementSymbol,
   addVariableSymbol,
+  needsRecalculation,
   removeUIElementSymbol,
   removeVariableSymbol,
   renderSymbol,
+  sortSymbol,
   suggestVariableSymbol,
   xSymbol,
   ySymbol,
@@ -24,6 +26,9 @@ export abstract class UIAnchor extends Eventail {
 
   /** Y position variable for constraint system */
   public [ySymbol] = new Variable("y");
+
+  /** Flag indicating whether the element needs recalculation */
+  public [needsRecalculation] = false;
 
   /** Unique identifier for the element */
   public name = MathUtils.generateUUID();
@@ -42,6 +47,10 @@ export abstract class UIAnchor extends Eventail {
     protected readonly object?: Object3D,
   ) {
     super();
+
+    if (this.object) {
+      this.object.matrixAutoUpdate = false;
+    }
 
     this.layer[addUIElementSymbol](this, object);
 
@@ -73,6 +82,16 @@ export abstract class UIAnchor extends Eventail {
     return this[ySymbol].value();
   }
 
+  /** Gets the current z-index (depth) of the element */
+  public get zIndex(): number {
+    return this.object?.position.z ?? 0;
+  }
+
+  /** Gets whether the element needs recalculation */
+  protected get needsRecalculation(): boolean {
+    return this[needsRecalculation];
+  }
+
   /**
    * Sets the x position of the element
    * @param value - New x position
@@ -87,6 +106,19 @@ export abstract class UIAnchor extends Eventail {
    */
   public set y(value: number) {
     this.layer[suggestVariableSymbol](this, this[ySymbol], value);
+  }
+
+  /**
+   * Sets the z-index (depth) of the element
+   * @param value - New z-index
+   */
+  public set zIndex(value: number) {
+    if (this.object) {
+      this.object.position.z = value;
+      this.object.renderOrder = value;
+      this.object.updateMatrix();
+      this.layer[sortSymbol]();
+    }
   }
 
   /**
@@ -108,6 +140,19 @@ export abstract class UIAnchor extends Eventail {
    */
   public [renderSymbol](renderer: WebGLRenderer, deltaTime: number): void {
     this.render(renderer, deltaTime);
+  }
+
+  /**
+   * Applies transformations to the underlying Three.js object.
+   * This is called when the element's position, size, or other properties change.
+   */
+  protected applyTransformations(): void {
+    if (this[needsRecalculation]) {
+      if (this.object) {
+        this.object.updateMatrix();
+      }
+      this[needsRecalculation] = false;
+    }
   }
 
   /**

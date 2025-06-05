@@ -18,6 +18,7 @@ import {
   removeUIElementSymbol,
   removeVariableSymbol,
   renderSymbol,
+  sortSymbol,
   suggestVariableSymbol,
   widthSymbol,
   xSymbol,
@@ -101,6 +102,8 @@ export abstract class UIElement extends Eventail {
     super();
     this.micro = new UIMicro(this.microInternal, this);
     this.composer = new UIComposer(this.composerInternal);
+
+    this.object.matrixAutoUpdate = false;
 
     this.layer[addUIElementSymbol](this, this.object);
 
@@ -209,6 +212,9 @@ export abstract class UIElement extends Eventail {
    */
   public set zIndex(value: number) {
     this.object.position.z = value;
+    this.object.renderOrder = value;
+    this.object.updateMatrix();
+    this.layer[sortSymbol]();
   }
 
   /**
@@ -275,6 +281,8 @@ export abstract class UIElement extends Eventail {
         this.height,
         this.composerInternal.padding,
       );
+
+      this.object.updateMatrix();
 
       this[needsRecalculation] = false;
       this.microInternal.needsRecalculation = false;
