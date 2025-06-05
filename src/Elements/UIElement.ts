@@ -214,8 +214,8 @@ export abstract class UIElement extends Eventail {
     if (this.object.renderOrder !== value) {
       this.object.position.z = value;
       this.object.renderOrder = value;
-      this.object.updateMatrix();
       this.layer[sortSymbol]();
+      this.object.updateMatrix();
     }
   }
 
