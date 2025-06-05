@@ -113,7 +113,7 @@ export abstract class UIAnchor extends Eventail {
    * @param value - New z-index
    */
   public set zIndex(value: number) {
-    if (this.object) {
+    if (this.object && this.object.renderOrder !== value) {
       this.object.position.z = value;
       this.object.renderOrder = value;
       this.object.updateMatrix();

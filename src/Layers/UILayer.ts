@@ -36,8 +36,6 @@ import {
 import { UIMode } from "../Miscellaneous/UIMode";
 import { UIOrientation } from "../Miscellaneous/UIOrientation";
 
-const MAX_Z_INDEX = 1000;
-const DEFAULT_Z_INDEX = 500;
 const clearColor = new Color(0x000000);
 
 interface VariableDescription {
@@ -109,6 +107,7 @@ export abstract class UILayer extends Eventail {
   public [addUIElementSymbol](
     element: UIElement | UIAnchor,
     object?: Object3D,
+    renderOrder?: number,
   ): void {
     if (this.elements.has(element)) {
       throw new Error("Element already added");
@@ -121,9 +120,15 @@ export abstract class UILayer extends Eventail {
     });
 
     if (object) {
-      object.position.z = DEFAULT_Z_INDEX;
+      object.position.z = renderOrder ?? this.scene.children.length;
+      object.renderOrder = renderOrder ?? this.scene.children.length;
+
       this.scene.add(object);
-      this[sortSymbol]();
+
+      this.camera.near = 1;
+      this.camera.far = this.scene.children.length + 2;
+      this.camera.position.z = this.scene.children.length + 1;
+      this.camera.updateProjectionMatrix();
     }
   }
 
@@ -322,6 +327,16 @@ export abstract class UILayer extends Eventail {
     this.scene.children.sort(
       (a: Object3D, b: Object3D) => a.position.z - b.position.z,
     );
+    for (let i = 0; i < this.scene.children.length; i++) {
+      const child = this.scene.children[i];
+      child.position.z = i;
+      child.renderOrder = i;
+    }
+
+    this.camera.near = 1;
+    this.camera.far = this.scene.children.length + 2;
+    this.camera.position.z = this.scene.children.length + 1;
+    this.camera.updateProjectionMatrix();
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
@@ -359,10 +374,7 @@ export abstract class UILayer extends Eventail {
 
     const elements = [...this.elements.keys()]
       .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
-      .filter(
-        (e: UIElement | UIAnchor) =>
-          e instanceof UIElement && e.mode === UIMode.INTERACTIVE,
-      )
+      .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
       .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
 
     for (const element of elements) {
@@ -380,8 +392,6 @@ export abstract class UILayer extends Eventail {
   }
 
   protected applyCameraSize(width: number, height: number): void {
-    this.camera.near = -MAX_Z_INDEX;
-    this.camera.far = 0;
     this.camera.bottom = 0;
     this.camera.left = 0;
     this.camera.right = width;
