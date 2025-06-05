@@ -120,15 +120,13 @@ export abstract class UILayer extends Eventail {
     });
 
     if (object) {
-      object.position.z = renderOrder ?? this.scene.children.length;
-      object.renderOrder = renderOrder ?? this.scene.children.length;
+      const zIndex = renderOrder ?? this.scene.children.length;
+
+      object.position.z = zIndex;
+      object.renderOrder = zIndex;
 
       this.scene.add(object);
-
-      this.camera.near = 1;
-      this.camera.far = this.scene.children.length + 2;
-      this.camera.position.z = this.scene.children.length + 1;
-      this.camera.updateProjectionMatrix();
+      this[sortSymbol]();
     }
   }
 
@@ -327,16 +325,20 @@ export abstract class UILayer extends Eventail {
     this.scene.children.sort(
       (a: Object3D, b: Object3D) => a.position.z - b.position.z,
     );
+
     for (let i = 0; i < this.scene.children.length; i++) {
       const child = this.scene.children[i];
       child.position.z = i;
       child.renderOrder = i;
     }
 
+    const gap = 1;
+
+    this.camera.position.set(0, 0, this.scene.children.length + gap);
     this.camera.near = 1;
-    this.camera.far = this.scene.children.length + 2;
-    this.camera.position.z = this.scene.children.length + 1;
+    this.camera.far = this.scene.children.length + gap + gap;
     this.camera.updateProjectionMatrix();
+    this.camera.updateMatrix();
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
