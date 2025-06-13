@@ -224,7 +224,11 @@ export abstract class UILayer extends Eventail {
     }
 
     dependencies.constraints.add(constraint);
-    this.solver?.addConstraint(constraint);
+    try {
+      this.solver?.addConstraint(constraint);
+    } catch {
+      this.rebuildSolver();
+    }
     this.needsRecalculation = true;
   }
 
@@ -242,7 +246,11 @@ export abstract class UILayer extends Eventail {
     }
 
     dependencies.constraints.delete(constraint);
-    this.solver?.removeConstraint(constraint);
+    try {
+      this.solver?.removeConstraint(constraint);
+    } catch {
+      this.rebuildSolver();
+    }
     this.needsRecalculation = true;
   }
 
@@ -268,7 +276,12 @@ export abstract class UILayer extends Eventail {
       strength,
       suggestedValue: variable.value(),
     });
-    this.solver?.addEditVariable(variable, strength);
+
+    try {
+      this.solver?.addEditVariable(variable, strength);
+    } catch {
+      this.rebuildSolver();
+    }
     this.needsRecalculation = true;
   }
 
@@ -290,7 +303,11 @@ export abstract class UILayer extends Eventail {
     }
 
     dependencies.variables.delete(variable);
-    this.solver?.removeEditVariable(variable);
+    try {
+      this.solver?.removeEditVariable(variable);
+    } catch {
+      this.rebuildSolver();
+    }
     this.needsRecalculation = true;
   }
 
@@ -316,7 +333,11 @@ export abstract class UILayer extends Eventail {
 
     if (description.suggestedValue !== value) {
       description.suggestedValue = value;
-      this.solver?.suggestValue(variable, value);
+      try {
+        this.solver?.suggestValue(variable, value);
+      } catch {
+        this.rebuildSolver();
+      }
       this.needsRecalculation = true;
     }
   }
@@ -501,6 +522,46 @@ export abstract class UILayer extends Eventail {
       }
 
       this.emit(UILayerEvent.ORIENTATION_CHANGED, this, this.orientation);
+    }
+  }
+
+  private rebuildSolver(): void {
+    try {
+      this.solver = undefined;
+
+      this.solver = new Solver();
+      const descriptions = [
+        ...this.elements.values(),
+        ...this.constraints.values(),
+      ];
+
+      for (const description of descriptions) {
+        for (const [key, value] of description.variables.entries()) {
+          this.solver.addEditVariable(key, value.strength);
+          this.solver.suggestValue(key, value.suggestedValue);
+        }
+      }
+
+      if (this.constraintX) {
+        this.solver.addConstraint(this.constraintX);
+      }
+      if (this.constraintY) {
+        this.solver.addConstraint(this.constraintY);
+      }
+      if (this.constraintW) {
+        this.solver.addConstraint(this.constraintW);
+      }
+      if (this.constraintH) {
+        this.solver.addConstraint(this.constraintH);
+      }
+
+      for (const dependency of this.constraints.values()) {
+        for (const constraint of dependency.constraints.values()) {
+          this.solver.addConstraint(constraint);
+        }
+      }
+    } catch (error) {
+      throw error;
     }
   }
 }

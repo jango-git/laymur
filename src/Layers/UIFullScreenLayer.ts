@@ -1,3 +1,4 @@
+import type { WebGLRenderer } from "three";
 import { UIMode } from "../Miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 
@@ -26,6 +27,11 @@ export class UIFullScreenLayer extends UILayer {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onClick);
     super.destroy();
+  }
+
+  public override render(renderer: WebGLRenderer, deltaTime: number): void {
+    renderer.clear(false, true, true);
+    super.render(renderer, deltaTime);
   }
 
   private calculateScale(): number {

@@ -22,7 +22,6 @@ export * from "./Elements/UIScene";
 export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
 export * from "./Layers/UILayer";
-export * from "./Layers/UIManualLayer";
 export * from "./Miscellaneous/symbols";
 export * from "./Miscellaneous/UIMode";
 export * from "./Miscellaneous/UIOrientation";
