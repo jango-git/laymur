@@ -56,7 +56,8 @@ interface UIConstraintDescription {
 }
 
 export enum UILayerEvent {
-  ORIENTATION_CHANGED = "orientationChanged",
+  ORIENTATION_CHANGED = "orientation_changed",
+  CLICK = "click",
 }
 
 export abstract class UILayer extends Eventail {
@@ -394,6 +395,8 @@ export abstract class UILayer extends Eventail {
     if (this.mode !== UIMode.INTERACTIVE) {
       return;
     }
+
+    this.emit(UILayerEvent.CLICK, this, x, y);
 
     const elements = [...this.elements.keys()]
       .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
