@@ -25,5 +25,6 @@ export * from "./Layers/UILayer";
 export * from "./Miscellaneous/symbols";
 export * from "./Miscellaneous/UIMode";
 export * from "./Miscellaneous/UIOrientation";
+export * from "./Miscellaneous/UITextInterfaces";
 export * from "./Passes/UIFullScreenQuad";
 export * from "./Passes/UIPass";
