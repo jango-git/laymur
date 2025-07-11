@@ -23,6 +23,7 @@ export * from "./Elements/UIText";
 export * from "./Layers/UIFullScreenLayer";
 export * from "./Layers/UILayer";
 export * from "./Miscellaneous/symbols";
+export * from "./Miscellaneous/UIBlending";
 export * from "./Miscellaneous/UIMode";
 export * from "./Miscellaneous/UIOrientation";
 export * from "./Miscellaneous/UITextInterfaces";

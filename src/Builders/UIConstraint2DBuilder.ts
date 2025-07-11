@@ -44,7 +44,7 @@ export interface UIConstraint2DResult<TX, TY> {
 export class UIConstraint2DBuilder {
   public static size(
     element: UIElement,
-    options: Partial<UIConstraintSize2DOptions>,
+    options: Partial<UIConstraintSize2DOptions> = {},
   ): UIConstraint2DResult<UIWidthConstraint, UIHeightConstraint> {
     return {
       x: new UIWidthConstraint(element, {
@@ -65,7 +65,7 @@ export class UIConstraint2DBuilder {
   public static distance(
     elementOne: UIElement | UIAnchor | UILayer,
     elementTwo: UIElement | UIAnchor,
-    options: Partial<UIConstraintSize2DOptions>,
+    options: Partial<UIConstraintSize2DOptions> = {},
   ): UIConstraint2DResult<
     UIHorizontalDistanceConstraint,
     UIVerticalDistanceConstraint
@@ -93,7 +93,7 @@ export class UIConstraint2DBuilder {
   public static proportion(
     elementOne: UIElement | UILayer,
     elementTwo: UIElement,
-    options: Partial<UIConstraintProportion2DOptions>,
+    options: Partial<UIConstraintProportion2DOptions> = {},
   ): UIConstraint2DResult<
     UIHorizontalProportionConstraint,
     UIVerticalProportionConstraint

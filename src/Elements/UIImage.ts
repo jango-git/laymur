@@ -4,6 +4,7 @@ import type { UILayer } from "../Layers/UILayer";
 import { UIMaterial } from "../Materials/UIMaterial";
 import { assertSize } from "../Miscellaneous/asserts";
 import { geometry } from "../Miscellaneous/threeInstances";
+import { UIBlending } from "../Miscellaneous/UIBlending";
 import { UIElement } from "./UIElement";
 
 /**
@@ -17,6 +18,8 @@ export class UIImage extends UIElement {
 
   /** The texture displayed by this image */
   private readonly textureInternal: Texture;
+
+  private blendingInternal: UIBlending = UIBlending.NORMAL;
 
   /**
    * Creates a new image UI element.
@@ -61,6 +64,11 @@ export class UIImage extends UIElement {
     return this.material.getOpacity();
   }
 
+  /** Gets the blending mode of the image */
+  public get blending(): UIBlending {
+    return this.blendingInternal;
+  }
+
   /**
    * Sets the color tint applied to the image
    * @param value - Color in hexadecimal format
@@ -76,6 +84,16 @@ export class UIImage extends UIElement {
    */
   public set opacity(value: number) {
     this.material.setOpacity(value);
+    this.composerInternal.requestUpdate();
+  }
+
+  /**
+   * Sets the blending mode of the image
+   * @param value - Blending mode to apply
+   */
+  public set blending(value: UIBlending) {
+    this.blendingInternal = value;
+    this.material.setBlending(value);
     this.composerInternal.requestUpdate();
   }
 

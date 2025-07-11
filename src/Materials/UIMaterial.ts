@@ -1,5 +1,17 @@
 import type { Texture } from "three";
-import { Color, ShaderMaterial } from "three";
+import {
+  AddEquation,
+  AdditiveBlending,
+  Color,
+  CustomBlending,
+  MultiplyBlending,
+  NormalBlending,
+  OneFactor,
+  OneMinusDstColorFactor,
+  ShaderMaterial,
+  SubtractiveBlending,
+} from "three";
+import { UIBlending } from "../Miscellaneous/UIBlending";
 
 export class UIMaterial extends ShaderMaterial {
   constructor(map?: Texture) {
@@ -61,5 +73,32 @@ export class UIMaterial extends ShaderMaterial {
   public setOpacity(value: number): void {
     this.uniforms.opacity.value = value;
     this.uniformsNeedUpdate = true;
+  }
+
+  public setBlending(blending: UIBlending): void {
+    switch (blending) {
+      case UIBlending.ADDITIVE:
+        this.blending = AdditiveBlending;
+        break;
+
+      case UIBlending.SUBTRACTIVE:
+        this.blending = SubtractiveBlending;
+        break;
+
+      case UIBlending.MULTIPLY:
+        this.blending = MultiplyBlending;
+        break;
+
+      case UIBlending.SCREEN:
+        this.blending = CustomBlending;
+        this.blendEquation = AddEquation;
+        this.blendSrc = OneMinusDstColorFactor;
+        this.blendDst = OneFactor;
+        break;
+
+      default:
+        this.blending = NormalBlending;
+        break;
+    }
   }
 }
