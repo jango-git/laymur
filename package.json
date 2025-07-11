@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.1.66",
+  "version": "0.1.67",
   "description": "tiny ui three js library",
   "scripts": {
     "clean": "rm -rf dist",
@@ -44,7 +44,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "eventail": "^0.1.11",
+    "eventail": "^0.2.6",
     "kiwi.js": "^1.1.3"
   }
 }
