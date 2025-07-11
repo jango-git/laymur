@@ -8,7 +8,9 @@ import {
   NormalBlending,
   OneFactor,
   OneMinusDstColorFactor,
+  OneMinusSrcAlphaFactor,
   ShaderMaterial,
+  SrcAlphaFactor,
   SubtractiveBlending,
 } from "three";
 import { UIBlending } from "../Miscellaneous/UIBlending";
@@ -76,6 +78,11 @@ export class UIMaterial extends ShaderMaterial {
   }
 
   public setBlending(blending: UIBlending): void {
+    this.premultipliedAlpha = false;
+    this.blendEquation = AddEquation;
+    this.blendSrc = SrcAlphaFactor;
+    this.blendDst = OneMinusSrcAlphaFactor;
+
     switch (blending) {
       case UIBlending.ADDITIVE:
         this.blending = AdditiveBlending;
@@ -87,6 +94,7 @@ export class UIMaterial extends ShaderMaterial {
 
       case UIBlending.MULTIPLY:
         this.blending = MultiplyBlending;
+        this.premultipliedAlpha = true;
         break;
 
       case UIBlending.SCREEN:
@@ -100,5 +108,7 @@ export class UIMaterial extends ShaderMaterial {
         this.blending = NormalBlending;
         break;
     }
+
+    this.needsUpdate = true;
   }
 }
