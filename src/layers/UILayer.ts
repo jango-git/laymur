@@ -1,4 +1,3 @@
-import { Eventail } from "eventail";
 import {
   Constraint,
   Expression,
@@ -6,7 +5,8 @@ import {
   Solver,
   Strength,
   Variable,
-} from "kiwi.js";
+} from "@lume/kiwi";
+import { Eventail } from "eventail";
 import type { Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
 import type { UIConstraint } from "../constraints/UIConstraint";

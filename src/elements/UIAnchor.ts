@@ -1,5 +1,5 @@
+import { Variable } from "@lume/kiwi";
 import { Eventail } from "eventail";
-import { Variable } from "kiwi.js";
 import type { Object3D, WebGLRenderer } from "three";
 import { MathUtils } from "three";
 import {

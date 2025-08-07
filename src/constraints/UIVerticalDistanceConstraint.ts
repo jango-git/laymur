@@ -1,4 +1,4 @@
-import { Constraint, Expression } from "kiwi.js";
+import { Constraint, Expression } from "@lume/kiwi";
 import { UIAnchor } from "../elements/UIAnchor";
 import { UIElement } from "../elements/UIElement";
 import { UILayer } from "../layers/UILayer";

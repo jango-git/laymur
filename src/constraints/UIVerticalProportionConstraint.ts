@@ -1,4 +1,4 @@
-import { Constraint, Expression } from "kiwi.js";
+import { Constraint, Expression } from "@lume/kiwi";
 import { UIElement } from "../elements/UIElement";
 import type { UILayer } from "../layers/UILayer";
 import { assertSameLayer } from "../miscellaneous/asserts";

@@ -1,4 +1,4 @@
-import { Strength } from "kiwi.js";
+import { Strength } from "@lume/kiwi";
 
 /**
  * Priority values for constraint strength calculation.
@@ -16,10 +16,10 @@ const LOW_PRIORITY = 10;
 
 /**
  * Defines the strength/priority levels for UI constraints.
- * 
+ *
  * Constraints with higher power (lower index) take precedence over
  * those with lower power when the constraint solver can't satisfy all constraints.
- * 
+ *
  * The enum values map to different strength configurations in the Kiwi.js solver:
  * - P0: Highest priority, "required" constraint that must be satisfied
  * - P1-P7: Decreasing levels of priority
@@ -45,7 +45,7 @@ export enum UIConstraintPower {
 
 /**
  * Type guard to check if a value is a valid UIConstraintPower.
- * 
+ *
  * @param obj - The value to check
  * @returns True if the value is a valid UIConstraintPower enum value
  */
@@ -57,7 +57,7 @@ export function isUIConstraintPower(obj: unknown): obj is UIConstraintPower {
 
 /**
  * Resolves an optional power level to a definite value.
- * 
+ *
  * @param power - The constraint power to resolve, or undefined
  * @returns The provided power level, or P0 (highest) if none was provided
  */
@@ -67,15 +67,15 @@ export function resolvePower(power?: UIConstraintPower): UIConstraintPower {
 
 /**
  * Converts a UIConstraintPower enum value to a Kiwi.js strength value.
- * 
+ *
  * The Kiwi.js constraint solver uses a three-tiered strength system.
  * This function maps our power levels to appropriate strength values:
- * 
+ *
  * - P0: Maximum strength in all tiers (required constraint)
  * - P1-P2: Varying strengths in the first tier
  * - P3-P4: Varying strengths in the second tier
  * - P5-P7: Varying strengths in the third tier
- * 
+ *
  * @param power - The constraint power to convert, or undefined
  * @returns A Kiwi.js strength value corresponding to the power level
  */

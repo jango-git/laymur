@@ -1,4 +1,4 @@
-import { Constraint, Expression } from "kiwi.js";
+import { Constraint, Expression } from "@lume/kiwi";
 import type { UIElement } from "../elements/UIElement";
 
 import {
