@@ -6,7 +6,7 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import { UIMaterial } from "../Materials/UIMaterial";
+import { UIMaterial } from "../materials/UIMaterial";
 import { UIFullScreenQuad } from "./UIFullScreenQuad";
 import type { UIPass } from "./UIPass";
 
@@ -44,7 +44,7 @@ export class UIComposerInternal {
    * Creates a new UI composer with initial render targets
    */
   constructor() {
-    const parameters = {
+    const options = {
       format: RGBAFormat,
       minFilter: LinearFilter,
       magFilter: LinearFilter,
@@ -52,8 +52,8 @@ export class UIComposerInternal {
       depthBuffer: false,
       stencilBuffer: false,
     };
-    this.fromRenderTarget = new WebGLRenderTarget(1, 1, parameters);
-    this.toRenderTarget = new WebGLRenderTarget(1, 1, parameters);
+    this.fromRenderTarget = new WebGLRenderTarget(1, 1, options);
+    this.toRenderTarget = new WebGLRenderTarget(1, 1, options);
     this.fromRenderTarget.texture.generateMipmaps = false;
     this.toRenderTarget.texture.generateMipmaps = false;
   }
@@ -95,7 +95,7 @@ export class UIComposerInternal {
 
   /**
    * Composes all registered passes to create the final result
-   * 
+   *
    * @param renderer - WebGL renderer to use for composition
    * @param width - Width of the render target in pixels
    * @param height - Height of the render target in pixels
@@ -147,13 +147,12 @@ export class UIComposerInternal {
 
     const options = { width, height, padding };
 
-    for (let i = 0; i < this.passes.length; i++) {
-      const pass = this.passes[i];
+    for (const pass of this.passes) {
       if (pass.needsUpdate || pass.isValuable) {
         this.reverseRenderTargets();
         renderer.setRenderTarget(this.toRenderTarget);
         renderer.clear(true, false, false);
-        this.passes[i].render(renderer, this.fromRenderTarget.texture, options);
+        pass.render(renderer, this.fromRenderTarget.texture, options);
       }
     }
 
@@ -197,7 +196,7 @@ export class UIComposerInternal {
 
   /**
    * Updates the screen quad's padding based on dimensions
-   * 
+   *
    * @param width - Width of the render target in pixels
    * @param height - Height of the render target in pixels
    * @param padding - Padding value in pixels
@@ -229,7 +228,7 @@ export class UIComposerInternal {
 export class UIComposer {
   /**
    * Creates a new UI composer
-   * 
+   *
    * @param raw - Internal implementation that handles actual rendering
    */
   constructor(private readonly raw: UIComposerInternal) {}

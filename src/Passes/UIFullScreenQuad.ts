@@ -1,6 +1,6 @@
 import type { Material, WebGLRenderer } from "three";
 import { Mesh, OrthographicCamera, Scene } from "three";
-import { geometry } from "../Miscellaneous/threeInstances";
+import { geometry } from "../miscellaneous/threeInstances";
 
 /**
  * Shared scene and mesh used by all UIFullScreenQuad instances
