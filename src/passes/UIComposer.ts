@@ -7,7 +7,7 @@ import {
   WebGLRenderTarget,
 } from "three";
 import { UIMaterial } from "../materials/UIMaterial";
-import { UIFullScreenQuad } from "./UIFullScreenQuad";
+import { UIFullscreenQuad } from "./UIFullscreenQuad";
 import type { UIPass } from "./UIPass";
 
 /**
@@ -31,7 +31,7 @@ export class UIComposerInternal {
   /** Default material used to render the final result */
   private readonly defaultMaterial = new UIMaterial();
   /** Full-screen quad used for rendering */
-  private readonly screen = new UIFullScreenQuad();
+  private readonly screen = new UIFullscreenQuad();
 
   /** Whether the composition needs to be updated */
   private needsUpdateInternal = false;

@@ -42,10 +42,10 @@ export enum UILayerEvent {
 export abstract class UILayer extends Eventail {
   public mode = UIMode.VISIBLE;
 
-  public readonly ["xInternal"]: Variable = new Variable();
-  public readonly ["yInternal"]: Variable = new Variable();
-  public readonly ["widthInternal"]: Variable = new Variable();
-  public readonly ["heightInternal"]: Variable = new Variable();
+  protected readonly ["xInternal"]: Variable = new Variable();
+  protected readonly ["yInternal"]: Variable = new Variable();
+  protected readonly ["widthInternal"]: Variable = new Variable();
+  protected readonly ["heightInternal"]: Variable = new Variable();
 
   protected readonly scene = new Scene();
   protected readonly camera = new OrthographicCamera();
@@ -59,11 +59,11 @@ export abstract class UILayer extends Eventail {
   protected constraintW?: Constraint;
   protected constraintH?: Constraint;
 
-  protected orientationPrivate = UIOrientation.PORTRAIT;
-  protected needsRecalculation = false;
+  protected orientationInternal = UIOrientation.PORTRAIT;
+  protected needsRecalculationInternal = false;
 
   public get orientation(): UIOrientation {
-    return this.orientationPrivate;
+    return this.orientationInternal;
   }
 
   public get width(): number {
@@ -209,7 +209,7 @@ export abstract class UILayer extends Eventail {
     } catch {
       this.rebuildSolver();
     }
-    this.needsRecalculation = true;
+    this.needsRecalculationInternal = true;
   }
 
   public ["removeConstraintInternal"](
@@ -231,7 +231,7 @@ export abstract class UILayer extends Eventail {
     } catch {
       this.rebuildSolver();
     }
-    this.needsRecalculation = true;
+    this.needsRecalculationInternal = true;
   }
 
   public ["addVariableInternal"](
@@ -262,7 +262,7 @@ export abstract class UILayer extends Eventail {
     } catch {
       this.rebuildSolver();
     }
-    this.needsRecalculation = true;
+    this.needsRecalculationInternal = true;
   }
 
   public ["removeVariableInternal"](
@@ -288,7 +288,7 @@ export abstract class UILayer extends Eventail {
     } catch {
       this.rebuildSolver();
     }
-    this.needsRecalculation = true;
+    this.needsRecalculationInternal = true;
   }
 
   public ["suggestVariableInternal"](
@@ -318,7 +318,7 @@ export abstract class UILayer extends Eventail {
       } catch {
         this.rebuildSolver();
       }
-      this.needsRecalculation = true;
+      this.needsRecalculationInternal = true;
     }
   }
 
@@ -343,48 +343,44 @@ export abstract class UILayer extends Eventail {
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
-    if (this.mode === UIMode.HIDDEN) {
-      return;
-    }
+    if (this.mode !== UIMode.HIDDEN) {
+      const originalRenderTarget = renderer.getRenderTarget();
+      const originalClearColor = renderer.getClearColor(clearColor);
+      const originalClearAlpha = renderer.getClearAlpha();
 
-    const originalRenderTarget = renderer.getRenderTarget();
-    const originalClearColor = renderer.getClearColor(clearColor);
-    const originalClearAlpha = renderer.getClearAlpha();
+      if (this.needsRecalculationInternal) {
+        this.needsRecalculationInternal = false;
+        this.solver?.updateVariables();
 
-    if (this.needsRecalculation) {
-      this.needsRecalculation = false;
-      this.solver?.updateVariables();
+        for (const element of this.elements.keys()) {
+          element.requestRecalculation();
+        }
+      }
 
       for (const element of this.elements.keys()) {
-        element["needsRecalculationInternal"] = true;
+        element["renderInternal"](renderer, deltaTime);
       }
-    }
 
-    for (const element of this.elements.keys()) {
-      element["renderInternal"](renderer, deltaTime);
+      renderer.setRenderTarget(originalRenderTarget);
+      renderer.setClearColor(originalClearColor);
+      renderer.setClearAlpha(originalClearAlpha);
+      renderer.render(this.scene, this.camera);
     }
-
-    renderer.setRenderTarget(originalRenderTarget);
-    renderer.setClearColor(originalClearColor);
-    renderer.setClearAlpha(originalClearAlpha);
-    renderer.render(this.scene, this.camera);
   }
 
   protected clickInternal(x: number, y: number): void {
-    if (this.mode !== UIMode.INTERACTIVE) {
-      return;
-    }
+    if (this.mode === UIMode.INTERACTIVE) {
+      this.emit(UILayerEvent.CLICK, this, x, y);
 
-    this.emit(UILayerEvent.CLICK, this, x, y);
+      const elements = [...this.elements.keys()]
+        .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
+        .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
+        .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
 
-    const elements = [...this.elements.keys()]
-      .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
-      .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
-      .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
-
-    for (const element of elements) {
-      if (element["clickInternal"](x, y)) {
-        break;
+      for (const element of elements) {
+        if (element["clickInternal"](x, y)) {
+          break;
+        }
       }
     }
   }
@@ -393,7 +389,7 @@ export abstract class UILayer extends Eventail {
     this.applyCameraSize(width, height);
     this.rebuildLayerConstraints(width, height);
     this.updateOrientation(width, height);
-    this.needsRecalculation = true;
+    this.needsRecalculationInternal = true;
   }
 
   protected applyCameraSize(width: number, height: number): void {
@@ -457,18 +453,18 @@ export abstract class UILayer extends Eventail {
   }
 
   protected updateOrientation(width: number, height: number): void {
-    const lastOrientation = this.orientationPrivate;
-    this.orientationPrivate =
+    const lastOrientation = this.orientationInternal;
+    this.orientationInternal =
       width > height ? UIOrientation.LANDSCAPE : UIOrientation.PORTRAIT;
 
-    if (lastOrientation !== this.orientationPrivate) {
+    if (lastOrientation !== this.orientationInternal) {
       this.solver = undefined;
 
       for (const constraint of this.constraints.keys()) {
-        constraint["enableConstraintInternal"](this.orientationPrivate);
+        constraint["enableConstraintInternal"](this.orientationInternal);
       }
       for (const constraint of this.constraints.keys()) {
-        constraint["disableConstraintInternal"](this.orientationPrivate);
+        constraint["disableConstraintInternal"](this.orientationInternal);
       }
 
       this.solver = new Solver();

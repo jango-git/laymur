@@ -4,8 +4,8 @@ import { UILayer } from "./UILayer";
 
 const DEFAULT_SCREEN_HEIGHT = 1920;
 
-export class UIFullScreenLayer extends UILayer {
-  private targetScreenHeight?: number = DEFAULT_SCREEN_HEIGHT;
+export class UIFullscreenLayer extends UILayer {
+  private targetHeightInternal?: number = DEFAULT_SCREEN_HEIGHT;
 
   constructor() {
     super();
@@ -14,12 +14,12 @@ export class UIFullScreenLayer extends UILayer {
     this.onResize();
   }
 
-  public get tergetScreenHeight(): number | undefined {
-    return this.targetScreenHeight;
+  public get targetHeight(): number | undefined {
+    return this.targetHeightInternal;
   }
 
-  public set tergetScreenHeight(value: number | undefined) {
-    this.targetScreenHeight = value;
+  public set targetHeight(value: number | undefined) {
+    this.targetHeightInternal = value;
     this.resizeInternal(window.innerWidth, window.innerHeight);
   }
 
@@ -35,7 +35,7 @@ export class UIFullScreenLayer extends UILayer {
   }
 
   private calculateScale(): number {
-    const targetHeight = this.tergetScreenHeight ?? window.innerHeight;
+    const targetHeight = this.targetHeight ?? window.innerHeight;
     return targetHeight / window.innerHeight;
   }
 
@@ -45,21 +45,19 @@ export class UIFullScreenLayer extends UILayer {
   };
 
   private readonly onClick = (event: PointerEvent): void => {
-    if (this.mode !== UIMode.INTERACTIVE) {
-      return;
+    if (this.mode === UIMode.INTERACTIVE) {
+      const rect =
+        event.target instanceof HTMLElement
+          ? event.target.getBoundingClientRect()
+          : null;
+
+      const offsetX = rect ? event.clientX - rect.left : event.clientX;
+      const offsetY = rect
+        ? rect.bottom - event.clientY
+        : window.innerHeight - event.clientY;
+
+      const scale = this.calculateScale();
+      this.clickInternal(offsetX * scale, offsetY * scale);
     }
-
-    const rect =
-      event.target instanceof HTMLElement
-        ? event.target.getBoundingClientRect()
-        : null;
-
-    const offsetX = rect ? event.clientX - rect.left : event.clientX;
-    const offsetY = rect
-      ? rect.bottom - event.clientY
-      : window.innerHeight - event.clientY;
-
-    const scale = this.calculateScale();
-    this.clickInternal(offsetX * scale, offsetY * scale);
   };
 }

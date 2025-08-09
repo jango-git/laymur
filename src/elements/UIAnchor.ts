@@ -1,7 +1,6 @@
 import { Variable } from "@lume/kiwi";
 import { Eventail } from "eventail";
 import type { Object3D, WebGLRenderer } from "three";
-import { MathUtils } from "three";
 import {
   convertPowerToStrength,
   UIConstraintPower,
@@ -9,17 +8,17 @@ import {
 import type { UILayer } from "../layers/UILayer";
 
 export abstract class UIAnchor extends Eventail {
+  /** Unique identifier for the element */
+  public name = "";
+
   /** X position variable for constraint system */
-  public ["xInternal"] = new Variable("x");
+  protected readonly xInternal = new Variable("x");
 
   /** Y position variable for constraint system */
-  public ["yInternal"] = new Variable("y");
+  protected readonly yInternal = new Variable("y");
 
   /** Flag indicating whether the element needs recalculation */
-  public ["needsRecalculationInternal"] = false;
-
-  /** Unique identifier for the element */
-  public name = MathUtils.generateUUID();
+  protected needsRecalculationInternal = false;
 
   /**
    * Creates a new UI element.
@@ -72,12 +71,7 @@ export abstract class UIAnchor extends Eventail {
 
   /** Gets the current z-index (depth) of the element */
   public get zIndex(): number {
-    return this.object?.position.z ?? 0;
-  }
-
-  /** Gets whether the element needs recalculation */
-  protected get needsRecalculation(): boolean {
-    return this["needsRecalculationInternal"];
+    return this.object?.renderOrder ?? 0;
   }
 
   /**
@@ -120,26 +114,13 @@ export abstract class UIAnchor extends Eventail {
   }
 
   /**
-   * Internal method called by the rendering system to render this element.
-   *
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time elapsed since the last frame
-   * @internal
-   */
-  public ["renderInternal"](renderer: WebGLRenderer, deltaTime: number): void {
-    this.render(renderer, deltaTime);
-  }
-
-  /**
    * Applies transformations to the underlying Three.js object.
    * This is called when the element's position, size, or other properties change.
    */
   protected applyTransformations(): void {
-    if (this["needsRecalculationInternal"]) {
-      if (this.object) {
-        this.object.updateMatrix();
-      }
-      this["needsRecalculationInternal"] = false;
+    if (this.needsRecalculationInternal) {
+      this.object?.updateMatrix();
+      this.needsRecalculationInternal = false;
     }
   }
 
@@ -150,5 +131,8 @@ export abstract class UIAnchor extends Eventail {
    * @param renderer - The WebGL renderer
    * @param deltaTime - Time elapsed since the last frame
    */
-  protected abstract render(renderer: WebGLRenderer, deltaTime: number): void;
+  protected abstract ["renderInternal"](
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void;
 }

@@ -14,7 +14,7 @@ scene.add(mesh);
  * Utility class for rendering a full-screen quad with optional padding
  * Used by the UI composition system to render passes
  */
-export class UIFullScreenQuad {
+export class UIFullscreenQuad {
   /**
    * Orthographic camera configured for device coordinates
    * Adjusted when padding changes to ensure correct rendering with padding
