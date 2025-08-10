@@ -1,22 +1,10 @@
 import type { Texture } from "three";
-import {
-  AddEquation,
-  AdditiveBlending,
-  Color,
-  CustomBlending,
-  MultiplyBlending,
-  NormalBlending,
-  OneFactor,
-  OneMinusDstColorFactor,
-  OneMinusSrcAlphaFactor,
-  ShaderMaterial,
-  SrcAlphaFactor,
-  SubtractiveBlending,
-} from "three";
-import { UIBlending } from "../miscellaneous/UIBlending";
+import { Color, ShaderMaterial } from "three";
+
+const DEFAULT_ALPHA_TEST = 0.25;
 
 export class UIMaterial extends ShaderMaterial {
-  constructor(map?: Texture) {
+  constructor(map: Texture) {
     super({
       uniforms: {
         map: { value: map },
@@ -42,7 +30,8 @@ export class UIMaterial extends ShaderMaterial {
           #include <colorspace_fragment>
         }
       `,
-      transparent: true,
+      transparent: false,
+      alphaTest: DEFAULT_ALPHA_TEST,
       lights: false,
       fog: false,
       depthWrite: false,
@@ -50,7 +39,7 @@ export class UIMaterial extends ShaderMaterial {
     });
   }
 
-  public getTexture(): Texture | undefined {
+  public getTexture(): Texture {
     return this.uniforms.map.value;
   }
 
@@ -62,7 +51,11 @@ export class UIMaterial extends ShaderMaterial {
     return this.uniforms.opacity.value;
   }
 
-  public setTexture(value: Texture | undefined): void {
+  public getTransparency(): boolean {
+    return this.transparent;
+  }
+
+  public setTexture(value: Texture): void {
     this.uniforms.map.value = value;
     this.uniformsNeedUpdate = true;
   }
@@ -77,38 +70,13 @@ export class UIMaterial extends ShaderMaterial {
     this.uniformsNeedUpdate = true;
   }
 
-  public setBlending(blending: UIBlending): void {
-    this.premultipliedAlpha = false;
-    this.blendEquation = AddEquation;
-    this.blendSrc = SrcAlphaFactor;
-    this.blendDst = OneMinusSrcAlphaFactor;
+  public setTransparency(value: boolean): void {
+    if (this.transparent !== value) {
+      this.transparent = value;
+      this.alphaTest = value ? DEFAULT_ALPHA_TEST : 0;
 
-    switch (blending) {
-      case UIBlending.ADDITIVE:
-        this.blending = AdditiveBlending;
-        break;
-
-      case UIBlending.SUBTRACTIVE:
-        this.blending = SubtractiveBlending;
-        break;
-
-      case UIBlending.MULTIPLY:
-        this.blending = MultiplyBlending;
-        this.premultipliedAlpha = true;
-        break;
-
-      case UIBlending.SCREEN:
-        this.blending = CustomBlending;
-        this.blendEquation = AddEquation;
-        this.blendSrc = OneMinusDstColorFactor;
-        this.blendDst = OneFactor;
-        break;
-
-      default:
-        this.blending = NormalBlending;
-        break;
+      this.needsUpdate = true;
+      this.uniformsNeedUpdate = true;
     }
-
-    this.needsUpdate = true;
   }
 }

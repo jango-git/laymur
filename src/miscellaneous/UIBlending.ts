@@ -1,7 +1,7 @@
-export enum UIBlending {
-  NORMAL,
-  ADDITIVE,
-  SUBTRACTIVE,
-  MULTIPLY,
-  SCREEN,
-}
+// export enum UIBlending {
+//   NORMAL,
+//   ADDITIVE,
+//   SUBTRACTIVE,
+//   MULTIPLY,
+//   SCREEN,
+// }

@@ -60,22 +60,27 @@ export function convertPriority(priority: UIPriority): number {
   }
 }
 
+// <variableIndex, coefficient>, constant
+type RawExpression = [Map<number, number>, number];
+
 interface VariableDescription {
   variable: Variable;
   priority: UIPriority;
   value: number;
+  constraint?: Constraint;
 }
 
 interface ConstraintDescription {
   constraint: Constraint;
-  lhs: Map<number, number>;
-  rhs: Map<number, number>;
+  lhs: RawExpression;
+  rhs: RawExpression;
   priority: UIPriority;
   relation: UIRelation;
 }
 
 export class UISolverWrapper {
   private solver = new Solver();
+  private recalculationRequired = false;
 
   private readonly variables = new Map<number, VariableDescription>();
   private lastVariableIndex = 0;
@@ -86,9 +91,22 @@ export class UISolverWrapper {
   public createVariable(value: number, priority: UIPriority): number {
     const index = this.lastVariableIndex++;
     const variable = new Variable();
-    this.variables.set(index, { variable, priority, value });
-    this.solver.addEditVariable(variable, convertPriority(priority));
-    this.solver.suggestValue(variable, value);
+
+    if (priority === UIPriority.P0) {
+      const constraint = new Constraint(
+        new Expression([1, variable]),
+        convertRelation(UIRelation.EQUAL),
+        new Expression(value),
+        convertPriority(priority),
+      );
+      this.variables.set(index, { variable, priority, value, constraint });
+      this.solver.addConstraint(constraint);
+    } else {
+      this.variables.set(index, { variable, priority, value });
+      this.solver.addEditVariable(variable, convertPriority(priority));
+      this.solver.suggestValue(variable, value);
+    }
+    this.recalculationRequired = true;
     return index;
   }
 
@@ -98,8 +116,18 @@ export class UISolverWrapper {
       throw new Error(`Variable ${index} does not exist`);
     }
 
-    this.solver.removeEditVariable(description.variable);
+    for (const cDescription of this.constraints.values()) {
+      if (cDescription.lhs[0].has(index) || cDescription.rhs[0].has(index)) {
+        throw new Error(`Variable ${index} is used in constraint`);
+      }
+    }
+
+    description.constraint
+      ? this.solver.removeConstraint(description.constraint)
+      : this.solver.removeEditVariable(description.variable);
+
     this.variables.delete(index);
+    this.recalculationRequired = true;
   }
 
   public suggestVariableValue(index: number, value: number): void {
@@ -108,7 +136,23 @@ export class UISolverWrapper {
       throw new Error(`Variable ${index} does not exist`);
     }
 
-    this.solver.suggestValue(description.variable, value);
+    if (description.value !== value) {
+      description.value = value;
+
+      if (description.constraint) {
+        description.constraint = this.rebuildConstraint(
+          description.constraint,
+          [new Map<number, number>([[index, 1]]), 0],
+          [new Map<number, number>(), value],
+          UIRelation.EQUAL,
+          description.priority,
+        );
+      } else {
+        this.solver.suggestValue(description.variable, value);
+      }
+
+      this.recalculationRequired = true;
+    }
   }
 
   public setVariablePriority(index: number, priority: UIPriority): void {
@@ -119,31 +163,59 @@ export class UISolverWrapper {
 
     if (priority !== description.priority) {
       description.priority = priority;
-      this.rebuildVariable(index, description);
+
+      if (description.constraint) {
+        description.constraint = this.rebuildConstraint(
+          description.constraint,
+          [new Map<number, number>([[index, 1]]), 0],
+          [new Map<number, number>(), description.value],
+          UIRelation.EQUAL,
+          description.priority,
+        );
+      } else {
+        this.rebuildVariable(index, description);
+      }
+
+      this.recalculationRequired = true;
     }
   }
 
+  public readVariableValue(index: number): number {
+    const description = this.variables.get(index);
+    if (description === undefined) {
+      throw new Error(`Variable ${index} does not exist`);
+    }
+
+    if (this.recalculationRequired) {
+      this.solver.updateVariables();
+      this.recalculationRequired = false;
+    }
+
+    return description.variable.value();
+  }
+
   public createConstraint(
-    lhs: Map<number, number>,
-    rhs: Map<number, number>,
+    lhs: RawExpression,
+    rhs: RawExpression,
     relation: UIRelation,
     priority: UIPriority,
   ): number {
     const index = this.lastConstraintIndex++;
     const constraint = new Constraint(
-      this.convertExpression(lhs),
+      this.convertRawExpression(lhs),
       convertRelation(relation),
-      this.convertExpression(rhs),
+      this.convertRawExpression(rhs),
       convertPriority(priority),
     );
     this.constraints.set(index, {
       constraint,
-      lhs: new Map(lhs.entries()),
-      rhs: new Map(rhs.entries()),
+      lhs: [new Map(lhs[0].entries()), lhs[1]],
+      rhs: [new Map(rhs[0].entries()), rhs[1]],
       priority,
       relation,
     });
     this.solver.addConstraint(constraint);
+    this.recalculationRequired = true;
     return index;
   }
 
@@ -155,26 +227,41 @@ export class UISolverWrapper {
 
     this.solver.removeConstraint(description.constraint);
     this.constraints.delete(index);
+    this.recalculationRequired = true;
   }
 
-  public setConstraintLHS(index: number, lhs: Map<number, number>): void {
+  public setConstraintLHS(index: number, lhs: RawExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
       throw new Error(`Constraint ${index} does not exist`);
     }
 
-    description.lhs = new Map(lhs.entries());
-    this.rebuildConstraint(description);
+    description.lhs = [new Map(lhs[0].entries()), lhs[1]];
+    description.constraint = this.rebuildConstraint(
+      description.constraint,
+      description.lhs,
+      description.rhs,
+      description.relation,
+      description.priority,
+    );
+    this.recalculationRequired = true;
   }
 
-  public setConstraintRHS(index: number, rhs: Map<number, number>): void {
+  public setConstraintRHS(index: number, rhs: RawExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
       throw new Error(`Constraint ${index} does not exist`);
     }
 
-    description.rhs = new Map(rhs.entries());
-    this.rebuildConstraint(description);
+    description.rhs = [new Map(rhs[0].entries()), rhs[1]];
+    description.constraint = this.rebuildConstraint(
+      description.constraint,
+      description.lhs,
+      description.rhs,
+      description.relation,
+      description.priority,
+    );
+    this.recalculationRequired = true;
   }
 
   public setConstraintRelation(index: number, relation: UIRelation): void {
@@ -184,7 +271,14 @@ export class UISolverWrapper {
     }
 
     description.relation = relation;
-    this.rebuildConstraint(description);
+    description.constraint = this.rebuildConstraint(
+      description.constraint,
+      description.lhs,
+      description.rhs,
+      description.relation,
+      description.priority,
+    );
+    this.recalculationRequired = true;
   }
 
   public setConstraintPriority(index: number, priority: UIPriority): void {
@@ -194,20 +288,28 @@ export class UISolverWrapper {
     }
 
     description.priority = priority;
-    this.rebuildConstraint(description);
+    description.constraint = this.rebuildConstraint(
+      description.constraint,
+      description.lhs,
+      description.rhs,
+      description.relation,
+      description.priority,
+    );
+    this.recalculationRequired = true;
   }
 
-  private convertExpression(terms: Map<number, number>): Expression {
+  private convertRawExpression([terms, constant]: RawExpression): Expression {
     return new Expression(
       ...Array.from(terms.entries()).map(
-        ([variableIndex, coefficient]): [Variable, number] => {
+        ([variableIndex, coefficient]): [number, Variable] => {
           const variable = this.variables.get(variableIndex);
           if (variable === undefined) {
             throw new Error(`Variable ${variableIndex} does not exist`);
           }
-          return [variable.variable, coefficient];
+          return [coefficient, variable.variable];
         },
       ),
+      constant,
     );
   }
 
@@ -219,7 +321,7 @@ export class UISolverWrapper {
     const dependConstraints: ConstraintDescription[] = [];
 
     for (const cDescription of this.constraints.values()) {
-      if (cDescription.lhs.has(index) || cDescription.rhs.has(index)) {
+      if (cDescription.lhs[0].has(index) || cDescription.rhs[0].has(index)) {
         if (!rebuildRequired) {
           try {
             this.solver.removeConstraint(cDescription.constraint);
@@ -239,9 +341,9 @@ export class UISolverWrapper {
 
     for (const cDescription of dependConstraints) {
       cDescription.constraint = new Constraint(
-        this.convertExpression(cDescription.lhs),
+        this.convertRawExpression(cDescription.lhs),
         convertRelation(cDescription.relation),
-        this.convertExpression(cDescription.rhs),
+        this.convertRawExpression(cDescription.rhs),
         convertPriority(cDescription.priority),
       );
     }
@@ -262,24 +364,30 @@ export class UISolverWrapper {
     }
   }
 
-  private rebuildConstraint(description: ConstraintDescription): void {
+  private rebuildConstraint(
+    oldConstraint: Constraint,
+    lhs: RawExpression,
+    rhs: RawExpression,
+    relation: UIRelation,
+    priority: UIPriority,
+  ): Constraint {
     let rebuildRequired = false;
     try {
-      this.solver.removeConstraint(description.constraint);
+      this.solver.removeConstraint(oldConstraint);
     } catch {
       rebuildRequired = true;
     }
 
-    description.constraint = new Constraint(
-      this.convertExpression(description.lhs),
-      convertRelation(description.relation),
-      this.convertExpression(description.rhs),
-      convertPriority(description.priority),
+    const constraint = new Constraint(
+      this.convertRawExpression(lhs),
+      convertRelation(relation),
+      this.convertRawExpression(rhs),
+      convertPriority(priority),
     );
 
     if (!rebuildRequired) {
       try {
-        this.solver.addConstraint(description.constraint);
+        this.solver.addConstraint(constraint);
       } catch {
         rebuildRequired = true;
       }
@@ -288,6 +396,8 @@ export class UISolverWrapper {
     if (rebuildRequired) {
       this.rebuildSolver();
     }
+
+    return constraint;
   }
 
   private rebuildSolver(): void {

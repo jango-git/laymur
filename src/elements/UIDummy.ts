@@ -1,38 +1,36 @@
-import { Object3D } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { UIElement } from "./UIElement";
+import { UIPriority } from "../wrappers/UISolverWrapper";
+import { UIAnchor } from "./UIAnchor";
 
-/**
- * Default size for dummy elements when no dimensions are specified
- */
-const DEFAULT_DUMMY_SIZE = 100;
+export abstract class UIDummy extends UIAnchor {
+  protected readonly wIndex: number;
+  protected readonly hIndex: number;
 
-/**
- * A minimal UI element with no visual representation.
- * Used as a placeholder, spacer, or container for other elements.
- */
-export class UIDummy extends UIElement {
-  /**
-   * Creates a new dummy UI element.
-   *
-   * @param layer - The UI layer that contains this element
-   * @param width - Width of the dummy element (defaults to DEFAULT_DUMMY_SIZE)
-   * @param height - Height of the dummy element (defaults to DEFAULT_DUMMY_SIZE)
-   */
-  constructor(
-    layer: UILayer,
-    width = DEFAULT_DUMMY_SIZE,
-    height = DEFAULT_DUMMY_SIZE,
-  ) {
-    super(layer, new Object3D(), 0, 0, width, height);
-    this.applyTransformations();
+  constructor(layer: UILayer, x: number, y: number, w: number, h: number) {
+    super(layer, x, y);
+    this.wIndex = this.solverWrapper.createVariable(w, UIPriority.P7);
+    this.hIndex = this.solverWrapper.createVariable(h, UIPriority.P7);
   }
 
-  /**
-   * Renders the dummy element.
-   * Since dummies have no visual representation, this only applies transformations.
-   */
-  protected override render(): void {
-    this.applyTransformations();
+  public get width(): number {
+    return this.solverWrapper.readVariableValue(this.wIndex);
+  }
+
+  public get height(): number {
+    return this.solverWrapper.readVariableValue(this.hIndex);
+  }
+
+  public set width(value: number) {
+    this.solverWrapper.suggestVariableValue(this.wIndex, value);
+  }
+
+  public set height(value: number) {
+    this.solverWrapper.suggestVariableValue(this.hIndex, value);
+  }
+
+  public override destroy(): void {
+    this.solverWrapper.removeVariable(this.hIndex);
+    this.solverWrapper.removeVariable(this.wIndex);
+    super.destroy();
   }
 }

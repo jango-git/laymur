@@ -1,6 +1,6 @@
 /**
  * Defines the visibility and interactivity state of UI elements.
- * 
+ *
  * UI elements can be in one of three states:
  * - Hidden: Element is not visible and does not receive input
  * - Visible: Element is visible but does not receive input

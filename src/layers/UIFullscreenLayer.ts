@@ -1,42 +1,41 @@
 import type { WebGLRenderer } from "three";
-import { UIMode } from "../miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 
 const DEFAULT_SCREEN_HEIGHT = 1920;
 
 export class UIFullscreenLayer extends UILayer {
-  private targetHeightInternal?: number = DEFAULT_SCREEN_HEIGHT;
+  private fixedHeightInternal?: number = DEFAULT_SCREEN_HEIGHT;
 
   constructor() {
-    super();
+    super(DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onClick);
     this.onResize();
   }
 
-  public get targetHeight(): number | undefined {
-    return this.targetHeightInternal;
+  public get fixedHeight(): number | undefined {
+    return this.fixedHeightInternal;
   }
 
-  public set targetHeight(value: number | undefined) {
-    this.targetHeightInternal = value;
+  public set fixedHeight(value: number | undefined) {
+    this.fixedHeightInternal = value;
     this.resizeInternal(window.innerWidth, window.innerHeight);
   }
 
-  public override destroy(): void {
+  public destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onClick);
-    super.destroy();
   }
 
-  public override render(renderer: WebGLRenderer, deltaTime: number): void {
+  public render(renderer: WebGLRenderer, deltaTime: number): void {
     renderer.clear(false, true, true);
-    super.render(renderer, deltaTime);
+    super.renderInternal(renderer, deltaTime);
   }
 
   private calculateScale(): number {
-    const targetHeight = this.targetHeight ?? window.innerHeight;
-    return targetHeight / window.innerHeight;
+    return this.fixedHeight === undefined
+      ? window.innerHeight
+      : this.fixedHeight / window.innerHeight;
   }
 
   private readonly onResize = (): void => {
@@ -45,19 +44,15 @@ export class UIFullscreenLayer extends UILayer {
   };
 
   private readonly onClick = (event: PointerEvent): void => {
-    if (this.mode === UIMode.INTERACTIVE) {
-      const rect =
-        event.target instanceof HTMLElement
-          ? event.target.getBoundingClientRect()
-          : null;
+    const r =
+      event.target instanceof HTMLElement
+        ? event.target.getBoundingClientRect()
+        : null;
 
-      const offsetX = rect ? event.clientX - rect.left : event.clientX;
-      const offsetY = rect
-        ? rect.bottom - event.clientY
-        : window.innerHeight - event.clientY;
+    const x = r ? event.clientX - r.left : event.clientX;
+    const y = r ? r.bottom - event.clientY : window.innerHeight - event.clientY;
 
-      const scale = this.calculateScale();
-      this.clickInternal(offsetX * scale, offsetY * scale);
-    }
+    const scale = this.calculateScale();
+    this.clickInternal(x * scale, y * scale);
   };
 }
