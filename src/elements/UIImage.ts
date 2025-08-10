@@ -47,8 +47,8 @@ export class UIImage extends UIElement<Mesh> {
     assertValidPositiveNumber(h, "H");
 
     this.material.setTexture(value);
-    this.solverWrapper.suggestVariableValue(this.wIndex, w);
-    this.solverWrapper.suggestVariableValue(this.hIndex, h);
+    this.solverWrapper.suggestVariableValue(this.wVariable, w);
+    this.solverWrapper.suggestVariableValue(this.hVariable, h);
   }
 
   public set color(value: number) {

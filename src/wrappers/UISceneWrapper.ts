@@ -46,6 +46,15 @@ export class UISceneWrapper {
     this.camera.updateProjectionMatrix();
   }
 
+  public getVisibility(element: UIElement): boolean {
+    const object = this.elements.get(element);
+    if (object === undefined) {
+      throw new Error("Element not found");
+    }
+
+    return object.visible;
+  }
+
   public getZIndex(element: UIElement): number {
     const object = this.elements.get(element);
     if (object === undefined) {
@@ -64,7 +73,16 @@ export class UISceneWrapper {
     object.renderOrder = zIndex;
   }
 
-  public enumerateElements(): UIElement[] {
+  public setVisibility(element: UIElement, visible: boolean): void {
+    const object = this.elements.get(element);
+    if (object === undefined) {
+      throw new Error("Element not found");
+    }
+
+    object.visible = visible;
+  }
+
+  public getSortedVisibleElements(): UIElement[] {
     return Array.from(this.elements.keys()).sort(
       (a, b) => this.getZIndex(a) - this.getZIndex(b),
     );

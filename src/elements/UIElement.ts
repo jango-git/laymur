@@ -4,19 +4,20 @@ import type { UILayer } from "../layers/UILayer";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import { UIMicro } from "../miscellaneous/UIMicro";
 import { UIMode } from "../miscellaneous/UIMode";
+import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISceneWrapper } from "../wrappers/UISceneWrapper";
-import { UIPriority } from "../wrappers/UISolverWrapper";
 import { UIAnchor } from "./UIAnchor";
 
 export abstract class UIElement<
   T extends Object3D = Object3D,
 > extends UIAnchor {
-  public mode: UIMode = UIMode.VISIBLE;
   public readonly micro = new UIMicro();
 
+  public readonly wVariable: number;
+  public readonly hVariable: number;
+
   protected readonly sceneWrapper: UISceneWrapper;
-  protected readonly wIndex: number;
-  protected readonly hIndex: number;
+  protected modeInternal: UIMode = UIMode.VISIBLE;
 
   constructor(
     layer: UILayer,
@@ -30,39 +31,50 @@ export abstract class UIElement<
     assertValidNumber(h, "H");
 
     super(layer, x, y);
-    this.sceneWrapper = layer["getSceneWrapperInternal"]();
+    this.sceneWrapper = this.layer["getSceneWrapperInternal"]();
     this.sceneWrapper.insertObject(this, this.object);
-    this.wIndex = this.solverWrapper.createVariable(w, UIPriority.P7);
-    this.hIndex = this.solverWrapper.createVariable(h, UIPriority.P7);
+    this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P7);
+    this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P7);
   }
 
   public get width(): number {
-    return this.solverWrapper.readVariableValue(this.wIndex);
+    return this.solverWrapper.readVariableValue(this.wVariable);
   }
 
   public get height(): number {
-    return this.solverWrapper.readVariableValue(this.hIndex);
+    return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
   public get zIndex(): number {
     return this.sceneWrapper.getZIndex(this);
   }
 
+  public get mode(): UIMode {
+    return this.modeInternal;
+  }
+
   public set width(value: number) {
-    this.solverWrapper.suggestVariableValue(this.wIndex, value);
+    this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   public set height(value: number) {
-    this.solverWrapper.suggestVariableValue(this.hIndex, value);
+    this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   public set zIndex(value: number) {
     this.sceneWrapper.setZIndex(this, value);
   }
 
+  public set mode(value: UIMode) {
+    if (value !== this.modeInternal) {
+      this.modeInternal = value;
+      this.sceneWrapper.setVisibility(this, value !== UIMode.HIDDEN);
+    }
+  }
+
   public override destroy(): void {
-    this.solverWrapper.removeVariable(this.hIndex);
-    this.solverWrapper.removeVariable(this.wIndex);
+    this.solverWrapper.removeVariable(this.hVariable);
+    this.solverWrapper.removeVariable(this.wVariable);
     this.sceneWrapper.removeObject(this);
     super.destroy();
   }
@@ -77,7 +89,7 @@ export abstract class UIElement<
 
   protected ["onClickInternal"](x: number, y: number): boolean {
     return (
-      this.mode === UIMode.INTERACTIVE &&
+      this.modeInternal === UIMode.INTERACTIVE &&
       x > this.x &&
       x < this.x + this.width &&
       y > this.y &&

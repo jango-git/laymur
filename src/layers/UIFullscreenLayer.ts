@@ -1,25 +1,45 @@
 import type { WebGLRenderer } from "three";
+import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UILayer } from "./UILayer";
 
-const DEFAULT_SCREEN_HEIGHT = 1920;
+const DEFAULT_SCREEN_SIZE = 1920;
 
 export class UIFullscreenLayer extends UILayer {
-  private fixedHeightInternal?: number = DEFAULT_SCREEN_HEIGHT;
+  private fixedWidthInternal?: number = DEFAULT_SCREEN_SIZE;
+  private fixedHeightInternal?: number = DEFAULT_SCREEN_SIZE;
 
-  constructor() {
-    super(DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_HEIGHT);
+  constructor(
+    fixedWidth: number = DEFAULT_SCREEN_SIZE,
+    fixedHeight: number = DEFAULT_SCREEN_SIZE,
+  ) {
+    super(1, 1);
+    this.fixedWidthInternal = fixedWidth;
+    this.fixedHeightInternal = fixedHeight;
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onClick);
     this.onResize();
+  }
+
+  public get fixedWidth(): number | undefined {
+    return this.fixedWidthInternal;
   }
 
   public get fixedHeight(): number | undefined {
     return this.fixedHeightInternal;
   }
 
+  public set fixedWidth(value: number | undefined) {
+    if (value !== this.fixedWidthInternal) {
+      this.fixedWidthInternal = value;
+      this.onResize();
+    }
+  }
+
   public set fixedHeight(value: number | undefined) {
-    this.fixedHeightInternal = value;
-    this.resizeInternal(window.innerWidth, window.innerHeight);
+    if (value !== this.fixedHeightInternal) {
+      this.fixedHeightInternal = value;
+      this.onResize();
+    }
   }
 
   public destroy(): void {
@@ -33,9 +53,23 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   private calculateScale(): number {
-    return this.fixedHeight === undefined
-      ? window.innerHeight
-      : this.fixedHeight / window.innerHeight;
+    if (this.orientation === UIOrientation.HORIZONTAL) {
+      if (this.fixedWidth) {
+        return this.fixedWidth / window.innerWidth;
+      } else if (this.fixedHeight) {
+        return this.fixedHeight / window.innerHeight;
+      } else {
+        return 1;
+      }
+    } else {
+      if (this.fixedHeight) {
+        return this.fixedHeight / window.innerHeight;
+      } else if (this.fixedWidth) {
+        return this.fixedWidth / window.innerWidth;
+      } else {
+        return 1;
+      }
+    }
   }
 
   private readonly onResize = (): void => {

@@ -7,12 +7,12 @@
 // export * from "./constraints/UIConstraintRule";
 // export * from "./constraints/UICoverConstraint";
 // export * from "./constraints/UIFitConstraint";
-// export * from "./constraints/UIHeightConstraint";
+export * from "./constraints/UIHeightConstraint";
 // export * from "./constraints/UIHorizontalDistanceConstraint";
 // export * from "./constraints/UIHorizontalProportionConstraint";
 // export * from "./constraints/UIVerticalDistanceConstraint";
 // export * from "./constraints/UIVerticalProportionConstraint";
-// export * from "./constraints/UIWidthConstraint";
+export * from "./constraints/UIWidthConstraint";
 export * from "./elements/UIAnchor";
 export * from "./elements/UIDummy";
 export * from "./elements/UIElement";

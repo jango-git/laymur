@@ -54,11 +54,6 @@ export class UIMicro {
     }
   }
 
-  /**
-   * Sets the Y-axis offset from the element's position.
-   *
-   * @param value - Y offset in pixels
-   */
   public set y(value: number) {
     if (value !== this.yInternal) {
       this.yInternal = value;
@@ -66,14 +61,6 @@ export class UIMicro {
     }
   }
 
-  /**
-   * Sets the X-axis anchor point where transformations are applied.
-   *
-   * @param value - X anchor (0-1):
-   *   - 0.0 = left edge
-   *   - 0.5 = center (default)
-   *   - 1.0 = right edge
-   */
   public set anchorX(value: number) {
     if (value !== this.anchorXInternal) {
       this.anchorXInternal = value;
@@ -81,14 +68,6 @@ export class UIMicro {
     }
   }
 
-  /**
-   * Sets the Y-axis anchor point where transformations are applied.
-   *
-   * @param value - Y anchor (0-1):
-   *   - 0.0 = top edge
-   *   - 0.5 = center (default)
-   *   - 1.0 = bottom edge
-   */
   public set anchorY(value: number) {
     if (value !== this.anchorYInternal) {
       this.anchorYInternal = value;
@@ -144,6 +123,10 @@ export class UIMicro {
       this.rotationInternal = DEFAULT_ROTATION;
       this.recalculationRequired = true;
     }
+  }
+
+  protected ["getRecalculationRequiredInternal"](): boolean {
+    return this.recalculationRequired;
   }
 
   protected ["resetRecalculationRequiredInternal"](): void {
