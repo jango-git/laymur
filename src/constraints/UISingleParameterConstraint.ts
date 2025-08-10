@@ -1,8 +1,11 @@
 import type { UILayer } from "../layers/UILayer";
 import { UILayerEvent } from "../layers/UILayer";
-import { UIOrientation } from "../miscellaneous/UIOrientation";
-import type { UIPriority } from "../miscellaneous/UIPriority";
-import type { UIRelation } from "../miscellaneous/UIRelation";
+import {
+  resolveOrientation,
+  UIOrientation,
+} from "../miscellaneous/UIOrientation";
+import { resolvePriority, type UIPriority } from "../miscellaneous/UIPriority";
+import { resolveRelation, type UIRelation } from "../miscellaneous/UIRelation";
 import { UIConstraint } from "./UIConstraint";
 
 export interface UISingleParameterConstraintOptions {
@@ -12,6 +15,10 @@ export interface UISingleParameterConstraintOptions {
 }
 
 export abstract class UISingleParameterConstraint extends UIConstraint {
+  protected priorityInternal: UIPriority;
+  protected relationInternal: UIRelation;
+  protected orientationInternal: UIOrientation;
+
   protected abstract readonly constraint: number;
 
   constructor(
@@ -20,7 +27,10 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     relation?: UIRelation,
     orientation?: UIOrientation,
   ) {
-    super(layer, priority, relation, orientation);
+    super(layer);
+    this.priorityInternal = resolvePriority(priority);
+    this.relationInternal = resolveRelation(relation);
+    this.orientationInternal = resolveOrientation(orientation);
     this.layer.on(UILayerEvent.ORIENTATION_CHANGE, this.onOrientationChange);
   }
 

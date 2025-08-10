@@ -1,17 +1,23 @@
 import type { WebGLRenderer } from "three";
+import {
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../miscellaneous/asserts";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UILayer } from "./UILayer";
 
-const DEFAULT_SCREEN_SIZE = 1920;
-
 export class UIFullscreenLayer extends UILayer {
-  private fixedWidthInternal?: number = DEFAULT_SCREEN_SIZE;
-  private fixedHeightInternal?: number = DEFAULT_SCREEN_SIZE;
+  private fixedWidthInternal?: number;
+  private fixedHeightInternal?: number;
 
-  constructor(
-    fixedWidth: number = DEFAULT_SCREEN_SIZE,
-    fixedHeight: number = DEFAULT_SCREEN_SIZE,
-  ) {
+  constructor(fixedWidth: number | undefined, fixedHeight: number | undefined) {
+    if (fixedWidth) {
+      assertValidPositiveNumber(fixedWidth, "UIFullscreenLayer.fixedWidth");
+    }
+    if (fixedHeight) {
+      assertValidPositiveNumber(fixedHeight, "UIFullscreenLayer.fixedHeight");
+    }
+
     super(1, 1);
     this.fixedWidthInternal = fixedWidth;
     this.fixedHeightInternal = fixedHeight;
@@ -29,6 +35,10 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   public set fixedWidth(value: number | undefined) {
+    if (value !== undefined) {
+      assertValidPositiveNumber(value, "UIFullscreenLayer.fixedWidth");
+    }
+
     if (value !== this.fixedWidthInternal) {
       this.fixedWidthInternal = value;
       this.onResize();
@@ -36,6 +46,10 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   public set fixedHeight(value: number | undefined) {
+    if (value !== undefined) {
+      assertValidPositiveNumber(value, "UIFullscreenLayer.fixedHeight");
+    }
+
     if (value !== this.fixedHeightInternal) {
       this.fixedHeightInternal = value;
       this.onResize();
@@ -48,6 +62,7 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
+    assertValidNumber(deltaTime, "UIFullscreenLayer.deltaTime");
     renderer.clear(false, true, true);
     super.renderInternal(renderer, deltaTime);
   }

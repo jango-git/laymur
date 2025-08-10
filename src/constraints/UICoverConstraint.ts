@@ -1,226 +1,209 @@
-// import { Constraint, Expression, Operator } from "@lume/kiwi";
-// import { UIElement } from "../elements/UIElement";
-// import type { UILayer } from "../layers/UILayer";
-// import { assertSameLayer } from "../miscellaneous/asserts";
-
+// import { UILayerEvent } from "../layers/UILayer";
+// import {
+//   assertValidConstraintSubjects,
+//   type UIPlaneElement,
+// } from "../miscellaneous/asserts";
+// import { UIExpression } from "../miscellaneous/UIExpression";
 // import {
 //   resolveOrientation,
 //   UIOrientation,
 // } from "../miscellaneous/UIOrientation";
+// import { resolvePriority, type UIPriority } from "../miscellaneous/UIPriority";
+// import { UIRelation } from "../miscellaneous/UIRelation";
 // import { UIConstraint } from "./UIConstraint";
-
-// /**
-//  * Default anchor value (0.5 = center) for cover constraint alignment
-//  */
 
 // const DEFAULT_ANCHOR = 0.5;
 
-// /**
-//  * Configuration options for cover constraints.
-//  */
-// export interface UICoverOptions {
-//   /** Whether to force equal height (true) or allow stretching (false) */
-//   isStrict: boolean;
-//   /** Horizontal anchor point (0-1) for alignment between elements */
-//   horizontalAnchor: number;
-//   /** Vertical anchor point (0-1) for alignment between elements */
-//   verticalAnchor: number;
-//   /** Screen orientation when this constraint should be active */
+// export interface UICoverConstraintOptions {
+//   anchorHorizontal: number;
+//   anchorVertical: number;
+//   priority: UIPriority;
 //   orientation: UIOrientation;
 // }
 
-// /**
-//  * Constraint that makes an element cover another element or layer.
-//  *
-//  * The covering element will:
-//  * - Be aligned with the covered element using the specified anchors
-//  * - Have at least the same width and height as the covered element
-//  * - Optionally maintain strict proportions
-//  *
-//  * This is similar to CSS's "cover" object-fit behavior.
-//  */
 // export class UICoverConstraint extends UIConstraint {
-//   /** The configuration options for this constraint */
-//   private readonly options: UICoverOptions;
+//   private readonly xConstraint: number;
+//   private readonly yConstraint: number;
+//   private readonly wConstraint: number;
+//   private readonly hConstraint: number;
 
-//   /** Constraint for X-axis alignment */
-//   private constraintX?: Constraint;
-//   /** Constraint for Y-axis alignment */
-//   private constraintY?: Constraint;
-//   /** Constraint for width relationship */
-//   private constraintW?: Constraint;
-//   /** Constraint for height relationship */
-//   private constraintH?: Constraint;
-//   /** Optional constraint for maintaining strict proportions */
-//   private constraintStrict?: Constraint;
+//   private anchorHorizontalInternal: number;
+//   private anchorVerticalInternal: number;
+//   private priorityInternal: UIPriority;
+//   private orientationInternal: UIOrientation;
 
-//   /**
-//    * Creates a new cover constraint.
-//    *
-//    * @param elementOne - The element or layer to be covered (the reference)
-//    * @param elementTwo - The element that will cover the reference
-//    * @param options - Configuration options
-//    */
 //   constructor(
-//     private readonly elementOne: UIElement | UILayer,
-//     private readonly elementTwo: UIElement,
-//     options: Partial<UICoverOptions> = {},
+//     private readonly a: UIPlaneElement,
+//     private readonly b: UIPlaneElement,
+//     options: Partial<UICoverConstraintOptions> = {},
 //   ) {
-//     assertSameLayer(elementOne, elementTwo);
-//     super(
-//       elementTwo.layer,
-//       new Set(
-//         elementOne instanceof UIElement
-//           ? [elementOne, elementTwo]
-//           : [elementTwo],
+//     super(assertValidConstraintSubjects(a, b, "UICoverConstraint"));
+
+//     this.anchorHorizontalInternal = options.anchorHorizontal ?? DEFAULT_ANCHOR;
+//     this.anchorVerticalInternal = options.anchorVertical ?? DEFAULT_ANCHOR;
+//     this.priorityInternal = resolvePriority(options.priority);
+//     this.orientationInternal = resolveOrientation(options.orientation);
+
+//     const enabled = this.isConstraintEnabled();
+
+//     this.xConstraint = this.solverWrapper.createConstraint(
+//       UIExpression.minus(
+//         new UIExpression(0, [
+//           [this.a.xVariable, 1],
+//           [this.a.wVariable, this.anchorHorizontalInternal],
+//         ]),
+//         new UIExpression(0, [
+//           [this.b.xVariable, 1],
+//           [this.b.wVariable, this.anchorHorizontalInternal],
+//         ]),
 //       ),
+//       new UIExpression(0),
+//       UIRelation.EQUAL,
+//       this.priorityInternal,
+//       enabled,
 //     );
 
-//     this.options = {
-//       isStrict: options.isStrict ?? true,
-//       horizontalAnchor: options.horizontalAnchor ?? DEFAULT_ANCHOR,
-//       verticalAnchor: options.verticalAnchor ?? DEFAULT_ANCHOR,
-//       orientation: resolveOrientation(options.orientation),
-//     };
+//     this.yConstraint = this.solverWrapper.createConstraint(
+//       UIExpression.minus(
+//         new UIExpression(0, [
+//           [this.a.yVariable, 1],
+//           [this.a.hVariable, this.anchorVerticalInternal],
+//         ]),
+//         new UIExpression(0, [
+//           [this.b.yVariable, 1],
+//           [this.b.hVariable, this.anchorVerticalInternal],
+//         ]),
+//       ),
+//       new UIExpression(0),
+//       UIRelation.EQUAL,
+//       this.priorityInternal,
+//       enabled,
+//     );
 
-//     if (
-//       this.options.orientation === UIOrientation.ALWAYS ||
-//       this.options.orientation === this.layer.orientation
-//     ) {
-//       this.buildConstraints();
-//     }
+//     this.wConstraint = this.solverWrapper.createConstraint(
+//       new UIExpression(0, [
+//         [this.a.wVariable, 1],
+//         [this.b.wVariable, -1],
+//       ]),
+//       new UIExpression(0),
+//       UIRelation.EQUAL,
+//       this.priorityInternal,
+//       enabled,
+//     );
+
+//     this.hConstraint = this.solverWrapper.createConstraint(
+//       new UIExpression(0, [
+//         [this.a.hVariable, 1],
+//         [this.b.hVariable, -1],
+//       ]),
+//       new UIExpression(0),
+//       UIRelation.EQUAL,
+//       this.priorityInternal,
+//       enabled,
+//     );
+
+//     this.layer.on(UILayerEvent.ORIENTATION_CHANGE, this.onOrientationChange);
 //   }
 
-//   /**
-//    * Destroys this constraint, removing it from the constraint system.
-//    */
-//   public override destroy(): void {
-//     this.destroyConstraints();
-//     super.destroy();
+//   public get anchorHorizontal(): number {
+//     return this.anchorHorizontalInternal;
 //   }
 
-//   /**
-//    * Internal method to disable this constraint when orientation changes.
-//    *
-//    * @param orientation - The new screen orientation
-//    * @internal
-//    */
-//   public ["disableConstraintInternal"](orientation: UIOrientation): void {
-//     if (
-//       this.options.orientation !== UIOrientation.ALWAYS &&
-//       orientation !== this.options.orientation
-//     ) {
-//       this.destroyConstraints();
-//     }
+//   public get anchorVertical(): number {
+//     return this.anchorVerticalInternal;
 //   }
 
-//   /**
-//    * Internal method to enable this constraint when orientation changes.
-//    *
-//    * @param orientation - The new screen orientation
-//    * @internal
-//    */
-//   public ["enableConstraintInternal"](orientation: UIOrientation): void {
-//     if (
-//       this.options.orientation !== UIOrientation.ALWAYS &&
-//       orientation === this.options.orientation
-//     ) {
-//       this.buildConstraints();
-//     }
+//   public get priority(): UIPriority {
+//     return this.priorityInternal;
 //   }
 
-//   /**
-//    * Builds and adds the cover constraints to the constraint solver.
-//    *
-//    * Creates five constraints:
-//    * 1. X alignment between the elements
-//    * 2. Y alignment between the elements
-//    * 3. Width covering (elementTwo width ≥ elementOne width)
-//    * 4. Height covering (elementTwo height ≥ elementOne height)
-//    * 5. Optional strict proportions (if isStrict = false)
-//    *
-//    */
-//   protected buildConstraints(): void {
-//     this.constraintX = new Constraint(
-//       new Expression(this.elementOne["xInternal"]).plus(
-//         new Expression(this.elementOne["widthInternal"]).multiply(
-//           this.options.horizontalAnchor,
+//   public get orientation(): UIOrientation {
+//     return this.orientationInternal;
+//   }
+
+//   public set anchorHorizontal(value: number) {
+//     if (value !== this.anchorHorizontalInternal) {
+//       this.anchorHorizontalInternal = value;
+//       this.solverWrapper.setConstraintLHS(
+//         this.xConstraint,
+//         UIExpression.minus(
+//           new UIExpression(0, [
+//             [this.a.xVariable, 1],
+//             [this.a.wVariable, this.anchorHorizontalInternal],
+//           ]),
+//           new UIExpression(0, [
+//             [this.b.xVariable, 1],
+//             [this.b.wVariable, this.anchorHorizontalInternal],
+//           ]),
 //         ),
-//       ),
-//       Operator.Eq,
-//       new Expression(this.elementTwo["xIndex"]).plus(
-//         new Expression(this.elementTwo["widthInternal"]).multiply(
-//           this.options.horizontalAnchor,
-//         ),
-//       ),
-//     );
-
-//     this.constraintY = new Constraint(
-//       new Expression(this.elementOne["yInternal"]).plus(
-//         new Expression(this.elementOne["heightInternal"]).multiply(
-//           this.options.verticalAnchor,
-//         ),
-//       ),
-//       Operator.Eq,
-//       new Expression(this.elementTwo["yIndex"]).plus(
-//         new Expression(this.elementTwo["heightInternal"]).multiply(
-//           this.options.verticalAnchor,
-//         ),
-//       ),
-//     );
-
-//     this.constraintW = new Constraint(
-//       new Expression(this.elementOne["widthInternal"]),
-//       Operator.Eq,
-//       new Expression(this.elementTwo["widthInternal"]),
-//     );
-
-//     this.constraintH = new Constraint(
-//       new Expression(this.elementOne["heightInternal"]),
-//       Operator.Eq,
-//       new Expression(this.elementTwo["heightInternal"]),
-//     );
-
-//     this.layer["addConstraintInternal"](this, this.constraintX);
-//     this.layer["addConstraintInternal"](this, this.constraintY);
-//     this.layer["addConstraintInternal"](this, this.constraintW);
-//     this.layer["addConstraintInternal"](this, this.constraintH);
-
-//     if (!this.options.isStrict) {
-//       this.constraintStrict = new Constraint(
-//         new Expression(this.elementOne["heightInternal"]),
-//         Operator.Eq,
-//         new Expression(this.elementTwo["heightInternal"]),
 //       );
-
-//       this.layer["addConstraintInternal"](this, this.constraintStrict);
 //     }
 //   }
 
-//   /**
-//    * Removes all cover constraints from the constraint solver.
-//    *
-//    */
-//   protected destroyConstraints(): void {
-//     if (this.constraintX) {
-//       this.layer["removeConstraintInternal"](this, this.constraintX);
-//       this.constraintX = undefined;
-//     }
-//     if (this.constraintY) {
-//       this.layer["removeConstraintInternal"](this, this.constraintY);
-//       this.constraintY = undefined;
-//     }
-//     if (this.constraintW) {
-//       this.layer["removeConstraintInternal"](this, this.constraintW);
-//       this.constraintW = undefined;
-//     }
-//     if (this.constraintH) {
-//       this.layer["removeConstraintInternal"](this, this.constraintH);
-//       this.constraintH = undefined;
-//     }
-//     if (this.constraintStrict) {
-//       this.layer["removeConstraintInternal"](this, this.constraintStrict);
-//       this.constraintStrict = undefined;
+//   public set anchorVertical(value: number) {
+//     if (value !== this.anchorVerticalInternal) {
+//       this.anchorVerticalInternal = value;
+//       this.solverWrapper.setConstraintLHS(
+//         this.yConstraint,
+//         UIExpression.minus(
+//           new UIExpression(0, [
+//             [this.a.yVariable, 1],
+//             [this.a.hVariable, this.anchorVerticalInternal],
+//           ]),
+//           new UIExpression(0, [
+//             [this.b.yVariable, 1],
+//             [this.b.hVariable, this.anchorVerticalInternal],
+//           ]),
+//         ),
+//       );
 //     }
 //   }
+
+//   public set priority(value: UIPriority) {
+//     if (value !== this.priorityInternal) {
+//       this.priorityInternal = value;
+//       this.solverWrapper.setConstraintPriority(
+//         this.xConstraint,
+//         this.priorityInternal,
+//       );
+//       this.solverWrapper.setConstraintPriority(
+//         this.yConstraint,
+//         this.priorityInternal,
+//       );
+//       this.solverWrapper.setConstraintPriority(
+//         this.wConstraint,
+//         this.priorityInternal,
+//       );
+//       this.solverWrapper.setConstraintPriority(
+//         this.hConstraint,
+//         this.priorityInternal,
+//       );
+//     }
+//   }
+
+//   public set orientation(value: UIOrientation) {
+//     if (value !== this.orientationInternal) {
+//       this.orientationInternal = value;
+//       this.onOrientationChange();
+//     }
+//   }
+
+//   public destroy(): void {
+//     this.layer.off(UILayerEvent.ORIENTATION_CHANGE, this.onOrientationChange);
+//   }
+
+//   protected isConstraintEnabled(): boolean {
+//     return (
+//       this.orientationInternal === UIOrientation.ALWAYS ||
+//       this.orientationInternal === this.layer.orientation
+//     );
+//   }
+
+//   private readonly onOrientationChange = (): void => {
+//     const enabled = this.isConstraintEnabled();
+//     this.solverWrapper.setConstraintEnabled(this.xConstraint, enabled);
+//     this.solverWrapper.setConstraintEnabled(this.yConstraint, enabled);
+//     this.solverWrapper.setConstraintEnabled(this.wConstraint, enabled);
+//     this.solverWrapper.setConstraintEnabled(this.hConstraint, enabled);
+//   };
 // }

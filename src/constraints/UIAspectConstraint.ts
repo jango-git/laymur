@@ -3,17 +3,18 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-export interface UIAspectOptions extends UISingleParameterConstraintOptions {
+export interface UIAspectConstraintOptions
+  extends UISingleParameterConstraintOptions {
   aspect: number;
 }
 
-export class UIHeightConstraint extends UISingleParameterConstraint {
+export class UIAspectConstraint extends UISingleParameterConstraint {
   protected override readonly constraint: number;
   private aspectInternal: number;
 
   constructor(
     private readonly element: UIElement,
-    options: Partial<UIAspectOptions> = {},
+    options: Partial<UIAspectConstraintOptions> = {},
   ) {
     super(
       element.layer,
@@ -24,15 +25,9 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
 
     this.aspectInternal = options.aspect ?? element.width / element.height;
 
-    const lhs = new UIExpression(0, [
-      [this.element.wVariable, 1],
-      [this.element.hVariable, -this.aspectInternal],
-    ]);
-    const rhs = new UIExpression(0);
-
     this.constraint = this.solverWrapper.createConstraint(
-      lhs,
-      rhs,
+      this.buildLHS(),
+      new UIExpression(0),
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
@@ -46,10 +41,14 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
   public set aspect(value: number) {
     if (this.aspectInternal !== value) {
       this.aspectInternal = value;
-      this.solverWrapper.setConstraintRHS(
-        this.constraint,
-        new UIExpression(value),
-      );
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
     }
+  }
+
+  private buildLHS(): UIExpression {
+    return new UIExpression(0, [
+      [this.element.wVariable, 1],
+      [this.element.hVariable, -this.aspectInternal],
+    ]);
   }
 }

@@ -10,7 +10,7 @@ import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 const DEFAULT_ANCHOR = 0.5;
 
-export interface UIVerticalDistanceOptions
+export interface UIVerticalDistanceConstraintOptions
   extends UISingleParameterConstraintOptions {
   anchorA: number;
   anchorB: number;
@@ -27,7 +27,7 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   constructor(
     private readonly a: UIPointElement | UIPlaneElement,
     private readonly b: UIPointElement | UIPlaneElement,
-    options: Partial<UIVerticalDistanceOptions> = {},
+    options: Partial<UIVerticalDistanceConstraintOptions> = {},
   ) {
     super(
       assertValidConstraintSubjects(a, b, "UIVerticalDistanceConstraint"),
@@ -40,12 +40,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;
     this.distanceInternal = options.distance ?? 0;
 
-    const lhs = this.buildLHS();
-    const rhs = new UIExpression(this.distanceInternal);
-
     this.constraint = this.solverWrapper.createConstraint(
-      lhs,
-      rhs,
+      this.buildLHS(),
+      new UIExpression(this.distanceInternal),
       this.relationInternal,
       this.priorityInternal,
       this.isConstraintEnabled(),
@@ -77,14 +74,14 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   public set anchorA(value: number) {
     if (this.anchorAInternal !== value) {
       this.anchorAInternal = value;
-      this.solverWrapper.setConstraintRHS(this.constraint, this.buildLHS());
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
     }
   }
 
   public set anchorB(value: number) {
     if (this.anchorBInternal !== value) {
       this.anchorBInternal = value;
-      this.solverWrapper.setConstraintRHS(this.constraint, this.buildLHS());
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
     }
   }
 
@@ -93,9 +90,10 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     let bExpression: UIExpression;
 
     if (isUIPlaneElement(this.a)) {
-      aExpression = new UIExpression()
-        .plus(this.a.yVariable, 1)
-        .plus(this.a.hVariable, this.anchorAInternal);
+      aExpression = new UIExpression(0, [
+        [this.a.yVariable, 1],
+        [this.a.hVariable, this.anchorAInternal],
+      ]);
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.yVariable, 1);
     } else {
@@ -103,9 +101,10 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     }
 
     if (isUIPlaneElement(this.b)) {
-      bExpression = new UIExpression()
-        .plus(this.b.yVariable, 1)
-        .plus(this.b.hVariable, this.anchorBInternal);
+      bExpression = new UIExpression(0, [
+        [this.b.yVariable, 1],
+        [this.b.hVariable, this.anchorBInternal],
+      ]);
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.yVariable, 1);
     } else {

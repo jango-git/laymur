@@ -57,6 +57,15 @@ export class UIExpression {
     return this.terms.has(variableIndex);
   }
 
+  public copy(expression: UIExpression): UIExpression {
+    this.constant = expression.constant;
+    this.terms.clear();
+    for (const [variableIndex, coefficient] of expression.terms) {
+      this.terms.set(variableIndex, coefficient);
+    }
+    return this;
+  }
+
   public clone(): UIExpression {
     return new UIExpression(this.constant, Array.from(this.terms.entries()));
   }

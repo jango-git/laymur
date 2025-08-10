@@ -144,12 +144,7 @@ export class UISolverWrapper {
     enabled: boolean,
   ): number {
     const index = this.lastConstraintIndex++;
-    const constraint = new Constraint(
-      this.convertExpression(lhs),
-      convertRelation(relation),
-      this.convertExpression(rhs),
-      convertPriority(priority),
-    );
+    const constraint = this.buildConstraint(lhs, rhs, relation, priority);
     this.constraints.set(index, {
       constraint,
       lhs: lhs.clone(),
@@ -180,7 +175,7 @@ export class UISolverWrapper {
       throw new Error(`Constraint ${index} does not exist`);
     }
 
-    description.lhs = lhs.clone();
+    description.lhs.copy(lhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
   }
@@ -191,7 +186,7 @@ export class UISolverWrapper {
       throw new Error(`Constraint ${index} does not exist`);
     }
 
-    description.rhs = rhs.clone();
+    description.rhs.copy(rhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
   }
@@ -314,12 +309,12 @@ export class UISolverWrapper {
           description.relation,
           description.priority,
         )
-      : (description.constraint = this.buildConstraint(
+      : this.buildConstraint(
           description.lhs,
           description.rhs,
           description.relation,
           description.priority,
-        ));
+        );
   }
 
   private rebuildRawConstraint(

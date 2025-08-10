@@ -3,7 +3,8 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-export interface UIWidthOptions extends UISingleParameterConstraintOptions {
+export interface UIWidthConstraintOptions
+  extends UISingleParameterConstraintOptions {
   width: number;
 }
 
@@ -13,7 +14,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
 
   constructor(
     private readonly element: UIElement,
-    options: Partial<UIWidthOptions> = {},
+    options: Partial<UIWidthConstraintOptions> = {},
   ) {
     super(
       element.layer,
@@ -24,12 +25,9 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
 
     this.widthInternal = options.width ?? element.width;
 
-    const lhs = new UIExpression().plus(this.element.wVariable, 1);
-    const rhs = new UIExpression(this.widthInternal);
-
     this.constraint = this.solverWrapper.createConstraint(
-      lhs,
-      rhs,
+      new UIExpression(0, [[this.element.wVariable, 1]]),
+      new UIExpression(this.widthInternal),
       this.relation,
       this.priority,
       this.isConstraintEnabled(),

@@ -4,7 +4,7 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-export interface UIHorizontalProportionOptions
+export interface UIHorizontalProportionConstraintOptions
   extends UISingleParameterConstraintOptions {
   proportion: number;
 }
@@ -16,7 +16,7 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
   constructor(
     private readonly a: UIPlaneElement,
     private readonly b: UIPlaneElement,
-    options: Partial<UIHorizontalProportionOptions> = {},
+    options: Partial<UIHorizontalProportionConstraintOptions> = {},
   ) {
     super(
       assertValidConstraintSubjects(a, b, "UIHorizontalProportionConstraint"),

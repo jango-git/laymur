@@ -3,7 +3,8 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-export interface UIHeightOptions extends UISingleParameterConstraintOptions {
+export interface UIHeightConstraintOptions
+  extends UISingleParameterConstraintOptions {
   height: number;
 }
 
@@ -13,7 +14,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
 
   constructor(
     private readonly element: UIElement,
-    options: Partial<UIHeightOptions> = {},
+    options: Partial<UIHeightConstraintOptions> = {},
   ) {
     super(
       element.layer,
@@ -24,12 +25,9 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
 
     this.heightInternal = options.height ?? element.height;
 
-    const lhs = new UIExpression().plus(this.element.hVariable, 1);
-    const rhs = new UIExpression(this.heightInternal);
-
     this.constraint = this.solverWrapper.createConstraint(
-      lhs,
-      rhs,
+      new UIExpression(0, [[this.element.hVariable, 1]]),
+      new UIExpression(this.heightInternal),
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
