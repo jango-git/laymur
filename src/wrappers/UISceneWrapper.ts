@@ -90,10 +90,21 @@ export class UISceneWrapper {
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     for (const [element, object] of this.elements) {
-      object.position.x = element.x;
-      object.position.y = element.y;
-      object.scale.x = element.width;
-      object.scale.y = element.height;
+      const micro = element.micro;
+      const cos = Math.cos(micro.rotation);
+      const sin = Math.sin(micro.rotation);
+      const width = element.width * micro.scaleX;
+      const height = element.height * micro.scaleY;
+      const anchorOffsetX = micro.anchorX * width;
+      const anchorOffsetY = micro.anchorY * height;
+      const rotatedAnchorX = anchorOffsetX * cos - anchorOffsetY * sin;
+      const rotatedAnchorY = anchorOffsetX * sin + anchorOffsetY * cos;
+
+      object.position.x = element.x + micro.x - rotatedAnchorX;
+      object.position.y = element.y + micro.y - rotatedAnchorY;
+      object.scale.x = width;
+      object.scale.y = height;
+      object.rotation.z = micro.rotation;
       element["onBeforeRenderInternal"](renderer, deltaTime);
     }
     renderer.render(this.scene, this.camera);

@@ -1,7 +1,7 @@
 import { MathUtils } from "three";
 
 const DEFAULT_POSITION = 0;
-const DEFAULT_ANCHOR = 0.5;
+const DEFAULT_ANCHOR = 0;
 const DEFAULT_SCALE = 1;
 const DEFAULT_ROTATION = 0;
 
