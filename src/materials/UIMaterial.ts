@@ -1,7 +1,7 @@
 import type { Texture } from "three";
 import { Color, ShaderMaterial } from "three";
 
-const DEFAULT_ALPHA_TEST = 0.25;
+const DEFAULT_ALPHA_TEST = 0.75;
 
 export class UIMaterial extends ShaderMaterial {
   constructor(map: Texture) {
@@ -10,6 +10,7 @@ export class UIMaterial extends ShaderMaterial {
         map: { value: map },
         opacity: { value: 1.0 },
         color: { value: new Color(1.0, 1.0, 1.0) },
+        alphaTest: { value: DEFAULT_ALPHA_TEST },
       },
       vertexShader: /* glsl */ `
         varying vec2 vUv;
@@ -22,11 +23,13 @@ export class UIMaterial extends ShaderMaterial {
         uniform sampler2D map;
         uniform float opacity;
         uniform vec3 color;
+        uniform float alphaTest;
         varying vec2 vUv;
 
         void main() {
-          vec4 textureColor = texture2D(map, vUv);
-          gl_FragColor = vec4(textureColor.rgb * color, textureColor.a * opacity);
+          vec4 diffuseColor = texture2D(map, vUv);
+          #include <alphatest_fragment>
+          gl_FragColor = vec4(diffuseColor.rgb * color, diffuseColor.a * opacity);
           #include <colorspace_fragment>
         }
       `,
@@ -73,8 +76,7 @@ export class UIMaterial extends ShaderMaterial {
   public setTransparency(value: boolean): void {
     if (this.transparent !== value) {
       this.transparent = value;
-      this.alphaTest = value ? DEFAULT_ALPHA_TEST : 0;
-
+      this.uniforms.alphaTest.value = value ? DEFAULT_ALPHA_TEST : 0;
       this.needsUpdate = true;
       this.uniformsNeedUpdate = true;
     }

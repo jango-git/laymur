@@ -17,6 +17,7 @@ export * from "./elements/UIAnchor";
 export * from "./elements/UIDummy";
 export * from "./elements/UIElement";
 export * from "./elements/UIImage";
+export * from "./elements/UINineSline";
 export * from "./miscellaneous/UIExpression";
 // export * from "./elements/UIProgress";
 // export * from "./elements/UIScene";

@@ -8,6 +8,10 @@ import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import { UIAnchor } from "./UIAnchor";
 
+export enum UIElementEvent {
+  CLICK = "click",
+}
+
 export abstract class UIElement<
   T extends Object3D = Object3D,
 > extends UIAnchor {
@@ -88,12 +92,15 @@ export abstract class UIElement<
   }
 
   protected ["onClickInternal"](x: number, y: number): boolean {
-    return (
+    const isClicked =
       this.modeInternal === UIMode.INTERACTIVE &&
       x > this.x &&
       x < this.x + this.width &&
       y > this.y &&
-      y < this.y + this.height
-    );
+      y < this.y + this.height;
+    if (isClicked) {
+      this.emit(UIElementEvent.CLICK, x, y, this);
+    }
+    return isClicked;
   }
 }
