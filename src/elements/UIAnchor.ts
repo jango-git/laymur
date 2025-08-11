@@ -1,10 +1,11 @@
 import { Eventail } from "eventail";
 import type { UILayer } from "../layers/UILayer";
+import type { UIPointElement } from "../miscellaneous/asserts";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
-export abstract class UIAnchor extends Eventail {
+export abstract class UIAnchor extends Eventail implements UIPointElement {
   public name = "";
 
   public readonly xVariable: number;
@@ -17,8 +18,8 @@ export abstract class UIAnchor extends Eventail {
     x: number,
     y: number,
   ) {
-    assertValidNumber(x, "X");
-    assertValidNumber(y, "Y");
+    assertValidNumber(x, "UIAnchor x");
+    assertValidNumber(y, "UIAnchor y");
 
     super();
     this.solverWrapper = this.layer["getSolverWrapperInternal"]();
@@ -35,10 +36,12 @@ export abstract class UIAnchor extends Eventail {
   }
 
   public set x(value: number) {
+    assertValidNumber(value, "UIAnchor x");
     this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
   public set y(value: number) {
+    assertValidNumber(value, "UIAnchor y");
     this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
 

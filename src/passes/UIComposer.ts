@@ -19,7 +19,7 @@
 //  * Internal implementation of the UI composition system
 //  * Handles the actual rendering and composition of passes
 //  */
-// export class UIComposerInternal {
+// export class UIComposer {
 //   /** Collection of all registered composition passes */
 //   public readonly passes: UIPass[] = [];
 
@@ -218,26 +218,5 @@
 //     const fromRenderTarget = this.fromRenderTarget;
 //     this.fromRenderTarget = this.toRenderTarget;
 //     this.toRenderTarget = fromRenderTarget;
-//   }
-// }
-
-// /**
-//  * Public interface for the UI composition system
-//  * Provides a simplified API for managing UI passes
-//  */
-// export class UIComposer {
-//   /**
-//    * Creates a new UI composer
-//    *
-//    * @param raw - Internal implementation that handles actual rendering
-//    */
-//   constructor(private readonly raw: UIComposerInternal) {}
-
-//   /**
-//    * Collection of all registered composition passes
-//    * Add passes to this collection to apply effects to the UI
-//    */
-//   public get passes(): UIPass[] {
-//     return this.raw.passes;
 //   }
 // }

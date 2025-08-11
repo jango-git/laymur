@@ -39,6 +39,10 @@ export class UIMicro {
     return this.scaleYInternal;
   }
 
+  public get size(): number {
+    return Math.max(this.scaleXInternal, this.scaleYInternal);
+  }
+
   public get angle(): number {
     return MathUtils.radToDeg(this.rotationInternal);
   }
@@ -84,6 +88,14 @@ export class UIMicro {
 
   public set scaleY(value: number) {
     if (value !== this.scaleYInternal) {
+      this.scaleYInternal = value;
+      this.recalculationRequired = true;
+    }
+  }
+
+  public set size(value: number) {
+    if (value !== this.scaleXInternal || value !== this.scaleYInternal) {
+      this.scaleXInternal = value;
       this.scaleYInternal = value;
       this.recalculationRequired = true;
     }

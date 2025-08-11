@@ -100,3 +100,13 @@ export function assertValidPositiveNumber(
     );
   }
 }
+
+export function assertValidNonNegativeNumber(
+  value: number,
+  subject: string,
+): void {
+  assertValidNumber(value, subject);
+  if (value < 0) {
+    throw new Error(`${subject}: value must be greater than or equal to 0`);
+  }
+}

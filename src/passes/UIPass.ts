@@ -8,8 +8,10 @@
 //   width: number;
 //   /** Height of the render target in pixels (without padding) */
 //   height: number;
-//   /** Current padding used for the render target */
-//   padding: number;
+//   /** Current horizontal padding used for the render target */
+//   paddingHorizontal: number;
+//   /** Current vertical padding used for the render target */
+//   paddingVertical: number;
 // }
 
 // /**
@@ -20,10 +22,16 @@
 //  */
 // export abstract class UIPass {
 //   /**
-//    * The amount of padding in pixels this pass requires
+//    * The amount of horizontal padding in pixels this pass requires
 //    * The compositor will use the maximum padding value from all passes
 //    */
-//   public abstract get padding(): number;
+//   public abstract get paddingHorizontal(): number;
+
+//   /**
+//    * The amount of vertical padding in pixels this pass requires
+//    * The compositor will use the maximum padding value from all passes
+//    */
+//   public abstract get paddingVertical(): number;
 
 //   /**
 //    * Whether this pass needs to be updated in the next frame

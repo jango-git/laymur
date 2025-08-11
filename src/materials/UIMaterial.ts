@@ -4,7 +4,7 @@ import { Color, ShaderMaterial } from "three";
 const DEFAULT_ALPHA_TEST = 0.75;
 
 export class UIMaterial extends ShaderMaterial {
-  constructor(map: Texture) {
+  constructor(map?: Texture) {
     super({
       uniforms: {
         map: { value: map },

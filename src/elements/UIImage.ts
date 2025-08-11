@@ -11,14 +11,13 @@ export class UIImage extends UIElement<Mesh> {
   private readonly textureInternal: Texture;
 
   constructor(layer: UILayer, texture: Texture, x = 0, y = 0) {
-    const w = texture.image.width;
-    const h = texture.image.height;
+    const width = texture.image.width;
+    const height = texture.image.height;
 
     const material = new UIMaterial(texture);
     const object = new Mesh(geometry, material);
 
-    super(layer, x, y, w, h, object);
-
+    super(layer, x, y, width, height, object);
     this.material = material;
     this.textureInternal = texture;
   }
@@ -40,15 +39,15 @@ export class UIImage extends UIElement<Mesh> {
   }
 
   public set texture(value: Texture) {
-    const w = value.image.width;
-    const h = value.image.height;
+    const width = value.image.width;
+    const height = value.image.height;
 
-    assertValidPositiveNumber(w, "W");
-    assertValidPositiveNumber(h, "H");
+    assertValidPositiveNumber(width, "UIImage texture width");
+    assertValidPositiveNumber(height, "UIImage texture height");
 
     this.material.setTexture(value);
-    this.solverWrapper.suggestVariableValue(this.wVariable, w);
-    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+    this.solverWrapper.suggestVariableValue(this.wVariable, width);
+    this.solverWrapper.suggestVariableValue(this.hVariable, height);
   }
 
   public set color(value: number) {

@@ -1,7 +1,11 @@
 import type { WebGLRenderer } from "three";
 import { type Object3D } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { assertValidNumber } from "../miscellaneous/asserts";
+import type { UIPlaneElement } from "../miscellaneous/asserts";
+import {
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../miscellaneous/asserts";
 import { UIMicro } from "../miscellaneous/UIMicro";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
@@ -12,9 +16,10 @@ export enum UIElementEvent {
   CLICK = "click",
 }
 
-export abstract class UIElement<
-  T extends Object3D = Object3D,
-> extends UIAnchor {
+export abstract class UIElement<T extends Object3D = Object3D>
+  extends UIAnchor
+  implements UIPlaneElement
+{
   public readonly micro = new UIMicro();
 
   public readonly wVariable: number;
@@ -27,18 +32,18 @@ export abstract class UIElement<
     layer: UILayer,
     x: number,
     y: number,
-    w: number,
-    h: number,
+    width: number,
+    height: number,
     protected readonly object: T,
   ) {
-    assertValidNumber(w, "W");
-    assertValidNumber(h, "H");
+    assertValidPositiveNumber(width, "UIElement width");
+    assertValidPositiveNumber(height, "UIElement height");
 
     super(layer, x, y);
     this.sceneWrapper = this.layer["getSceneWrapperInternal"]();
     this.sceneWrapper.insertObject(this, this.object);
-    this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P7);
-    this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P7);
+    this.wVariable = this.solverWrapper.createVariable(width, UIPriority.P7);
+    this.hVariable = this.solverWrapper.createVariable(height, UIPriority.P7);
   }
 
   public get width(): number {
@@ -58,14 +63,17 @@ export abstract class UIElement<
   }
 
   public set width(value: number) {
+    assertValidPositiveNumber(value, "UIElement width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   public set height(value: number) {
+    assertValidPositiveNumber(value, "UIElement height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   public set zIndex(value: number) {
+    assertValidNumber(value, "UIElement zIndex");
     this.sceneWrapper.setZIndex(this, value);
   }
 
@@ -83,14 +91,6 @@ export abstract class UIElement<
     super.destroy();
   }
 
-  protected ["onBeforeRenderInternal"](
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
-    void renderer;
-    void deltaTime;
-  }
-
   protected ["onClickInternal"](x: number, y: number): boolean {
     const isClicked =
       this.modeInternal === UIMode.INTERACTIVE &&
@@ -103,4 +103,11 @@ export abstract class UIElement<
     }
     return isClicked;
   }
+
+  protected ["onBeforeRenderInternal"](
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
+    renderer: WebGLRenderer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
+    deltaTime: number,
+  ): void {}
 }

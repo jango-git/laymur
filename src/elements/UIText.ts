@@ -1,210 +1,132 @@
-// import type { WebGLRenderer } from "three";
-// import { CanvasTexture, Mesh } from "three";
-// import type { UILayer } from "../layers/UILayer";
-// import { UIMaterial } from "../materials/UIMaterial";
-// import {
-//   calculateTextBlockSize,
-//   measureTextChunk,
-//   renderTextLines,
-//   resolvePadding,
-//   resolveTextStyle,
-//   splitText,
-//   wrapTextLines,
-// } from "../miscellaneous/textTools";
-// import { geometry } from "../miscellaneous/threeInstances";
-// import type {
-//   UITextChunk,
-//   UITextPadding,
-//   UITextSize,
-//   UITextSpan,
-//   UITextStyle,
-// } from "../miscellaneous/UITextInterfaces";
-// import { UIElement } from "./UIElement";
+import type { WebGLRenderer } from "three";
+import { CanvasTexture, Mesh } from "three";
+import type { UILayer } from "../layers/UILayer";
+import { UIMaterial } from "../materials/UIMaterial";
+import type {
+  UITextContent,
+  UITextSize,
+} from "../miscellaneous/textInterfaces";
+import {
+  calculateTextContentParameters,
+  renderTextLines,
+} from "../miscellaneous/textTools";
+import { geometry } from "../miscellaneous/threeInstances";
+import {
+  resolvePadding,
+  type UITextPadding,
+} from "../miscellaneous/UITextPadding";
+import { type UITextStyle } from "../miscellaneous/UITextStyle";
+import { UIElement } from "./UIElement";
 
-// /**
-//  * Options for customizing the UIText element.
-//  */
-// export interface UITextOptions {
-//   /** Maximum width of the text block before wrapping occurs */
-//   maxWidth: number;
-//   /** Padding around the text */
-//   padding: Partial<UITextPadding>;
-//   /** Default style to apply to text spans that don't specify their own style */
-//   defaultStyle: Partial<UITextStyle>;
-// }
+export interface UITextOptions {
+  maxLineWidth: number;
+  padding: Partial<UITextPadding>;
+  commonStyle: Partial<UITextStyle>;
+}
 
-// /** Default maximum line width for text if not otherwise specified */
-// const DEFAULT_LINE_SIZE = 1024;
+export class UIText extends UIElement<Mesh> {
+  private readonly material: UIMaterial;
+  private readonly texture: CanvasTexture;
 
-// /**
-//  * A UI element that displays formatted text.
-//  * Renders text to a canvas and displays it as a texture on a mesh.
-//  */
-// export class UIText extends UIElement {
-//   /** Material used to render the text */
-//   private readonly material: UIMaterial;
-//   /** Texture containing the rendered text */
-//   private readonly texture: CanvasTexture;
+  private readonly canvas: HTMLCanvasElement;
+  private readonly context: CanvasRenderingContext2D;
 
-//   /** Canvas element used to render the text */
-//   private readonly canvas: HTMLCanvasElement;
-//   /** 2D rendering context for the canvas */
-//   private readonly context: CanvasRenderingContext2D;
+  private readonly textSize: UITextSize;
+  private readonly padding: UITextPadding;
 
-//   /** Size of the text block without padding */
-//   private readonly textBlockSize: UITextSize;
-//   /** Padding values applied around the text */
-//   private readonly padding: UITextPadding;
-//   /** Cached aspect ratio for performance optimization */
-//   private suggestedAspect = 0;
+  private lastAspectRatio = 0;
 
-//   /**
-//    * Creates a new text UI element.
-//    *
-//    * @param layer - The UI layer that contains this element
-//    * @param spans - Text content to display, either as a string, text span, or array of text spans/strings
-//    * @param options - Options to customize the text rendering
-//    * @throws Error if canvas context creation fails
-//    */
-//   constructor(
-//     layer: UILayer,
-//     spans: (UITextSpan | string)[] | UITextSpan | string,
-//     options: Partial<UITextOptions> = {},
-//   ) {
-//     const canvas = document.createElement("canvas");
-//     const context = canvas.getContext("2d");
+  constructor(
+    layer: UILayer,
+    content: UITextContent,
+    options: Partial<UITextOptions> = {},
+    x = 0,
+    y = 0,
+  ) {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
 
-//     if (!context) {
-//       throw new Error("Failed to create canvas context");
-//     }
+    if (!context) {
+      throw new Error("Failed to create canvas context");
+    }
 
-//     const chunks: UITextChunk[] = [];
-//     const processedSpans = Array.isArray(spans) ? spans : [spans];
+    const { lines, size } = calculateTextContentParameters(
+      context,
+      content,
+      options.maxLineWidth,
+      options.commonStyle,
+    );
 
-//     for (const span of processedSpans) {
-//       const isSpanString = typeof span === "string";
-//       const spanText = isSpanString ? span : span.text;
-//       const style = resolveTextStyle(
-//         isSpanString ? undefined : span.style,
-//         options.defaultStyle,
-//       );
+    const padding = resolvePadding(options.padding);
+    canvas.width = size.width + padding.left + padding.right;
+    canvas.height = size.height + padding.top + padding.bottom;
 
-//       for (const text of splitText(spanText)) {
-//         const metrics = measureTextChunk(context, text, style);
-//         chunks.push({ text, style, metrics });
-//       }
-//     }
+    const texture = new CanvasTexture(canvas);
+    const material = new UIMaterial(texture);
+    const object = new Mesh(geometry, material);
 
-//     const wrappedLines = wrapTextLines(
-//       options.maxWidth ?? DEFAULT_LINE_SIZE,
-//       chunks,
-//     );
-//     const textBlockSize = calculateTextBlockSize(wrappedLines);
+    super(layer, x, y, size.width, size.height, object);
 
-//     const padding = resolvePadding(options.padding);
+    this.material = material;
+    this.texture = texture;
 
-//     canvas.width = textBlockSize.width + padding.left + padding.right;
-//     canvas.height = textBlockSize.height + padding.top + padding.bottom;
+    this.canvas = canvas;
+    this.context = context;
 
-//     const texture = new CanvasTexture(canvas);
+    this.textSize = size;
+    this.padding = padding;
 
-//     const material = new UIMaterial(texture);
-//     const object = new Mesh(geometry, material);
+    renderTextLines(this.padding.top, this.padding.left, lines, this.context);
+    this.texture.needsUpdate = true;
+  }
 
-//     super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
+  public get color(): number {
+    return this.material.getColor();
+  }
 
-//     this.material = material;
-//     this.texture = texture;
+  public get opacity(): number {
+    return this.material.getOpacity();
+  }
 
-//     this.canvas = canvas;
-//     this.context = context;
+  public get transparency(): boolean {
+    return this.material.getTransparency();
+  }
 
-//     this.textBlockSize = textBlockSize;
-//     this.padding = padding;
+  public set color(value: number) {
+    this.material.setColor(value);
+  }
 
-//     renderTextLines(
-//       this.padding.top,
-//       this.padding.left,
-//       wrappedLines,
-//       this.context,
-//     );
+  public set opacity(value: number) {
+    this.material.setOpacity(value);
+  }
 
-//     this.texture.needsUpdate = true;
-//     this.applyTransformations();
-//   }
+  public set transparency(value: boolean) {
+    this.material.setTransparency(value);
+  }
 
-//   /** Gets the color tint applied to the text */
-//   public get color(): number {
-//     return this.material.getColor();
-//   }
+  public override destroy(): void {
+    this.material.dispose();
+    this.texture.dispose();
+    this.canvas.remove();
+    super.destroy();
+  }
 
-//   /** Gets the opacity of the text */
-//   public get opacity(): number {
-//     return this.material.getOpacity();
-//   }
+  protected override ["onBeforeRenderInternal"](
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
+    renderer: WebGLRenderer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
+    deltaTime: number,
+  ): void {
+    const actualAspectRatio = this.width / this.height;
 
-//   /**
-//    * Sets the color tint applied to the text
-//    * @param value - Color in hexadecimal format
-//    */
-//   public set color(value: number) {
-//     this.material.setColor(value);
-//     this.composerInternal.requestUpdate();
-//   }
+    if (this.lastAspectRatio !== actualAspectRatio) {
+      this.lastAspectRatio = actualAspectRatio;
 
-//   /**
-//    * Sets the opacity of the text
-//    * @param value - Opacity value between 0 (transparent) and 1 (opaque)
-//    */
-//   public set opacity(value: number) {
-//     this.material.setOpacity(value);
-//     this.composerInternal.requestUpdate();
-//   }
+      const targetAspectRatio =
+        (this.textSize.width + this.padding.left + this.padding.right) /
+        (this.textSize.height + this.padding.top + this.padding.bottom);
 
-//   /**
-//    * Destroys the text element, disposing of all resources and removing it from the layer.
-//    * This should be called when the element is no longer needed.
-//    */
-//   public override destroy(): void {
-//     this.material.dispose();
-//     this.texture.dispose();
-//     this.canvas.remove();
-//     super.destroy();
-//   }
-
-//   /**
-//    * Applies transformations to the text element, ensuring the aspect ratio
-//    * matches the rendered text to prevent distortion.
-//    *
-//    * This overrides the base implementation to maintain the correct aspect ratio.
-//    */
-//   public override applyTransformations(): void {
-//     super.applyTransformations();
-
-//     const currentAspect = this.width / this.height;
-//     if (this.suggestedAspect !== currentAspect) {
-//       this.suggestedAspect = currentAspect;
-
-//       const targetAspect =
-//         (this.textBlockSize.width + this.padding.left + this.padding.right) /
-//         (this.textBlockSize.height + this.padding.top + this.padding.bottom);
-
-//       this.height = this.width / targetAspect;
-//     }
-//   }
-
-//   /**
-//    * Renders the text element.
-//    *
-//    * @param renderer - The WebGL renderer
-//    */
-//   protected override render(renderer: WebGLRenderer): void {
-//     (this.object as Mesh).material = this.composerInternal.compose(
-//       renderer,
-//       this.texture.image.width,
-//       this.texture.image.height,
-//       this.material,
-//     );
-//     this.applyTransformations();
-//   }
-// }
+      this.height = this.width / targetAspectRatio;
+    }
+  }
+}
