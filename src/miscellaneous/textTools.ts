@@ -179,12 +179,10 @@ export function renderTextLines(
   }
 }
 
-const DEFAULT_MAX_LINE_WIDTH = 1024;
-
 export function calculateTextContentParameters(
   context: CanvasRenderingContext2D,
   content: UITextContent,
-  maxLineWidth: number = DEFAULT_MAX_LINE_WIDTH,
+  maxLineWidth: number,
   commonStyle?: Partial<UITextStyle>,
 ): { lines: UITextLine[]; size: UITextSize } {
   const chunks: UITextChunk[] = [];

@@ -18,6 +18,8 @@ import {
 import { type UITextStyle } from "../miscellaneous/UITextStyle";
 import { UIElement } from "./UIElement";
 
+const DEFAULT_MAX_LINE_WIDTH = 1024;
+
 export interface UITextOptions {
   maxLineWidth: number;
   padding: Partial<UITextPadding>;
@@ -31,9 +33,13 @@ export class UIText extends UIElement<Mesh> {
   private readonly canvas: HTMLCanvasElement;
   private readonly context: CanvasRenderingContext2D;
 
+  private readonly contentInternal: UITextContent;
   private readonly textSize: UITextSize;
   private readonly padding: UITextPadding;
+  private readonly maxLineWidth: number;
+  private readonly commonStyle: Partial<UITextStyle>;
 
+  private readonly targetAspectRatio: number = 0;
   private lastAspectRatio = 0;
 
   constructor(
@@ -50,11 +56,14 @@ export class UIText extends UIElement<Mesh> {
       throw new Error("Failed to create canvas context");
     }
 
+    const maxLineWidth = options.maxLineWidth ?? DEFAULT_MAX_LINE_WIDTH;
+    const commonStyle = options.commonStyle ?? {};
+
     const { lines, size } = calculateTextContentParameters(
       context,
       content,
-      options.maxLineWidth,
-      options.commonStyle,
+      maxLineWidth,
+      commonStyle,
     );
 
     const padding = resolvePadding(options.padding);
@@ -73,8 +82,15 @@ export class UIText extends UIElement<Mesh> {
     this.canvas = canvas;
     this.context = context;
 
+    this.contentInternal = content;
     this.textSize = size;
     this.padding = padding;
+    this.maxLineWidth = maxLineWidth;
+    this.commonStyle = commonStyle;
+
+    this.targetAspectRatio =
+      (this.textSize.width + this.padding.left + this.padding.right) /
+      (this.textSize.height + this.padding.top + this.padding.bottom);
 
     renderTextLines(this.padding.top, this.padding.left, lines, this.context);
     this.texture.needsUpdate = true;
@@ -92,6 +108,10 @@ export class UIText extends UIElement<Mesh> {
     return this.material.getTransparency();
   }
 
+  public get content(): UITextContent {
+    return this.contentInternal;
+  }
+
   public set color(value: number) {
     this.material.setColor(value);
   }
@@ -102,6 +122,21 @@ export class UIText extends UIElement<Mesh> {
 
   public set transparency(value: boolean) {
     this.material.setTransparency(value);
+  }
+
+  public set content(value: UITextContent) {
+    const { lines, size } = calculateTextContentParameters(
+      this.context,
+      value,
+      this.maxLineWidth,
+      this.commonStyle,
+    );
+
+    this.canvas.width = size.width + this.padding.left + this.padding.right;
+    this.canvas.height = size.height + this.padding.top + this.padding.bottom;
+
+    renderTextLines(this.padding.top, this.padding.left, lines, this.context);
+    this.texture.needsUpdate = true;
   }
 
   public override destroy(): void {
@@ -117,16 +152,9 @@ export class UIText extends UIElement<Mesh> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
     deltaTime: number,
   ): void {
-    const actualAspectRatio = this.width / this.height;
-
-    if (this.lastAspectRatio !== actualAspectRatio) {
-      this.lastAspectRatio = actualAspectRatio;
-
-      const targetAspectRatio =
-        (this.textSize.width + this.padding.left + this.padding.right) /
-        (this.textSize.height + this.padding.top + this.padding.bottom);
-
-      this.height = this.width / targetAspectRatio;
+    if (this.lastAspectRatio !== this.width / this.height) {
+      this.lastAspectRatio = this.targetAspectRatio;
+      this.height = this.width / this.targetAspectRatio;
     }
   }
 }
