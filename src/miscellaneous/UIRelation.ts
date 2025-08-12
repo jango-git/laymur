@@ -1,9 +1,9 @@
 import { Operator } from "@lume/kiwi";
 
 export enum UIRelation {
-  EQUAL,
-  LESS_THAN,
-  GREATER_THAN,
+  EQUAL = 0,
+  LESS_THAN = 1,
+  GREATER_THAN = 2,
 }
 
 export function convertRelation(relation: UIRelation): Operator {

@@ -9,19 +9,19 @@ export enum UIOrientation {
    * Indicates a landscape orientation (width > height).
    * Constraints using this value will only be active in landscape mode.
    */
-  HORIZONTAL,
+  HORIZONTAL = 0,
 
   /**
    * Indicates a portrait orientation (height > width).
    * Constraints using this value will only be active in portrait mode.
    */
-  VERTICAL,
+  VERTICAL = 1,
 
   /**
    * Indicates that the constraint should always be active,
    * regardless of screen orientation.
    */
-  ALWAYS,
+  ALWAYS = 2,
 }
 
 /**

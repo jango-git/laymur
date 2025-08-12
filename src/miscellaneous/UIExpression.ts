@@ -29,7 +29,7 @@ export class UIExpression {
     return result;
   }
 
-  public plus(variableIndex: number, coefficient: number): UIExpression {
+  public plus(variableIndex: number, coefficient: number): this {
     this.terms.set(
       variableIndex,
       (this.terms.get(variableIndex) ?? 0) + coefficient,
@@ -37,11 +37,11 @@ export class UIExpression {
     return this;
   }
 
-  public minus(variableIndex: number, coefficient: number): UIExpression {
+  public minus(variableIndex: number, coefficient: number): this {
     return this.plus(variableIndex, -coefficient);
   }
 
-  public multiply(value: number): UIExpression {
+  public multiply(value: number): this {
     this.constant *= value;
     for (const [variableIndex, coefficient] of this.terms) {
       this.terms.set(variableIndex, coefficient * value);
@@ -49,7 +49,7 @@ export class UIExpression {
     return this;
   }
 
-  public divide(value: number): UIExpression {
+  public divide(value: number): this {
     return this.multiply(1 / value);
   }
 
@@ -57,7 +57,7 @@ export class UIExpression {
     return this.terms.has(variableIndex);
   }
 
-  public copy(expression: UIExpression): UIExpression {
+  public copy(expression: UIExpression): this {
     this.constant = expression.constant;
     this.terms.clear();
     for (const [variableIndex, coefficient] of expression.terms) {

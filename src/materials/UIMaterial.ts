@@ -58,27 +58,31 @@ export class UIMaterial extends ShaderMaterial {
     return this.transparent;
   }
 
-  public setTexture(value: Texture): void {
+  public setTexture(value: Texture): this {
     this.uniforms.map.value = value;
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setColor(value: number): void {
+  public setColor(value: number): this {
     (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setOpacity(value: number): void {
+  public setOpacity(value: number): this {
     this.uniforms.opacity.value = value;
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setTransparency(value: boolean): void {
+  public setTransparency(value: boolean): this {
     if (this.transparent !== value) {
       this.transparent = value;
       this.uniforms.alphaTest.value = value ? DEFAULT_ALPHA_TEST : 0;
       this.needsUpdate = true;
       this.uniformsNeedUpdate = true;
     }
+    return this;
   }
 }

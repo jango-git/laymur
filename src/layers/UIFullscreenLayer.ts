@@ -11,10 +11,10 @@ export class UIFullscreenLayer extends UILayer {
   private fixedHeightInternal?: number;
 
   constructor(fixedWidth: number | undefined, fixedHeight: number | undefined) {
-    if (fixedWidth) {
+    if (fixedWidth !== undefined) {
       assertValidPositiveNumber(fixedWidth, "UIFullscreenLayer.fixedWidth");
     }
-    if (fixedHeight) {
+    if (fixedHeight !== undefined) {
       assertValidPositiveNumber(fixedHeight, "UIFullscreenLayer.fixedHeight");
     }
 
@@ -69,17 +69,17 @@ export class UIFullscreenLayer extends UILayer {
 
   private calculateScale(): number {
     if (this.orientation === UIOrientation.HORIZONTAL) {
-      if (this.fixedWidth) {
+      if (this.fixedWidth !== undefined) {
         return this.fixedWidth / window.innerWidth;
-      } else if (this.fixedHeight) {
+      } else if (this.fixedHeight !== undefined) {
         return this.fixedHeight / window.innerHeight;
       } else {
         return 1;
       }
     } else {
-      if (this.fixedHeight) {
+      if (this.fixedHeight !== undefined) {
         return this.fixedHeight / window.innerHeight;
-      } else if (this.fixedWidth) {
+      } else if (this.fixedWidth !== undefined) {
         return this.fixedWidth / window.innerWidth;
       } else {
         return 1;
