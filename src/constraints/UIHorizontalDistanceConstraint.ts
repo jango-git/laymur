@@ -8,22 +8,59 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
+/** Default anchor point (0.5 = center) for elements when not specified. */
 const DEFAULT_ANCHOR = 0.5;
 
+/**
+ * Configuration options for UIHorizontalDistanceConstraint creation.
+ */
 export interface UIHorizontalDistanceConstraintOptions
   extends UISingleParameterConstraintOptions {
+  /** Anchor point for element A (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
   anchorA: number;
+  /** Anchor point for element B (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
   anchorB: number;
+  /** The desired horizontal distance between the elements. */
   distance: number;
 }
 
+/**
+ * Constraint that enforces horizontal distance between two UI elements.
+ *
+ * UIHorizontalDistanceConstraint creates a mathematical relationship that maintains
+ * a specific horizontal distance between two elements using configurable anchor points.
+ * For plane elements, anchors determine the reference point (0.0 = left, 0.5 = center, 1.0 = right).
+ * For point elements, the anchor is always the element's position. The constraint equation is:
+ * (elementB.x + elementB.width * anchorB) - (elementA.x + elementA.width * anchorA) = distance
+ *
+ * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
+ * @see {@link UIPointElement} - Point elements that can be constrained
+ * @see {@link UIPlaneElement} - Plane elements that can be constrained
+ * @see {@link UIExpression} - Mathematical expressions for constraint equations
+ */
 export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint {
+  /** The constraint descriptor managed by the solver system. */
   protected override readonly constraint: number;
 
+  /** Internal storage for element A's anchor point. */
   private anchorAInternal: number;
+  /** Internal storage for element B's anchor point. */
   private anchorBInternal: number;
+  /** Internal storage for the horizontal distance value. */
   private distanceInternal: number;
 
+  /**
+   * Creates a new UIHorizontalDistanceConstraint instance.
+   *
+   * The constraint will use default anchor points (0.5 = center) and zero distance
+   * if not specified in options. Both elements must be from the same layer.
+   *
+   * @param a - The first UI element (point or plane element)
+   * @param b - The second UI element (point or plane element)
+   * @param options - Configuration options for the constraint
+   * @throws Will throw an error if elements are not from the same layer
+   * @see {@link assertValidConstraintSubjects}
+   */
   constructor(
     private readonly a: UIPointElement | UIPlaneElement,
     private readonly b: UIPointElement | UIPlaneElement,
@@ -49,18 +86,34 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     );
   }
 
+  /**
+   * Gets the current horizontal distance being enforced.
+   * @returns The horizontal distance in pixels
+   */
   public get distance(): number {
     return this.distanceInternal;
   }
 
+  /**
+   * Gets the anchor point for element A.
+   * @returns The anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
   public get anchorA(): number {
     return this.anchorAInternal;
   }
 
+  /**
+   * Gets the anchor point for element B.
+   * @returns The anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
   public get anchorB(): number {
     return this.anchorBInternal;
   }
 
+  /**
+   * Sets a new horizontal distance and updates the constraint equation.
+   * @param value - The new horizontal distance in pixels
+   */
   public set distance(value: number) {
     if (this.distanceInternal !== value) {
       this.distanceInternal = value;
@@ -71,6 +124,10 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     }
   }
 
+  /**
+   * Sets a new anchor point for element A and updates the constraint equation.
+   * @param value - The new anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
   public set anchorA(value: number) {
     if (this.anchorAInternal !== value) {
       this.anchorAInternal = value;
@@ -78,6 +135,10 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     }
   }
 
+  /**
+   * Sets a new anchor point for element B and updates the constraint equation.
+   * @param value - The new anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
   public set anchorB(value: number) {
     if (this.anchorBInternal !== value) {
       this.anchorBInternal = value;
@@ -85,6 +146,16 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     }
   }
 
+  /**
+   * Builds the left-hand side expression for the constraint equation.
+   *
+   * Creates the expression: (elementB.x + elementB.width * anchorB) - (elementA.x + elementA.width * anchorA)
+   * For point elements, only the x position is used since they have no width.
+   * For plane elements, the anchor determines the reference point within the element's width.
+   *
+   * @returns The UIExpression representing the horizontal distance calculation
+   * @private
+   */
   private buildLHS(): UIExpression {
     let aExpression: UIExpression;
     let bExpression: UIExpression;

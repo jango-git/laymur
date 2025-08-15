@@ -3,15 +3,43 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
+/**
+ * Configuration options for UIWidthConstraint creation.
+ */
 export interface UIWidthConstraintOptions
   extends UISingleParameterConstraintOptions {
+  /** The desired width value for the element. */
   width: number;
 }
 
+/**
+ * Constraint that enforces a specific width value for UI elements.
+ *
+ * UIWidthConstraint creates a mathematical relationship that fixes an element's
+ * width to a constant value. The constraint equation is: element.width = width.
+ * This is useful for ensuring elements maintain a specific width regardless of
+ * other layout changes or for setting fixed dimensions in responsive layouts.
+ *
+ * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
+ * @see {@link UIElement} - Elements that can have width constraints applied
+ * @see {@link UIExpression} - Mathematical expressions for constraint equations
+ */
 export class UIWidthConstraint extends UISingleParameterConstraint {
+  /** The constraint descriptor managed by the solver system. */
   protected override readonly constraint: number;
+
+  /** Internal storage for the current width value. */
   private widthInternal: number;
 
+  /**
+   * Creates a new UIWidthConstraint instance.
+   *
+   * If no width is specified in options, the constraint will use the
+   * element's current width as the target width value.
+   *
+   * @param element - The UI element to apply the width constraint to
+   * @param options - Configuration options for the constraint
+   */
   constructor(
     private readonly element: UIElement,
     options: Partial<UIWidthConstraintOptions> = {},
@@ -34,10 +62,18 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     );
   }
 
+  /**
+   * Gets the current width value being enforced.
+   * @returns The width value in pixels
+   */
   public get width(): number {
     return this.widthInternal;
   }
 
+  /**
+   * Sets a new width value and updates the constraint equation.
+   * @param value - The new width value in pixels
+   */
   public set width(value: number) {
     if (this.widthInternal !== value) {
       this.widthInternal = value;
