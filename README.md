@@ -37,6 +37,10 @@ npm install laymur
 - Three.js ^0.175.0 (peer dependency)
 - Modern JavaScript environment with ES2020+ support
 
+## Live Examples
+
+🎮 **[Live Examples](https://jango-git.github.io/laymur/)** - Explore constraint-based layouts, proportional positioning, and responsive UI components in action.
+
 ## Quick Start
 
 ```typescript
