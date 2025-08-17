@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Laymur Examples</title>
+        <style>
+            :root {
+                --primary-color: #3b82f6;
+                --primary-hover: #2563eb;
+                --secondary-color: #10b981;
+                --secondary-hover: #059669;
+                --accent-color: #60a5fa;
+                --bg-dark: #1a1a1a;
+                --bg-panel: #2d2d2d;
+                --text-primary: #ffffff;
+                --text-secondary: #e0e0e0;
+                --text-muted: rgba(255, 255, 255, 0.7);
+                --border-color: rgba(255, 255, 255, 0.1);
+                --card-border: #3b82f6;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, Ubuntu, Cantarell, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 2rem;
+                line-height: 1.6;
+                background: var(--bg-dark);
+                color: var(--text-secondary);
+            }
+            h1 {
+                color: var(--primary-color);
+                border-bottom: 3px solid var(--primary-color);
+                padding-bottom: 0.5rem;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            .description {
+                background: var(--bg-panel);
+                padding: 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                margin-bottom: 2rem;
+                border: 1px solid var(--border-color);
+            }
+            .examples-grid {
+                display: grid;
+                gap: 1rem;
+                margin-top: 2rem;
+            }
+            .example-card {
+                background: var(--bg-panel);
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+                border-left: 4px solid var(--card-border);
+                border: 1px solid var(--border-color);
+            }
+            .example-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+                border-left-color: var(--primary-color);
+            }
+            .example-title {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: var(--primary-color);
+                margin-bottom: 0.5rem;
+            }
+            .example-description {
+                color: var(--text-muted);
+                margin-bottom: 1rem;
+                line-height: 1.5;
+            }
+            .example-link {
+                display: inline-block;
+                background: var(--primary-color);
+                color: white;
+                text-decoration: none;
+                padding: 0.6rem 1.2rem;
+                border-radius: 6px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            }
+            .example-link:hover {
+                background: var(--primary-hover);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            }
+            .tech-stack {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 0.3rem 0.6rem;
+                border-radius: 6px;
+                font-size: 0.85rem;
+                color: var(--text-secondary);
+                display: inline-block;
+                margin-right: 0.5rem;
+                margin-top: 0.5rem;
+                border: 1px solid var(--border-color);
+                font-weight: 500;
+            }
+            .github-link {
+                text-align: center;
+                margin-top: 3rem;
+                padding-top: 2rem;
+                border-top: 1px solid var(--border-color);
+            }
+            .github-link a {
+                color: var(--primary-color);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.2s ease;
+            }
+            .github-link a:hover {
+                color: var(--primary-hover);
+                text-decoration: underline;
+            }
+            .warning-note {
+                font-size: 14px;
+                color: #f59e0b;
+                margin-top: 16px;
+                background: rgba(245, 158, 11, 0.1);
+                padding: 12px 16px;
+                border-radius: 8px;
+                border-left: 3px solid #f59e0b;
+                border: 1px solid rgba(245, 158, 11, 0.2);
+            }
+        </style>
+    </head>
+    <body>
+        <h1>📐 Laymur Examples</h1>
+
+        <div class="description">
+            <p>
+                <strong>Laymur</strong> is a TypeScript Three.js UI layout
+                library with constraint-based positioning and rendering.
+            </p>
+            <p>
+                The library provides powerful constraint solving for flexible
+                layouts, rich UI elements like images and text, responsive
+                design with orientation awareness, and micro-transformations for
+                animations.
+            </p>
+            <p>
+                Explore the examples below to see how to integrate Laymur into
+                your Three.js projects for creating sophisticated user
+                interfaces.
+            </p>
+            <p class="warning-note">
+                ⚠️ <strong>Early Alpha / Work in Progress:</strong> This library
+                is in very early development stage. APIs may change
+                significantly.
+            </p>
+        </div>
+
+        <div class="examples-grid">
+            <div class="example-card">
+                <div class="example-title">00. Distance Constraints</div>
+                <div class="example-description">
+                    Demonstrates positioning UI elements using distance
+                    constraints to maintain fixed pixel distances from container
+                    edges. Shows how horizontal and vertical distance
+                    constraints work with anchor points.
+                </div>
+                <div>
+                    <span class="tech-stack">Three.js</span>
+                    <span class="tech-stack">Distance Constraints</span>
+                    <span class="tech-stack">UIImage</span>
+                    <span class="tech-stack">Laymur</span>
+                </div>
+                <br /><br />
+                <a href="00_snapping.html" class="example-link">View Example</a>
+            </div>
+
+            <div class="example-card">
+                <div class="example-title">
+                    01. Aspect & Proportion Constraints
+                </div>
+                <div class="example-description">
+                    Interactive demonstration of aspect ratio and proportional
+                    constraints. Shows how to maintain element proportions and
+                    create responsive layouts using aspect and proportion-based
+                    positioning.
+                </div>
+                <div>
+                    <span class="tech-stack">Three.js</span>
+                    <span class="tech-stack">Aspect Constraints</span>
+                    <span class="tech-stack">Proportions</span>
+                    <span class="tech-stack">Laymur</span>
+                </div>
+                <br /><br />
+                <a href="01_proportions.html" class="example-link"
+                    >View Example</a
+                >
+            </div>
+        </div>
+
+        <div class="github-link">
+            <p>
+                📚
+                <a href="https://github.com/jango-git/laymur" target="_blank"
+                    >View Source on GitHub</a
+                >
+                | 📦
+                <a href="https://www.npmjs.com/package/laymur" target="_blank"
+                    >NPM Package</a
+                >
+            </p>
+        </div>
+    </body>
+</html>
