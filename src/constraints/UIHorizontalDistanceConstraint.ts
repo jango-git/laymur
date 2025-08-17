@@ -1,175 +1,187 @@
-import { Constraint, Expression } from "@lume/kiwi";
-import { UIAnchor } from "../elements/UIAnchor";
-import { UIElement } from "../elements/UIElement";
-import { UILayer } from "../layers/UILayer";
-import { assertSameLayer } from "../miscellaneous/asserts";
-
+import type { UIPlaneElement, UIPointElement } from "../miscellaneous/asserts";
 import {
-  resolveOrientation,
-  UIOrientation,
-} from "../miscellaneous/UIOrientation";
-import { UIConstraint } from "./UIConstraint";
-import type { UIConstraintPower } from "./UIConstraintPower";
-import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
-import type { UIConstraintRule } from "./UIConstraintRule";
-import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
+  assertValidConstraintSubjects,
+  isUIPlaneElement,
+  isUIPointElement,
+} from "../miscellaneous/asserts";
+import { UIExpression } from "../miscellaneous/UIExpression";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-/**
- * Default anchor value (0.5 = center) for horizontal distance constraint
- */
+/** Default anchor point (0.5 = center) for elements when not specified. */
 const DEFAULT_ANCHOR = 0.5;
 
 /**
- * Configuration options for horizontal distance constraints.
+ * Configuration options for UIHorizontalDistanceConstraint creation.
  */
-export interface UIHorizontalDistanceOptions {
-  /** Horizontal anchor point (0-1) for the first element */
-  anchorOne: number;
-  /** Horizontal anchor point (0-1) for the second element */
-  anchorTwo: number;
-  /** The target distance between the two elements' anchor points */
+export interface UIHorizontalDistanceConstraintOptions
+  extends UISingleParameterConstraintOptions {
+  /** Anchor point for element A (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
+  anchorA: number;
+  /** Anchor point for element B (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
+  anchorB: number;
+  /** The desired horizontal distance between the elements. */
   distance: number;
-  /** Priority level for this constraint */
-  power: UIConstraintPower;
-  /** Rule for the constraint relationship (equal, less than, greater than) */
-  rule: UIConstraintRule;
-  /** Screen orientation when this constraint should be active */
-  orientation: UIOrientation;
 }
 
 /**
- * Constraint that enforces a specific horizontal distance between two UI elements.
+ * Constraint that enforces horizontal distance between two UI elements.
  *
- * This constraint measures the distance between two anchor points on the x-axis
- * and ensures it matches (or is less/greater than) the specified distance value.
+ * UIHorizontalDistanceConstraint creates a mathematical relationship that maintains
+ * a specific horizontal distance between two elements using configurable anchor points.
+ * For plane elements, anchors determine the reference point (0.0 = left, 0.5 = center, 1.0 = right).
+ * For point elements, the anchor is always the element's position. The constraint equation is:
+ * (elementB.x + elementB.width * anchorB) - (elementA.x + elementA.width * anchorA) = distance
+ *
+ * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
+ * @see {@link UIPointElement} - Point elements that can be constrained
+ * @see {@link UIPlaneElement} - Plane elements that can be constrained
+ * @see {@link UIExpression} - Mathematical expressions for constraint equations
  */
-export class UIHorizontalDistanceConstraint extends UIConstraint {
-  /** The configuration options for this constraint */
-  private readonly options: UIHorizontalDistanceOptions;
-  /** The Kiwi.js constraint object */
-  private constraint?: Constraint;
+export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint {
+  /** The constraint descriptor managed by the solver system. */
+  protected override readonly constraint: number;
+
+  /** Internal storage for element A's anchor point. */
+  private anchorAInternal: number;
+  /** Internal storage for element B's anchor point. */
+  private anchorBInternal: number;
+  /** Internal storage for the horizontal distance value. */
+  private distanceInternal: number;
 
   /**
-   * Creates a new horizontal distance constraint.
+   * Creates a new UIHorizontalDistanceConstraint instance.
    *
-   * @param elementOne - The first element or layer
-   * @param elementTwo - The second element
-   * @param options - Configuration options
+   * The constraint will use default anchor points (0.5 = center) and zero distance
+   * if not specified in options. Both elements must be from the same layer.
+   *
+   * @param a - The first UI element (point or plane element)
+   * @param b - The second UI element (point or plane element)
+   * @param options - Configuration options for the constraint
+   * @throws Will throw an error if elements are not from the same layer
+   * @see {@link assertValidConstraintSubjects}
    */
   constructor(
-    private readonly elementOne: UIElement | UIAnchor | UILayer,
-    private readonly elementTwo: UIElement | UIAnchor,
-    options: Partial<UIHorizontalDistanceOptions> = {},
+    private readonly a: UIPointElement | UIPlaneElement,
+    private readonly b: UIPointElement | UIPlaneElement,
+    options: Partial<UIHorizontalDistanceConstraintOptions> = {},
   ) {
-    assertSameLayer(elementOne, elementTwo);
     super(
-      elementTwo.layer,
-      new Set(
-        elementOne instanceof UIElement || elementOne instanceof UIAnchor
-          ? [elementOne, elementTwo]
-          : [elementTwo],
-      ),
+      assertValidConstraintSubjects(a, b, "UIHorizontalDistanceConstraint"),
+      options.priority,
+      options.relation,
+      options.orientation,
     );
 
-    this.options = {
-      anchorOne: options.anchorOne ?? DEFAULT_ANCHOR,
-      anchorTwo: options.anchorTwo ?? DEFAULT_ANCHOR,
-      distance: options.distance ?? 0,
-      power: resolvePower(options.power),
-      rule: resolveRule(options.rule),
-      orientation: resolveOrientation(options.orientation),
-    };
+    this.anchorAInternal = options.anchorA ?? DEFAULT_ANCHOR;
+    this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;
+    this.distanceInternal = options.distance ?? 0;
 
-    if (
-      this.options.orientation === UIOrientation.ALWAYS ||
-      this.options.orientation === this.layer.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Destroys this constraint, removing it from the constraint system.
-   */
-  public override destroy(): void {
-    this.destroyConstraints();
-    super.destroy();
-  }
-
-  /**
-   * Internal method to disable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["disableConstraintInternal"](orientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      orientation !== this.options.orientation
-    ) {
-      this.destroyConstraints();
-    }
-  }
-
-  /**
-   * Internal method to enable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["enableConstraintInternal"](orientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      orientation === this.options.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Builds and adds the horizontal distance constraint to the constraint solver.
-   *
-   * Creates a constraint that enforces the distance between anchor points
-   * on the x-axis of two elements based on the specified rule.
-   *
-   */
-  protected buildConstraints(): void {
-    const expressionOne =
-      this.elementOne instanceof UIElement || this.elementOne instanceof UILayer
-        ? new Expression(this.elementOne["xInternal"]).plus(
-            new Expression(this.elementOne["widthInternal"]).multiply(
-              this.options.anchorOne,
-            ),
-          )
-        : new Expression(this.elementOne["xInternal"]);
-
-    const expressionTwo =
-      this.elementTwo instanceof UIElement
-        ? new Expression(this.elementTwo["xInternal"]).plus(
-            new Expression(this.elementTwo["widthInternal"]).multiply(
-              this.options.anchorTwo,
-            ),
-          )
-        : new Expression(this.elementTwo["xInternal"]);
-
-    this.constraint = new Constraint(
-      expressionTwo.minus(expressionOne),
-      convertRuleToOperator(this.options.rule),
-      this.options.distance,
-      convertPowerToStrength(this.options.power),
+    this.constraint = this.solverWrapper.createConstraint(
+      this.buildLHS(),
+      new UIExpression(this.distanceInternal),
+      this.relationInternal,
+      this.priorityInternal,
+      this.isConstraintEnabled(),
     );
-
-    this.layer["addConstraintInternal"](this, this.constraint);
   }
 
   /**
-   * Removes the horizontal distance constraint from the constraint solver.
-   *
+   * Gets the current horizontal distance being enforced.
+   * @returns The horizontal distance in pixels
    */
-  protected destroyConstraints(): void {
-    if (this.constraint) {
-      this.layer["removeConstraintInternal"](this, this.constraint);
-      this.constraint = undefined;
+  public get distance(): number {
+    return this.distanceInternal;
+  }
+
+  /**
+   * Gets the anchor point for element A.
+   * @returns The anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
+  public get anchorA(): number {
+    return this.anchorAInternal;
+  }
+
+  /**
+   * Gets the anchor point for element B.
+   * @returns The anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
+  public get anchorB(): number {
+    return this.anchorBInternal;
+  }
+
+  /**
+   * Sets a new horizontal distance and updates the constraint equation.
+   * @param value - The new horizontal distance in pixels
+   */
+  public set distance(value: number) {
+    if (this.distanceInternal !== value) {
+      this.distanceInternal = value;
+      this.solverWrapper.setConstraintRHS(
+        this.constraint,
+        new UIExpression(this.distanceInternal),
+      );
     }
+  }
+
+  /**
+   * Sets a new anchor point for element A and updates the constraint equation.
+   * @param value - The new anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
+  public set anchorA(value: number) {
+    if (this.anchorAInternal !== value) {
+      this.anchorAInternal = value;
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
+    }
+  }
+
+  /**
+   * Sets a new anchor point for element B and updates the constraint equation.
+   * @param value - The new anchor value (0.0 = left, 0.5 = center, 1.0 = right)
+   */
+  public set anchorB(value: number) {
+    if (this.anchorBInternal !== value) {
+      this.anchorBInternal = value;
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
+    }
+  }
+
+  /**
+   * Builds the left-hand side expression for the constraint equation.
+   *
+   * Creates the expression: (elementB.x + elementB.width * anchorB) - (elementA.x + elementA.width * anchorA)
+   * For point elements, only the x position is used since they have no width.
+   * For plane elements, the anchor determines the reference point within the element's width.
+   *
+   * @returns The UIExpression representing the horizontal distance calculation
+   * @private
+   */
+  private buildLHS(): UIExpression {
+    let aExpression: UIExpression;
+    let bExpression: UIExpression;
+
+    if (isUIPlaneElement(this.a)) {
+      aExpression = new UIExpression(0, [
+        [this.a.xVariable, 1],
+        [this.a.wVariable, this.anchorAInternal],
+      ]);
+    } else if (isUIPointElement(this.a)) {
+      aExpression = new UIExpression().plus(this.a.xVariable, 1);
+    } else {
+      throw new Error("A is not a valid element type");
+    }
+
+    if (isUIPlaneElement(this.b)) {
+      bExpression = new UIExpression(0, [
+        [this.b.xVariable, 1],
+        [this.b.wVariable, this.anchorBInternal],
+      ]);
+    } else if (isUIPointElement(this.b)) {
+      bExpression = new UIExpression().plus(this.b.xVariable, 1);
+    } else {
+      throw new Error("B is not a valid element type");
+    }
+
+    return UIExpression.minus(bExpression, aExpression);
   }
 }

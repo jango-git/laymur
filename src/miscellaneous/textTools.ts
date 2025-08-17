@@ -1,72 +1,11 @@
 import type {
   UIChunkMetrics,
   UITextChunk,
+  UITextContent,
   UITextLine,
-  UITextPadding,
   UITextSize,
-  UITextStyle,
-} from "./UITextInterfaces";
-
-export function resolvePadding(
-  padding?: Partial<UITextPadding> | number,
-): UITextPadding {
-  if (typeof padding === "number") {
-    return {
-      left: padding,
-      right: padding,
-      top: padding,
-      bottom: padding,
-    };
-  }
-  return {
-    left: Math.max(padding?.left ?? 0, 0),
-    right: Math.max(padding?.right ?? 0, 0),
-    top: Math.max(padding?.top ?? 0, 0),
-    bottom: Math.max(padding?.bottom ?? 0, 0),
-  };
-}
-
-export function resolveTextStyle(
-  currentStyle?: Partial<UITextStyle>,
-  baseStyle?: Partial<UITextStyle>,
-): UITextStyle {
-  const fontSize = Math.max(
-    currentStyle?.fontSize ?? baseStyle?.fontSize ?? 16,
-    1,
-  );
-  const lineHeight =
-    currentStyle?.lineHeight ?? baseStyle?.lineHeight ?? fontSize * 1.2;
-  const shadowBlur = Math.max(
-    currentStyle?.shadowBlur ?? baseStyle?.shadowBlur ?? 0,
-    0,
-  );
-  const strokeWidth = Math.max(
-    currentStyle?.strokeWidth ?? baseStyle?.strokeWidth ?? 0,
-    0,
-  );
-  return {
-    color: currentStyle?.color ?? baseStyle?.color ?? "#000000",
-    fontFamily: currentStyle?.fontFamily ?? baseStyle?.fontFamily ?? "Arial",
-    fontSize,
-    fontStyle: currentStyle?.fontStyle ?? baseStyle?.fontStyle ?? "normal",
-    fontWeight: currentStyle?.fontWeight ?? baseStyle?.fontWeight ?? "normal",
-    lineHeight,
-
-    enableShadow:
-      currentStyle?.enableShadow ?? baseStyle?.enableShadow ?? false,
-    shadowOffsetX: currentStyle?.shadowOffsetX ?? baseStyle?.shadowOffsetX ?? 0,
-    shadowOffsetY: currentStyle?.shadowOffsetY ?? baseStyle?.shadowOffsetY ?? 0,
-    shadowBlur,
-    shadowColor:
-      currentStyle?.shadowColor ?? baseStyle?.shadowColor ?? "transparent",
-
-    enableStroke:
-      currentStyle?.enableStroke ?? baseStyle?.enableStroke ?? false,
-    strokeColor:
-      currentStyle?.strokeColor ?? baseStyle?.strokeColor ?? "transparent",
-    strokeWidth,
-  };
-}
+} from "./textInterfaces";
+import { resolveTextStyle, type UITextStyle } from "./UITextStyle";
 
 export function splitText(text: string): string[] {
   return text.match(/\S+|\s|\n/g) ?? [];
@@ -89,21 +28,20 @@ export function measureTextChunk(
   }
 
   const metrics = context.measureText(chunk);
-  const width = metrics.width;
-
+  const width = Math.ceil(metrics.width);
   const height = Math.ceil(
     metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
   );
 
   return {
-    width: Math.ceil(width),
-    height: height,
+    width,
+    height,
     baseline: metrics.actualBoundingBoxDescent,
     lineHeight: style.lineHeight,
   };
 }
 
-export function wrapTextLines(
+export function buildLines(
   maxWidth: number,
   chunks: UITextChunk[],
 ): UITextLine[] {
@@ -171,7 +109,7 @@ export function wrapTextLines(
   return lines;
 }
 
-export function calculateTextBlockSize(lines: UITextLine[]): UITextSize {
+export function calculateTextSize(lines: UITextLine[]): UITextSize {
   if (lines.length === 0) {
     return { width: 0, height: 0 };
   }
@@ -182,11 +120,7 @@ export function calculateTextBlockSize(lines: UITextLine[]): UITextSize {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (i === 0) {
-      totalHeight += line.height;
-    } else {
-      totalHeight += line.lineHeight;
-    }
+    totalHeight += i === 0 ? line.height : line.lineHeight;
 
     if (i === lines.length - 1) {
       totalHeight += line.baseline;
@@ -243,4 +177,32 @@ export function renderTextLines(
       currentX += chunk.metrics.width;
     }
   }
+}
+
+export function calculateTextContentParameters(
+  context: CanvasRenderingContext2D,
+  content: UITextContent,
+  maxLineWidth: number,
+  commonStyle?: Partial<UITextStyle>,
+): { lines: UITextLine[]; size: UITextSize } {
+  const chunks: UITextChunk[] = [];
+
+  for (const span of Array.isArray(content) ? content : [content]) {
+    const isSpanString = typeof span === "string";
+    const spanString = isSpanString ? span : span.text;
+    const style = resolveTextStyle(
+      isSpanString ? undefined : span.style,
+      commonStyle,
+    );
+
+    for (const text of splitText(spanString)) {
+      const metrics = measureTextChunk(context, text, style);
+      chunks.push({ text, style, metrics });
+    }
+  }
+
+  const lines = buildLines(maxLineWidth, chunks);
+  const textSize = calculateTextSize(lines);
+
+  return { lines, size: textSize };
 }

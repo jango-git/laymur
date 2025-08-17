@@ -1,154 +1,114 @@
-import { Variable } from "@lume/kiwi";
 import { Eventail } from "eventail";
-import type { Object3D, WebGLRenderer } from "three";
-import { MathUtils } from "three";
-import {
-  convertPowerToStrength,
-  UIConstraintPower,
-} from "../constraints/UIConstraintPower";
 import type { UILayer } from "../layers/UILayer";
+import type { UIPointElement } from "../miscellaneous/asserts";
+import { assertValidNumber } from "../miscellaneous/asserts";
+import { UIPriority } from "../miscellaneous/UIPriority";
+import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
-export abstract class UIAnchor extends Eventail {
-  /** X position variable for constraint system */
-  public ["xInternal"] = new Variable("x");
-
-  /** Y position variable for constraint system */
-  public ["yInternal"] = new Variable("y");
-
-  /** Flag indicating whether the element needs recalculation */
-  public ["needsRecalculationInternal"] = false;
-
-  /** Unique identifier for the element */
-  public name = MathUtils.generateUUID();
+/**
+ * Abstract base class representing a minimal UI element as a point in 2D space.
+ *
+ * A UIAnchor serves as the fundamental building block for UI layout systems,
+ * representing a single point with x and y coordinates. It provides constraint-based
+ * positioning through solver variables and serves as an anchor point for more
+ * complex UI elements.
+ *
+ * @see {@link UIPointElement} - Interface defining point element behavior
+ * @see {@link UILayer} - Container layer for UI elements
+ * @see {@link UISolverWrapper} - Constraint solver integration
+ */
+export abstract class UIAnchor extends Eventail implements UIPointElement {
+  /** Optional name identifier for the anchor. */
+  public name = "";
 
   /**
-   * Creates a new UI element.
+   * Solver variable descriptor for the x-coordinate.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly xVariable: number;
+
+  /**
+   * Solver variable descriptor for the y-coordinate.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly yVariable: number;
+
+  /**
+   * Reference to the constraint solver wrapper for variable management.
+   * @see {@link UISolverWrapper}
+   */
+  protected readonly solverWrapper: UISolverWrapper;
+
+  /**
+   * Creates a new UIAnchor instance.
    *
-   * @param layer - The UI layer that contains this element
-   * @param x - Initial x position
-   * @param y - Initial y position
+   * @param layer - The UI layer that contains this anchor
+   * @param x - Initial x-coordinate position
+   * @param y - Initial y-coordinate position
+   * @throws Will throw an error if x or y are not valid numbers
+   * @see {@link assertValidNumber}
    */
   constructor(
     public readonly layer: UILayer,
     x: number,
     y: number,
-    protected readonly object?: Object3D,
   ) {
+    assertValidNumber(x, "UIAnchor x");
+    assertValidNumber(y, "UIAnchor y");
+
     super();
-
-    if (this.object) {
-      this.object.matrixAutoUpdate = false;
-    }
-
-    this.layer["addUIElementInternal"](this, object);
-
-    this.layer["addVariableInternal"](
-      this,
-      this["xInternal"],
-      convertPowerToStrength(UIConstraintPower.P7),
-    );
-    this.layer["addVariableInternal"](
-      this,
-      this["yInternal"],
-      convertPowerToStrength(UIConstraintPower.P7),
-    );
-
-    this["xInternal"].setValue(x);
-    this["yInternal"].setValue(y);
-
-    this.layer["suggestVariableInternal"](this, this["xInternal"], x);
-    this.layer["suggestVariableInternal"](this, this["yInternal"], y);
-  }
-
-  /** Gets the current x position of the anchor */
-  public get x(): number {
-    return this["xInternal"].value();
-  }
-
-  /** Gets the current y position of the anchor */
-  public get y(): number {
-    return this["yInternal"].value();
-  }
-
-  /** Gets the current z-index (depth) of the element */
-  public get zIndex(): number {
-    return this.object?.position.z ?? 0;
-  }
-
-  /** Gets whether the element needs recalculation */
-  protected get needsRecalculation(): boolean {
-    return this["needsRecalculationInternal"];
+    this.solverWrapper = this.layer["getSolverWrapperInternal"]();
+    this.xVariable = this.solverWrapper.createVariable(x, UIPriority.P7);
+    this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);
   }
 
   /**
-   * Sets the x position of the element
-   * @param value - New x position
+   * Gets the current x-coordinate value from the solver.
+   * @returns The current x-coordinate position
+   */
+  public get x(): number {
+    return this.solverWrapper.readVariableValue(this.xVariable);
+  }
+
+  /**
+   * Gets the current y-coordinate value from the solver.
+   * @returns The current y-coordinate position
+   */
+  public get y(): number {
+    return this.solverWrapper.readVariableValue(this.yVariable);
+  }
+
+  /**
+   * Sets the x-coordinate value through the solver system.
+   * @param value - The new x-coordinate value
+   * @throws Will throw an error if value is not a valid number
+   * @see {@link assertValidNumber}
    */
   public set x(value: number) {
-    this.layer["suggestVariableInternal"](this, this["xInternal"], value);
+    assertValidNumber(value, "UIAnchor x");
+    this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
   /**
-   * Sets the y position of the element
-   * @param value - New y position
+   * Sets the y-coordinate value through the solver system.
+   * @param value - The new y-coordinate value
+   * @throws Will throw an error if value is not a valid number
+   * @see {@link assertValidNumber}
    */
   public set y(value: number) {
-    this.layer["suggestVariableInternal"](this, this["yInternal"], value);
+    assertValidNumber(value, "UIAnchor y");
+    this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
 
   /**
-   * Sets the z-index (depth) of the element
-   * @param value - New z-index
-   */
-  public set zIndex(value: number) {
-    if (this.object && this.object.renderOrder !== value) {
-      this.object.position.z = value;
-      this.object.renderOrder = value;
-      this.layer["sortInternal"]();
-      this.object.updateMatrix();
-    }
-  }
-
-  /**
-   * Destroys the anchor, cleaning up all resources and removing it from the layer.
-   * This should be called when the anchor is no longer needed.
+   * Destroys the anchor by removing its solver variables.
+   *
+   * This method cleans up the solver variables associated with this anchor,
+   * effectively removing it from the constraint solving system. After calling
+   * this method, the anchor should not be used anymore.
    */
   public destroy(): void {
-    this.layer["removeVariableInternal"](this, this["yInternal"]);
-    this.layer["removeVariableInternal"](this, this["xInternal"]);
-    this.layer["removeUIElementInternal"](this);
+    this.solverWrapper.removeVariable(this.yVariable);
+    this.solverWrapper.removeVariable(this.xVariable);
   }
-
-  /**
-   * Internal method called by the rendering system to render this element.
-   *
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time elapsed since the last frame
-   * @internal
-   */
-  public ["renderInternal"](renderer: WebGLRenderer, deltaTime: number): void {
-    this.render(renderer, deltaTime);
-  }
-
-  /**
-   * Applies transformations to the underlying Three.js object.
-   * This is called when the element's position, size, or other properties change.
-   */
-  protected applyTransformations(): void {
-    if (this["needsRecalculationInternal"]) {
-      if (this.object) {
-        this.object.updateMatrix();
-      }
-      this["needsRecalculationInternal"] = false;
-    }
-  }
-
-  /**
-   * Renders the element.
-   * This must be implemented by concrete subclasses.
-   *
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time elapsed since the last frame
-   */
-  protected abstract render(renderer: WebGLRenderer, deltaTime: number): void;
 }

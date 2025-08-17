@@ -91,20 +91,12 @@ export class UIProgressMaterial extends ShaderMaterial {
     return (this.uniforms.color.value as Color).getHex();
   }
 
-  public getColor(): number {
-    return (this.uniforms.color.value as Color).getHex();
-  }
-
   public getBackgroundOpacity(): number {
     return this.uniforms.backgroundOpacity.value;
   }
 
   public getForegroundOpacity(): number {
     return this.uniforms.foregroundOpacity.value;
-  }
-
-  public getOpacity(): number {
-    return this.uniforms.opacity.value;
   }
 
   public getAngle(): number {
@@ -140,11 +132,6 @@ export class UIProgressMaterial extends ShaderMaterial {
     this.uniformsNeedUpdate = true;
   }
 
-  public setColor(value: number): void {
-    (this.uniforms.color.value as Color).setHex(value);
-    this.uniformsNeedUpdate = true;
-  }
-
   public setBackgroundOpacity(value: number): void {
     this.uniforms.backgroundOpacity.value = value;
     this.uniformsNeedUpdate = true;
@@ -152,11 +139,6 @@ export class UIProgressMaterial extends ShaderMaterial {
 
   public setForegroundOpacity(value: number): void {
     this.uniforms.foregroundOpacity.value = value;
-    this.uniformsNeedUpdate = true;
-  }
-
-  public setOpacity(value: number): void {
-    this.uniforms.opacity.value = value;
     this.uniformsNeedUpdate = true;
   }
 

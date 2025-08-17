@@ -10,108 +10,128 @@ import {
 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIMaterial } from "../materials/UIMaterial";
-import { assertSize } from "../miscellaneous/asserts";
 import { geometry } from "../miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
 
 /**
- * Defines when a UIScene should be rendered/updated.
+ * Update modes for controlling when the 3D scene should be re-rendered.
  */
 export enum UISceneUpdateMode {
-  /** Scene is rendered on every frame */
-  ALWAYS = "always",
-  /** Scene is rendered when any property changes */
-  PROPERTY_CHANGED = "property_changed",
-  /** Scene is only rendered when explicitly requested */
-  MANUAL = "manual",
+  /** Re-render the scene every frame. */
+  EACH_FRAME = 1,
+  /** Re-render the scene every second frame for performance. */
+  EACH_SECOND_FRAME = 2,
+  /** Re-render the scene only when properties change. */
+  PROPERTY_CHANGED = 3,
+  /** Re-render the scene only when manually requested. */
+  MANUAL = 4,
 }
 
-/** Default factor for reducing render target resolution (0.5 = half resolution) */
+/** Default resolution factor for render target sizing. */
 const DEFAULT_RESOLUTION_FACTOR = 0.5;
-/** Minimum allowed resolution factor */
+/** Minimum allowed resolution factor to prevent performance issues. */
 const MIN_RESOLUTION_FACTOR = 0.1;
-/** Maximum allowed resolution factor */
-const MAX_RESOLUTION_FACTOR = 8;
-/** Default width for the scene if not specified */
+/** Maximum allowed resolution factor to prevent memory issues. */
+const MAX_RESOLUTION_FACTOR = 2;
+/** Default width for the scene render target in pixels. */
 const DEFAULT_WIDTH = 512;
-/** Default height for the scene if not specified */
+/** Default height for the scene render target in pixels. */
 const DEFAULT_HEIGHT = 512;
-/** Default field of view for the perspective camera in degrees */
-const DEFAULT_FOV = 75;
-/** Default near plane distance for the perspective camera */
-const DEFAULT_NEAR = 0.1;
-/** Default far plane distance for the perspective camera */
-const DEFAULT_FAR = 100;
-/** Default update mode for the scene */
+/** Default field of view for the perspective camera in degrees. */
+const DEFAULT_CAMERA_FOV = 75;
+/** Default near clipping plane distance for the camera. */
+const DEFAULT_CAMERA_NEAR = 0.1;
+/** Default far clipping plane distance for the camera. */
+const DEFAULT_CAMERA_FAR = 100;
+/** Default update mode for scene rendering. */
 const DEFAULT_UPDATE_MODE = UISceneUpdateMode.PROPERTY_CHANGED;
-/** Default clear color (black) */
+/** Default clear color for the render target. */
 const DEFAULT_CLEAR_COLOR = 0x000000;
-/** Default clear alpha (fully transparent) */
+/** Default clear alpha for the render target. */
 const DEFAULT_CLEAR_ALPHA = 0;
-/** Whether the scene is rendered immediately by default */
-const DEFAULT_RENDERED_BY_DEFAULT = false;
-/** Whether to use a depth buffer by default */
+/** Default depth buffer usage setting. */
 const DEFAULT_USE_DEPTH = true;
 
 /**
- * Options for customizing the UIScene element.
+ * Configuration options for UIScene element creation.
  */
 export interface UISceneOptions {
-  /** Three.js scene to render */
-  scene: Scene;
-  /** Camera to use for rendering the scene */
-  camera: Camera;
-  /** Width of the scene viewport in pixels */
+  /** Initial x-coordinate position. */
+  x: number;
+  /** Initial y-coordinate position. */
+  y: number;
+  /** Width of the scene render target in pixels. */
   width: number;
-  /** Height of the scene viewport in pixels */
+  /** Height of the scene render target in pixels. */
   height: number;
-  /** Resolution scaling factor for performance optimization */
+
+  /** Three.js scene to render. */
+  scene: Scene;
+  /** Camera to use for rendering the scene. */
+  camera: Camera;
+  /** Update mode controlling when the scene is re-rendered. */
+  updateMode: UISceneUpdateMode;
+  /** Resolution factor for render target sizing (0.1 to 2.0). */
   resolutionFactor: number;
-  /** Whether the scene should be rendered immediately after creation */
-  renderedByDefault: boolean;
-  /** Whether to use a depth buffer for rendering */
-  useDepth: boolean;
-  /** Color to clear the scene with before rendering */
+  /** Clear color for the render target background. */
   clearColor: number;
-  /** Alpha value for the clear color (0-1) */
+  /** Clear alpha for the render target background. */
   clearAlpha: number;
-  /** When the scene should be automatically re-rendered */
-  updateBehavior: UISceneUpdateMode;
+  /** Whether to enable depth buffer for the render target. */
+  enableDepthBuffer: boolean;
 }
 
 /**
- * A UI element that renders a Three.js scene as a texture.
- * This allows 3D content to be integrated into the 2D UI system.
+ * UI element for rendering 3D scenes to texture within the UI system.
+ *
+ * UIScene is a concrete implementation of UIElement that renders a Three.js
+ * scene to a WebGL render target and displays it as a texture. It provides
+ * control over rendering frequency, resolution, and visual properties. This
+ * allows embedding complex 3D content within the 2D UI layout system with
+ * performance optimizations through configurable update modes.
+ *
+ * @see {@link UIElement} - Base class providing UI element functionality
+ * @see {@link UISceneUpdateMode} - Update mode configuration
+ * @see {@link Scene} - Three.js scene for 3D content
+ * @see {@link Camera} - Three.js camera for scene rendering
  */
-export class UIScene extends UIElement {
-  /** Material used to render the scene's render target */
+export class UIScene extends UIElement<Mesh> {
+  /** The material used for rendering the scene texture. */
   private readonly material: UIMaterial;
-  /** WebGL render target where the scene is rendered */
+
+  /** The WebGL render target for off-screen scene rendering. */
   private readonly renderTarget: WebGLRenderTarget;
 
-  /** Color to clear the scene with before rendering */
+  /** Internal storage for the current Three.js scene. */
+  private sceneInternal: Scene;
+  /** Internal storage for the current camera. */
+  private cameraInternal: Camera;
+  /** Internal storage for the current update mode. */
+  private updateModeInternal: UISceneUpdateMode;
+  /** Internal storage for the current resolution factor. */
+  private resolutionFactorInternal: number;
+  /** Internal storage for the current clear color. */
   private clearColorInternal: number;
-  /** Alpha value for the clear color */
+  /** Internal storage for the current clear alpha. */
   private clearAlphaInternal: number;
 
-  /** Whether the scene needs to be re-rendered on the next frame */
-  private needsRenderInternal = false;
-  /** When the scene should be automatically re-rendered */
-  private readonly updateModeInternal: UISceneUpdateMode;
-  /** Resolution scaling factor for performance optimization */
-  private resolutionFactorInternal: number;
-
-  /** The Three.js scene being rendered */
-  private sceneInternal: Scene;
-  /** The camera used for rendering the scene */
-  private cameraInternal: Camera;
+  /** Frame alternation boolean for EACH_SECOND_FRAME update mode. */
+  private frameBoolean = true;
+  /** Flag indicating if properties have changed requiring a re-render. */
+  private propertyChanged = false;
+  /** Flag indicating if a manual render has been requested. */
+  private renderRequired = false;
 
   /**
-   * Creates a new scene UI element.
+   * Creates a new UIScene instance with 3D scene rendering capabilities.
    *
-   * @param layer - The UI layer that contains this element
-   * @param options - Options to customize the scene
-   * @throws Error if resolution factor is out of valid range or dimensions are invalid
+   * The scene element creates a WebGL render target for off-screen rendering
+   * and displays the result as a texture. A default perspective camera is
+   * created if none is provided.
+   *
+   * @param layer - The UI layer that contains this scene element
+   * @param options - Configuration options for scene rendering
+   * @throws Will throw an error if resolution factor is outside valid range (0.1-2.0)
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     const resolutionFactor =
@@ -129,12 +149,6 @@ export class UIScene extends UIElement {
     const width = options.width ?? DEFAULT_WIDTH;
     const height = options.height ?? DEFAULT_HEIGHT;
 
-    assertSize(
-      width,
-      height,
-      `Invalid width or height: ${width}x${height}. Must be positive.`,
-    );
-
     const renderTarget = new WebGLRenderTarget(
       width * resolutionFactor,
       height * resolutionFactor,
@@ -143,7 +157,7 @@ export class UIScene extends UIElement {
         minFilter: LinearFilter,
         magFilter: LinearFilter,
         type: UnsignedByteType,
-        depthBuffer: options.useDepth ?? DEFAULT_USE_DEPTH,
+        depthBuffer: options.enableDepthBuffer ?? DEFAULT_USE_DEPTH,
         stencilBuffer: false,
       },
     );
@@ -151,148 +165,164 @@ export class UIScene extends UIElement {
     const material = new UIMaterial(renderTarget.texture);
     const object = new Mesh(geometry, material);
 
-    super(layer, object, 0, 0, width, height);
+    super(layer, 0, 0, width, height, object);
+
+    this.material = material;
+    this.renderTarget = renderTarget;
 
     this.sceneInternal = options.scene ?? new Scene();
     this.cameraInternal =
       options.camera ??
       new PerspectiveCamera(
-        DEFAULT_FOV,
+        DEFAULT_CAMERA_FOV,
         width / height,
-        DEFAULT_NEAR,
-        DEFAULT_FAR,
+        DEFAULT_CAMERA_NEAR,
+        DEFAULT_CAMERA_FAR,
       );
 
     this.resolutionFactorInternal = resolutionFactor;
-
-    this.updateModeInternal = options.updateBehavior ?? DEFAULT_UPDATE_MODE;
-
-    if (options.renderedByDefault ?? DEFAULT_RENDERED_BY_DEFAULT) {
-      this.needsRenderInternal = true;
-    }
+    this.updateModeInternal = options.updateMode ?? DEFAULT_UPDATE_MODE;
 
     this.clearColorInternal = options.clearColor ?? DEFAULT_CLEAR_COLOR;
     this.clearAlphaInternal = options.clearAlpha ?? DEFAULT_CLEAR_ALPHA;
 
-    this.renderTarget = renderTarget;
-    this.material = material;
-
-    this.applyTransformations();
+    if (options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED) {
+      this.renderRequired = true;
+    }
   }
 
-  /** Gets whether the scene needs to be re-rendered on the next frame */
-  public get needsRender(): boolean {
-    return this.needsRenderInternal;
-  }
-
-  /** Gets the color tint applied to the rendered scene */
+  /**
+   * Gets the current color tint applied to the scene texture.
+   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   */
   public get color(): number {
     return this.material.getColor();
   }
 
-  /** Gets the opacity of the rendered scene */
+  /**
+   * Gets the current opacity level of the scene texture.
+   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
+   */
   public get opacity(): number {
     return this.material.getOpacity();
   }
 
-  /** Gets the Three.js scene being rendered */
+  /**
+   * Gets whether transparency is enabled for the scene texture.
+   * @returns True if transparency is enabled, false otherwise
+   */
+  public get transparency(): boolean {
+    return this.material.getTransparency();
+  }
+
+  /**
+   * Gets the Three.js scene being rendered.
+   * @returns The current Three.js scene
+   */
   public get scene(): Scene {
     return this.sceneInternal;
   }
 
-  /** Gets the camera used for rendering the scene */
+  /**
+   * Gets the camera used for rendering the scene.
+   * @returns The current Three.js camera
+   */
   public get camera(): Camera {
     return this.cameraInternal;
   }
 
-  /** Gets the color used to clear the scene before rendering */
-  public get clearColor(): number {
-    return this.clearColorInternal;
+  /**
+   * Gets the current update mode controlling render frequency.
+   * @returns The current update mode
+   */
+  public get updateMode(): UISceneUpdateMode {
+    return this.updateModeInternal;
   }
 
-  /** Gets the alpha value for the clear color */
-  public get clearAlpha(): number {
-    return this.clearAlphaInternal;
-  }
-
-  /** Gets the resolution scaling factor */
+  /**
+   * Gets the resolution factor for render target sizing.
+   * @returns The resolution factor between 0.1 and 2.0
+   */
   public get resolutionFactor(): number {
     return this.resolutionFactorInternal;
   }
 
   /**
-   * Sets the color tint applied to the rendered scene
-   * @param value - Color in hexadecimal format
+   * Gets the clear color used for the render target background.
+   * @returns The clear color as a number
+   */
+  public get clearColor(): number {
+    return this.clearColorInternal;
+  }
+
+  /**
+   * Gets the clear alpha used for the render target background.
+   * @returns The clear alpha value between 0.0 and 1.0
+   */
+  public get clearAlpha(): number {
+    return this.clearAlphaInternal;
+  }
+
+  /**
+   * Sets the color tint applied to the scene texture.
+   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
   public set color(value: number) {
     this.material.setColor(value);
-    this.composerInternal.requestUpdate();
   }
 
   /**
-   * Sets the opacity of the rendered scene
-   * @param value - Opacity value between 0 (transparent) and 1 (opaque)
+   * Sets the opacity level of the scene texture.
+   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
    */
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composerInternal.requestUpdate();
   }
 
   /**
-   * Sets the Three.js scene to be rendered
-   * @param value - Scene to render
+   * Sets whether transparency is enabled for the scene texture.
+   * @param value - True to enable transparency, false to disable
+   */
+  public set transparency(value: boolean) {
+    this.material.setTransparency(value);
+  }
+
+  /**
+   * Sets a new Three.js scene to render and marks for re-render.
+   * @param value - The new Three.js scene
    */
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
       this.sceneInternal = value;
-      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
-        this.requestRender();
-      }
+      this.propertyChanged = true;
     }
   }
 
   /**
-   * Sets the camera used for rendering the scene
-   * @param value - Camera to use
+   * Sets a new camera for rendering and marks for re-render.
+   * @param value - The new Three.js camera
    */
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
       this.cameraInternal = value;
-      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
-        this.requestRender();
-      }
+      this.propertyChanged = true;
     }
   }
 
   /**
-   * Sets the color used to clear the scene before rendering
-   * @param value - Clear color in hexadecimal format
+   * Sets the update mode controlling render frequency and marks for re-render.
+   * @param value - The new update mode
    */
-  public set clearColor(value: number) {
-    if (this.clearColorInternal !== value) {
-      this.clearColorInternal = value;
-      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
-        this.requestRender();
-      }
+  public set updateMode(value: UISceneUpdateMode) {
+    if (this.updateModeInternal !== value) {
+      this.updateModeInternal = value;
+      this.propertyChanged = true;
     }
   }
 
   /**
-   * Sets the alpha value for the clear color
-   * @param value - Alpha value between 0 (transparent) and 1 (opaque)
-   */
-  public set clearAlpha(value: number) {
-    if (this.clearAlphaInternal !== value) {
-      this.clearAlphaInternal = value;
-      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
-        this.requestRender();
-      }
-    }
-  }
-
-  /**
-   * Sets the resolution scaling factor
-   * @param value - Resolution factor (e.g., 0.5 for half resolution)
+   * Sets the resolution factor and resizes the render target accordingly.
+   * @param value - The new resolution factor between 0.1 and 2.0
    */
   public set resolutionFactor(value: number) {
     if (this.resolutionFactorInternal !== value) {
@@ -301,15 +331,38 @@ export class UIScene extends UIElement {
         this.width * this.resolutionFactorInternal,
         this.height * this.resolutionFactorInternal,
       );
-      if (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED) {
-        this.requestRender();
-      }
+      this.propertyChanged = true;
     }
   }
 
   /**
-   * Destroys the scene element, disposing of all resources and removing it from the layer.
-   * This should be called when the element is no longer needed.
+   * Sets the clear color for the render target background and marks for re-render.
+   * @param value - The new clear color as a number
+   */
+  public set clearColor(value: number) {
+    if (this.clearColorInternal !== value) {
+      this.clearColorInternal = value;
+      this.propertyChanged = true;
+    }
+  }
+
+  /**
+   * Sets the clear alpha for the render target background and marks for re-render.
+   * @param value - The new clear alpha value between 0.0 and 1.0
+   */
+  public set clearAlpha(value: number) {
+    if (this.clearAlphaInternal !== value) {
+      this.clearAlphaInternal = value;
+      this.propertyChanged = true;
+    }
+  }
+
+  /**
+   * Destroys the scene element by cleaning up all associated resources.
+   *
+   * This method disposes of the material and render target resources,
+   * and calls the parent destroy method to clean up the underlying UI element.
+   * After calling this method, the scene element should not be used anymore.
    */
   public override destroy(): void {
     this.material.dispose();
@@ -318,27 +371,39 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Requests that the scene be re-rendered on the next frame.
-   * This is used when the scene is in MANUAL update mode or when properties change.
+   * Manually requests a re-render of the scene.
+   *
+   * This method is useful when the update mode is set to MANUAL and you
+   * want to trigger a scene re-render without changing any properties.
    */
   public requestRender(): void {
-    this.needsRenderInternal = true;
-    this.composerInternal.requestUpdate();
+    this.renderRequired = true;
   }
 
   /**
-   * Renders the scene element.
-   * This will render the Three.js scene to a texture if needed,
-   * then apply that texture to the mesh.
+   * Internal method called before rendering each frame.
    *
-   * @param renderer - The WebGL renderer
+   * This method handles the conditional rendering of the 3D scene based on
+   * the current update mode. It manages frame counting, property change detection,
+   * and manual render requests to optimize performance.
+   *
+   * @param renderer - The WebGL renderer instance
+   * @internal
    */
-  protected override render(renderer: WebGLRenderer): void {
+  protected override ["onBeforeRenderInternal"](renderer: WebGLRenderer): void {
     if (
-      this.needsRenderInternal ||
-      this.updateModeInternal === UISceneUpdateMode.ALWAYS
+      this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
+      (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
+        this.frameBoolean) ||
+      (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED &&
+        this.propertyChanged) ||
+      (this.updateModeInternal === UISceneUpdateMode.MANUAL &&
+        this.renderRequired)
     ) {
-      this.needsRenderInternal = false;
+      this.renderRequired = false;
+      this.propertyChanged = false;
+      this.frameBoolean = !this.frameBoolean;
+
       this.renderTarget.setSize(
         this.width * this.resolutionFactorInternal,
         this.height * this.resolutionFactorInternal,
@@ -348,13 +413,5 @@ export class UIScene extends UIElement {
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
-
-    (this.object as Mesh).material = this.composerInternal.compose(
-      renderer,
-      this.width * this.resolutionFactorInternal,
-      this.height * this.resolutionFactorInternal,
-      this.material,
-    );
-    this.applyTransformations();
   }
 }

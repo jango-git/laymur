@@ -1,150 +1,107 @@
-import { Constraint, Expression } from "@lume/kiwi";
-import { UIElement } from "../elements/UIElement";
-import type { UILayer } from "../layers/UILayer";
-import { assertSameLayer } from "../miscellaneous/asserts";
-
-import {
-  resolveOrientation,
-  UIOrientation,
-} from "../miscellaneous/UIOrientation";
-import { UIConstraint } from "./UIConstraint";
-import type { UIConstraintPower } from "./UIConstraintPower";
-import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
-import type { UIConstraintRule } from "./UIConstraintRule";
-import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
+import type { UIPlaneElement } from "../miscellaneous/asserts";
+import { assertValidConstraintSubjects } from "../miscellaneous/asserts";
+import { UIExpression } from "../miscellaneous/UIExpression";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /**
- * Configuration options for horizontal proportion constraints.
+ * Configuration options for UIHorizontalProportionConstraint creation.
  */
-export interface UIHorizontalProportionOptions {
-  /** The proportion ratio between elements' widths */
+export interface UIHorizontalProportionConstraintOptions
+  extends UISingleParameterConstraintOptions {
+  /** The proportional relationship between element widths (elementA.width = elementB.width * proportion). */
   proportion: number;
-  /** Priority level for this constraint */
-  power: UIConstraintPower;
-  /** Rule for the constraint relationship (equal, less than, greater than) */
-  rule: UIConstraintRule;
-  /** Screen orientation when this constraint should be active */
-  orientation: UIOrientation;
 }
 
 /**
- * Constraint that enforces a proportional relationship between the widths of two elements.
+ * Constraint that enforces proportional width relationships between two UI elements.
  *
- * This constraint ensures that the width of one element is proportionally
- * related to the width of another element by a specified ratio.
+ * UIHorizontalProportionConstraint creates a mathematical relationship that maintains
+ * a proportional ratio between the widths of two plane elements. The constraint equation is:
+ * elementA.width * proportion = elementB.width, which can be rearranged as:
+ * elementA.width * proportion - elementB.width = 0
+ *
+ * This is useful for creating responsive layouts where elements need to maintain
+ * specific width ratios, such as sidebar-to-content ratios or grid column proportions.
+ *
+ * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
+ * @see {@link UIPlaneElement} - Plane elements that can have proportional constraints applied
+ * @see {@link UIExpression} - Mathematical expressions for constraint equations
  */
-export class UIHorizontalProportionConstraint extends UIConstraint {
-  /** The configuration options for this constraint */
-  private readonly options: UIHorizontalProportionOptions;
-  /** The Kiwi.js constraint object */
-  private constraint?: Constraint;
+export class UIHorizontalProportionConstraint extends UISingleParameterConstraint {
+  /** The constraint descriptor managed by the solver system. */
+  protected override readonly constraint: number;
+  /** Internal storage for the current proportion value. */
+  private proportionInternal: number;
 
   /**
-   * Creates a new horizontal proportion constraint.
+   * Creates a new UIHorizontalProportionConstraint instance.
    *
-   * @param elementOne - The reference element or layer
-   * @param elementTwo - The element to constrain proportionally
-   * @param options - Configuration options
+   * The constraint will enforce the relationship: elementA.width * proportion = elementB.width.
+   * If no proportion is specified, it defaults to 1.0 (equal widths).
+   * Both elements must be from the same layer.
+   *
+   * @param a - The first UI plane element (whose width will be multiplied by proportion)
+   * @param b - The second UI plane element (target width for the proportion)
+   * @param options - Configuration options for the constraint
+   * @throws Will throw an error if elements are not from the same layer
+   * @see {@link assertValidConstraintSubjects}
    */
   constructor(
-    private readonly elementOne: UIElement | UILayer,
-    private readonly elementTwo: UIElement,
-    options: Partial<UIHorizontalProportionOptions> = {},
+    private readonly a: UIPlaneElement,
+    private readonly b: UIPlaneElement,
+    options: Partial<UIHorizontalProportionConstraintOptions> = {},
   ) {
-    assertSameLayer(elementOne, elementTwo);
     super(
-      elementTwo.layer,
-      new Set(
-        elementOne instanceof UIElement
-          ? [elementOne, elementTwo]
-          : [elementTwo],
-      ),
+      assertValidConstraintSubjects(a, b, "UIHorizontalProportionConstraint"),
+      options.priority,
+      options.relation,
+      options.orientation,
     );
 
-    this.options = {
-      proportion: options.proportion ?? 1,
-      power: resolvePower(options.power),
-      rule: resolveRule(options.rule),
-      orientation: resolveOrientation(options.orientation),
-    };
+    this.proportionInternal = options.proportion ?? 1;
 
-    if (
-      this.options.orientation === UIOrientation.ALWAYS ||
-      this.options.orientation === this.layer.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Destroys this constraint, removing it from the constraint system.
-   */
-  public override destroy(): void {
-    this.destroyConstraints();
-    super.destroy();
-  }
-
-  /**
-   * Internal method to disable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["disableConstraintInternal"](orientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      orientation !== this.options.orientation
-    ) {
-      this.destroyConstraints();
-    }
-  }
-
-  /**
-   * Internal method to enable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["enableConstraintInternal"](orientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      orientation === this.options.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Builds and adds the horizontal proportion constraint to the constraint solver.
-   *
-   * Creates a constraint expression in the form: (elementOne.width * proportion) - elementTwo.width = 0
-   * This ensures the width ratio between elements matches the specified proportion.
-   *
-   */
-  protected buildConstraints(): void {
-    const expressionOne = new Expression(
-      this.elementOne["widthInternal"],
-    ).multiply(this.options.proportion);
-    const expressionTwo = new Expression(this.elementTwo["widthInternal"]);
-
-    this.constraint = new Constraint(
-      expressionOne.minus(expressionTwo),
-      convertRuleToOperator(this.options.rule),
-      0,
-      convertPowerToStrength(this.options.power),
+    this.constraint = this.solverWrapper.createConstraint(
+      this.buildLHS(),
+      new UIExpression(0),
+      this.relationInternal,
+      this.priorityInternal,
+      this.isConstraintEnabled(),
     );
-
-    this.layer["addConstraintInternal"](this, this.constraint);
   }
 
   /**
-   * Removes the horizontal proportion constraint from the constraint solver.
-   *
+   * Gets the current proportion value being enforced.
+   * @returns The proportion ratio (elementA.width = elementB.width * proportion)
    */
-  protected destroyConstraints(): void {
-    if (this.constraint) {
-      this.layer["removeConstraintInternal"](this, this.constraint);
-      this.constraint = undefined;
+  public get proportion(): number {
+    return this.proportionInternal;
+  }
+
+  /**
+   * Sets a new proportion value and updates the constraint equation.
+   * @param value - The new proportion ratio
+   */
+  public set proportion(value: number) {
+    if (this.proportionInternal !== value) {
+      this.proportionInternal = value;
+      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
     }
+  }
+
+  /**
+   * Builds the left-hand side expression for the constraint equation.
+   *
+   * Creates the expression: (elementA.width * proportion) - elementB.width = 0
+   * This enforces the relationship: elementA.width * proportion = elementB.width
+   *
+   * @returns The UIExpression representing the proportional width relationship
+   * @private
+   */
+  private buildLHS(): UIExpression {
+    return UIExpression.minus(
+      new UIExpression(0, [[this.a.wVariable, this.proportionInternal]]),
+      new UIExpression(0, [[this.b.wVariable, 1]]),
+    );
   }
 }

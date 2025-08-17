@@ -1,67 +1,34 @@
-import type { UIAnchor } from "../elements/UIAnchor";
-import type { UIElement } from "../elements/UIElement";
-import type { UILayer } from "../layers/UILayer";
+import { type UILayer } from "../layers/UILayer";
 
-import type { UIOrientation } from "../miscellaneous/UIOrientation";
+import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
 /**
- * Abstract base class for all UI constraints in the system.
+ * Abstract base class for all UI layout constraints.
  *
- * Constraints control the layout of UI elements by establishing relationships
- * between their properties (position, size) and other elements or the screen.
+ * UIConstraint serves as the fundamental building block for the constraint-based
+ * layout system. It provides access to the solver wrapper for creating and
+ * managing constraint relationships between UI elements. All concrete constraint
+ * implementations must extend this class to participate in the layout solving process.
  *
- * The constraint system uses Kiwi.js under the hood for solving the constraint system.
- * Each constraint adds specific rules to the solver that determine element positioning.
+ * @see {@link UILayer} - Container layer for constraints
+ * @see {@link UISolverWrapper} - Constraint solver integration
  */
 export abstract class UIConstraint {
-  /**
-   * Optional identifier for the constraint.
-   * Useful for debugging and identifying constraints.
-   */
+  /** Optional name identifier for the constraint. */
   public name = "";
 
   /**
-   * Creates a new UI constraint.
-   *
-   * @param layer - The UI layer that will manage this constraint
-   * @param elements - The set of UI elements affected by this constraint
+   * Reference to the constraint solver wrapper for managing solver operations.
+   * @see {@link UISolverWrapper}
    */
-  constructor(
-    public readonly layer: UILayer,
-    elements: Set<UIElement | UIAnchor>,
-  ) {
-    this.layer["addUIConstraintInternal"](this, elements);
+  protected readonly solverWrapper: UISolverWrapper;
+
+  /**
+   * Creates a new UIConstraint instance.
+   *
+   * @param layer - The UI layer that contains this constraint
+   */
+  constructor(public readonly layer: UILayer) {
+    this.solverWrapper = this.layer["getSolverWrapperInternal"]();
   }
-
-  /**
-   * Destroys the constraint, removing it from the layer and solver.
-   * This should be called when the constraint is no longer needed.
-   */
-  public destroy(): void {
-    this.layer["removeUIConstraintInternal"](this);
-  }
-
-  /**
-   * Internal method called when the constraint should be disabled.
-   * Typically called when the screen orientation changes and the
-   * constraint is not applicable for the current orientation.
-   *
-   * @param orientation - The current UI orientation
-   * @internal
-   */
-  public abstract ["disableConstraintInternal"](
-    orientation: UIOrientation,
-  ): void;
-
-  /**
-   * Internal method called when the constraint should be enabled.
-   * Typically called when the screen orientation changes and the
-   * constraint becomes applicable for the current orientation.
-   *
-   * @param orientation - The current UI orientation
-   * @internal
-   */
-  public abstract ["enableConstraintInternal"](
-    orientation: UIOrientation,
-  ): void;
 }

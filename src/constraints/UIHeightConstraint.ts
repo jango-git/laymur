@@ -1,133 +1,86 @@
-import { Constraint, Expression } from "@lume/kiwi";
 import type { UIElement } from "../elements/UIElement";
-
-import {
-  resolveOrientation,
-  UIOrientation,
-} from "../miscellaneous/UIOrientation";
-import { UIConstraint } from "./UIConstraint";
-import type { UIConstraintPower } from "./UIConstraintPower";
-import { convertPowerToStrength, resolvePower } from "./UIConstraintPower";
-import type { UIConstraintRule } from "./UIConstraintRule";
-import { convertRuleToOperator, resolveRule } from "./UIConstraintRule";
+import { UIExpression } from "../miscellaneous/UIExpression";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /**
- * Configuration options for height constraints.
+ * Configuration options for UIHeightConstraint creation.
  */
-export interface UIHeightOptions {
-  /** The fixed height value to constrain the element to */
+export interface UIHeightConstraintOptions
+  extends UISingleParameterConstraintOptions {
+  /** The desired height value for the element. */
   height: number;
-  /** Priority level for this constraint */
-  power: UIConstraintPower;
-  /** Rule for the constraint relationship (equal, less than, greater than) */
-  rule: UIConstraintRule;
-  /** Screen orientation when this constraint should be active */
-  orientation: UIOrientation;
 }
 
 /**
- * Constraint that enforces a specific height for a UI element.
+ * Constraint that enforces a specific height value for UI elements.
  *
- * This constraint can be configured to require an exact height
- * or set minimum/maximum height limits using different rules.
+ * UIHeightConstraint creates a mathematical relationship that fixes an element's
+ * height to a constant value. The constraint equation is: element.height = height.
+ * This is useful for ensuring elements maintain a specific height regardless of
+ * other layout changes or for setting fixed dimensions in responsive layouts.
+ *
+ * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
+ * @see {@link UIElement} - Elements that can have height constraints applied
+ * @see {@link UIExpression} - Mathematical expressions for constraint equations
  */
-export class UIHeightConstraint extends UIConstraint {
-  /** The configuration options for this constraint */
-  private readonly options: UIHeightOptions;
-  /** The Kiwi.js constraint object */
-  private constraint?: Constraint;
+export class UIHeightConstraint extends UISingleParameterConstraint {
+  /** The constraint descriptor managed by the solver system. */
+  protected override readonly constraint: number;
+
+  /** Internal storage for the current height value. */
+  private heightInternal: number;
 
   /**
-   * Creates a new height constraint.
+   * Creates a new UIHeightConstraint instance.
    *
-   * @param element - The UI element to constrain
-   * @param options - Configuration options
+   * If no height is specified in options, the constraint will use the
+   * element's current height as the target height value.
+   *
+   * @param element - The UI element to apply the height constraint to
+   * @param options - Configuration options for the constraint
    */
   constructor(
     private readonly element: UIElement,
-    options: Partial<UIHeightOptions> = {},
+    options: Partial<UIHeightConstraintOptions> = {},
   ) {
-    super(element.layer, new Set([element]));
-
-    this.options = {
-      height: options.height ?? element.height,
-      power: resolvePower(options.power),
-      rule: resolveRule(options.rule),
-      orientation: resolveOrientation(options.orientation),
-    };
-
-    if (
-      this.options.orientation === UIOrientation.ALWAYS ||
-      this.options.orientation === this.layer.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Destroys this constraint, removing it from the constraint system.
-   */
-  public override destroy(): void {
-    this.destroyConstraints();
-    super.destroy();
-  }
-
-  /**
-   * Internal method to disable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["disableConstraintInternal"](newOrientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      newOrientation !== this.options.orientation
-    ) {
-      this.destroyConstraints();
-    }
-  }
-
-  /**
-   * Internal method to enable this constraint when orientation changes.
-   *
-   * @param orientation - The new screen orientation
-   * @internal
-   */
-  public ["enableConstraintInternal"](newOrientation: UIOrientation): void {
-    if (
-      this.options.orientation !== UIOrientation.ALWAYS &&
-      newOrientation === this.options.orientation
-    ) {
-      this.buildConstraints();
-    }
-  }
-
-  /**
-   * Builds and adds the height constraint to the constraint solver.
-   *
-   * Creates a constraint that enforces the element's height based
-   * on the specified rule (equal to, less than, or greater than).
-   *
-   */
-  protected buildConstraints(): void {
-    this.constraint = new Constraint(
-      new Expression(this.element["heightInternal"]),
-      convertRuleToOperator(this.options.rule),
-      this.options.height,
-      convertPowerToStrength(this.options.power),
+    super(
+      element.layer,
+      options.priority,
+      options.relation,
+      options.orientation,
     );
 
-    this.layer["addConstraintInternal"](this, this.constraint);
+    this.heightInternal = options.height ?? element.height;
+
+    this.constraint = this.solverWrapper.createConstraint(
+      new UIExpression(0, [[this.element.hVariable, 1]]),
+      new UIExpression(this.heightInternal),
+      this.relation,
+      this.priority,
+      this.isConstraintEnabled(),
+    );
   }
 
   /**
-   * Removes the height constraint from the constraint solver.
-   *
+   * Gets the current height value being enforced.
+   * @returns The height value in pixels
    */
-  protected destroyConstraints(): void {
-    if (this.constraint) {
-      this.layer["removeConstraintInternal"](this, this.constraint);
-      this.constraint = undefined;
+  public get height(): number {
+    return this.heightInternal;
+  }
+
+  /**
+   * Sets a new height value and updates the constraint equation.
+   * @param value - The new height value in pixels
+   */
+  public set height(value: number) {
+    if (this.heightInternal !== value) {
+      this.heightInternal = value;
+      this.solverWrapper.setConstraintRHS(
+        this.constraint,
+        new UIExpression(value),
+      );
     }
   }
 }

@@ -1,19 +1,7 @@
 import type { Texture } from "three";
-import {
-  AddEquation,
-  AdditiveBlending,
-  Color,
-  CustomBlending,
-  MultiplyBlending,
-  NormalBlending,
-  OneFactor,
-  OneMinusDstColorFactor,
-  OneMinusSrcAlphaFactor,
-  ShaderMaterial,
-  SrcAlphaFactor,
-  SubtractiveBlending,
-} from "three";
-import { UIBlending } from "../miscellaneous/UIBlending";
+import { Color, ShaderMaterial } from "three";
+
+const DEFAULT_ALPHA_TEST = 0.75;
 
 export class UIMaterial extends ShaderMaterial {
   constructor(map?: Texture) {
@@ -22,6 +10,7 @@ export class UIMaterial extends ShaderMaterial {
         map: { value: map },
         opacity: { value: 1.0 },
         color: { value: new Color(1.0, 1.0, 1.0) },
+        alphaTest: { value: DEFAULT_ALPHA_TEST },
       },
       vertexShader: /* glsl */ `
         varying vec2 vUv;
@@ -34,15 +23,18 @@ export class UIMaterial extends ShaderMaterial {
         uniform sampler2D map;
         uniform float opacity;
         uniform vec3 color;
+        uniform float alphaTest;
         varying vec2 vUv;
 
         void main() {
-          vec4 textureColor = texture2D(map, vUv);
-          gl_FragColor = vec4(textureColor.rgb * color, textureColor.a * opacity);
+          vec4 diffuseColor = texture2D(map, vUv);
+          #include <alphatest_fragment>
+          gl_FragColor = vec4(diffuseColor.rgb * color, diffuseColor.a * opacity);
           #include <colorspace_fragment>
         }
       `,
-      transparent: true,
+      transparent: false,
+      alphaTest: DEFAULT_ALPHA_TEST,
       lights: false,
       fog: false,
       depthWrite: false,
@@ -50,7 +42,7 @@ export class UIMaterial extends ShaderMaterial {
     });
   }
 
-  public getTexture(): Texture | undefined {
+  public getTexture(): Texture {
     return this.uniforms.map.value;
   }
 
@@ -62,53 +54,35 @@ export class UIMaterial extends ShaderMaterial {
     return this.uniforms.opacity.value;
   }
 
-  public setTexture(value: Texture | undefined): void {
+  public getTransparency(): boolean {
+    return this.transparent;
+  }
+
+  public setTexture(value: Texture): this {
     this.uniforms.map.value = value;
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setColor(value: number): void {
+  public setColor(value: number): this {
     (this.uniforms.color.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setOpacity(value: number): void {
+  public setOpacity(value: number): this {
     this.uniforms.opacity.value = value;
     this.uniformsNeedUpdate = true;
+    return this;
   }
 
-  public setBlending(blending: UIBlending): void {
-    this.premultipliedAlpha = false;
-    this.blendEquation = AddEquation;
-    this.blendSrc = SrcAlphaFactor;
-    this.blendDst = OneMinusSrcAlphaFactor;
-
-    switch (blending) {
-      case UIBlending.ADDITIVE:
-        this.blending = AdditiveBlending;
-        break;
-
-      case UIBlending.SUBTRACTIVE:
-        this.blending = SubtractiveBlending;
-        break;
-
-      case UIBlending.MULTIPLY:
-        this.blending = MultiplyBlending;
-        this.premultipliedAlpha = true;
-        break;
-
-      case UIBlending.SCREEN:
-        this.blending = CustomBlending;
-        this.blendEquation = AddEquation;
-        this.blendSrc = OneMinusDstColorFactor;
-        this.blendDst = OneFactor;
-        break;
-
-      default:
-        this.blending = NormalBlending;
-        break;
+  public setTransparency(value: boolean): this {
+    if (this.transparent !== value) {
+      this.transparent = value;
+      this.uniforms.alphaTest.value = value ? DEFAULT_ALPHA_TEST : 0;
+      this.needsUpdate = true;
+      this.uniformsNeedUpdate = true;
     }
-
-    this.needsUpdate = true;
+    return this;
   }
 }

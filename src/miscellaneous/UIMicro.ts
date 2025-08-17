@@ -1,302 +1,269 @@
 import { MathUtils } from "three";
-import type { UIElement } from "../elements/UIElement";
 
-/**
- * Default position offset value (0)
- */
+/** Default position value for x and y coordinates. */
 const DEFAULT_POSITION = 0;
-/**
- * Default anchor point value (0.5 = centered)
- */
-const DEFAULT_ANCHOR = 0.5;
-/**
- * Default scale value (1 = no scaling)
- */
+/** Default anchor point value for anchorX and anchorY. */
+const DEFAULT_ANCHOR = 0;
+/** Default scale value for scaleX and scaleY. */
 const DEFAULT_SCALE = 1;
-/**
- * Default rotation value in radians (0 = no rotation)
- */
+/** Default rotation value in radians. */
 const DEFAULT_ROTATION = 0;
 
 /**
- * Internal implementation of micro-transformations for UI elements.
- * Stores the raw transformation values and recalculation flag.
+ * Micro-transformation system for non-constraint based UI element adjustments.
  *
- */
-export class UIMicroInternal {
-  /** X-axis offset from element position */
-  public x = DEFAULT_POSITION;
-  /** Y-axis offset from element position */
-  public y = DEFAULT_POSITION;
-  /** X-axis anchor point (0-1) where transformations are applied */
-  public anchorX = DEFAULT_ANCHOR;
-  /** Y-axis anchor point (0-1) where transformations are applied */
-  public anchorY = DEFAULT_ANCHOR;
-  /** X-axis scaling factor */
-  public scaleX = DEFAULT_SCALE;
-  /** Y-axis scaling factor */
-  public scaleY = DEFAULT_SCALE;
-  /** Rotation in radians */
-  public rotation = DEFAULT_ROTATION;
-  /** Flag indicating whether transformations need to be recalculated */
-  public needsRecalculation = false;
-}
-
-/**
- * Provides fine-grained transformations for UI elements.
+ * UIMicro provides a lightweight transformation system that operates independently
+ * of the constraint solver. It manages position offsets, anchor points, scaling,
+ * and rotation transformations that can be applied to UI elements for animations,
+ * visual effects, or fine-tuned positioning without affecting the constraint-based
+ * layout system.
  *
- * Micro-transformations allow for detailed positioning, scaling, and rotation
- * adjustments relative to an element's base position and dimensions.
- * These transformations are applied on top of the standard element positioning
- * and can be used for effects like pivoting, offsetting, and animation.
+ * All transformations are tracked with change detection to optimize rendering
+ * performance by only recalculating when properties have actually changed.
+ *
+ * @see {@link UIElement} - Elements that use micro transformations
  */
 export class UIMicro {
-  /**
-   * Creates a new micro-transformation interface.
-   *
-   * @param raw - The internal state object that stores transformation values
-   * @param owner - The UI element that owns these transformations
-   */
-  constructor(
-    private readonly raw: UIMicroInternal,
-    private readonly owner: UIElement,
-  ) {}
+  /** Internal storage for x-coordinate offset. */
+  private xInternal: number = DEFAULT_POSITION;
+  /** Internal storage for y-coordinate offset. */
+  private yInternal: number = DEFAULT_POSITION;
+  /** Internal storage for x-axis anchor point. */
+  private anchorXInternal: number = DEFAULT_ANCHOR;
+  /** Internal storage for y-axis anchor point. */
+  private anchorYInternal: number = DEFAULT_ANCHOR;
+  /** Internal storage for x-axis scale factor. */
+  private scaleXInternal: number = DEFAULT_SCALE;
+  /** Internal storage for y-axis scale factor. */
+  private scaleYInternal: number = DEFAULT_SCALE;
+  /** Internal storage for rotation in radians. */
+  private rotationInternal: number = DEFAULT_ROTATION;
+  /** Flag indicating if any transformation properties have changed. */
+  private recalculationRequired = false;
 
   /**
-   * Gets the X-axis offset from the element's position.
+   * Gets the x-coordinate offset for micro positioning.
+   * @returns The x-offset value
    */
   public get x(): number {
-    return this.raw.x;
+    return this.xInternal;
   }
 
   /**
-   * Gets the Y-axis offset from the element's position.
+   * Gets the y-coordinate offset for micro positioning.
+   * @returns The y-offset value
    */
   public get y(): number {
-    return this.raw.y;
+    return this.yInternal;
   }
 
   /**
-   * Gets the X-axis anchor point (0-1) where transformations are applied.
-   *
-   * - 0.0 = left edge
-   * - 0.5 = center (default)
-   * - 1.0 = right edge
+   * Gets the x-axis anchor point for transformations.
+   * @returns The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
    */
   public get anchorX(): number {
-    return this.raw.anchorX;
+    return this.anchorXInternal;
   }
 
   /**
-   * Gets the Y-axis anchor point (0-1) where transformations are applied.
-   *
-   * - 0.0 = top edge
-   * - 0.5 = center (default)
-   * - 1.0 = bottom edge
+   * Gets the y-axis anchor point for transformations.
+   * @returns The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
    */
   public get anchorY(): number {
-    return this.raw.anchorY;
+    return this.anchorYInternal;
   }
 
   /**
-   * Gets the X-axis scaling factor.
-   *
-   * - 1.0 = normal size (default)
-   * - > 1.0 = enlarged
-   * - < 1.0 = reduced
+   * Gets the x-axis scale factor.
+   * @returns The scale factor (1.0 = normal size)
    */
   public get scaleX(): number {
-    return this.raw.scaleX;
+    return this.scaleXInternal;
   }
 
   /**
-   * Gets the Y-axis scaling factor.
-   *
-   * - 1.0 = normal size (default)
-   * - > 1.0 = enlarged
-   * - < 1.0 = reduced
+   * Gets the y-axis scale factor.
+   * @returns The scale factor (1.0 = normal size)
    */
   public get scaleY(): number {
-    return this.raw.scaleY;
+    return this.scaleYInternal;
   }
 
   /**
-   * Gets the rotation in degrees.
-   * Converted from the internal radians value.
+   * Gets the uniform scale factor (maximum of scaleX and scaleY).
+   * @returns The larger of the two scale factors
+   */
+  public get size(): number {
+    return Math.max(this.scaleXInternal, this.scaleYInternal);
+  }
+
+  /**
+   * Gets the rotation angle in degrees.
+   * @returns The rotation angle in degrees
    */
   public get angle(): number {
-    return MathUtils.radToDeg(this.raw.rotation);
+    return MathUtils.radToDeg(this.rotationInternal);
   }
 
   /**
-   * Gets the rotation in radians.
+   * Gets the rotation angle in radians.
+   * @returns The rotation angle in radians
    */
   public get rotation(): number {
-    return this.raw.rotation;
+    return this.rotationInternal;
   }
 
   /**
-   * Sets the X-axis offset from the element's position.
-   *
-   * @param value - X offset in pixels
+   * Sets the x-coordinate offset for micro positioning.
+   * @param value - The new x-offset value
    */
   public set x(value: number) {
-    if (value !== this.raw.x) {
-      this.raw.x = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.xInternal) {
+      this.xInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the Y-axis offset from the element's position.
-   *
-   * @param value - Y offset in pixels
+   * Sets the y-coordinate offset for micro positioning.
+   * @param value - The new y-offset value
    */
   public set y(value: number) {
-    if (value !== this.raw.y) {
-      this.raw.y = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.yInternal) {
+      this.yInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the X-axis anchor point where transformations are applied.
-   *
-   * @param value - X anchor (0-1):
-   *   - 0.0 = left edge
-   *   - 0.5 = center (default)
-   *   - 1.0 = right edge
+   * Sets the x-axis anchor point for transformations.
+   * @param value - The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
    */
   public set anchorX(value: number) {
-    if (value !== this.raw.anchorX) {
-      this.raw.anchorX = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.anchorXInternal) {
+      this.anchorXInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the Y-axis anchor point where transformations are applied.
-   *
-   * @param value - Y anchor (0-1):
-   *   - 0.0 = top edge
-   *   - 0.5 = center (default)
-   *   - 1.0 = bottom edge
+   * Sets the y-axis anchor point for transformations.
+   * @param value - The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
    */
   public set anchorY(value: number) {
-    if (value !== this.raw.anchorY) {
-      this.raw.anchorY = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.anchorYInternal) {
+      this.anchorYInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the X-axis scaling factor.
-   *
-   * @param value - X scale factor:
-   *   - 1.0 = normal size (default)
-   *   - > 1.0 = enlarged
-   *   - < 1.0 = reduced
+   * Sets the x-axis scale factor.
+   * @param value - The scale factor (1.0 = normal size)
    */
   public set scaleX(value: number) {
-    if (value !== this.raw.scaleX) {
-      this.raw.scaleX = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.scaleXInternal) {
+      this.scaleXInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the Y-axis scaling factor.
-   *
-   * @param value - Y scale factor:
-   *   - 1.0 = normal size (default)
-   *   - > 1.0 = enlarged
-   *   - < 1.0 = reduced
+   * Sets the y-axis scale factor.
+   * @param value - The scale factor (1.0 = normal size)
    */
   public set scaleY(value: number) {
-    if (value !== this.raw.scaleY) {
-      this.raw.scaleY = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.scaleYInternal) {
+      this.scaleYInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the rotation in degrees.
-   * Automatically converts to radians for internal storage.
-   *
-   * @param value - Rotation angle in degrees
+   * Sets both scale factors to the same value for uniform scaling.
+   * @param value - The uniform scale factor (1.0 = normal size)
+   */
+  public set size(value: number) {
+    if (value !== this.scaleXInternal || value !== this.scaleYInternal) {
+      this.scaleXInternal = value;
+      this.scaleYInternal = value;
+      this.recalculationRequired = true;
+    }
+  }
+
+  /**
+   * Sets the rotation angle in degrees.
+   * @param value - The rotation angle in degrees
    */
   public set angle(value: number) {
-    const convertedValue = MathUtils.degToRad(value);
-    if (convertedValue !== this.raw.rotation) {
-      this.raw.rotation = convertedValue;
-      this.raw.needsRecalculation = true;
+    const rotation = MathUtils.degToRad(value);
+    if (rotation !== this.rotationInternal) {
+      this.rotationInternal = rotation;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the rotation in radians.
-   *
-   * @param value - Rotation angle in radians
+   * Sets the rotation angle in radians.
+   * @param value - The rotation angle in radians
    */
   public set rotation(value: number) {
-    if (value !== this.raw.rotation) {
-      this.raw.rotation = value;
-      this.raw.needsRecalculation = true;
+    if (value !== this.rotationInternal) {
+      this.rotationInternal = value;
+      this.recalculationRequired = true;
     }
   }
 
   /**
-   * Sets the anchor point based on global coordinates relative to the element.
-   * Converts the global position to a normalized anchor point (0-1 range).
+   * Resets all transformation properties to their default values.
    *
-   * This is useful for setting the pivot point to a specific position,
-   * such as making an element rotate around a particular point.
-   *
-   * @param x - Global X coordinate to set as anchor
-   * @param y - Global Y coordinate to set as anchor
-   */
-  public setAnchorByGlobalPosition(x: number, y: number): void {
-    const deltaX = x - this.owner.x;
-    const deltaY = y - this.owner.y;
-    const newAnchorX = deltaX / this.owner.width;
-    const newAnchorY = deltaY / this.owner.height;
-
-    if (newAnchorX !== this.raw.anchorX || newAnchorY !== this.raw.anchorY) {
-      this.raw.anchorX = newAnchorX;
-      this.raw.anchorY = newAnchorY;
-      this.raw.needsRecalculation = true;
-    }
-  }
-
-  /**
-   * Resets all micro-transformations to their default values.
-   *
-   * Default values:
-   * - Position (x, y): 0
-   * - Anchor (anchorX, anchorY): 0.5 (centered)
-   * - Scale (scaleX, scaleY): 1.0 (original size)
-   * - Rotation: 0 (no rotation)
-   *
-   * Only triggers recalculation if any values were changed.
+   * This method restores position (0,0), anchor (0,0), scale (1,1),
+   * and rotation (0) to their initial states. Only triggers recalculation
+   * if any values actually change.
    */
   public reset(): void {
     if (
-      this.raw.x !== DEFAULT_POSITION ||
-      this.raw.y !== DEFAULT_POSITION ||
-      this.raw.anchorX !== DEFAULT_ANCHOR ||
-      this.raw.anchorY !== DEFAULT_ANCHOR ||
-      this.raw.scaleX !== DEFAULT_SCALE ||
-      this.raw.scaleY !== DEFAULT_SCALE ||
-      this.raw.rotation !== DEFAULT_ROTATION
+      this.xInternal !== DEFAULT_POSITION ||
+      this.yInternal !== DEFAULT_POSITION ||
+      this.anchorXInternal !== DEFAULT_ANCHOR ||
+      this.anchorYInternal !== DEFAULT_ANCHOR ||
+      this.scaleXInternal !== DEFAULT_SCALE ||
+      this.scaleYInternal !== DEFAULT_SCALE ||
+      this.rotationInternal !== DEFAULT_ROTATION
     ) {
-      this.raw.x = DEFAULT_POSITION;
-      this.raw.y = DEFAULT_POSITION;
-      this.raw.anchorX = DEFAULT_ANCHOR;
-      this.raw.anchorY = DEFAULT_ANCHOR;
-      this.raw.scaleX = DEFAULT_SCALE;
-      this.raw.scaleY = DEFAULT_SCALE;
-      this.raw.rotation = DEFAULT_ROTATION;
-      this.raw.needsRecalculation = true;
+      this.xInternal = DEFAULT_POSITION;
+      this.yInternal = DEFAULT_POSITION;
+      this.anchorXInternal = DEFAULT_ANCHOR;
+      this.anchorYInternal = DEFAULT_ANCHOR;
+      this.scaleXInternal = DEFAULT_SCALE;
+      this.scaleYInternal = DEFAULT_SCALE;
+      this.rotationInternal = DEFAULT_ROTATION;
+      this.recalculationRequired = true;
     }
+  }
+
+  /**
+   * Gets whether any transformation properties have changed since last reset.
+   *
+   * This method is used internally by the rendering system to determine
+   * if transformation matrices need to be recalculated.
+   *
+   * @returns True if recalculation is required, false otherwise
+   * @internal
+   */
+  protected ["getRecalculationRequiredInternal"](): boolean {
+    return this.recalculationRequired;
+  }
+
+  /**
+   * Resets the recalculation flag after transformations have been applied.
+   *
+   * This method is called internally by the rendering system after
+   * transformation matrices have been updated.
+   *
+   * @internal
+   */
+  protected ["resetRecalculationRequiredInternal"](): void {
+    this.recalculationRequired = false;
   }
 }

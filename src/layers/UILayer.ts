@@ -1,549 +1,240 @@
-import {
-  Constraint,
-  Expression,
-  Operator,
-  Solver,
-  Strength,
-  Variable,
-} from "@lume/kiwi";
 import { Eventail } from "eventail";
-import type { Object3D, WebGLRenderer } from "three";
-import { Color, OrthographicCamera, Scene } from "three";
-import type { UIConstraint } from "../constraints/UIConstraint";
-import { UIAnchor } from "../elements/UIAnchor";
-import { UIElement } from "../elements/UIElement";
+import type { WebGLRenderer } from "three";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
+import { UIPriority } from "../miscellaneous/UIPriority";
+import { UISceneWrapper } from "../wrappers/UISceneWrapper";
+import { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
-const clearColor = new Color(0x000000);
-
-interface VariableDescription {
-  strength: number;
-  suggestedValue: number;
-}
-
-interface UIElementDescription {
-  object?: Object3D;
-  variables: Map<Variable, VariableDescription>;
-  constraints: Set<UIConstraint>;
-}
-
-interface UIConstraintDescription {
-  elements: Set<UIElement | UIAnchor>;
-  variables: Map<Variable, VariableDescription>;
-  constraints: Set<Constraint>;
-}
-
+/**
+ * Events that can be emitted by UI layers.
+ */
 export enum UILayerEvent {
-  ORIENTATION_CHANGED = "orientation_changed",
-  CLICK = "click",
+  /** Emitted when the layer's orientation changes between horizontal and vertical. */
+  ORIENTATION_CHANGE = "orientation_change",
+  /** Emitted when the layer's visibility/interaction mode changes. */
+  MODE_CHANGE = "mode_change",
 }
 
+/**
+ * Abstract base class for UI layout containers with constraint solving and rendering.
+ *
+ * UILayer serves as the fundamental container for UI elements, providing constraint-based
+ * layout solving, 3D scene management, and event handling. It manages the layer's
+ * dimensions through solver variables, handles orientation changes, and coordinates
+ * rendering and interaction for all contained elements.
+ *
+ * Each layer maintains its own constraint solver and scene graph, allowing for
+ * independent layout calculation and rendering optimization.
+ *
+ * @see {@link UIElement} - Elements contained within layers
+ * @see {@link UISolverWrapper} - Constraint solving system
+ * @see {@link UISceneWrapper} - 3D scene management
+ * @see {@link UIOrientation} - Layer orientation states
+ */
 export abstract class UILayer extends Eventail {
-  public mode = UIMode.VISIBLE;
+  /** Optional name identifier for the layer. */
+  public name = "";
 
-  public readonly ["xInternal"]: Variable = new Variable();
-  public readonly ["yInternal"]: Variable = new Variable();
-  public readonly ["widthInternal"]: Variable = new Variable();
-  public readonly ["heightInternal"]: Variable = new Variable();
+  /**
+   * Solver variable descriptor for the x-coordinate position.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly xVariable: number;
 
-  protected readonly scene = new Scene();
-  protected readonly camera = new OrthographicCamera();
-  protected solver? = new Solver();
+  /**
+   * Solver variable descriptor for the y-coordinate position.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly yVariable: number;
 
-  protected elements = new Map<UIElement | UIAnchor, UIElementDescription>();
-  protected constraints = new Map<UIConstraint, UIConstraintDescription>();
+  /**
+   * Solver variable descriptor for the width dimension.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly wVariable: number;
 
-  protected constraintX?: Constraint;
-  protected constraintY?: Constraint;
-  protected constraintW?: Constraint;
-  protected constraintH?: Constraint;
+  /**
+   * Solver variable descriptor for the height dimension.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly hVariable: number;
 
-  protected orientationPrivate = UIOrientation.PORTRAIT;
-  protected needsRecalculation = false;
+  /**
+   * Constraint solver wrapper for managing layout calculations.
+   * @see {@link UISolverWrapper}
+   */
+  protected readonly solverWrapper = new UISolverWrapper();
 
-  public get orientation(): UIOrientation {
-    return this.orientationPrivate;
+  /**
+   * 3D scene wrapper for managing rendering and element hierarchy.
+   * @see {@link UISceneWrapper}
+   */
+  protected readonly sceneWrapper: UISceneWrapper;
+
+  /** Internal storage for the current visibility/interaction mode. */
+  protected modeInternal: UIMode = UIMode.VISIBLE;
+
+  /** Internal storage for the current orientation state. */
+  protected orientationInternal: UIOrientation;
+
+  /**
+   * Creates a new UILayer instance with specified dimensions.
+   *
+   * Initializes the constraint solver with position and dimension variables,
+   * sets up the 3D scene wrapper, and determines the initial orientation
+   * based on the width-to-height ratio.
+   *
+   * @param w - Initial width of the layer
+   * @param h - Initial height of the layer
+   */
+  constructor(w: number, h: number) {
+    super();
+    this.sceneWrapper = new UISceneWrapper(w, h);
+    this.xVariable = this.solverWrapper.createVariable(0, UIPriority.P0);
+    this.yVariable = this.solverWrapper.createVariable(0, UIPriority.P0);
+    this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P0);
+    this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P0);
+    this.orientationInternal =
+      w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
   }
 
+  /**
+   * Gets the current width value from the constraint solver.
+   * @returns The current layer width in pixels
+   */
   public get width(): number {
-    return this["widthInternal"].value();
+    return this.solverWrapper.readVariableValue(this.wVariable);
   }
 
+  /**
+   * Gets the current height value from the constraint solver.
+   * @returns The current layer height in pixels
+   */
   public get height(): number {
-    return this["heightInternal"].value();
+    return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
-  public destroy(): void {
-    this.solver = undefined;
-    for (const constraint of this.constraints.keys()) {
-      constraint.destroy();
-    }
-    for (const element of this.elements.keys()) {
-      element.destroy();
-    }
+  /**
+   * Gets the current visibility and interaction mode.
+   * @returns The current UIMode setting
+   * @see {@link UIMode}
+   */
+  public get mode(): UIMode {
+    return this.modeInternal;
   }
 
-  public ["addUIElementInternal"](
-    element: UIElement | UIAnchor,
-    object?: Object3D,
-    renderOrder?: number,
-  ): void {
-    if (this.elements.has(element)) {
-      throw new Error("Element already added");
-    }
+  /**
+   * Gets the current orientation state.
+   * @returns The current orientation (horizontal or vertical)
+   * @see {@link UIOrientation}
+   */
+  public get orientation(): UIOrientation {
+    return this.orientationInternal;
+  }
 
-    this.elements.set(element, {
-      object,
-      variables: new Map(),
-      constraints: new Set(),
-    });
-
-    if (object) {
-      const zIndex = renderOrder ?? this.scene.children.length;
-
-      object.position.z = zIndex;
-      object.renderOrder = zIndex;
-
-      this.scene.add(object);
-      this["sortInternal"]();
+  /**
+   * Sets the visibility and interaction mode and emits change event.
+   * @param value - The new UIMode setting
+   * @see {@link UIMode}
+   */
+  public set mode(value: UIMode) {
+    if (value !== this.modeInternal) {
+      this.modeInternal = value;
+      this.emit(UILayerEvent.MODE_CHANGE, this.modeInternal, this);
     }
   }
 
-  public ["removeUIElementInternal"](element: UIElement | UIAnchor): void {
-    const dependencies = this.elements.get(element);
-    if (dependencies === undefined) {
-      throw new Error("Element not found");
-    }
+  /**
+   * Internal method for resizing the layer and updating orientation.
+   *
+   * Updates the solver variables for width and height, resizes the scene wrapper,
+   * and determines if the orientation has changed based on the new dimensions.
+   * Emits an orientation change event if the orientation has changed.
+   *
+   * @param width - The new layer width
+   * @param height - The new layer height
+   * @protected
+   */
+  protected resizeInternal(width: number, height: number): void {
+    this.solverWrapper.suggestVariableValue(this.wVariable, width);
+    this.solverWrapper.suggestVariableValue(this.hVariable, height);
+    this.sceneWrapper.resize(width, height);
 
-    if (dependencies.variables.size > 0) {
-      throw new Error("Variables should be removed before removing element");
-    }
+    const orientation =
+      width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
 
-    if (dependencies.constraints.size > 0) {
-      throw new Error("Constraints should be removed before removing element");
-    }
-
-    this.elements.delete(element);
-    if (dependencies.object) {
-      this.scene.remove(dependencies.object);
-    }
-  }
-
-  public ["addUIConstraintInternal"](
-    constraint: UIConstraint,
-    elements: Set<UIElement | UIAnchor>,
-  ): void {
-    if (this.constraints.has(constraint)) {
-      throw new Error("Constraint already added");
-    }
-
-    for (const element of elements) {
-      const dependencies = this.elements.get(element);
-      if (dependencies === undefined) {
-        throw new Error("Element not found");
-      }
-
-      if (dependencies.constraints.has(constraint)) {
-        throw new Error("Something went wrong");
-      }
-
-      dependencies.constraints.add(constraint);
-    }
-
-    this.constraints.set(constraint, {
-      elements,
-      variables: new Map(),
-      constraints: new Set(),
-    });
-  }
-
-  public ["removeUIConstraintInternal"](constraint: UIConstraint): void {
-    const dependencies = this.constraints.get(constraint);
-    if (dependencies === undefined) {
-      throw new Error("Constraint not found");
-    }
-
-    if (dependencies.variables.size > 0) {
-      throw new Error("Variables should be removed before removing constraint");
-    }
-
-    if (dependencies.constraints.size > 0) {
-      throw new Error(
-        "Constraints should be removed before removing constraint",
+    if (orientation !== this.orientationInternal) {
+      this.orientationInternal = orientation;
+      this.emit(
+        UILayerEvent.ORIENTATION_CHANGE,
+        this.orientationInternal,
+        this,
       );
     }
-
-    for (const element of dependencies.elements) {
-      const dependencies = this.elements.get(element);
-      if (dependencies === undefined) {
-        throw new Error("Element not found");
-      }
-
-      if (!dependencies.constraints.has(constraint)) {
-        throw new Error("Something went wrong");
-      }
-
-      dependencies.constraints.delete(constraint);
-    }
-
-    this.constraints.delete(constraint);
   }
 
-  public ["addConstraintInternal"](
-    owner: UIConstraint,
-    constraint: Constraint,
-  ): void {
-    const dependencies = this.constraints.get(owner);
-    if (dependencies === undefined) {
-      throw new Error("Before adding constraint you need to add it's owner");
-    }
-
-    if (dependencies.constraints.has(constraint)) {
-      throw new Error("Constraint already exists");
-    }
-
-    dependencies.constraints.add(constraint);
-    try {
-      this.solver?.addConstraint(constraint);
-    } catch {
-      this.rebuildSolver();
-    }
-    this.needsRecalculation = true;
-  }
-
-  public ["removeConstraintInternal"](
-    owner: UIConstraint,
-    constraint: Constraint,
-  ): void {
-    const dependencies = this.constraints.get(owner);
-    if (dependencies === undefined) {
-      throw new Error("Before removing constraint you need to add it's owner");
-    }
-
-    if (!dependencies.constraints.has(constraint)) {
-      throw new Error("Constraint not found");
-    }
-
-    dependencies.constraints.delete(constraint);
-    try {
-      this.solver?.removeConstraint(constraint);
-    } catch {
-      this.rebuildSolver();
-    }
-    this.needsRecalculation = true;
-  }
-
-  public ["addVariableInternal"](
-    owner: UIElement | UIAnchor | UIConstraint,
-    variable: Variable,
-    strength: number,
-  ): void {
-    const dependencies =
-      owner instanceof UIElement || owner instanceof UIAnchor
-        ? this.elements.get(owner)
-        : this.constraints.get(owner);
-
-    if (dependencies === undefined) {
-      throw new Error("Before adding variable you need to add it's owner");
-    }
-
-    if (dependencies.variables.has(variable)) {
-      throw new Error("Variable already exists");
-    }
-
-    dependencies.variables.set(variable, {
-      strength,
-      suggestedValue: variable.value(),
-    });
-
-    try {
-      this.solver?.addEditVariable(variable, strength);
-    } catch {
-      this.rebuildSolver();
-    }
-    this.needsRecalculation = true;
-  }
-
-  public ["removeVariableInternal"](
-    owner: UIElement | UIAnchor | UIConstraint,
-    variable: Variable,
-  ): void {
-    const dependencies =
-      owner instanceof UIElement || owner instanceof UIAnchor
-        ? this.elements.get(owner)
-        : this.constraints.get(owner);
-
-    if (dependencies === undefined) {
-      throw new Error("Before removing variable you need to add it's owner");
-    }
-
-    if (!dependencies.variables.has(variable)) {
-      throw new Error("Variable does not exist");
-    }
-
-    dependencies.variables.delete(variable);
-    try {
-      this.solver?.removeEditVariable(variable);
-    } catch {
-      this.rebuildSolver();
-    }
-    this.needsRecalculation = true;
-  }
-
-  public ["suggestVariableInternal"](
-    owner: UIElement | UIAnchor | UIConstraint,
-    variable: Variable,
-    value: number,
-  ): void {
-    const dependencies =
-      owner instanceof UIElement || owner instanceof UIAnchor
-        ? this.elements.get(owner)
-        : this.constraints.get(owner);
-
-    if (dependencies === undefined) {
-      throw new Error("Before suggesting variable you need to add it's owner");
-    }
-
-    const description = dependencies.variables.get(variable);
-
-    if (!description) {
-      throw new Error("Variable does not exist");
-    }
-
-    if (description.suggestedValue !== value) {
-      description.suggestedValue = value;
-      try {
-        this.solver?.suggestValue(variable, value);
-      } catch {
-        this.rebuildSolver();
-      }
-      this.needsRecalculation = true;
+  /**
+   * Internal method for rendering the layer and its elements.
+   *
+   * Delegates rendering to the scene wrapper if the layer is not hidden.
+   * This method is called during the rendering loop to update and draw
+   * all elements contained within the layer.
+   *
+   * @param renderer - The WebGL renderer instance
+   * @param deltaTime - Time elapsed since the last frame in seconds
+   * @protected
+   */
+  protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
+    if (this.mode !== UIMode.HIDDEN) {
+      this.sceneWrapper.render(renderer, deltaTime);
     }
   }
 
-  public ["sortInternal"](): void {
-    this.scene.children.sort(
-      (a: Object3D, b: Object3D) => a.position.z - b.position.z,
-    );
-
-    for (let i = 0; i < this.scene.children.length; i++) {
-      const child = this.scene.children[i];
-      child.position.z = i;
-      child.renderOrder = i;
-    }
-
-    const gap = 1;
-
-    this.camera.position.set(0, 0, this.scene.children.length + gap);
-    this.camera.near = 1;
-    this.camera.far = this.scene.children.length + gap + gap;
-    this.camera.updateProjectionMatrix();
-    this.camera.updateMatrix();
-  }
-
-  public render(renderer: WebGLRenderer, deltaTime: number): void {
-    if (this.mode === UIMode.HIDDEN) {
-      return;
-    }
-
-    const originalRenderTarget = renderer.getRenderTarget();
-    const originalClearColor = renderer.getClearColor(clearColor);
-    const originalClearAlpha = renderer.getClearAlpha();
-
-    if (this.needsRecalculation) {
-      this.needsRecalculation = false;
-      this.solver?.updateVariables();
-
-      for (const element of this.elements.keys()) {
-        element["needsRecalculationInternal"] = true;
-      }
-    }
-
-    for (const element of this.elements.keys()) {
-      element["renderInternal"](renderer, deltaTime);
-    }
-
-    renderer.setRenderTarget(originalRenderTarget);
-    renderer.setClearColor(originalClearColor);
-    renderer.setClearAlpha(originalClearAlpha);
-    renderer.render(this.scene, this.camera);
-  }
-
+  /**
+   * Internal method for handling click events on the layer.
+   *
+   * Processes click events by testing elements in reverse z-order (top to bottom)
+   * until one handles the click. Only processes clicks when the layer is in
+   * interactive mode.
+   *
+   * @param x - The x-coordinate of the click
+   * @param y - The y-coordinate of the click
+   * @protected
+   */
   protected clickInternal(x: number, y: number): void {
-    if (this.mode !== UIMode.INTERACTIVE) {
-      return;
-    }
-
-    this.emit(UILayerEvent.CLICK, this, x, y);
-
-    const elements = [...this.elements.keys()]
-      .filter((e: UIElement | UIAnchor) => e instanceof UIElement)
-      .filter((e: UIElement) => e.mode === UIMode.INTERACTIVE)
-      .sort((a: UIElement, b: UIElement) => a.zIndex - b.zIndex);
-
-    for (const element of elements) {
-      if (element["clickInternal"](x, y)) {
-        break;
-      }
-    }
-  }
-
-  protected resizeInternal(width: number, height: number): void {
-    this.applyCameraSize(width, height);
-    this.rebuildLayerConstraints(width, height);
-    this.updateOrientation(width, height);
-    this.needsRecalculation = true;
-  }
-
-  protected applyCameraSize(width: number, height: number): void {
-    this.camera.bottom = 0;
-    this.camera.left = 0;
-    this.camera.right = width;
-    this.camera.top = height;
-    this.camera.updateProjectionMatrix();
-  }
-
-  protected rebuildLayerConstraints(width: number, height: number): void {
-    if (this.constraintX) {
-      this.solver?.removeConstraint(this.constraintX);
-      this.constraintX = undefined;
-    }
-    if (this.constraintY) {
-      this.solver?.removeConstraint(this.constraintY);
-      this.constraintY = undefined;
-    }
-    if (this.constraintW) {
-      this.solver?.removeConstraint(this.constraintW);
-      this.constraintW = undefined;
-    }
-    if (this.constraintH) {
-      this.solver?.removeConstraint(this.constraintH);
-      this.constraintH = undefined;
-    }
-
-    this.constraintX = new Constraint(
-      new Expression(this["xInternal"]),
-      Operator.Eq,
-      0,
-      Strength.required,
-    );
-
-    this.constraintY = new Constraint(
-      new Expression(this["yInternal"]),
-      Operator.Eq,
-      0,
-      Strength.required,
-    );
-
-    this.constraintW = new Constraint(
-      new Expression(this["widthInternal"]),
-      Operator.Eq,
-      width,
-      Strength.required,
-    );
-
-    this.constraintH = new Constraint(
-      new Expression(this["heightInternal"]),
-      Operator.Eq,
-      height,
-      Strength.required,
-    );
-
-    this.solver?.addConstraint(this.constraintX);
-    this.solver?.addConstraint(this.constraintY);
-    this.solver?.addConstraint(this.constraintW);
-    this.solver?.addConstraint(this.constraintH);
-  }
-
-  protected updateOrientation(width: number, height: number): void {
-    const lastOrientation = this.orientationPrivate;
-    this.orientationPrivate =
-      width > height ? UIOrientation.LANDSCAPE : UIOrientation.PORTRAIT;
-
-    if (lastOrientation !== this.orientationPrivate) {
-      this.solver = undefined;
-
-      for (const constraint of this.constraints.keys()) {
-        constraint["enableConstraintInternal"](this.orientationPrivate);
-      }
-      for (const constraint of this.constraints.keys()) {
-        constraint["disableConstraintInternal"](this.orientationPrivate);
-      }
-
-      this.solver = new Solver();
-      const descriptions = [
-        ...this.elements.values(),
-        ...this.constraints.values(),
-      ];
-
-      for (const description of descriptions) {
-        for (const [key, value] of description.variables.entries()) {
-          this.solver.addEditVariable(key, value.strength);
-          this.solver.suggestValue(key, value.suggestedValue);
+    if (this.mode === UIMode.INTERACTIVE) {
+      for (const element of this.sceneWrapper.getSortedVisibleElements()) {
+        if (element["onClickInternal"](x, y)) {
+          return;
         }
       }
-
-      if (this.constraintX) {
-        this.solver.addConstraint(this.constraintX);
-      }
-      if (this.constraintY) {
-        this.solver.addConstraint(this.constraintY);
-      }
-      if (this.constraintW) {
-        this.solver.addConstraint(this.constraintW);
-      }
-      if (this.constraintH) {
-        this.solver.addConstraint(this.constraintH);
-      }
-
-      for (const dependency of this.constraints.values()) {
-        for (const constraint of dependency.constraints.values()) {
-          this.solver.addConstraint(constraint);
-        }
-      }
-
-      this.emit(UILayerEvent.ORIENTATION_CHANGED, this, this.orientation);
     }
   }
 
-  private rebuildSolver(): void {
-    try {
-      this.solver = undefined;
+  /**
+   * Internal method for accessing the constraint solver wrapper.
+   *
+   * Provides access to the layer's constraint solver for elements and
+   * constraints that need to create variables or constraints.
+   *
+   * @returns The constraint solver wrapper instance
+   * @internal
+   */
+  protected ["getSolverWrapperInternal"](): UISolverWrapper {
+    return this.solverWrapper;
+  }
 
-      this.solver = new Solver();
-      const descriptions = [
-        ...this.elements.values(),
-        ...this.constraints.values(),
-      ];
-
-      for (const description of descriptions) {
-        for (const [key, value] of description.variables.entries()) {
-          this.solver.addEditVariable(key, value.strength);
-          this.solver.suggestValue(key, value.suggestedValue);
-        }
-      }
-
-      if (this.constraintX) {
-        this.solver.addConstraint(this.constraintX);
-      }
-      if (this.constraintY) {
-        this.solver.addConstraint(this.constraintY);
-      }
-      if (this.constraintW) {
-        this.solver.addConstraint(this.constraintW);
-      }
-      if (this.constraintH) {
-        this.solver.addConstraint(this.constraintH);
-      }
-
-      for (const dependency of this.constraints.values()) {
-        for (const constraint of dependency.constraints.values()) {
-          this.solver.addConstraint(constraint);
-        }
-      }
-    } catch (error) {
-      throw error;
-    }
+  /**
+   * Internal method for accessing the 3D scene wrapper.
+   *
+   * Provides access to the layer's scene management system for elements
+   * that need to be added to or removed from the 3D scene.
+   *
+   * @returns The scene wrapper instance
+   * @internal
+   */
+  protected ["getSceneWrapperInternal"](): UISceneWrapper {
+    return this.sceneWrapper;
   }
 }

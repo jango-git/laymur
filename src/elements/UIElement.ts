@@ -1,308 +1,230 @@
-import { Variable } from "@lume/kiwi";
-import { Eventail } from "eventail";
 import type { WebGLRenderer } from "three";
-import { MathUtils, type Object3D } from "three";
-import {
-  convertPowerToStrength,
-  UIConstraintPower,
-} from "../constraints/UIConstraintPower";
+import { type Object3D } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { testElement } from "../miscellaneous/math";
-import { applyMicroTransformations } from "../miscellaneous/microTransformationTools";
-import { UIMicro, UIMicroInternal } from "../miscellaneous/UIMicro";
+import type { UIPlaneElement } from "../miscellaneous/asserts";
+import {
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../miscellaneous/asserts";
+import { UIMicro } from "../miscellaneous/UIMicro";
 import { UIMode } from "../miscellaneous/UIMode";
-import { UIComposer, UIComposerInternal } from "../Passes/UIComposer";
+import { UIPriority } from "../miscellaneous/UIPriority";
+import type { UISceneWrapper } from "../wrappers/UISceneWrapper";
+import { UIAnchor } from "./UIAnchor";
 
 /**
  * Events that can be emitted by UI elements.
  */
 export enum UIElementEvent {
-  /** Triggered when an interactive element is clicked */
+  /** Emitted when the element is clicked. */
   CLICK = "click",
 }
 
 /**
- * Abstract base class for all UI elements in the system.
- * Provides core functionality for positioning, sizing, and rendering UI elements.
+ * Abstract base class for all renderable UI elements with dimensions.
  *
- * Each UI element has:
- * - Position (x, y) and size (width, height) variables
- * - Layer management integration
- * - Event handling capabilities
- * - Micro transformations support
- * - Rendering capabilities
+ * UIElement serves as the fundamental building block for all other UI elements
+ * that need to be visually rendered. It extends UIAnchor with dimensional properties
+ * and integrates with the Three.js rendering system through Object3D. This class
+ * provides essential functionality for positioning, sizing, rendering, visibility,
+ * z-index management, and user interaction.
+ *
+ * @template T - The type of Three.js Object3D used for rendering
+ * @see {@link UIAnchor} - Base class providing position functionality
+ * @see {@link UIPlaneElement} - Interface defining dimensional element behavior
+ * @see {@link UISceneWrapper} - Scene management for rendering
+ * @see {@link UIMicro} - Micro-optimization utilities
  */
-export abstract class UIElement extends Eventail {
-  /** X position variable for constraint system */
-  public ["xInternal"] = new Variable("x");
-
-  /** Y position variable for constraint system */
-  public ["yInternal"] = new Variable("y");
-
-  /** Width variable for constraint system */
-  public ["widthInternal"] = new Variable("width");
-
-  /** Height variable for constraint system */
-  public ["heightInternal"] = new Variable("height");
-
-  /** Flag indicating whether the element needs recalculation */
-  public ["needsRecalculationInternal"] = false;
-
-  /** Unique identifier for the element */
-  public name = MathUtils.generateUUID();
-
-  /** Micro transformation interface for the element */
-  public readonly micro: UIMicro;
-
-  /** Composer interface for the element */
-  public readonly composer: UIComposer;
-
-  /** Internal micro transformation implementation */
-  protected readonly microInternal = new UIMicroInternal();
-
-  /** Internal composer implementation */
-  protected readonly composerInternal = new UIComposerInternal();
-
-  /** Current visibility/interactivity mode */
-  protected modeInternal = UIMode.VISIBLE;
+export abstract class UIElement<T extends Object3D = Object3D>
+  extends UIAnchor
+  implements UIPlaneElement
+{
+  /** Micro-transformation system for non-constraint based positioning, scaling, and rotation adjustments. */
+  public readonly micro = new UIMicro();
 
   /**
-   * Creates a new UI element.
+   * Solver variable descriptor for the width dimension.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly wVariable: number;
+
+  /**
+   * Solver variable descriptor for the height dimension.
+   * This variable is managed by the constraint solver system.
+   */
+  public readonly hVariable: number;
+
+  /**
+   * Reference to the scene wrapper for rendering management.
+   * @see {@link UISceneWrapper}
+   */
+  protected readonly sceneWrapper: UISceneWrapper;
+
+  /** Internal storage for the current visibility/interaction mode. */
+  protected modeInternal: UIMode = UIMode.VISIBLE;
+
+  /**
+   * Creates a new UIElement instance with rendering capabilities.
    *
    * @param layer - The UI layer that contains this element
-   * @param object - The Three.js object that represents this element
-   * @param x - Initial x position
-   * @param y - Initial y position
-   * @param width - Initial width
-   * @param height - Initial height
+   * @param x - Initial x-coordinate position
+   * @param y - Initial y-coordinate position
+   * @param width - Initial width dimension (must be positive)
+   * @param height - Initial height dimension (must be positive)
+   * @param object - The Three.js Object3D used for rendering this element
+   * @throws Will throw an error if width or height are not valid positive numbers
+   * @see {@link assertValidPositiveNumber}
    */
   constructor(
-    public readonly layer: UILayer,
-    protected readonly object: Object3D,
+    layer: UILayer,
     x: number,
     y: number,
     width: number,
     height: number,
+    protected readonly object: T,
   ) {
-    super();
-    this.micro = new UIMicro(this.microInternal, this);
-    this.composer = new UIComposer(this.composerInternal);
+    assertValidPositiveNumber(width, "UIElement width");
+    assertValidPositiveNumber(height, "UIElement height");
 
-    this.object.matrixAutoUpdate = false;
-
-    this.layer["addUIElementInternal"](this, this.object);
-
-    this.layer["addVariableInternal"](
-      this,
-      this["xInternal"],
-      convertPowerToStrength(UIConstraintPower.P7),
-    );
-    this.layer["addVariableInternal"](
-      this,
-      this["yInternal"],
-      convertPowerToStrength(UIConstraintPower.P7),
-    );
-    this.layer["addVariableInternal"](
-      this,
-      this["widthInternal"],
-      convertPowerToStrength(UIConstraintPower.P5),
-    );
-    this.layer["addVariableInternal"](
-      this,
-      this["heightInternal"],
-      convertPowerToStrength(UIConstraintPower.P5),
-    );
-
-    this["xInternal"].setValue(x);
-    this["yInternal"].setValue(y);
-    this["widthInternal"].setValue(width);
-    this["heightInternal"].setValue(height);
-
-    this.layer["suggestVariableInternal"](this, this["xInternal"], x);
-    this.layer["suggestVariableInternal"](this, this["yInternal"], y);
-    this.layer["suggestVariableInternal"](this, this["widthInternal"], width);
-    this.layer["suggestVariableInternal"](this, this["heightInternal"], height);
+    super(layer, x, y);
+    this.sceneWrapper = this.layer["getSceneWrapperInternal"]();
+    this.sceneWrapper.insertObject(this, this.object);
+    this.wVariable = this.solverWrapper.createVariable(width, UIPriority.P6);
+    this.hVariable = this.solverWrapper.createVariable(height, UIPriority.P6);
   }
 
-  /** Gets the current x position of the element */
-  public get x(): number {
-    return this["xInternal"].value();
-  }
-
-  /** Gets the current y position of the element */
-  public get y(): number {
-    return this["yInternal"].value();
-  }
-
-  /** Gets the current width of the element */
+  /**
+   * Gets the current width value from the solver.
+   * @returns The current width dimension
+   */
   public get width(): number {
-    return this["widthInternal"].value();
+    return this.solverWrapper.readVariableValue(this.wVariable);
   }
 
-  /** Gets the current height of the element */
+  /**
+   * Gets the current height value from the solver.
+   * @returns The current height dimension
+   */
   public get height(): number {
-    return this["heightInternal"].value();
+    return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
-  /** Gets the current z-index (depth) of the element */
+  /**
+   * Gets the current z-index (depth) value from the scene.
+   * @returns The current z-index for rendering order
+   */
   public get zIndex(): number {
-    return this.object.position.z;
+    return this.sceneWrapper.getZIndex(this);
   }
 
-  /** Gets the current visibility/interactivity mode of the element */
+  /**
+   * Gets the current visibility and interaction mode.
+   * @returns The current UIMode setting
+   * @see {@link UIMode}
+   */
   public get mode(): UIMode {
     return this.modeInternal;
   }
 
-  /** Gets whether the element needs recalculation */
-  protected get needsRecalculation(): boolean {
-    return this["needsRecalculationInternal"];
-  }
-
   /**
-   * Sets the x position of the element
-   * @param value - New x position
-   */
-  public set x(value: number) {
-    this.layer["suggestVariableInternal"](this, this["xInternal"], value);
-  }
-
-  /**
-   * Sets the y position of the element
-   * @param value - New y position
-   */
-  public set y(value: number) {
-    this.layer["suggestVariableInternal"](this, this["yInternal"], value);
-  }
-
-  /**
-   * Sets the width of the element
-   * @param value - New width
+   * Sets the width value through the solver system.
+   * @param value - The new width dimension (must be positive)
+   * @throws Will throw an error if value is not a valid positive number
+   * @see {@link assertValidPositiveNumber}
    */
   public set width(value: number) {
-    this.layer["suggestVariableInternal"](this, this["widthInternal"], value);
+    assertValidPositiveNumber(value, "UIElement width");
+    this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   /**
-   * Sets the height of the element
-   * @param value - New height
+   * Sets the height value through the solver system.
+   * @param value - The new height dimension (must be positive)
+   * @throws Will throw an error if value is not a valid positive number
+   * @see {@link assertValidPositiveNumber}
    */
   public set height(value: number) {
-    this.layer["suggestVariableInternal"](this, this["heightInternal"], value);
+    assertValidPositiveNumber(value, "UIElement height");
+    this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   /**
-   * Sets the z-index (depth) of the element
-   * @param value - New z-index
+   * Sets the z-index (depth) value for rendering order.
+   * @param value - The new z-index value
+   * @throws Will throw an error if value is not a valid number
+   * @see {@link assertValidNumber}
    */
   public set zIndex(value: number) {
-    if (this.object.renderOrder !== value) {
-      this.object.position.z = value;
-      this.object.renderOrder = value;
-      this.layer["sortInternal"]();
-      this.object.updateMatrix();
-    }
+    assertValidNumber(value, "UIElement zIndex");
+    this.sceneWrapper.setZIndex(this, value);
   }
 
   /**
-   * Sets the visibility/interactivity mode of the element
-   * @param value - New UI mode
+   * Sets the visibility and interaction mode.
+   * @param value - The new UIMode setting
+   * @see {@link UIMode}
    */
   public set mode(value: UIMode) {
-    this.modeInternal = value;
-    this.object.visible = value !== UIMode.HIDDEN;
+    if (value !== this.modeInternal) {
+      this.modeInternal = value;
+      this.sceneWrapper.setVisibility(this, value !== UIMode.HIDDEN);
+    }
   }
 
   /**
-   * Destroys the element, cleaning up all resources and removing it from the layer.
-   * This should be called when the element is no longer needed.
-   */
-  public destroy(): void {
-    this.composerInternal.destroy();
-    this.layer["removeVariableInternal"](this, this["heightInternal"]);
-    this.layer["removeVariableInternal"](this, this["widthInternal"]);
-    this.layer["removeVariableInternal"](this, this["yInternal"]);
-    this.layer["removeVariableInternal"](this, this["xInternal"]);
-    this.layer["removeUIElementInternal"](this);
-  }
-
-  /**
-   * Internal method called by the rendering system to render this element.
+   * Destroys the UI element by cleaning up all associated resources.
    *
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time elapsed since the last frame
+   * This method removes the element from the rendering scene, cleans up
+   * dimension solver variables, and calls the parent destroy method to
+   * clean up position variables. After calling this method, the element
+   * should not be used anymore.
+   */
+  public override destroy(): void {
+    this.solverWrapper.removeVariable(this.hVariable);
+    this.solverWrapper.removeVariable(this.wVariable);
+    this.sceneWrapper.removeObject(this);
+    super.destroy();
+  }
+
+  /**
+   * Internal method for handling click events.
+   *
+   * Determines if the click coordinates intersect with this element's bounds
+   * and emits a CLICK event if the element is in interactive mode.
+   *
+   * @param x - The x-coordinate of the click
+   * @param y - The y-coordinate of the click
+   * @returns True if the click was handled by this element
    * @internal
    */
-  public ["renderInternal"](renderer: WebGLRenderer, deltaTime: number): void {
-    this.render(renderer, deltaTime);
+  protected ["onClickInternal"](x: number, y: number): boolean {
+    const isClicked =
+      this.modeInternal === UIMode.INTERACTIVE &&
+      x > this.x &&
+      x < this.x + this.width &&
+      y > this.y &&
+      y < this.y + this.height;
+    if (isClicked) {
+      this.emit(UIElementEvent.CLICK, x, y, this);
+    }
+    return isClicked;
   }
 
   /**
-   * Internal method called by the event system to handle clicks on this element.
+   * Internal method called before rendering each frame.
    *
-   * @param x - X coordinate of the click
-   * @param y - Y coordinate of the click
-   * @returns Whether the click was handled by this element
+   * This is a hook method that can be overridden by subclasses to perform
+   * pre-render operations such as updating animations, transforms, or
+   * other dynamic properties.
+   *
+   * @param renderer - The WebGL renderer instance
+   * @param deltaTime - Time elapsed since the last frame in seconds
    * @internal
    */
-  public ["clickInternal"](x: number, y: number): boolean {
-    return this.click(x, y);
-  }
-
-  /**
-   * Applies transformations to the underlying Three.js object.
-   * This is called when the element's position, size, or other properties change.
-   */
-  protected applyTransformations(): void {
-    if (
-      this["needsRecalculationInternal"] ||
-      this.microInternal.needsRecalculation ||
-      this.composerInternal.paddingHasChanged
-    ) {
-      applyMicroTransformations(
-        this.object,
-        this.microInternal,
-        this.x,
-        this.y,
-        this.width,
-        this.height,
-        this.composerInternal.padding,
-      );
-
-      this.object.updateMatrix();
-
-      this["needsRecalculationInternal"] = false;
-      this.microInternal.needsRecalculation = false;
-    }
-  }
-
-  /**
-   * Handles click events on this element.
-   *
-   * @param x - X coordinate of the click
-   * @param y - Y coordinate of the click
-   * @returns Whether the click was handled by this element
-   */
-  protected click(x: number, y: number): boolean {
-    if (this.mode !== UIMode.INTERACTIVE) {
-      return false;
-    }
-
-    this.applyTransformations();
-    if (testElement(this.x, this.y, this.width, this.height, x, y)) {
-      this.emit(UIElementEvent.CLICK, this);
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Renders the element.
-   * This must be implemented by concrete subclasses.
-   *
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time elapsed since the last frame
-   */
-  protected abstract render(renderer: WebGLRenderer, deltaTime: number): void;
+  protected ["onBeforeRenderInternal"](
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
+    renderer: WebGLRenderer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
+    deltaTime: number,
+  ): void {}
 }

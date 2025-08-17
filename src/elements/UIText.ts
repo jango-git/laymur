@@ -2,74 +2,99 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIMaterial } from "../materials/UIMaterial";
+import type { UITextContent } from "../miscellaneous/textInterfaces";
 import {
-  calculateTextBlockSize,
-  measureTextChunk,
+  calculateTextContentParameters,
   renderTextLines,
-  resolvePadding,
-  resolveTextStyle,
-  splitText,
-  wrapTextLines,
 } from "../miscellaneous/textTools";
 import { geometry } from "../miscellaneous/threeInstances";
-import type {
-  UITextChunk,
-  UITextPadding,
-  UITextSize,
-  UITextSpan,
-  UITextStyle,
-} from "../miscellaneous/UITextInterfaces";
+import {
+  resolvePadding,
+  type UITextPadding,
+} from "../miscellaneous/UITextPadding";
+import { type UITextStyle } from "../miscellaneous/UITextStyle";
 import { UIElement } from "./UIElement";
 
+/** Default maximum width for text elements in pixels. */
+const DEFAULT_MAX_WIDTH = 1024;
+
 /**
- * Options for customizing the UIText element.
+ * Configuration options for UIText element creation.
  */
 export interface UITextOptions {
-  /** Maximum width of the text block before wrapping occurs */
+  /** Maximum width in pixels before text wrapping occurs. */
   maxWidth: number;
-  /** Padding around the text */
+  /** Padding configuration for text content. */
   padding: Partial<UITextPadding>;
-  /** Default style to apply to text spans that don't specify their own style */
-  defaultStyle: Partial<UITextStyle>;
+  /** Common style properties applied to all text content. */
+  commonStyle: Partial<UITextStyle>;
 }
 
-/** Default maximum line width for text if not otherwise specified */
-const DEFAULT_LINE_SIZE = 1024;
-
 /**
- * A UI element that displays formatted text.
- * Renders text to a canvas and displays it as a texture on a mesh.
+ * UI element for rendering dynamic text with canvas-based rendering.
+ *
+ * UIText is a concrete implementation of UIElement that renders text content
+ * using HTML5 Canvas and displays it as a texture. It supports rich text
+ * formatting, automatic text wrapping, padding, and dynamic resizing based
+ * on content. The text is rendered to a canvas texture which is then applied
+ * to a Three.js mesh for display in the 3D scene.
+ *
+ * @see {@link UIElement} - Base class providing UI element functionality
+ * @see {@link UITextContent} - Text content structure
+ * @see {@link UITextStyle} - Text styling options
+ * @see {@link UITextPadding} - Padding configuration
  */
-export class UIText extends UIElement {
-  /** Material used to render the text */
+export class UIText extends UIElement<Mesh> {
+  /** The material used for rendering the text texture. */
   private readonly material: UIMaterial;
-  /** Texture containing the rendered text */
+
+  /** The canvas texture containing the rendered text. */
   private readonly texture: CanvasTexture;
 
-  /** Canvas element used to render the text */
+  /** The HTML canvas element used for text rendering. */
   private readonly canvas: HTMLCanvasElement;
-  /** 2D rendering context for the canvas */
+
+  /** The 2D rendering context for drawing text on the canvas. */
   private readonly context: CanvasRenderingContext2D;
 
-  /** Size of the text block without padding */
-  private readonly textBlockSize: UITextSize;
-  /** Padding values applied around the text */
-  private readonly padding: UITextPadding;
-  /** Cached aspect ratio for performance optimization */
-  private suggestedAspect = 0;
+  /** Internal storage for the current text content. */
+  private contentInternal: UITextContent;
+
+  /** Internal storage for the maximum width before text wrapping. */
+  private maxWidthInternal: number;
+
+  /** Internal storage for the current padding configuration. */
+  private paddingInternal: UITextPadding;
+
+  /** Internal storage for the common text style properties. */
+  private commonStyleInternal: Partial<UITextStyle>;
+
+  /** Target aspect ratio for the text element based on content. */
+  private targetAspectRatio = 1;
+
+  /** Last calculated aspect ratio for comparison during rendering. */
+  private lastAspectRatio = 1;
 
   /**
-   * Creates a new text UI element.
+   * Creates a new UIText instance with dynamic text rendering.
    *
-   * @param layer - The UI layer that contains this element
-   * @param spans - Text content to display, either as a string, text span, or array of text spans/strings
-   * @param options - Options to customize the text rendering
-   * @throws Error if canvas context creation fails
+   * The text element will automatically size itself based on the content
+   * and specified options. A canvas is created for rendering the text,
+   * which is then used as a texture for the 3D mesh.
+   *
+   * @param layer - The UI layer that contains this text element
+   * @param content - The text content to display
+   * @param options - Configuration options for text rendering
+   * @param x - Initial x-coordinate position (defaults to 0)
+   * @param y - Initial y-coordinate position (defaults to 0)
+   * @throws Will throw an error if canvas context creation fails
    */
   constructor(
     layer: UILayer,
-    spans: (UITextSpan | string)[] | UITextSpan | string,
+    content: UITextContent,
     options: Partial<UITextOptions> = {},
+    x = 0,
+    y = 0,
   ) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -78,40 +103,11 @@ export class UIText extends UIElement {
       throw new Error("Failed to create canvas context");
     }
 
-    const chunks: UITextChunk[] = [];
-    const processedSpans = Array.isArray(spans) ? spans : [spans];
-
-    for (const span of processedSpans) {
-      const isSpanString = typeof span === "string";
-      const spanText = isSpanString ? span : span.text;
-      const style = resolveTextStyle(
-        isSpanString ? undefined : span.style,
-        options.defaultStyle,
-      );
-
-      for (const text of splitText(spanText)) {
-        const metrics = measureTextChunk(context, text, style);
-        chunks.push({ text, style, metrics });
-      }
-    }
-
-    const wrappedLines = wrapTextLines(
-      options.maxWidth ?? DEFAULT_LINE_SIZE,
-      chunks,
-    );
-    const textBlockSize = calculateTextBlockSize(wrappedLines);
-
-    const padding = resolvePadding(options.padding);
-
-    canvas.width = textBlockSize.width + padding.left + padding.right;
-    canvas.height = textBlockSize.height + padding.top + padding.bottom;
-
     const texture = new CanvasTexture(canvas);
-
     const material = new UIMaterial(texture);
     const object = new Mesh(geometry, material);
 
-    super(layer, object, 0, 0, textBlockSize.width, textBlockSize.height);
+    super(layer, x, y, 2, 2, object);
 
     this.material = material;
     this.texture = texture;
@@ -119,51 +115,137 @@ export class UIText extends UIElement {
     this.canvas = canvas;
     this.context = context;
 
-    this.textBlockSize = textBlockSize;
-    this.padding = padding;
+    this.contentInternal = content;
+    this.maxWidthInternal = options.maxWidth ?? DEFAULT_MAX_WIDTH;
+    this.paddingInternal = resolvePadding(options.padding);
+    this.commonStyleInternal = options.commonStyle ?? {};
 
-    renderTextLines(
-      this.padding.top,
-      this.padding.left,
-      wrappedLines,
-      this.context,
-    );
-
-    this.texture.needsUpdate = true;
-    this.applyTransformations();
+    this.rebuildText();
   }
 
-  /** Gets the color tint applied to the text */
+  /**
+   * Gets the current color tint applied to the text.
+   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   */
   public get color(): number {
     return this.material.getColor();
   }
 
-  /** Gets the opacity of the text */
+  /**
+   * Gets the current opacity level of the text.
+   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
+   */
   public get opacity(): number {
     return this.material.getOpacity();
   }
 
   /**
-   * Sets the color tint applied to the text
-   * @param value - Color in hexadecimal format
+   * Gets whether transparency is enabled for the text.
+   * @returns True if transparency is enabled, false otherwise
+   */
+  public get transparency(): boolean {
+    return this.material.getTransparency();
+  }
+
+  /**
+   * Gets the current text content being displayed.
+   * @returns The current text content structure
+   */
+  public get content(): UITextContent {
+    return this.contentInternal;
+  }
+
+  /**
+   * Gets the maximum width before text wrapping occurs.
+   * @returns The maximum width in pixels
+   */
+  public get maxWidth(): number {
+    return this.maxWidthInternal;
+  }
+
+  /**
+   * Gets the current padding configuration.
+   * @returns The padding configuration for all sides
+   */
+  public get padding(): UITextPadding {
+    return this.paddingInternal;
+  }
+
+  /**
+   * Gets the common style properties applied to the text.
+   * @returns The partial text style configuration
+   */
+  public get commonStyle(): Partial<UITextStyle> {
+    return this.commonStyleInternal;
+  }
+
+  /**
+   * Sets the color tint applied to the text.
+   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
   public set color(value: number) {
     this.material.setColor(value);
-    this.composerInternal.requestUpdate();
   }
 
   /**
-   * Sets the opacity of the text
-   * @param value - Opacity value between 0 (transparent) and 1 (opaque)
+   * Sets the opacity level of the text.
+   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
    */
   public set opacity(value: number) {
     this.material.setOpacity(value);
-    this.composerInternal.requestUpdate();
   }
 
   /**
-   * Destroys the text element, disposing of all resources and removing it from the layer.
-   * This should be called when the element is no longer needed.
+   * Sets whether transparency is enabled for the text.
+   * @param value - True to enable transparency, false to disable
+   */
+  public set transparency(value: boolean) {
+    this.material.setTransparency(value);
+  }
+
+  /**
+   * Sets new text content and triggers a rebuild.
+   * @param value - The new text content structure
+   */
+  public set content(value: UITextContent) {
+    this.contentInternal = value;
+    this.rebuildText();
+  }
+
+  /**
+   * Sets the maximum width before text wrapping and triggers a rebuild.
+   * @param value - The new maximum width in pixels
+   */
+  public set maxWidth(value: number) {
+    this.maxWidthInternal = value;
+    this.rebuildText();
+  }
+
+  /**
+   * Sets new padding configuration and triggers a rebuild.
+   * @param value - The new padding configuration
+   */
+  public set padding(value: UITextPadding) {
+    this.paddingInternal = value;
+    this.rebuildText();
+  }
+
+  /**
+   * Sets new common style properties and triggers a rebuild.
+   * @param value - The new partial text style configuration
+   */
+  public set commonStyle(value: Partial<UITextStyle>) {
+    this.commonStyleInternal = value;
+    this.rebuildText();
+  }
+
+  /**
+   * Destroys the text element by cleaning up all associated resources.
+   *
+   * This method disposes of the material and texture resources, removes
+   * the canvas element from the DOM, and calls the parent destroy method
+   * to clean up the underlying UI element. After calling this method,
+   * the text element should not be used anymore.
    */
   public override destroy(): void {
     this.material.dispose();
@@ -173,38 +255,60 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Applies transformations to the text element, ensuring the aspect ratio
-   * matches the rendered text to prevent distortion.
+   * Internal method called before rendering each frame.
    *
-   * This overrides the base implementation to maintain the correct aspect ratio.
+   * Updates the element's height to maintain the correct aspect ratio
+   * based on the text content dimensions. This ensures the text is
+   * displayed without distortion.
+   *
+   * @param renderer - The WebGL renderer instance
+   * @param deltaTime - Time elapsed since the last frame in seconds
+   * @internal
    */
-  public override applyTransformations(): void {
-    super.applyTransformations();
-
-    const currentAspect = this.width / this.height;
-    if (this.suggestedAspect !== currentAspect) {
-      this.suggestedAspect = currentAspect;
-
-      const targetAspect =
-        (this.textBlockSize.width + this.padding.left + this.padding.right) /
-        (this.textBlockSize.height + this.padding.top + this.padding.bottom);
-
-      this.height = this.width / targetAspect;
+  protected override ["onBeforeRenderInternal"](
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
+    renderer: WebGLRenderer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
+    deltaTime: number,
+  ): void {
+    if (this.lastAspectRatio !== this.width / this.height) {
+      this.lastAspectRatio = this.targetAspectRatio;
+      this.height = this.width / this.targetAspectRatio;
     }
   }
 
   /**
-   * Renders the text element.
+   * Rebuilds the text canvas and texture based on current content and settings.
    *
-   * @param renderer - The WebGL renderer
+   * This method calculates the text layout, resizes the canvas to fit the content
+   * with padding, renders the text lines to the canvas, and updates the texture.
+   * It also calculates and sets the target aspect ratio for proper display.
+   *
+   * @private
    */
-  protected override render(renderer: WebGLRenderer): void {
-    (this.object as Mesh).material = this.composerInternal.compose(
-      renderer,
-      this.texture.image.width,
-      this.texture.image.height,
-      this.material,
+  private rebuildText(): void {
+    const { lines, size } = calculateTextContentParameters(
+      this.context,
+      this.content,
+      this.maxWidthInternal,
+      this.commonStyleInternal,
     );
-    this.applyTransformations();
+
+    this.canvas.width =
+      size.width + this.paddingInternal.left + this.paddingInternal.right;
+    this.canvas.height =
+      size.height + this.paddingInternal.top + this.paddingInternal.bottom;
+
+    this.targetAspectRatio =
+      (size.width + this.paddingInternal.left + this.paddingInternal.right) /
+      (size.height + this.paddingInternal.top + this.paddingInternal.bottom);
+
+    renderTextLines(
+      this.paddingInternal.top,
+      this.paddingInternal.left,
+      lines,
+      this.context,
+    );
+    this.texture.needsUpdate = true;
   }
 }
