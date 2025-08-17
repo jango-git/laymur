@@ -153,8 +153,10 @@ export class UISolverWrapper {
       relation,
       enabled,
     });
-    this.solver.addConstraint(constraint);
-    this.recalculationRequired = true;
+    if (enabled) {
+      this.solver.addConstraint(constraint);
+      this.recalculationRequired = true;
+    }
     return index;
   }
 

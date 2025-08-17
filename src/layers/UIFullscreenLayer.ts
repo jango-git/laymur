@@ -131,7 +131,6 @@ export class UIFullscreenLayer extends UILayer {
    */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.deltaTime");
-    renderer.clear(false, true, true);
     super.renderInternal(renderer, deltaTime);
   }
 
