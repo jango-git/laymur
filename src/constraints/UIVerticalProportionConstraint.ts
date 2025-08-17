@@ -62,8 +62,8 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
     this.proportionInternal = options.proportion ?? 1;
 
     this.constraint = this.solverWrapper.createConstraint(
-      this.buildLHS(),
       new UIExpression(0),
+      this.buildRHS(),
       this.relationInternal,
       this.priorityInternal,
       this.isConstraintEnabled(),
@@ -85,12 +85,12 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
   public set proportion(value: number) {
     if (this.proportionInternal !== value) {
       this.proportionInternal = value;
-      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
+      this.solverWrapper.setConstraintRHS(this.constraint, this.buildRHS());
     }
   }
 
   /**
-   * Builds the left-hand side expression for the constraint equation.
+   * Builds the right-hand side expression for the constraint equation.
    *
    * Creates the expression: (elementA.height * proportion) - elementB.height = 0
    * This enforces the relationship: elementA.height * proportion = elementB.height
@@ -98,7 +98,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
    * @returns The UIExpression representing the proportional height relationship
    * @private
    */
-  private buildLHS(): UIExpression {
+  private buildRHS(): UIExpression {
     return UIExpression.minus(
       new UIExpression(0, [[this.a.hVariable, this.proportionInternal]]),
       new UIExpression(0, [[this.b.hVariable, 1]]),
