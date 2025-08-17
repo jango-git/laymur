@@ -3,8 +3,14 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Distance Constraints</title>
+        <title>Laymur UI Demo - Text Elements</title>
         <link rel="stylesheet" href="shared-styles.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
     </head>
     <body>
         <div class="container">
@@ -12,10 +18,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="00_snapping_content.html"
-                        title="Laymur Proportions Demo"
-                        sandbox="allow-scripts allow-same-origin"
-                        loading="lazy"
+                        src="03_text_elements_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -25,39 +28,45 @@
                 <h2>What's happening here?</h2>
 
                 <p>
-                    This example demonstrates positioning UI elements using
-                    <span class="highlight">distance constraints</span> to
-                    maintain fixed pixel distances from container edges. A
-                    logotype is positioned in the top-left corner and a download
-                    button in the top-right corner, both with 50px margins.
+                    This example introduces
+                    <span class="highlight">UIText elements</span> alongside
+                    images in constraint-based layouts. A character, logotype,
+                    download button, and text elements are positioned using
+                    aspect and proportion constraints, demonstrating how to
+                    combine different UI element types.
                 </p>
 
-                <div class="code-snippet">
-                    <pre><code id="code-example">
-new UIHorizontalDistanceConstraint(
-  layer, logotype,
-  { anchorA: 0, anchorB: 0, distance: 50, }
-);
+                <pre><code class="language-javascript">new UIText(layer, "Hello!", {
+    padding: { left: 20, right: 20, top: 20, bottom: 20 },
+    commonStyle: {
+      color: "#ffffff",
+      fontFamily: "Chewy",
+      fontSize: 256,
 
-new UIVerticalDistanceConstraint(
-  logotype, layer,
-  { anchorA: 1, anchorB: 1, distance: 50, }
-);
-                  </code></pre>
-                </div>
+      enableShadow: true,
+      shadowOffsetX: 8,
+      shadowOffsetY: 8,
+      shadowBlur: 4,
+      shadowColor: "#050505",
+
+      enableStroke: true,
+      strokeColor: "#101010",
+      strokeWidth: 12,
+    },
+});</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Interactive:</strong> Use the resize handle to
-                    see how constraints maintain element positioning as the
-                    viewport changes.
+                    <strong>💡 Text Elements:</strong> Resize the demo to see
+                    how text elements can be positioned and constrained
+                    alongside images in the same layout system.
                 </div>
 
                 <div class="navigation">
-                    <a href="index.html" class="nav-button disabled">
+                    <a href="02_proportions.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="01_proportions.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -71,7 +80,7 @@ new UIVerticalDistanceConstraint(
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/00_snapping_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/03_text_elements_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
@@ -81,7 +90,9 @@ new UIVerticalDistanceConstraint(
             </div>
         </div>
 
-        <script type="module" src="code-preview.js"></script>
+        <script>
+            hljs.highlightAll();
+        </script>
         <script>
             let isResizing = false;
             let resizeStartPos = { x: 0, y: 0 };
@@ -113,7 +124,7 @@ new UIVerticalDistanceConstraint(
                 const demoArea = document.getElementById("demoArea");
                 if (!demoArea) return;
 
-                const maxWidth = window.innerWidth - 510;
+                const maxWidth = window.innerWidth - 610;
                 const maxHeight = window.innerHeight - 40;
 
                 const width = Math.max(300, maxWidth);
@@ -173,7 +184,7 @@ new UIVerticalDistanceConstraint(
                     const newWidth = Math.max(
                         300,
                         Math.min(
-                            window.innerWidth - 510,
+                            window.innerWidth - 610,
                             resizeStartSize.width + deltaX,
                         ),
                     );
@@ -246,7 +257,7 @@ new UIVerticalDistanceConstraint(
                 const currentWidth = demoArea.clientWidth;
                 const currentHeight = demoArea.clientHeight;
 
-                const maxWidth = window.innerWidth - 510;
+                const maxWidth = window.innerWidth - 610;
                 const maxHeight = window.innerHeight - 40;
 
                 const constrainedWidth = Math.max(

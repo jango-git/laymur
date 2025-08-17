@@ -8,7 +8,7 @@ import {
   UIVerticalProportionConstraint,
   UIRelation,
   UIOrientation,
-} from "https://esm.sh/laymur@0.2.2?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.2.4?deps=three@0.175&min";
 import { BaseScene } from "./base_scene.js";
 
 let baseScene;
@@ -53,13 +53,13 @@ async function buildScene() {
 
     new UIHorizontalProportionConstraint(layer, character, {
       proportion: 0.45,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.VERTICAL,
     });
 
     new UIVerticalProportionConstraint(layer, character, {
       proportion: 0.75,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
   }
@@ -83,13 +83,13 @@ async function buildScene() {
 
     new UIHorizontalProportionConstraint(layer, logotype, {
       proportion: 0.25,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.VERTICAL,
     });
 
     new UIVerticalProportionConstraint(layer, logotype, {
       proportion: 0.15,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
   }
@@ -113,13 +113,13 @@ async function buildScene() {
 
     new UIHorizontalProportionConstraint(layer, download, {
       proportion: 0.4,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.VERTICAL,
     });
 
     new UIVerticalProportionConstraint(layer, download, {
       proportion: 0.15,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
   }

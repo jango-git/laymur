@@ -3,8 +3,14 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Aspect & Proportion Constraints</title>
+        <title>Laymur UI Demo - Distance Constraints</title>
         <link rel="stylesheet" href="shared-styles.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
     </head>
     <body>
         <div class="container">
@@ -12,7 +18,10 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="01_proportions_content.html"
+                        src="01_snapping_content.html"
+                        title="Laymur Proportions Demo"
+                        sandbox="allow-scripts allow-same-origin"
+                        loading="lazy"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -22,46 +31,39 @@
                 <h2>What's happening here?</h2>
 
                 <p>
-                    This example demonstrates maintaining
-                    <span class="highlight">aspect ratios</span> and creating
-                    <span class="highlight">proportional layouts</span> using
-                    constraint-based positioning. A character, logotype, and
-                    download button are positioned using aspect and proportion
-                    constraints for responsive, adaptive layouts.
+                    This example demonstrates positioning UI elements using
+                    <span class="highlight">distance constraints</span> to
+                    maintain fixed pixel distances from container edges. A
+                    logotype is positioned in the top-left corner and a download
+                    button in the top-right corner, both with 50px margins.
                 </p>
 
-                <div class="code-snippet">
-                    <pre><code id="code-example">
-new UIHorizontalProportionConstraint(
-  layer, character, {
-    proportion: 0.45,
-    relation: UIRelation.GREATER_THAN,
-    orientation: UIOrientation.VERTICAL,
-  }
+                <pre><code class="language-javascript">// Create horizontal constraint
+// Logotype 50px from left edge of layer
+new UIHorizontalDistanceConstraint(
+  layer, logotype,
+  { anchorA: 0, anchorB: 0, distance: 50 }
 );
 
-new UIVerticalProportionConstraint(
-  layer, character, {
-    proportion: 0.75,
-    relation: UIRelation.GREATER_THAN,
-    orientation: UIOrientation.HORIZONTAL,
-  }
-);
-                  </code></pre>
-                </div>
+// Create vertical constraint
+// Logotype 50px from top edge of layer
+new UIVerticalDistanceConstraint(
+  logotype, layer,
+  { anchorA: 1, anchorB: 1, distance: 50 }
+);</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Interactive:</strong> Resize the demo to see how
-                    proportional and aspect constraints maintain relationships
-                    between elements.
+                    <strong>💡 Interactive:</strong> Use the resize handle to
+                    see how constraints maintain element positioning as the
+                    viewport changes.
                 </div>
 
                 <div class="navigation">
-                    <a href="00_snapping.html" class="nav-button">
+                    <a href="00_basic_layer.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="index.html" class="nav-button disabled">
+                    <a href="02_proportions.html" class="nav-button">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -75,7 +77,7 @@ new UIVerticalProportionConstraint(
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/01_proportions_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/01_snapping_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
@@ -85,7 +87,9 @@ new UIVerticalProportionConstraint(
             </div>
         </div>
 
-        <script type="module" src="code-preview.js"></script>
+        <script>
+            hljs.highlightAll();
+        </script>
         <script>
             let isResizing = false;
             let resizeStartPos = { x: 0, y: 0 };
@@ -117,7 +121,7 @@ new UIVerticalProportionConstraint(
                 const demoArea = document.getElementById("demoArea");
                 if (!demoArea) return;
 
-                const maxWidth = window.innerWidth - 510;
+                const maxWidth = window.innerWidth - 610;
                 const maxHeight = window.innerHeight - 40;
 
                 const width = Math.max(300, maxWidth);
@@ -177,7 +181,7 @@ new UIVerticalProportionConstraint(
                     const newWidth = Math.max(
                         300,
                         Math.min(
-                            window.innerWidth - 510,
+                            window.innerWidth - 610,
                             resizeStartSize.width + deltaX,
                         ),
                     );
@@ -250,7 +254,7 @@ new UIVerticalProportionConstraint(
                 const currentWidth = demoArea.clientWidth;
                 const currentHeight = demoArea.clientHeight;
 
-                const maxWidth = window.innerWidth - 510;
+                const maxWidth = window.innerWidth - 610;
                 const maxHeight = window.innerHeight - 40;
 
                 const constrainedWidth = Math.max(
