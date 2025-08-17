@@ -13,6 +13,7 @@ export * from "./elements/UIAnchor";
 export * from "./elements/UIDummy";
 export * from "./elements/UIElement";
 export * from "./elements/UIImage";
+export * from "./elements/UINineSline";
 export * from "./elements/UIProgress";
 export * from "./elements/UIScene";
 export * from "./elements/UIText";
@@ -30,4 +31,3 @@ export * from "./miscellaneous/UITextStyle";
 
 // export * from "./constraints/UICoverConstraint";
 // export * from "./constraints/UIFitConstraint";
-// export * from "./elements/UINineSline";

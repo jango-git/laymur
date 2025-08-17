@@ -299,6 +299,9 @@ export class UIText extends UIElement<Mesh> {
     this.canvas.height =
       size.height + this.paddingInternal.top + this.paddingInternal.bottom;
 
+    this.width = this.canvas.width;
+    this.height = this.canvas.height;
+
     this.targetAspectRatio =
       (size.width + this.paddingInternal.left + this.paddingInternal.right) /
       (size.height + this.paddingInternal.top + this.paddingInternal.bottom);
