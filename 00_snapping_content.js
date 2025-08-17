@@ -8,6 +8,7 @@ import {
   TextureLoader,
   MeshLambertMaterial,
   SRGBColorSpace,
+  EquirectangularReflectionMapping,
 } from "https://esm.sh/three@0.175?min";
 import {
   UIFullscreenLayer,
@@ -17,11 +18,14 @@ import {
 } from "https://esm.sh/laymur@0.2.2?deps=three@0.175&min";
 import { GLTFLoader } from "https://esm.sh/three@0.175/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "https://esm.sh/three@0.175.0/examples/jsm/loaders/DRACOLoader.js";
+import { RGBELoader } from "https://esm.sh/three@0.175/examples/jsm/loaders/RGBELoader";
 
 let renderer;
 let layer;
 let scene;
 let camera;
+let originalCameraPosition = { x: 0, y: 0, z: 0 };
+let originalCameraRotation = { x: 0, y: 0, z: 0 };
 const loadedTextures = {};
 const loader = new GLTFLoader();
 const clock = new Clock();
@@ -60,11 +64,40 @@ async function loadTextures() {
   }
 }
 
-async function loadModels() {
+async function loadEnvironment() {
+  const rgbeLoader = new RGBELoader();
+
+  return new Promise((resolve, reject) => {
+    rgbeLoader.load(
+      "assets/T_Environment.hdr",
+      (texture) => {
+        texture.mapping = EquirectangularReflectionMapping;
+        loadedTextures["T_Environment"] = texture;
+        resolve(texture);
+      },
+      undefined,
+      (error) => {
+        console.error("Failed to load environment:", error);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function loadTerrain() {
   loader.setPath("assets/").load("SM_Terrain.glb", (gltf) => {
     const model = gltf.scene;
     scene.add(model);
     camera = gltf.cameras[0];
+
+    // Store original camera transform
+    originalCameraPosition.x = camera.position.x;
+    originalCameraPosition.y = camera.position.y;
+    originalCameraPosition.z = camera.position.z;
+    originalCameraRotation.x = camera.rotation.x;
+    originalCameraRotation.y = camera.rotation.y;
+    originalCameraRotation.z = camera.rotation.z;
+
     onResize();
     const terrain = model.getObjectByName("SM_Terrain");
     const material = new MeshLambertMaterial({ color: 0x00ff00 });
@@ -75,19 +108,19 @@ async function loadModels() {
 async function buildScene() {
   {
     scene = new Scene();
-    scene.background = new Color(0x87ceeb);
   }
 
   await loadTextures();
-  await loadModels();
+  await loadEnvironment();
+  await loadTerrain();
 
   {
-    const hemisphere = new HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(hemisphere);
-
-    const sun = new DirectionalLight(0xffffff, 2);
-    sun.position.set(5, 5, 5);
-    scene.add(sun);
+    const rotation = Math.PI * 0.5;
+    const texture = loadedTextures["T_Environment"];
+    scene.background = texture;
+    scene.backgroundRotation.y = rotation;
+    scene.environment = texture;
+    scene.environmentRotation.y = rotation;
   }
 
   layer = new UIFullscreenLayer(1920, 1920);
@@ -154,6 +187,24 @@ function onResize() {
 
 function animate() {
   requestAnimationFrame(animate);
+
+  // Add subtle camera sway
+  if (camera && originalCameraPosition) {
+    const time = clock.getElapsedTime();
+    const swayIntensity = 0.1;
+    const swaySpeed = 0.5;
+
+    // Subtle position sway
+    camera.position.x =
+      originalCameraPosition.x + Math.sin(time * swaySpeed) * swayIntensity;
+    camera.position.y =
+      originalCameraPosition.y +
+      Math.cos(time * swaySpeed * 0.7) * swayIntensity * 0.5;
+
+    // Subtle rotation sway
+    camera.rotation.z =
+      originalCameraRotation.z + Math.sin(time * swaySpeed * 0.8) * 0.005;
+  }
 
   if (scene && camera && renderer) {
     renderer.render(scene, camera);
