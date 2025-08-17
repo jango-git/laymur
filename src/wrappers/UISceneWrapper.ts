@@ -1,6 +1,8 @@
 import type { Object3D, WebGLRenderer } from "three";
-import { OrthographicCamera, Scene } from "three";
+import { Color, OrthographicCamera, Scene } from "three";
 import type { UIElement } from "../elements/UIElement";
+
+const tempColor = new Color();
 
 export class UISceneWrapper {
   private readonly scene = new Scene();
@@ -89,6 +91,20 @@ export class UISceneWrapper {
   }
 
   public render(renderer: WebGLRenderer, deltaTime: number): void {
+    const originalRenderTarget = renderer.getRenderTarget();
+    const originalClearColor = renderer.getClearColor(tempColor);
+    const originalClearAlpha = renderer.getClearAlpha();
+    const originalAutoClear = renderer.autoClear;
+    const originalAutoClearColor = renderer.autoClearColor;
+    const originalAutoClearDepth = renderer.autoClearDepth;
+    const originalAutoClearStencil = renderer.autoClearStencil;
+
+    renderer.autoClear = false;
+    renderer.autoClearColor = false;
+    renderer.autoClearDepth = false;
+    renderer.autoClearStencil = false;
+    renderer.setClearColor(0x000000, 1);
+
     for (const [element, object] of this.elements) {
       const micro = element.micro;
       const cos = Math.cos(micro.rotation);
@@ -107,6 +123,16 @@ export class UISceneWrapper {
       object.rotation.z = micro.rotation;
       element["onBeforeRenderInternal"](renderer, deltaTime);
     }
+
+    renderer.clear(false, true, true);
     renderer.render(this.scene, this.camera);
+
+    renderer.setRenderTarget(originalRenderTarget);
+    renderer.setClearColor(originalClearColor);
+    renderer.setClearAlpha(originalClearAlpha);
+    renderer.autoClear = originalAutoClear;
+    renderer.autoClearColor = originalAutoClearColor;
+    renderer.autoClearDepth = originalAutoClearDepth;
+    renderer.autoClearStencil = originalAutoClearStencil;
   }
 }
