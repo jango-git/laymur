@@ -1,38 +1,41 @@
 import {
   Scene,
   Color,
-  PerspectiveCamera,
   WebGLRenderer,
   HemisphereLight,
   DirectionalLight,
   Clock,
   TextureLoader,
-  BoxGeometry,
   MeshLambertMaterial,
-  Mesh,
   SRGBColorSpace,
 } from "https://esm.sh/three@0.175?min";
 import {
   UIFullscreenLayer,
   UIImage,
+  UIHorizontalDistanceConstraint,
+  UIVerticalDistanceConstraint,
   UIAspectConstraint,
   UIHorizontalProportionConstraint,
   UIVerticalProportionConstraint,
-  UIHorizontalDistanceConstraint,
-  UIVerticalDistanceConstraint,
   UIRelation,
   UIOrientation,
 } from "https://esm.sh/laymur@0.2.2?deps=three@0.175&min";
+import { GLTFLoader } from "https://esm.sh/three@0.175/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "https://esm.sh/three@0.175.0/examples/jsm/loaders/DRACOLoader.js";
 
 let renderer;
 let layer;
 let scene;
 let camera;
-let cube;
-let loadedTextures = {};
-let clock = new Clock();
+const loadedTextures = {};
+const loader = new GLTFLoader();
+const clock = new Clock();
 
-async function loadAssets() {
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+loader.setDRACOLoader(dracoLoader);
+
+async function loadTextures() {
   const loader = new TextureLoader();
   const assetPaths = [
     "assets/T_Character.webp",
@@ -66,51 +69,36 @@ async function loadAssets() {
   }
 }
 
-async function buildScene() {
-  // Load assets first
-  await loadAssets();
-
-  // Create renderer
-  renderer = new WebGLRenderer({
-    antialias: true,
-    alpha: true,
+async function loadModels() {
+  loader.setPath("assets/").load("SM_Terrain.glb", (gltf) => {
+    const model = gltf.scene;
+    scene.add(model);
+    camera = gltf.cameras[0];
+    onResize();
+    const terrain = model.getObjectByName("SM_Terrain");
+    const material = new MeshLambertMaterial({ color: 0x00ff00 });
+    terrain.material = material;
   });
+}
 
-  renderer.autoClear = false;
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setClearColor(0x111111, 1);
+async function buildScene() {
+  {
+    scene = new Scene();
+    scene.background = new Color(0x87ceeb);
+  }
 
-  // Add canvas to body
-  document.body.appendChild(renderer.domElement);
+  await loadTextures();
+  await loadModels();
 
-  // Create scene
-  scene = new Scene();
-  scene.background = new Color("darkgray");
-  15; // Create camera
-  camera = new PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000,
-  );
-  camera.position.z = 5;
+  {
+    const hemisphere = new HemisphereLight(0xffffff, 0x444444, 1);
+    scene.add(hemisphere);
 
-  // Create cube
-  const geometry = new BoxGeometry(1, 1, 1);
-  const material = new MeshLambertMaterial({ color: 0x00ff00 });
-  cube = new Mesh(geometry, material);
-  scene.add(cube);
+    const sun = new DirectionalLight(0xffffff, 2);
+    sun.position.set(5, 5, 5);
+    scene.add(sun);
+  }
 
-  // Add sun (hemisphere and directional light)
-  const hemisphereLight = new HemisphereLight(0xffffff, 0x444444, 1);
-  scene.add(hemisphereLight);
-
-  const directionalLight = new DirectionalLight(0xffffff, 2);
-  directionalLight.position.set(5, 5, 5);
-  scene.add(directionalLight);
-
-  // Create layer
   layer = new UIFullscreenLayer(1920, 1920);
 
   {
@@ -203,14 +191,24 @@ async function buildScene() {
     });
   }
 
-  // Setup resize handling
-  window.addEventListener("resize", handleResize);
+  {
+    renderer = new WebGLRenderer({
+      antialias: true,
+      alpha: false,
+    });
 
-  // Start render loop
+    renderer.autoClear = false;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x111111, 1);
+    document.body.appendChild(renderer.domElement);
+  }
+
+  window.addEventListener("resize", onResize);
   animate();
 }
 
-function handleResize() {
+function onResize() {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
@@ -224,14 +222,6 @@ function handleResize() {
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotate cube
-  if (cube) {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-    cube.rotation.z += 0.01;
-  }
-
-  // Render scene
   if (scene && camera && renderer) {
     renderer.render(scene, camera);
   }

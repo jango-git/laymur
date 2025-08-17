@@ -22,27 +22,15 @@
             </div>
 
             <div class="info-panel">
-                <h2>Distance Constraints</h2>
+                <h2>What's happening here?</h2>
 
                 <p>
                     This example demonstrates positioning UI elements using
                     <span class="highlight">distance constraints</span> to
-                    maintain fixed pixel distances from container edges.
+                    maintain fixed pixel distances from container edges. A
+                    logotype is positioned in the top-left corner and a download
+                    button in the top-right corner, both with 50px margins.
                 </p>
-
-                <h3>Elements</h3>
-                <ul>
-                    <li>
-                        <strong>Logotype:</strong> Positioned 50px from top-left
-                        corner
-                    </li>
-                    <li>
-                        <strong>Download button:</strong> Positioned 50px from
-                        top-right corner
-                    </li>
-                </ul>
-
-                <h3>Constraint Types</h3>
 
                 <div class="code-snippet">
                     <pre><code id="code-example">
@@ -57,21 +45,6 @@ new UIVerticalDistanceConstraint(
 );
                   </code></pre>
                 </div>
-
-                <h3>Anchor System</h3>
-                <ul>
-                    <li>
-                        <strong>0:</strong> Left edge (horizontal) / Top edge
-                        (vertical)
-                    </li>
-                    <li>
-                        <strong>1:</strong> Right edge (horizontal) / Bottom
-                        edge (vertical)
-                    </li>
-                    <li>
-                        <strong>distance:</strong> Pixel offset between anchors
-                    </li>
-                </ul>
 
                 <div class="warning">
                     <strong>💡 Interactive:</strong> Use the resize handle to
