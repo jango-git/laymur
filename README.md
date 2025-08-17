@@ -6,6 +6,12 @@ This library is in very early development stage. APIs may change significantly.
 
 A TypeScript Three.js UI layout library with constraint-based positioning.
 
+## Live Examples
+
+Interactive examples and demos are available at: [https://jango-git.github.io/laymur/](https://jango-git.github.io/laymur/)
+
+Explore constraint-based layouts, proportional positioning, and responsive UI components in action.
+
 ## License
 
 Laymur is licensed under the [MIT License](./LICENSE).
