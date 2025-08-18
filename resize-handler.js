@@ -1,0 +1,195 @@
+/**
+ * Shared resize handler for demo pages
+ * Provides consistent resize functionality across all demo pages
+ */
+
+let isResizing = false;
+let resizeStartPos = { x: 0, y: 0 };
+let resizeStartSize = { width: 0, height: 0 };
+
+/**
+ * Initialize the demo with resize functionality
+ */
+function initializeDemo() {
+    const demoArea = document.getElementById("demoArea");
+    const demoFrame = document.getElementById("demoFrame");
+
+    if (!demoArea || !demoFrame) {
+        console.warn("Demo area or frame not found");
+        return;
+    }
+
+    // Set initial size to maximum
+    setMaximumSize();
+
+    // Handle iframe load to ensure proper canvas sizing
+    demoFrame.addEventListener("load", function () {
+        // Trigger resize event in iframe after load
+        setTimeout(() => {
+            if (demoFrame.contentWindow) {
+                demoFrame.contentWindow.dispatchEvent(
+                    new Event("resize"),
+                );
+            }
+        }, 100);
+    });
+
+    setupResizeHandling(demoArea);
+}
+
+/**
+ * Set demo area to maximum available size
+ */
+function setMaximumSize() {
+    const demoArea = document.getElementById("demoArea");
+    if (!demoArea) return;
+
+    const maxWidth = window.innerWidth - 610;
+    const maxHeight = window.innerHeight - 40;
+
+    const width = Math.max(300, maxWidth);
+    const height = Math.max(200, maxHeight);
+
+    demoArea.style.width = width + "px";
+    demoArea.style.height = height + "px";
+}
+
+/**
+ * Setup resize handle functionality
+ * @param {HTMLElement} demoArea - The demo area element
+ */
+function setupResizeHandling(demoArea) {
+    const resizeHandle = document.getElementById("resizeHandle");
+    if (!resizeHandle) return;
+
+    function startResize(e) {
+        isResizing = true;
+        resizeStartPos.x = e.clientX;
+        resizeStartPos.y = e.clientY;
+        resizeStartSize.width = demoArea.clientWidth;
+        resizeStartSize.height = demoArea.clientHeight;
+
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.style.cursor = "se-resize";
+        document.body.style.userSelect = "none";
+
+        // Disable pointer events on iframe during resize
+        const demoFrame = document.getElementById("demoFrame");
+        if (demoFrame) {
+            demoFrame.style.pointerEvents = "none";
+        }
+
+        if (resizeHandle.setPointerCapture && e.pointerId) {
+            resizeHandle.setPointerCapture(e.pointerId);
+        }
+
+        document.addEventListener("mousemove", onPointerMove, true);
+        document.addEventListener("mouseup", onPointerUp, true);
+        document.addEventListener("pointermove", onPointerMove, true);
+        document.addEventListener("pointerup", onPointerUp, true);
+    }
+
+    function onPointerMove(e) {
+        if (!isResizing) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const clientX = e.clientX || e.pageX;
+        const clientY = e.clientY || e.pageY;
+
+        const deltaX = clientX - resizeStartPos.x;
+        const deltaY = clientY - resizeStartPos.y;
+
+        const newWidth = Math.max(
+            300,
+            Math.min(
+                window.innerWidth - 610,
+                resizeStartSize.width + deltaX,
+            ),
+        );
+        const newHeight = Math.max(
+            200,
+            Math.min(
+                window.innerHeight - 40,
+                resizeStartSize.height + deltaY,
+            ),
+        );
+
+        demoArea.style.width = newWidth + "px";
+        demoArea.style.height = newHeight + "px";
+
+        // Trigger resize event in iframe
+        const demoFrame = document.getElementById("demoFrame");
+        if (demoFrame && demoFrame.contentWindow) {
+            demoFrame.contentWindow.dispatchEvent(
+                new Event("resize"),
+            );
+        }
+    }
+
+    function onPointerUp(e) {
+        if (!isResizing) return;
+
+        isResizing = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+
+        // Re-enable pointer events on iframe after resize
+        const demoFrame = document.getElementById("demoFrame");
+        if (demoFrame) {
+            demoFrame.style.pointerEvents = "auto";
+        }
+
+        if (resizeHandle.releasePointerCapture && e.pointerId) {
+            resizeHandle.releasePointerCapture(e.pointerId);
+        }
+
+        document.removeEventListener("mousemove", onPointerMove, true);
+        document.removeEventListener("mouseup", onPointerUp, true);
+        document.removeEventListener("pointermove", onPointerMove, true);
+        document.removeEventListener("pointerup", onPointerUp, true);
+    }
+
+    resizeHandle.addEventListener("mousedown", startResize);
+    resizeHandle.addEventListener("pointerdown", startResize);
+    resizeHandle.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+    });
+}
+
+/**
+ * Constrain demo area size to fit within window bounds
+ */
+function constrainDemoAreaSize() {
+    const demoArea = document.getElementById("demoArea");
+    if (!demoArea) return;
+
+    const currentWidth = demoArea.clientWidth;
+    const currentHeight = demoArea.clientHeight;
+
+    const maxWidth = window.innerWidth - 610;
+    const maxHeight = window.innerHeight - 40;
+
+    const constrainedWidth = Math.max(
+        300,
+        Math.min(maxWidth, currentWidth),
+    );
+    const constrainedHeight = Math.max(
+        200,
+        Math.min(maxHeight, currentHeight),
+    );
+
+    if (
+        constrainedWidth !== currentWidth ||
+        constrainedHeight !== currentHeight
+    ) {
+        demoArea.style.width = constrainedWidth + "px";
+        demoArea.style.height = constrainedHeight + "px";
+    }
+}
+
+// Initialize when page loads
+window.addEventListener("load", initializeDemo);
+window.addEventListener("resize", constrainDemoAreaSize);

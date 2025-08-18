@@ -2,7 +2,7 @@ import {
   UIFullscreenLayer,
   UIImage,
 } from "https://esm.sh/laymur@0.2.10?deps=three@0.175&min";
-import { BaseScene } from "./base_scene.js";
+import { BaseScene } from "./base-scene.js";
 
 let baseScene;
 let layer;
