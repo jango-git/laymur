@@ -1,9 +1,10 @@
 import { MathUtils } from "three";
+import { UIAnchorMode } from "./UIAnchorMode";
 
 /** Default position value for x and y coordinates. */
 const DEFAULT_POSITION = 0;
 /** Default anchor point value for anchorX and anchorY. */
-const DEFAULT_ANCHOR = 0;
+const DEFAULT_ANCHOR = 0.5;
 /** Default scale value for scaleX and scaleY. */
 const DEFAULT_SCALE = 1;
 /** Default rotation value in radians. */
@@ -38,6 +39,8 @@ export class UIMicro {
   private scaleYInternal: number = DEFAULT_SCALE;
   /** Internal storage for rotation in radians. */
   private rotationInternal: number = DEFAULT_ROTATION;
+  /** Internal storage for anchor mode determining which transformations are applied around the anchor point. */
+  private anchorModeInternal: UIAnchorMode = UIAnchorMode.ROTATION_SCALE;
   /** Flag indicating if any transformation properties have changed. */
   private recalculationRequired = false;
 
@@ -103,6 +106,14 @@ export class UIMicro {
    */
   public get angle(): number {
     return MathUtils.radToDeg(this.rotationInternal);
+  }
+
+  /**
+   * Gets the current anchor mode determining which transformations are applied around the anchor point.
+   * @returns The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
+   */
+  public get anchorMode(): UIAnchorMode {
+    return this.anchorModeInternal;
   }
 
   /**
@@ -210,6 +221,17 @@ export class UIMicro {
   public set rotation(value: number) {
     if (value !== this.rotationInternal) {
       this.rotationInternal = value;
+      this.recalculationRequired = true;
+    }
+  }
+
+  /**
+   * Sets the anchor mode determining which transformations are applied around the anchor point.
+   * @param value - The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
+   */
+  public set anchorMode(value: UIAnchorMode) {
+    if (value !== this.anchorModeInternal) {
+      this.anchorModeInternal = value;
       this.recalculationRequired = true;
     }
   }

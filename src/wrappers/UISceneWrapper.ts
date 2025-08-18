@@ -1,6 +1,7 @@
 import type { Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
 import type { UIElement } from "../elements/UIElement";
+import { UIAnchorMode } from "../miscellaneous/UIAnchorMode";
 
 const tempColor = new Color();
 
@@ -107,20 +108,33 @@ export class UISceneWrapper {
 
     for (const [element, object] of this.elements) {
       const micro = element.micro;
-      const cos = Math.cos(micro.rotation);
-      const sin = Math.sin(micro.rotation);
+
       const width = element.width * micro.scaleX;
       const height = element.height * micro.scaleY;
+
       const anchorOffsetX = micro.anchorX * width;
       const anchorOffsetY = micro.anchorY * height;
+
+      const cos = Math.cos(micro.rotation);
+      const sin = Math.sin(micro.rotation);
+
       const rotatedAnchorX = anchorOffsetX * cos - anchorOffsetY * sin;
       const rotatedAnchorY = anchorOffsetX * sin + anchorOffsetY * cos;
 
-      object.position.x = element.x + micro.x - rotatedAnchorX;
-      object.position.y = element.y + micro.y - rotatedAnchorY;
+      if (micro.anchorMode === UIAnchorMode.POSITION_ROTATION_SCALE) {
+        object.position.x = element.x + micro.x - rotatedAnchorX;
+        object.position.y = element.y + micro.y - rotatedAnchorY;
+      } else {
+        const rawAnchorOffsetX = micro.anchorX * element.width;
+        const rawAnchorOffsetY = micro.anchorY * element.height;
+        object.position.x = element.x + rawAnchorOffsetX - rotatedAnchorX;
+        object.position.y = element.y + rawAnchorOffsetY - rotatedAnchorY;
+      }
+
       object.scale.x = width;
       object.scale.y = height;
       object.rotation.z = micro.rotation;
+
       element["onBeforeRenderInternal"](renderer, deltaTime);
     }
 

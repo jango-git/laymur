@@ -19,6 +19,7 @@ export * from "./elements/UIScene";
 export * from "./elements/UIText";
 export * from "./layers/UIFullscreenLayer";
 export * from "./layers/UILayer";
+export * from "./miscellaneous/UIAnchorMode";
 export * from "./miscellaneous/UIExpression";
 export * from "./miscellaneous/UIMicro";
 export * from "./miscellaneous/UIMode";
