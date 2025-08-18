@@ -1,7 +1,9 @@
 import type { Texture } from "three";
 import { Color, ShaderMaterial, UniformsUtils } from "three";
-import fragmentShader from "../shaders/UINineSliceMaterial.fs";
-import vertexShader from "../shaders/UINineSliceMaterial.vs";
+import fragmentShader from "../shaders/UIProgressMaterial.fs";
+import vertexShader from "../shaders/UIProgressMaterial.vs";
+
+const DEFAULT_ALPHA_TEST = 0.025;
 
 export class UIProgressMaterial extends ShaderMaterial {
   constructor(foregroundTexture: Texture, backgroundTexture?: Texture) {
@@ -15,6 +17,7 @@ export class UIProgressMaterial extends ShaderMaterial {
           foregroundColor: { value: new Color(1, 1, 1) },
           backgroundOpacity: { value: 1 },
           foregroundOpacity: { value: 1 },
+          alphaTest: { value: DEFAULT_ALPHA_TEST },
           angle: { value: 0 },
           direction: { value: 1 },
         },
@@ -42,11 +45,11 @@ export class UIProgressMaterial extends ShaderMaterial {
   }
 
   public getBackgroundColor(): number {
-    return (this.uniforms.color.value as Color).getHex();
+    return (this.uniforms.backgroundColor.value as Color).getHex();
   }
 
   public getForegroundColor(): number {
-    return (this.uniforms.color.value as Color).getHex();
+    return (this.uniforms.foregroundColor.value as Color).getHex();
   }
 
   public getBackgroundOpacity(): number {
@@ -55,6 +58,10 @@ export class UIProgressMaterial extends ShaderMaterial {
 
   public getForegroundOpacity(): number {
     return this.uniforms.foregroundOpacity.value;
+  }
+
+  public getTransparency(): boolean {
+    return this.transparent;
   }
 
   public getAngle(): number {
@@ -81,12 +88,12 @@ export class UIProgressMaterial extends ShaderMaterial {
   }
 
   public setBackgroundColor(value: number): void {
-    (this.uniforms.color.value as Color).setHex(value);
+    (this.uniforms.backgroundColor.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 
   public setForegroundColor(value: number): void {
-    (this.uniforms.color.value as Color).setHex(value);
+    (this.uniforms.foregroundColor.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
   }
 
@@ -98,6 +105,16 @@ export class UIProgressMaterial extends ShaderMaterial {
   public setForegroundOpacity(value: number): void {
     this.uniforms.foregroundOpacity.value = value;
     this.uniformsNeedUpdate = true;
+  }
+
+  public setTransparency(value: boolean): this {
+    if (this.transparent !== value) {
+      this.transparent = value;
+      this.uniforms.alphaTest.value = !value ? DEFAULT_ALPHA_TEST : 0;
+      this.needsUpdate = true;
+      this.uniformsNeedUpdate = true;
+    }
+    return this;
   }
 
   public setAngle(value: number): void {

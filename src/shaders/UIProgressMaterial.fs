@@ -5,6 +5,7 @@ uniform vec3 backgroundColor;
 uniform vec3 foregroundColor;
 uniform float backgroundOpacity;
 uniform float foregroundOpacity;
+uniform float alphaTest;
 uniform float angle;
 uniform float direction;
 varying vec2 vUv;
@@ -26,8 +27,15 @@ void main() {
     float adjustedX = mix(vUv.x, 1.0 - vUv.x, step(0.0, -direction));
     float tanAngle = tan(angle);
     float threshold = adjustedX - (vUv.y - 0.5) * tanAngle * sign(direction);
-    float progressMask = smoothstep(threshold - 0.01, threshold + 0.01, progress);
+    float progressMask = step(threshold, progress);
 
-    gl_FragColor = mix(backgroundColor, foregroundColor, progressMask);
+    vec4 mixedColor = backgroundColor * (1.0 - foregroundColor.a * progressMask)
+            + foregroundColor * (foregroundColor.a * progressMask);
+
+    if (mixedColor.a < alphaTest) {
+        discard;
+    }
+
+    gl_FragColor = mixedColor;
     #include <colorspace_fragment>
 }
