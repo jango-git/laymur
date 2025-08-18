@@ -20,7 +20,7 @@ interface ConstraintDescription {
 }
 
 export class UISolverWrapper {
-  private solver = new Solver();
+  private solver? = new Solver();
   private recalculationRequired = false;
 
   private readonly variables = new Map<number, VariableDescription>();
@@ -36,18 +36,29 @@ export class UISolverWrapper {
     if (priority === UIPriority.P0) {
       const description: VariableDescription = { variable, priority, value };
       this.variables.set(index, description);
+
       description.constraint = this.buildConstraint(
         new UIExpression(0, [[index, 1]]),
         new UIExpression(value),
         UIRelation.EQUAL,
         priority,
       );
-      this.solver.addConstraint(description.constraint);
+      try {
+        this.solver?.addConstraint(description.constraint);
+      } catch {
+        this.solver = undefined;
+      }
     } else {
       this.variables.set(index, { variable, priority, value });
-      this.solver.addEditVariable(variable, convertPriority(priority));
-      this.solver.suggestValue(variable, value);
+
+      try {
+        this.solver?.addEditVariable(variable, convertPriority(priority));
+        this.solver?.suggestValue(variable, value);
+      } catch {
+        this.solver = undefined;
+      }
     }
+
     this.recalculationRequired = true;
     return index;
   }
@@ -64,9 +75,13 @@ export class UISolverWrapper {
       }
     }
 
-    description.constraint
-      ? this.solver.removeConstraint(description.constraint)
-      : this.solver.removeEditVariable(description.variable);
+    try {
+      description.constraint
+        ? this.solver?.removeConstraint(description.constraint)
+        : this.solver?.removeEditVariable(description.variable);
+    } catch {
+      this.solver = undefined;
+    }
 
     this.variables.delete(index);
     this.recalculationRequired = true;
@@ -82,7 +97,7 @@ export class UISolverWrapper {
       description.value = value;
 
       if (description.constraint) {
-        description.constraint = this.rebuildRawConstraint(
+        description.constraint = this.rebuildConstraint(
           description.constraint,
           new UIExpression().plus(index, 1),
           new UIExpression(description.value),
@@ -90,7 +105,7 @@ export class UISolverWrapper {
           description.priority,
         );
       } else {
-        this.solver.suggestValue(description.variable, value);
+        this.solver?.suggestValue(description.variable, value);
       }
 
       this.recalculationRequired = true;
@@ -106,15 +121,32 @@ export class UISolverWrapper {
     if (priority !== description.priority) {
       description.priority = priority;
 
-      if (description.constraint) {
-        description.constraint = this.rebuildRawConstraint(
-          description.constraint,
-          new UIExpression().plus(index, 1),
-          new UIExpression(description.value),
+      if (description.priority === UIPriority.P0) {
+        const lhs = new UIExpression().plus(index, 1);
+        const rhs = new UIExpression(description.value);
+
+        description.constraint = this.buildConstraint(
+          lhs,
+          rhs,
           UIRelation.EQUAL,
           description.priority,
         );
+
+        try {
+          this.solver?.addConstraint(description.constraint);
+        } catch {
+          this.solver = undefined;
+        }
       } else {
+        if (description.constraint) {
+          try {
+            this.solver?.removeConstraint(description.constraint);
+          } catch {
+            this.solver = undefined;
+          }
+        }
+
+        description.constraint = undefined;
         this.rebuildVariable(index, description);
       }
 
@@ -128,8 +160,12 @@ export class UISolverWrapper {
       throw new Error(`Variable ${index} does not exist`);
     }
 
+    if (this.solver === undefined) {
+      this.rebuildSolver();
+    }
+
     if (this.recalculationRequired) {
-      this.solver.updateVariables();
+      this.solver?.updateVariables();
       this.recalculationRequired = false;
     }
 
@@ -154,7 +190,11 @@ export class UISolverWrapper {
       enabled,
     });
     if (enabled) {
-      this.solver.addConstraint(constraint);
+      try {
+        this.solver?.addConstraint(constraint);
+      } catch {
+        this.solver = undefined;
+      }
       this.recalculationRequired = true;
     }
     return index;
@@ -166,7 +206,14 @@ export class UISolverWrapper {
       throw new Error(`Constraint ${index} does not exist`);
     }
 
-    this.solver.removeConstraint(description.constraint);
+    if (description.enabled) {
+      try {
+        this.solver?.removeConstraint(description.constraint);
+      } catch {
+        this.solver = undefined;
+      }
+    }
+
     this.constraints.delete(index);
     this.recalculationRequired = true;
   }
@@ -225,78 +272,54 @@ export class UISolverWrapper {
       description.enabled = enabled;
       try {
         description.enabled
-          ? this.solver.addConstraint(description.constraint)
-          : this.solver.removeConstraint(description.constraint);
+          ? this.solver?.addConstraint(description.constraint)
+          : this.solver?.removeConstraint(description.constraint);
       } catch {
-        this.rebuildSolver();
+        this.solver = undefined;
       }
       this.recalculationRequired = true;
     }
-  }
-
-  private convertExpression(expression: UIExpression): Expression {
-    return new Expression(
-      ...expression["prepareTermsInternal"]().map(
-        ([variableIndex, coefficient]): [number, Variable] => {
-          const variable = this.variables.get(variableIndex);
-          if (variable === undefined) {
-            throw new Error(`Variable ${variableIndex} does not exist`);
-          }
-          return [coefficient, variable.variable];
-        },
-      ),
-      expression.constant,
-    );
   }
 
   private rebuildVariable(
     index: number,
     description: VariableDescription,
   ): void {
-    let rebuildRequired = false;
     const dependConstraints: ConstraintDescription[] = [];
 
     for (const cDescription of this.constraints.values()) {
       if (cDescription.lhs.hasTerm(index) || cDescription.rhs.hasTerm(index)) {
-        if (!rebuildRequired) {
-          try {
-            this.solver.removeConstraint(cDescription.constraint);
-          } catch {
-            rebuildRequired = true;
-          }
+        try {
+          this.solver?.removeConstraint(cDescription.constraint);
+        } catch {
+          this.solver = undefined;
         }
         dependConstraints.push(cDescription);
       }
     }
 
-    this.solver.removeEditVariable(description.variable);
-    this.solver.addEditVariable(
+    this.solver?.removeEditVariable(description.variable);
+    this.solver?.addEditVariable(
       description.variable,
       convertPriority(description.priority),
     );
 
     for (const cDescription of dependConstraints) {
-      cDescription.constraint = new Constraint(
-        this.convertExpression(cDescription.lhs),
-        convertRelation(cDescription.relation),
-        this.convertExpression(cDescription.rhs),
-        convertPriority(cDescription.priority),
+      cDescription.constraint = this.buildConstraint(
+        cDescription.lhs,
+        cDescription.rhs,
+        cDescription.relation,
+        cDescription.priority,
       );
     }
 
-    if (!rebuildRequired) {
-      for (const cDescription of dependConstraints) {
-        try {
-          this.solver.addConstraint(cDescription.constraint);
-        } catch {
-          rebuildRequired = true;
-          break;
-        }
+    for (const cDescription of dependConstraints) {
+      try {
+        this.solver?.addConstraint(cDescription.constraint);
+      } catch {
+        this.solver = undefined;
+        break;
       }
-    }
-
-    if (rebuildRequired) {
-      this.rebuildSolver();
     }
   }
 
@@ -304,7 +327,7 @@ export class UISolverWrapper {
     description: ConstraintDescription,
   ): void {
     description.constraint = description.enabled
-      ? this.rebuildRawConstraint(
+      ? this.rebuildConstraint(
           description.constraint,
           description.lhs,
           description.rhs,
@@ -319,33 +342,25 @@ export class UISolverWrapper {
         );
   }
 
-  private rebuildRawConstraint(
+  private rebuildConstraint(
     oldConstraint: Constraint,
     lhs: UIExpression,
     rhs: UIExpression,
     relation: UIRelation,
     priority: UIPriority,
   ): Constraint {
-    let isSolverCrashed = false;
-
     try {
-      this.solver.removeConstraint(oldConstraint);
+      this.solver?.removeConstraint(oldConstraint);
     } catch {
-      isSolverCrashed = true;
+      this.solver = undefined;
     }
 
     const constraint = this.buildConstraint(lhs, rhs, relation, priority);
 
-    if (!isSolverCrashed) {
-      try {
-        this.solver.addConstraint(constraint);
-      } catch {
-        isSolverCrashed = true;
-      }
-    }
-
-    if (isSolverCrashed) {
-      this.rebuildSolver();
+    try {
+      this.solver?.addConstraint(constraint);
+    } catch {
+      this.solver = undefined;
     }
 
     return constraint;
@@ -365,16 +380,46 @@ export class UISolverWrapper {
     );
   }
 
+  private convertExpression(expression: UIExpression): Expression {
+    return new Expression(
+      ...expression["prepareTermsInternal"]().map(
+        ([variableIndex, coefficient]): [number, Variable] => {
+          const description = this.variables.get(variableIndex);
+          if (description === undefined) {
+            throw new Error(`Variable ${variableIndex} does not exist`);
+          }
+          return [coefficient, description.variable];
+        },
+      ),
+      expression.constant,
+    );
+  }
+
   private rebuildSolver(): void {
+    if (this.solver) {
+      throw new Error("Solver already exists");
+    }
+
     this.solver = new Solver();
 
     for (const description of this.variables.values()) {
-      this.solver.addEditVariable(description.variable, description.priority);
-      this.solver.suggestValue(description.variable, description.value);
+      if (description.constraint) {
+        this.solver.addConstraint(description.constraint);
+      } else {
+        this.solver.addEditVariable(
+          description.variable,
+          convertPriority(description.priority),
+        );
+        this.solver.suggestValue(description.variable, description.value);
+      }
     }
 
     for (const description of this.constraints.values()) {
-      this.solver.addConstraint(description.constraint);
+      if (description.enabled) {
+        this.solver.addConstraint(description.constraint);
+      }
     }
+
+    this.recalculationRequired = true;
   }
 }
