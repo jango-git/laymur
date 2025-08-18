@@ -79,7 +79,7 @@ export class UIMaterial extends ShaderMaterial {
   public setTransparency(value: boolean): this {
     if (this.transparent !== value) {
       this.transparent = value;
-      this.uniforms.alphaTest.value = value ? DEFAULT_ALPHA_TEST : 0;
+      this.uniforms.alphaTest.value = !value ? DEFAULT_ALPHA_TEST : 0;
       this.needsUpdate = true;
       this.uniformsNeedUpdate = true;
     }
