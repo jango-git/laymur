@@ -127,8 +127,10 @@ export class UISceneWrapper {
       } else {
         const rawAnchorOffsetX = micro.anchorX * element.width;
         const rawAnchorOffsetY = micro.anchorY * element.height;
-        object.position.x = element.x + rawAnchorOffsetX - rotatedAnchorX;
-        object.position.y = element.y + rawAnchorOffsetY - rotatedAnchorY;
+        object.position.x =
+          element.x + rawAnchorOffsetX - rotatedAnchorX + micro.x;
+        object.position.y =
+          element.y + rawAnchorOffsetY - rotatedAnchorY + micro.y;
       }
 
       object.scale.x = width;
