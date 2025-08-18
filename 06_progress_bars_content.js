@@ -3,6 +3,7 @@ import {
   UIImage,
   UIText,
   UINineSlice,
+  UIProgress,
   UIHorizontalDistanceConstraint,
   UIVerticalDistanceConstraint,
   UIAspectConstraint,
@@ -33,6 +34,8 @@ async function buildScene() {
     "assets/T_Download.webp",
     "assets/T_Logotype.webp",
     "assets/T_Vignette.webp",
+    "assets/T_Progress_Background.webp",
+    "assets/T_Progress_Foreground.webp",
   ]);
 
   // Initialize scene and renderer
@@ -42,25 +45,6 @@ async function buildScene() {
   // Create UI layer
   layer = new UIFullscreenLayer(1920, 1920);
   layer.mode = UIMode.INTERACTIVE;
-
-  {
-    // Create nine-slice vignette overlay
-    const vignette = new UINineSlice(
-      layer,
-      baseScene.loadedTextures["T_Vignette"],
-      {
-        sliceBorder: 0.15,
-      },
-    );
-
-    // Configure appearance
-    vignette.transparency = true;
-    vignette.opacity = 0.75;
-    vignette.color = 0xffa500;
-
-    // Use cover constraints to fill the entire layer
-    UICoverConstraintBuilder.build(layer, vignette);
-  }
 
   let character;
   {
@@ -104,7 +88,7 @@ async function buildScene() {
     new UIVerticalDistanceConstraint(character, bubble, {
       anchorA: 1,
       anchorB: 0,
-      distance: 50,
+      distance: 150,
       orientation: UIOrientation.VERTICAL,
     });
 
@@ -278,6 +262,53 @@ async function buildScene() {
           duration: 0.25,
           ease: "back.out",
         });
+    });
+  }
+
+  {
+    // Create nine-slice vignette overlay
+    const vignette = new UINineSlice(
+      layer,
+      baseScene.loadedTextures["T_Vignette"],
+      {
+        sliceBorder: 0.15,
+      },
+    );
+
+    // Configure appearance
+    vignette.transparency = true;
+    vignette.opacity = 0.5;
+    vignette.color = 0xffa500;
+
+    // Use cover constraints to fill the entire layer
+    UICoverConstraintBuilder.build(layer, vignette);
+  }
+
+  {
+    // Create health bar above character
+    const bar = new UIProgress(
+      layer,
+      baseScene.loadedTextures["T_Progress_Foreground"],
+      {
+        textureBackground: baseScene.loadedTextures["T_Progress_Background"],
+        progress: 0.75,
+        foregroundColor: 0xe26a36,
+        backgroundColor: 0xe26a36,
+      },
+    );
+
+    new UIAspectConstraint(bar);
+
+    // Position above character
+    UIConstraint2DBuilder.distance(character, bar, {
+      anchorA: { h: 0.6, v: 1.025 },
+      anchorB: { h: 0.5, v: 0 },
+      distance: { h: 0, v: 0 },
+    });
+
+    // Scale health bar to appropriate size
+    new UIHorizontalProportionConstraint(character, bar, {
+      proportion: 0.5,
     });
   }
 

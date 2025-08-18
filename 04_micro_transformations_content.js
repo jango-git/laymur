@@ -12,7 +12,7 @@ import {
   UIMode,
   UIElementEvent,
   UIConstraint2DBuilder,
-} from "https://esm.sh/laymur@0.2.12?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.2.13?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
 

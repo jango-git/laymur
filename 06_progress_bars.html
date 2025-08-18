@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Nine Slice Elements</title>
+        <title>Laymur UI Demo - Progress Bars</title>
         <link rel="stylesheet" href="shared-styles.css" />
         <link
             rel="stylesheet"
@@ -20,7 +20,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="05_nine_slice_content.html"
+                        src="06_progress_bars_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -31,41 +31,38 @@
 
                 <p>
                     This example demonstrates
-                    <span class="highlight">UINineSlice elements</span> for
-                    creating scalable UI components with preserved border
-                    regions. A vignette overlay is created using nine-slice
-                    scaling that covers the entire layer while maintaining
-                    border quality at any size.
+                    <span class="highlight">UIProgress elements</span> for
+                    creating dynamic progress bars and health indicators. A
+                    health bar is positioned above the character showing
+                    real-time progress updates, along with all previous UI
+                    elements and a vignette overlay.
                 </p>
 
-                <pre><code class="language-javascript">// Create nine-slice element with 15% border
-const image = new UINineSlice(
+                <pre><code class="language-javascript">// Create progress bar
+const bar = new UIProgress(
   layer,
-  baseScene.loadedTextures["T_Vignette"],
-  { sliceBorder: 0.15 }
-);
-
-// Configure appearance
-image.transparency = true;
-image.opacity = 0.75;
-image.color = 0xffa500;
-
-// Use cover constraints to fill the entire layer
-UICoverConstraintBuilder.build(layer, image);</code></pre>
+  textureForeground,
+  {
+    textureBackground, // Optional
+    progress: 0.75,    // Initial progress value
+    foregroundColor: 0xe26a36,
+    backgroundColor: 0xe26a36,
+  },
+);</code></pre>
 
                 <div class="warning">
-                    <strong>🎨 Nine-Slice Scaling:</strong> Nine-slice divides
-                    an image into 9 regions - corners stay original size, edges
-                    scale in one dimension, center scales in both. Perfect for
-                    scalable UI panels and borders.
+                    <strong>📊 Progress Bars:</strong> UIProgress elements
+                    support custom fill directions, separate background and
+                    foreground textures, and real-time progress updates. Perfect
+                    for health bars, loading indicators, and meters.
                 </div>
 
                 <div class="navigation">
-                    <a href="04_micro_transformations.html" class="nav-button">
+                    <a href="05_nine_slice.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="06_progress_bars.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -79,7 +76,7 @@ UICoverConstraintBuilder.build(layer, image);</code></pre>
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/05_nine_slice_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/06_progress_bars_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
