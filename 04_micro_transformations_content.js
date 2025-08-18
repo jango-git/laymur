@@ -19,7 +19,7 @@ let baseScene;
 let layer;
 
 async function buildScene() {
-  await document.fonts.ready;
+  await document.fonts.load('16px "Chewy"');
   baseScene = new BaseScene();
 
   // Load textures specific to this example
