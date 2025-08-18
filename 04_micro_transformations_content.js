@@ -224,7 +224,7 @@ async function buildScene() {
 
     new UIVerticalProportionConstraint(layer, download, {
       proportion: 0.15,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
 
@@ -268,14 +268,14 @@ async function buildScene() {
     });
 
     new UIHorizontalProportionConstraint(layer, battle, {
-      proportion: 0.25,
-      relation: UIRelation.GREATER_THAN,
+      proportion: 0.4,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.VERTICAL,
     });
 
     new UIVerticalProportionConstraint(layer, battle, {
       proportion: 0.15,
-      relation: UIRelation.GREATER_THAN,
+      relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
 
