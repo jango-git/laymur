@@ -2,6 +2,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import terser from "@rollup/plugin-terser";
 import typescript from "rollup-plugin-typescript2";
 import minifyPrivatesTransformer from "ts-transformer-minify-privates";
+import { string } from "rollup-plugin-string";
 
 export default {
   input: "src/index.ts",
@@ -62,6 +63,9 @@ export default {
   ],
   plugins: [
     nodeResolve({ extensions: [".js", ".ts"] }),
+    string({
+      include: ["**/*.glsl", "**/*.fs", "**/*.vs", "**/*.frag", "**/*.vert"],
+    }),
     typescript({
       tsconfig: "tsconfig.json",
       useTsconfigDeclarationDir: true,

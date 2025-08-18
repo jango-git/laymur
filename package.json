@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Lightweight Three.js UI toolkit mainly for mobile ads",
   "scripts": {
     "clean": "rm -rf dist",
@@ -51,6 +51,7 @@
     "@typescript-eslint/parser": "^8.32.0",
     "eslint": "^9.26.0",
     "rollup": "^4.40.2",
+    "rollup-plugin-string": "^3.0.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-transformer-minify-privates": "^1.0.0",
     "typescript": "^5.8.3"

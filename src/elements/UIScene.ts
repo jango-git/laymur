@@ -8,7 +8,7 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import type { UILayer } from "../layers/UILayer";
+import { UILayerEvent, type UILayer } from "../layers/UILayer";
 import { UIMaterial } from "../materials/UIMaterial";
 import { geometry } from "../miscellaneous/threeInstances";
 import { UIElement } from "./UIElement";
@@ -166,6 +166,7 @@ export class UIScene extends UIElement<Mesh> {
     const object = new Mesh(geometry, material);
 
     super(layer, 0, 0, width, height, object);
+    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
 
     this.material = material;
     this.renderTarget = renderTarget;
@@ -365,6 +366,7 @@ export class UIScene extends UIElement<Mesh> {
    * After calling this method, the scene element should not be used anymore.
    */
   public override destroy(): void {
+    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
     this.material.dispose();
     this.renderTarget.dispose();
     super.destroy();
@@ -380,16 +382,7 @@ export class UIScene extends UIElement<Mesh> {
     this.renderRequired = true;
   }
 
-  /**
-   * Internal method called before rendering each frame.
-   *
-   * This method handles the conditional rendering of the 3D scene based on
-   * the current update mode. It manages frame counting, property change detection,
-   * and manual render requests to optimize performance.
-   *
-   * @param renderer - The WebGL renderer instance
-   */
-  protected override ["onBeforeRenderInternal"](renderer: WebGLRenderer): void {
+  private readonly onWillRenderInternal = (renderer: WebGLRenderer): void => {
     if (
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
@@ -412,5 +405,5 @@ export class UIScene extends UIElement<Mesh> {
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
-  }
+  };
 }

@@ -3,7 +3,12 @@ import { Color, OrthographicCamera, Scene } from "three";
 import type { UIElement } from "../elements/UIElement";
 import { UIAnchorMode } from "../miscellaneous/UIAnchorMode";
 
-const tempColor = new Color();
+let originalClearColor: Color = new Color();
+let originalClearAlpha = 0;
+let originalAutoClear = false;
+let originalAutoClearColor = false;
+let originalAutoClearDepth = false;
+let originalAutoClearStencil = false;
 
 export class UISceneWrapper {
   private readonly scene = new Scene();
@@ -91,14 +96,13 @@ export class UISceneWrapper {
     );
   }
 
-  public render(renderer: WebGLRenderer, deltaTime: number): void {
-    const originalRenderTarget = renderer.getRenderTarget();
-    const originalClearColor = renderer.getClearColor(tempColor);
-    const originalClearAlpha = renderer.getClearAlpha();
-    const originalAutoClear = renderer.autoClear;
-    const originalAutoClearColor = renderer.autoClearColor;
-    const originalAutoClearDepth = renderer.autoClearDepth;
-    const originalAutoClearStencil = renderer.autoClearStencil;
+  public prepareRender(renderer: WebGLRenderer): void {
+    originalClearColor = renderer.getClearColor(originalClearColor);
+    originalClearAlpha = renderer.getClearAlpha();
+    originalAutoClear = renderer.autoClear;
+    originalAutoClearColor = renderer.autoClearColor;
+    originalAutoClearDepth = renderer.autoClearDepth;
+    originalAutoClearStencil = renderer.autoClearStencil;
 
     renderer.autoClear = false;
     renderer.autoClearColor = false;
@@ -136,14 +140,13 @@ export class UISceneWrapper {
       object.scale.x = width;
       object.scale.y = height;
       object.rotation.z = micro.rotation;
-
-      element["onBeforeRenderInternal"](renderer, deltaTime);
     }
+  }
 
+  public render(renderer: WebGLRenderer): void {
     renderer.clear(false, true, true);
     renderer.render(this.scene, this.camera);
 
-    renderer.setRenderTarget(originalRenderTarget);
     renderer.setClearColor(originalClearColor);
     renderer.setClearAlpha(originalClearAlpha);
     renderer.autoClear = originalAutoClear;

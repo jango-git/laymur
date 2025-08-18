@@ -1,4 +1,3 @@
-import type { WebGLRenderer } from "three";
 import { type Object3D } from "three";
 import type { UILayer } from "../layers/UILayer";
 import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
@@ -208,21 +207,4 @@ export abstract class UIElement<T extends Object3D = Object3D>
     }
     return isClicked;
   }
-
-  /**
-   * Internal method called before rendering each frame.
-   *
-   * This is a hook method that can be overridden by subclasses to perform
-   * pre-render operations such as updating animations, transforms, or
-   * other dynamic properties.
-   *
-   * @param renderer - The WebGL renderer instance
-   * @param deltaTime - Time elapsed since the last frame in seconds
-   */
-  protected ["onBeforeRenderInternal"](
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
-    renderer: WebGLRenderer,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused
-    deltaTime: number,
-  ): void {}
 }

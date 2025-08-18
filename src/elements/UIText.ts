@@ -1,6 +1,5 @@
-import type { WebGLRenderer } from "three";
 import { CanvasTexture, Mesh } from "three";
-import type { UILayer } from "../layers/UILayer";
+import { UILayerEvent, type UILayer } from "../layers/UILayer";
 import { UIMaterial } from "../materials/UIMaterial";
 import type { UITextContent } from "../miscellaneous/textInterfaces";
 import {
@@ -28,6 +27,10 @@ export interface UITextOptions {
   padding: Partial<UITextPadding>;
   /** Common style properties applied to all text content. */
   commonStyle: Partial<UITextStyle>;
+  /** X-coordinate of the text element. */
+  x: number;
+  /** Y-coordinate of the text element. */
+  y: number;
 }
 
 /**
@@ -93,8 +96,6 @@ export class UIText extends UIElement<Mesh> {
     layer: UILayer,
     content: UITextContent,
     options: Partial<UITextOptions> = {},
-    x = 0,
-    y = 0,
   ) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -107,7 +108,8 @@ export class UIText extends UIElement<Mesh> {
     const material = new UIMaterial(texture);
     const object = new Mesh(geometry, material);
 
-    super(layer, x, y, 2, 2, object);
+    super(layer, options.x ?? 0, options.y ?? 0, 2, 2, object);
+    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
 
     this.material = material;
     this.texture = texture;
@@ -248,33 +250,19 @@ export class UIText extends UIElement<Mesh> {
    * the text element should not be used anymore.
    */
   public override destroy(): void {
+    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
     this.material.dispose();
     this.texture.dispose();
     this.canvas.remove();
     super.destroy();
   }
 
-  /**
-   * Internal method called before rendering each frame.
-   *
-   * Updates the element's height to maintain the correct aspect ratio
-   * based on the text content dimensions. This ensures the text is
-   * displayed without distortion.
-   *
-   * @param renderer - The WebGL renderer instance
-   * @param deltaTime - Time elapsed since the last frame in seconds
-   */
-  protected override ["onBeforeRenderInternal"](
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
-    renderer: WebGLRenderer,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent
-    deltaTime: number,
-  ): void {
+  private readonly onWillRenderInternal = (): void => {
     if (this.lastAspectRatio !== this.width / this.height) {
       this.lastAspectRatio = this.targetAspectRatio;
       this.height = this.width / this.targetAspectRatio;
     }
-  }
+  };
 
   /**
    * Rebuilds the text canvas and texture based on current content and settings.

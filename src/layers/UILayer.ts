@@ -1,5 +1,5 @@
 import { Eventail } from "eventail";
-import type { WebGLRenderer } from "three";
+import { type WebGLRenderer } from "three";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
@@ -14,6 +14,8 @@ export enum UILayerEvent {
   ORIENTATION_CHANGE = "orientation_change",
   /** Emitted when the layer's visibility/interaction mode changes. */
   MODE_CHANGE = "mode_change",
+  /** Emitted before the layer is rendered. */
+  WILL_RENDER = "will_render",
 }
 
 /**
@@ -187,7 +189,9 @@ export abstract class UILayer extends Eventail {
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.mode !== UIMode.HIDDEN) {
-      this.sceneWrapper.render(renderer, deltaTime);
+      this.sceneWrapper.prepareRender(renderer);
+      this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
+      this.sceneWrapper.render(renderer);
     }
   }
 

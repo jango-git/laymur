@@ -22,5 +22,6 @@
     "sourceMap": true,
     "stripInternal": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "typeRoots": ["./node_modules/@types", "./src/types"]
 }
