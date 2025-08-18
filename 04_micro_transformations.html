@@ -48,16 +48,16 @@ button.on(UIElementEvent.CLICK, () => {
   gsap
     .timeline()
     .to(battle.micro, {
-      scaleX: 0.75,
-      scaleY: 0.75,
+      y: -35,
+      scaleX: 0.85,
       duration: 0.125,
       ease: "power1.out",
     })
     .to(battle.micro, {
+      y: 0,
       scaleX: 1,
-      scaleY: 1,
       duration: 0.25,
-      ease: "power1.out",
+      ease: "back.out",
     });
 });</code></pre>
 
