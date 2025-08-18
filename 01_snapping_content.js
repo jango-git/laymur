@@ -3,7 +3,7 @@ import {
   UIImage,
   UIHorizontalDistanceConstraint,
   UIVerticalDistanceConstraint,
-} from "https://esm.sh/laymur@0.2.6?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.2.7?deps=three@0.175&min";
 import { BaseScene } from "./base_scene.js";
 
 let baseScene;

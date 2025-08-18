@@ -9,7 +9,7 @@ import {
   UIVerticalProportionConstraint,
   UIRelation,
   UIOrientation,
-} from "https://esm.sh/laymur@0.2.6?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.2.7?deps=three@0.175&min";
 import { BaseScene } from "./base_scene.js";
 
 let baseScene;
@@ -97,6 +97,12 @@ async function buildScene() {
       distance: 50,
       orientation: UIOrientation.VERTICAL,
     });
+
+    new UIHorizontalProportionConstraint(layer, bubble, {
+      proportion: 0.95,
+      relation: UIRelation.LESS_THAN,
+      orientation: UIOrientation.VERTICAL,
+    });
   }
 
   {
@@ -131,6 +137,10 @@ async function buildScene() {
       anchorA: 0.525,
       anchorB: 0.5,
       distance: 0,
+    });
+
+    new UIHorizontalProportionConstraint(bubble, text, {
+      proportion: text.width / bubble.width,
     });
   }
 
