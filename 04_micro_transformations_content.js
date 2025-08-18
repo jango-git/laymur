@@ -9,7 +9,10 @@ import {
   UIVerticalProportionConstraint,
   UIRelation,
   UIOrientation,
+  UIMode,
+  UIElementEvent,
 } from "https://esm.sh/laymur@0.2.10?deps=three@0.175&min";
+import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base_scene.js";
 
 let baseScene;
@@ -21,6 +24,7 @@ async function buildScene() {
 
   // Load textures specific to this example
   await baseScene.loadTextures([
+    "assets/T_Battle.webp",
     "assets/T_Bubble.webp",
     "assets/T_Character.webp",
     "assets/T_Download.webp",
@@ -33,6 +37,7 @@ async function buildScene() {
 
   // Create UI layer
   layer = new UIFullscreenLayer(1920, 1920);
+  layer.mode = UIMode.INTERACTIVE;
 
   let character;
   {
@@ -173,6 +178,25 @@ async function buildScene() {
       relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
+
+    logotype.mode = UIMode.INTERACTIVE;
+
+    logotype.on(UIElementEvent.CLICK, () => {
+      gsap
+        .timeline()
+        .to(logotype.micro, {
+          scaleX: 1.25,
+          scaleY: 1.25,
+          duration: 0.125,
+          ease: "power1.inOut",
+        })
+        .to(logotype.micro, {
+          scaleX: 1,
+          scaleY: 1,
+          duration: 0.5,
+          ease: "power1.inOut",
+        });
+    });
   }
 
   {
@@ -200,8 +224,80 @@ async function buildScene() {
 
     new UIVerticalProportionConstraint(layer, download, {
       proportion: 0.15,
-      relation: UIRelation.LESS_THAN,
+      relation: UIRelation.GREATER_THAN,
       orientation: UIOrientation.HORIZONTAL,
+    });
+
+    // Make download button interactive
+    download.mode = UIMode.INTERACTIVE;
+
+    // Add click animation
+    download.on(UIElementEvent.CLICK, () => {
+      gsap
+        .timeline()
+        .to(download.micro, {
+          scaleX: 0.75,
+          scaleY: 0.75,
+          duration: 0.125,
+          ease: "power1.out",
+        })
+        .to(download.micro, {
+          scaleX: 1,
+          scaleY: 1,
+          duration: 0.25,
+          ease: "power1.out",
+        });
+    });
+  }
+
+  {
+    const battle = new UIImage(layer, baseScene.loadedTextures["T_Battle"]);
+
+    new UIAspectConstraint(battle);
+
+    new UIHorizontalDistanceConstraint(battle, layer, {
+      anchorA: 1,
+      anchorB: 1,
+      distance: 50,
+    });
+
+    new UIVerticalDistanceConstraint(layer, battle, {
+      anchorA: 0,
+      anchorB: 0,
+      distance: 50,
+    });
+
+    new UIHorizontalProportionConstraint(layer, battle, {
+      proportion: 0.25,
+      relation: UIRelation.GREATER_THAN,
+      orientation: UIOrientation.VERTICAL,
+    });
+
+    new UIVerticalProportionConstraint(layer, battle, {
+      proportion: 0.15,
+      relation: UIRelation.GREATER_THAN,
+      orientation: UIOrientation.HORIZONTAL,
+    });
+
+    // Make battle button interactive
+    battle.mode = UIMode.INTERACTIVE;
+
+    // Add click animation
+    battle.on(UIElementEvent.CLICK, () => {
+      gsap
+        .timeline()
+        .to(battle.micro, {
+          y: -35,
+          scaleX: 0.85,
+          duration: 0.125,
+          ease: "power1.out",
+        })
+        .to(battle.micro, {
+          y: 0,
+          scaleX: 1,
+          duration: 0.25,
+          ease: "back.out",
+        });
     });
   }
 

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Text Elements</title>
+        <title>Laymur UI Demo - Micro Transformations</title>
         <link rel="stylesheet" href="shared-styles.css" />
         <link
             rel="stylesheet"
@@ -11,6 +11,7 @@
         />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     </head>
     <body>
         <div class="container">
@@ -18,7 +19,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="03_text_elements_content.html"
+                        src="04_micro_transformations_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -28,54 +29,50 @@
                 <h2>What's happening here?</h2>
 
                 <p>
-                    This example introduces
-                    <span class="highlight">UIText elements</span> alongside
-                    images in constraint-based layouts. A character, logotype,
-                    download button, and text elements are positioned using
-                    aspect and proportion constraints, demonstrating how to
-                    combine different UI element types.
+                    This example demonstrates
+                    <span class="highlight">UIMicro transformations</span> and
+                    interactive animations. UI elements can be animated
+                    independently of constraints using micro transformations.
+                    Click on the buttons to see GSAP-powered scale animations
+                    using the micro transformation system.
                 </p>
 
-                <pre><code class="language-javascript">new UIText(layer,
-  // Can be a string, span, or array of spans
-  "Hello!",
-  {
-    padding: { left: 20, right: 20, top: 20, bottom: 20 },
-    // Common style - default style
-    commonStyle: {
-      color: "#ffffff",
-      fontFamily: "Chewy",
-      fontSize: 256,
+                <pre><code class="language-javascript">// Make layer and button interactive
+layer.mode = UIMode.INTERACTIVE;
+button.mode = UIMode.INTERACTIVE;
 
-      enableShadow: true,
-      shadowOffsetX: 8,
-      shadowOffsetY: 8,
-      shadowBlur: 4,
-      shadowColor: "#050505",
-
-      enableStroke: true,
-      strokeColor: "#101010",
-      strokeWidth: 12,
-    },
-  }
-);
-
-// If a UI element has semi-transparent parts,
-// enable transparency instead of alphaTest
-text.transparency = true;</code></pre>
+// Add click animation using micro transformations
+button.on(UIElementEvent.CLICK, () => {
+  // Micro transformations are independent of constraints
+  // They allow animations without affecting layout
+  gsap
+    .timeline()
+    .to(battle.micro, {
+      scaleX: 0.75,
+      scaleY: 0.75,
+      duration: 0.125,
+      ease: "power1.out",
+    })
+    .to(battle.micro, {
+      scaleX: 1,
+      scaleY: 1,
+      duration: 0.25,
+      ease: "power1.out",
+    });
+});</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Text Elements:</strong> Resize the demo to see
-                    how text elements can be positioned and constrained
-                    alongside images in the same layout system.
+                    <strong>💡 Interactive Animations:</strong> Click on the
+                    buttons to see micro transformations in action. These
+                    animations are independent of the constraint system.
                 </div>
 
                 <div class="navigation">
-                    <a href="02_proportions.html" class="nav-button">
+                    <a href="03_text_elements.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="04_micro_transformations.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -89,7 +86,7 @@ text.transparency = true;</code></pre>
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/03_text_elements_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/04_micro_transformations_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
