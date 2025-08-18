@@ -2,6 +2,7 @@ import {
   UIFullscreenLayer,
   UIImage,
   UIText,
+  UINineSlice,
   UIHorizontalDistanceConstraint,
   UIVerticalDistanceConstraint,
   UIAspectConstraint,
@@ -12,6 +13,7 @@ import {
   UIMode,
   UIElementEvent,
   UIConstraint2DBuilder,
+  UICoverConstraintBuilder,
 } from "https://esm.sh/laymur@0.2.12?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
@@ -30,6 +32,7 @@ async function buildScene() {
     "assets/T_Character.webp",
     "assets/T_Download.webp",
     "assets/T_Logotype.webp",
+    "assets/T_Vignette.webp",
   ]);
 
   // Initialize scene and renderer
@@ -39,6 +42,25 @@ async function buildScene() {
   // Create UI layer
   layer = new UIFullscreenLayer(1920, 1920);
   layer.mode = UIMode.INTERACTIVE;
+
+  {
+    // Create nine-slice vignette overlay
+    const vignette = new UINineSlice(
+      layer,
+      baseScene.loadedTextures["T_Vignette"],
+      {
+        sliceBorder: 0.15,
+      },
+    );
+
+    // Configure appearance
+    vignette.transparency = true;
+    vignette.opacity = 0.75;
+    vignette.color = 0xffa500;
+
+    // Use cover constraints to fill the entire layer
+    UICoverConstraintBuilder.build(layer, vignette);
+  }
 
   let character;
   {

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Micro Transformations</title>
+        <title>Laymur UI Demo - Nine Slice Elements</title>
         <link rel="stylesheet" href="shared-styles.css" />
         <link
             rel="stylesheet"
@@ -20,7 +20,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="04_micro_transformations_content.html"
+                        src="05_nine_slice_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -31,63 +31,41 @@
 
                 <p>
                     This example demonstrates
-                    <span class="highlight">UIMicro transformations</span> and
-                    interactive animations. UI elements can be animated
-                    independently of constraints using micro transformations.
-                    Click on the buttons to see GSAP-powered scale animations
-                    using the micro transformation system.
+                    <span class="highlight">UINineSlice elements</span> for
+                    creating scalable UI components with preserved border
+                    regions. A vignette overlay is created using nine-slice
+                    scaling that covers the entire layer while maintaining
+                    border quality at any size.
                 </p>
 
-                <pre><code class="language-javascript">// Make layer and button interactive
-layer.mode = UIMode.INTERACTIVE;
-button.mode = UIMode.INTERACTIVE;
+                <pre><code class="language-javascript">// Create nine-slice element with 15% border
+const image = new UINineSlice(
+  layer,
+  baseScene.loadedTextures["T_Vignette"],
+  { sliceBorder: 0.15 }
+);
 
-// Add click animation using micro transformations
-button.on(UIElementEvent.CLICK, () => {
-  // Micro transformations are independent of constraints
-  // They allow animations without affecting layout
-  gsap
-    .timeline()
-    .to(battle.micro, {
-      y: -35,
-      scaleX: 0.85,
-      duration: 0.125,
-      ease: "power1.out",
-    })
-    .to(battle.micro, {
-      y: 0,
-      scaleX: 1,
-      duration: 0.25,
-      ease: "back.out",
-    });
-});</code></pre>
+// Configure appearance
+image.transparency = true;
+image.opacity = 0.75;
+image.color = 0xffa500;
+
+// Use cover constraints to fill the entire layer
+UICoverConstraintBuilder.build(layer, image);</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Interactive Animations:</strong> Click on the
-                    buttons to see micro transformations in action. These
-                    animations are independent of the constraint system.
-                </div>
-
-                <div class="warning">
-                    <strong>📦 Third-party Library:</strong> This demo uses GSAP
-                    for animations. GSAP is not part of Laymur and can be
-                    installed separately. GSAP has its own license - please
-                    check
-                    <a
-                        href="https://greensock.com/licensing/"
-                        target="_blank"
-                        style="color: #4a9eff"
-                        >GSAP licensing</a
-                    >
-                    for commercial use.
+                    <strong>🎨 Nine-Slice Scaling:</strong> Nine-slice divides
+                    an image into 9 regions - corners stay original size, edges
+                    scale in one dimension, center scales in both. Perfect for
+                    scalable UI panels and borders.
                 </div>
 
                 <div class="navigation">
-                    <a href="03_text_elements.html" class="nav-button">
+                    <a href="04_micro_transformations.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="05_nine_slice.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -101,7 +79,7 @@ button.on(UIElementEvent.CLICK, () => {
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/04_micro_transformations_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/05_nine_slice_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
