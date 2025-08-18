@@ -11,6 +11,7 @@ import {
   UIOrientation,
   UIMode,
   UIElementEvent,
+  UIConstraint2DBuilder,
 } from "https://esm.sh/laymur@0.2.10?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
@@ -45,28 +46,16 @@ async function buildScene() {
 
     new UIAspectConstraint(character);
 
-    new UIHorizontalDistanceConstraint(layer, character, {
-      anchorA: 0,
-      anchorB: 0,
-      distance: 25,
+    UIConstraint2DBuilder.distance(layer, character, {
+      anchorA: { h: 0, v: 0 },
+      anchorB: { h: 0, v: 0 },
+      distance: { h: 25, v: 0 },
     });
 
-    new UIVerticalDistanceConstraint(character, layer, {
-      anchorA: 0,
-      anchorB: 0,
-      distance: 0,
-    });
-
-    new UIHorizontalProportionConstraint(layer, character, {
-      proportion: 0.45,
-      relation: UIRelation.LESS_THAN,
-      orientation: UIOrientation.VERTICAL,
-    });
-
-    new UIVerticalProportionConstraint(layer, character, {
-      proportion: 0.75,
-      relation: UIRelation.LESS_THAN,
-      orientation: UIOrientation.HORIZONTAL,
+    UIConstraint2DBuilder.proportion(layer, character, {
+      proportion: { h: 0.45, v: 0.75 },
+      relation: { h: UIRelation.LESS_THAN, v: UIRelation.LESS_THAN },
+      orientation: { h: UIOrientation.VERTICAL, v: UIOrientation.HORIZONTAL },
     });
   }
 
@@ -76,18 +65,11 @@ async function buildScene() {
 
     new UIAspectConstraint(bubble);
 
-    new UIHorizontalDistanceConstraint(character, bubble, {
-      anchorA: 1,
-      anchorB: 0,
-      distance: 0,
-      orientation: UIOrientation.HORIZONTAL,
-    });
-
-    new UIVerticalDistanceConstraint(character, bubble, {
-      anchorA: 0.45,
-      anchorB: 0,
-      distance: 0,
-      orientation: UIOrientation.HORIZONTAL,
+    UIConstraint2DBuilder.distance(character, bubble, {
+      anchorA: { h: 1, v: 0.45 },
+      anchorB: { h: 0, v: 0 },
+      distance: { h: 0, v: 0 },
+      orientation: { h: UIOrientation.HORIZONTAL, v: UIOrientation.HORIZONTAL },
     });
 
     new UIHorizontalDistanceConstraint(layer, bubble, {
@@ -133,16 +115,10 @@ async function buildScene() {
 
     text.transparency = true;
 
-    new UIHorizontalDistanceConstraint(bubble, text, {
-      anchorA: 0.5,
-      anchorB: 0.5,
-      distance: 0,
-    });
-
-    new UIVerticalDistanceConstraint(bubble, text, {
-      anchorA: 0.525,
-      anchorB: 0.5,
-      distance: 0,
+    UIConstraint2DBuilder.distance(bubble, text, {
+      anchorA: { h: 0.5, v: 0.525 },
+      anchorB: { h: 0.5, v: 0.5 },
+      distance: { h: 0, v: 0 },
     });
 
     new UIHorizontalProportionConstraint(bubble, text, {
@@ -155,16 +131,10 @@ async function buildScene() {
 
     new UIAspectConstraint(logotype);
 
-    new UIHorizontalDistanceConstraint(layer, logotype, {
-      anchorA: 0,
-      anchorB: 0,
-      distance: 50,
-    });
-
-    new UIVerticalDistanceConstraint(logotype, layer, {
-      anchorA: 1,
-      anchorB: 1,
-      distance: 50,
+    UIConstraint2DBuilder.distance(layer, logotype, {
+      anchorA: { h: 0, v: 1 },
+      anchorB: { h: 0, v: 1 },
+      distance: { h: 50, v: -50 },
     });
 
     new UIHorizontalProportionConstraint(layer, logotype, {
@@ -204,16 +174,10 @@ async function buildScene() {
 
     new UIAspectConstraint(download);
 
-    new UIHorizontalDistanceConstraint(download, layer, {
-      anchorA: 1,
-      anchorB: 1,
-      distance: 50,
-    });
-
-    new UIVerticalDistanceConstraint(download, layer, {
-      anchorA: 1,
-      anchorB: 1,
-      distance: 50,
+    UIConstraint2DBuilder.distance(layer, download, {
+      anchorA: { h: 1, v: 1 },
+      anchorB: { h: 1, v: 1 },
+      distance: { h: -50, v: -50 },
     });
 
     new UIHorizontalProportionConstraint(layer, download, {
@@ -255,16 +219,10 @@ async function buildScene() {
 
     new UIAspectConstraint(battle);
 
-    new UIHorizontalDistanceConstraint(battle, layer, {
-      anchorA: 1,
-      anchorB: 1,
-      distance: 50,
-    });
-
-    new UIVerticalDistanceConstraint(layer, battle, {
-      anchorA: 0,
-      anchorB: 0,
-      distance: 50,
+    UIConstraint2DBuilder.distance(layer, battle, {
+      anchorA: { h: 1, v: 0 },
+      anchorB: { h: 1, v: 0 },
+      distance: { h: -50, v: 50 },
     });
 
     new UIHorizontalProportionConstraint(layer, battle, {
