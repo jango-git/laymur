@@ -36,8 +36,12 @@
                     combine different UI element types.
                 </p>
 
-                <pre><code class="language-javascript">new UIText(layer, "Hello!", {
+                <pre><code class="language-javascript">new UIText(layer,
+  // Can be a string, span, or array of spans
+  "Hello!",
+  {
     padding: { left: 20, right: 20, top: 20, bottom: 20 },
+    // Common style - default style
     commonStyle: {
       color: "#ffffff",
       fontFamily: "Chewy",
@@ -53,7 +57,12 @@
       strokeColor: "#101010",
       strokeWidth: 12,
     },
-});</code></pre>
+  }
+);
+
+// If a UI element has semi-transparent parts,
+// enable transparency instead of alphaTest
+text.transparency = true;</code></pre>
 
                 <div class="warning">
                     <strong>💡 Text Elements:</strong> Resize the demo to see
