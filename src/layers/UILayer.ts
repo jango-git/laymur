@@ -219,7 +219,6 @@ export abstract class UILayer extends Eventail {
    * constraints that need to create variables or constraints.
    *
    * @returns The constraint solver wrapper instance
-   * @internal
    */
   protected ["getSolverWrapperInternal"](): UISolverWrapper {
     return this.solverWrapper;
@@ -232,7 +231,6 @@ export abstract class UILayer extends Eventail {
    * that need to be added to or removed from the 3D scene.
    *
    * @returns The scene wrapper instance
-   * @internal
    */
   protected ["getSceneWrapperInternal"](): UISceneWrapper {
     return this.sceneWrapper;

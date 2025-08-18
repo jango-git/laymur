@@ -1,7 +1,7 @@
 import type { WebGLRenderer } from "three";
 import { type Object3D } from "three";
 import type { UILayer } from "../layers/UILayer";
-import type { UIPlaneElement } from "../miscellaneous/asserts";
+import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
 import {
   assertValidNumber,
   assertValidPositiveNumber,
@@ -37,7 +37,7 @@ export enum UIElementEvent {
  */
 export abstract class UIElement<T extends Object3D = Object3D>
   extends UIAnchor
-  implements UIPlaneElement
+  implements UIPlaneElement, UILayerElement
 {
   /** Micro-transformation system for non-constraint based positioning, scaling, and rotation adjustments. */
   public readonly micro = new UIMicro();
@@ -195,7 +195,6 @@ export abstract class UIElement<T extends Object3D = Object3D>
    * @param x - The x-coordinate of the click
    * @param y - The y-coordinate of the click
    * @returns True if the click was handled by this element
-   * @internal
    */
   protected ["onClickInternal"](x: number, y: number): boolean {
     const isClicked =
@@ -219,7 +218,6 @@ export abstract class UIElement<T extends Object3D = Object3D>
    *
    * @param renderer - The WebGL renderer instance
    * @param deltaTime - Time elapsed since the last frame in seconds
-   * @internal
    */
   protected ["onBeforeRenderInternal"](
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- empty basic method, parameters unused

@@ -25,6 +25,11 @@ export interface UIPointElement {
   xVariable: number;
   /** Solver variable descriptor for the y-coordinate. */
   yVariable: number;
+
+  /** The x-coordinate of the element. */
+  x: number;
+  /** The y-coordinate of the element. */
+  y: number;
 }
 
 /**
@@ -38,6 +43,11 @@ export interface UIPlaneElement extends UIPointElement {
   wVariable: number;
   /** Solver variable descriptor for the height dimension. */
   hVariable: number;
+
+  /** The width of the element. */
+  width: number;
+  /** The height of the element. */
+  height: number;
 }
 
 /**
@@ -68,7 +78,11 @@ export function isUIPointElement(obj: unknown): obj is UIPointElement {
     "xVariable" in obj &&
     typeof obj.xVariable === "number" &&
     "yVariable" in obj &&
-    typeof obj.yVariable === "number"
+    typeof obj.yVariable === "number" &&
+    "width" in obj &&
+    typeof obj.width === "number" &&
+    "height" in obj &&
+    typeof obj.height === "number"
   );
 }
 
@@ -88,7 +102,11 @@ export function isUIPlaneElement(obj: unknown): obj is UIPlaneElement {
     "wVariable" in obj &&
     typeof obj.wVariable === "number" &&
     "hVariable" in obj &&
-    typeof obj.hVariable === "number"
+    typeof obj.hVariable === "number" &&
+    "width" in obj &&
+    typeof obj.width === "number" &&
+    "height" in obj &&
+    typeof obj.height === "number"
   );
 }
 

@@ -1,4 +1,4 @@
-import type { UIElement } from "../elements/UIElement";
+import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
@@ -21,7 +21,7 @@ export interface UIHeightConstraintOptions
  * other layout changes or for setting fixed dimensions in responsive layouts.
  *
  * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIElement} - Elements that can have height constraints applied
+ * @see {@link UIPlaneElement} - Elements that can have height constraints applied
  * @see {@link UIExpression} - Mathematical expressions for constraint equations
  */
 export class UIHeightConstraint extends UISingleParameterConstraint {
@@ -41,7 +41,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
    * @param options - Configuration options for the constraint
    */
   constructor(
-    private readonly element: UIElement,
+    private readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIHeightConstraintOptions> = {},
   ) {
     super(

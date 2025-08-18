@@ -388,7 +388,6 @@ export class UIScene extends UIElement<Mesh> {
    * and manual render requests to optimize performance.
    *
    * @param renderer - The WebGL renderer instance
-   * @internal
    */
   protected override ["onBeforeRenderInternal"](renderer: WebGLRenderer): void {
     if (

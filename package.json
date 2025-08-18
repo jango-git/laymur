@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "Lightweight Three.js UI toolkit mainly for mobile ads",
   "scripts": {
     "clean": "rm -rf dist",

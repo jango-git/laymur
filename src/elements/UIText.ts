@@ -263,7 +263,6 @@ export class UIText extends UIElement<Mesh> {
    *
    * @param renderer - The WebGL renderer instance
    * @param deltaTime - Time elapsed since the last frame in seconds
-   * @internal
    */
   protected override ["onBeforeRenderInternal"](
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- parameter required by parent

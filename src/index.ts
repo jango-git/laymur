@@ -1,4 +1,6 @@
 export * from "./builders/UIConstraint2DBuilder";
+export * from "./builders/UICoverConstraintBuilder";
+export * from "./builders/UIFitConstraintBuilder";
 export * from "./constraints/UIAspectConstraint";
 export * from "./constraints/UIConstraint";
 export * from "./constraints/UICustomConstraint";
@@ -29,6 +31,3 @@ export * from "./miscellaneous/UIRelation";
 export * from "./miscellaneous/UITextPadding";
 export * from "./miscellaneous/UITextSpan";
 export * from "./miscellaneous/UITextStyle";
-
-// export * from "./constraints/UICoverConstraint";
-// export * from "./constraints/UIFitConstraint";
