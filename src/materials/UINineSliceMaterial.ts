@@ -27,8 +27,8 @@ export class UINineSliceMaterial extends ShaderMaterial {
       alphaTest: DEFAULT_ALPHA_TEST,
       lights: false,
       fog: false,
-      depthWrite: true,
-      depthTest: true,
+      depthWrite: false,
+      depthTest: false,
     });
   }
 
