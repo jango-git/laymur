@@ -3,7 +3,7 @@ import { Color, ShaderMaterial, UniformsUtils } from "three";
 import fragmentShader from "../shaders/UIProgressMaterial.fs";
 import vertexShader from "../shaders/UIProgressMaterial.vs";
 
-const DEFAULT_ALPHA_TEST = 0.025;
+const DEFAULT_ALPHA_TEST = 0.25;
 
 export class UIProgressMaterial extends ShaderMaterial {
   constructor(foregroundTexture: Texture, backgroundTexture?: Texture) {
@@ -13,8 +13,10 @@ export class UIProgressMaterial extends ShaderMaterial {
           background: { value: backgroundTexture },
           foreground: { value: foregroundTexture },
           progress: { value: 1 },
+          color: { value: new Color(1, 1, 1) },
           backgroundColor: { value: new Color(1, 1, 1) },
           foregroundColor: { value: new Color(1, 1, 1) },
+          opacity: { value: 1 },
           backgroundOpacity: { value: 1 },
           foregroundOpacity: { value: 1 },
           alphaTest: { value: DEFAULT_ALPHA_TEST },
@@ -44,12 +46,20 @@ export class UIProgressMaterial extends ShaderMaterial {
     return this.uniforms.foreground.value;
   }
 
+  public getColor(): number {
+    return (this.uniforms.color.value as Color).getHex();
+  }
+
   public getBackgroundColor(): number {
     return (this.uniforms.backgroundColor.value as Color).getHex();
   }
 
   public getForegroundColor(): number {
     return (this.uniforms.foregroundColor.value as Color).getHex();
+  }
+
+  public getOpacity(): number {
+    return this.uniforms.opacity.value;
   }
 
   public getBackgroundOpacity(): number {
@@ -87,6 +97,11 @@ export class UIProgressMaterial extends ShaderMaterial {
     this.uniformsNeedUpdate = true;
   }
 
+  public setColor(value: number): void {
+    (this.uniforms.color.value as Color).setHex(value);
+    this.uniformsNeedUpdate = true;
+  }
+
   public setBackgroundColor(value: number): void {
     (this.uniforms.backgroundColor.value as Color).setHex(value);
     this.uniformsNeedUpdate = true;
@@ -94,6 +109,11 @@ export class UIProgressMaterial extends ShaderMaterial {
 
   public setForegroundColor(value: number): void {
     (this.uniforms.foregroundColor.value as Color).setHex(value);
+    this.uniformsNeedUpdate = true;
+  }
+
+  public setOpacity(value: number): void {
+    this.uniforms.opacity.value = value;
     this.uniformsNeedUpdate = true;
   }
 

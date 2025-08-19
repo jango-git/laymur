@@ -157,6 +157,14 @@ export class UIProgress extends UIElement<Mesh> {
   }
 
   /**
+   * Gets the color tint.
+   * @returns The color as a hex number (e.g., 0xFFFFFF)
+   */
+  public get color(): number {
+    return this.material.getColor();
+  }
+
+  /**
    * Gets the background color tint.
    * @returns The background color as a hex number (e.g., 0xFFFFFF)
    */
@@ -170,6 +178,14 @@ export class UIProgress extends UIElement<Mesh> {
    */
   public get foregroundColor(): number {
     return this.material.getForegroundColor();
+  }
+
+  /**
+   * Gets the opacity.
+   * @returns Opacity value between 0.0 (transparent) and 1.0 (opaque)
+   */
+  public get opacity(): number {
+    return this.material.getOpacity();
   }
 
   /**
@@ -258,6 +274,14 @@ export class UIProgress extends UIElement<Mesh> {
   }
 
   /**
+   * Sets the color tint.
+   * @param value - The color as a hex number (e.g., 0xFFFFFF)
+   */
+  public set color(value: number) {
+    this.material.setColor(value);
+  }
+
+  /**
    * Sets the background color tint.
    * @param value - The background color as a hex number (e.g., 0xFFFFFF)
    */
@@ -271,6 +295,14 @@ export class UIProgress extends UIElement<Mesh> {
    */
   public set foregroundColor(value: number) {
     this.material.setForegroundColor(value);
+  }
+
+  /**
+   * Sets the opacity.
+   * @param value - Opacity value between 0.0 (transparent) and 1.0 (opaque)
+   */
+  public set opacity(value: number) {
+    this.material.setOpacity(value);
   }
 
   /**

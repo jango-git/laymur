@@ -3,7 +3,7 @@ import { Color, ShaderMaterial, Vector2, Vector4 } from "three";
 import fragmentShader from "../shaders/UINineSliceMaterial.fs";
 import vertexShader from "../shaders/UINineSliceMaterial.vs";
 
-const DEFAULT_ALPHA_TEST = 0.025;
+const DEFAULT_ALPHA_TEST = 0.25;
 
 export class UINineSliceMaterial extends ShaderMaterial {
   constructor(texture: Texture) {
