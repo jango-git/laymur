@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Progress Bars</title>
+        <title>Laymur UI Demo - Animations</title>
         <link rel="stylesheet" href="shared-styles.css" />
         <link
             rel="stylesheet"
@@ -20,7 +20,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="06_progress_bars_content.html"
+                        src="07_animations_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -31,38 +31,55 @@
 
                 <p>
                     This example demonstrates
-                    <span class="highlight">UIProgress elements</span> for
-                    creating dynamic progress bars and health indicators. A
-                    health bar is positioned above the character showing
-                    real-time progress updates, along with all previous UI
-                    elements and a vignette overlay.
+                    <span class="highlight">laymur-animations</span> addon for
+                    creating smooth entrance animations with UI elements. Common
+                    UI animations like fade-in, slide-in, and appear effects are
+                    applied to elements using UIAppearAnimator, providing
+                    ready-to-use animation patterns for UI.
                 </p>
 
-                <pre><code class="language-javascript">// Create progress bar
-const bar = new UIProgress(
-  layer,
-  textureForeground,
-  {
-    textureBackground, // Optional
-    progress: 0.75,    // Initial progress value
-    foregroundColor: 0xe26a36,
-    backgroundColor: 0xe26a36,
-  },
-);</code></pre>
+                <pre><code class="language-javascript">// Enable transparency for animations
+logotype.transparency = true;
+
+// Animate logotype appearing from bottom-left
+UIAppearAnimator.appear(logotype, {
+  xFrom: -100,
+  yFrom: 100,
+  delay: 0.25,
+  duration: 0.5,
+});
+
+// Animate multiple elements together
+text.transparency = true;
+bubble.transparency = true;
+UIAppearAnimator.appear([text, bubble], {
+  xFrom: -100,
+  yFrom: -50,
+  delay: 1.0,
+  duration: 0.5,
+});</code></pre>
 
                 <div class="warning">
-                    <strong>📊 Progress Bars:</strong> UIProgress elements
-                    support custom fill directions, separate background and
-                    foreground textures, and real-time progress updates. Perfect
-                    for health bars, loading indicators, and meters.
+                    <strong>🎬 Animation Addon:</strong> laymur-animations
+                    provides common UI animation patterns like appear, fade,
+                    slide, and bounce effects. It's a collection of the most
+                    frequently used UI animations built on top of GSAP for
+                    Laymur elements.
+                </div>
+
+                <div class="warning">
+                    <strong>📦 Third-party Addon:</strong> laymur-animations is
+                    a separate addon package that requires laymur and GSAP as
+                    peer dependencies. Install with
+                    <code>npm install laymur-animations</code>.
                 </div>
 
                 <div class="navigation">
-                    <a href="05_nine_slice.html" class="nav-button">
+                    <a href="06_progress_bars.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="07_animations.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -76,7 +93,7 @@ const bar = new UIProgress(
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/06_progress_bars_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/07_animations_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >
