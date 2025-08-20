@@ -346,6 +346,17 @@ Element visibility and interaction states:
 - `UIMode.VISIBLE` - Rendered, no interaction
 - `UIMode.INTERACTIVE` - Rendered with interaction
 
+## Addons
+
+### laymur-animations
+
+A collection of standard UI animations for smooth, performant motion effects built on top of GSAP.
+
+- **GitHub**: [https://github.com/jango-git/laymur-animations](https://github.com/jango-git/laymur-animations)
+- **NPM**: [https://www.npmjs.com/package/laymur-animations](https://www.npmjs.com/package/laymur-animations)
+
+Includes common animations like appear/disappear effects, pulsing, jumping, spinning, and click feedback for Laymur UI elements.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
@@ -362,11 +373,8 @@ Laymur is licensed under the [MIT License](./LICENSE).
 It uses [Kiwi.js](https://github.com/lume/kiwi) as its constraint solving engine — a fast and lightweight Cassowary implementation in TypeScript.
 
 Kiwi.js is licensed under the [BSD-3-Clause License](https://github.com/lume/kiwi/blob/main/LICENSE).
-The MIT and BSD-3-Clause licenses are [compatible](https://opensource.org/license/bsd-3-clause/) and permissive.
 
-## Credits
+It is built on top of [Three.js](https://threejs.org/) for 3D rendering support — a cross-browser JavaScript library for creating and displaying 3D graphics.
 
-- Constraint solving powered by [Kiwi.js](https://github.com/lume/kiwi)
-- Built with [Three.js](https://threejs.org/) for 3D rendering support
-- Event system powered by [eventail](https://www.npmjs.com/package/eventail)
-- Mathematical foundations based on the Cassowary constraint solving algorithm
+Three.js is licensed under the [MIT License](https://github.com/mrdoob/three.js/blob/dev/LICENSE).
+All licenses used are compatible and permissive.

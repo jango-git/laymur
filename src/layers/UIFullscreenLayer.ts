@@ -47,7 +47,7 @@ export class UIFullscreenLayer extends UILayer {
       assertValidPositiveNumber(fixedHeight, "UIFullscreenLayer.fixedHeight");
     }
 
-    super(1, 1);
+    super(window.innerWidth, window.innerHeight);
     this.fixedWidthInternal = fixedWidth;
     this.fixedHeightInternal = fixedHeight;
     window.addEventListener("resize", this.onResize);
