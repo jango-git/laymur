@@ -15,9 +15,13 @@ import {
   UIElementEvent,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
-} from "https://esm.sh/laymur@0.2.17?deps=three@0.175&min";
+} from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
-import { UIAppearAnimator } from "https://esm.sh/laymur-animations@latest?deps=laymur@0.2.12,gsap@3.13.0&min";
+import {
+  UIAppearAnimator,
+  UIClickAnimator,
+  UIJumpCallAnimator,
+} from "https://esm.sh/laymur-animations@0.2.4?deps=laymur@latest,gsap@3.13.0&min";
 import { BaseScene } from "./base-scene.js";
 
 let baseScene;
@@ -147,7 +151,6 @@ async function buildScene() {
   });
 
   logotype.mode = UIMode.INTERACTIVE;
-
   logotype.on(UIElementEvent.CLICK, () => {
     gsap
       .timeline()
@@ -188,10 +191,7 @@ async function buildScene() {
     orientation: UIOrientation.HORIZONTAL,
   });
 
-  // Make download button interactive
   download.mode = UIMode.INTERACTIVE;
-
-  // Add click animation
   download.on(UIElementEvent.CLICK, () => {
     gsap
       .timeline()
@@ -233,23 +233,7 @@ async function buildScene() {
   });
 
   battle.mode = UIMode.INTERACTIVE;
-
-  battle.on(UIElementEvent.CLICK, () => {
-    gsap
-      .timeline()
-      .to(battle.micro, {
-        y: -35,
-        scaleX: 0.85,
-        duration: 0.125,
-        ease: "power1.out",
-      })
-      .to(battle.micro, {
-        y: 0,
-        scaleX: 1,
-        duration: 0.25,
-        ease: "back.out",
-      });
-  });
+  battle.on(UIElementEvent.CLICK, () => UIClickAnimator.click(battle));
 
   // ========== VIGNETTE OVERLAY ==========
   const vignette = new UINineSlice(
@@ -305,7 +289,7 @@ async function buildScene() {
     yFrom: 100,
     delay: 0.25 * 2,
     duration: 0.5,
-  });
+  }).then(() => UIJumpCallAnimator.jump(download));
 
   bar.transparency = true;
   character.transparency = true;
