@@ -1,16 +1,15 @@
 import type { Camera, WebGLRenderer } from "three";
 import {
   LinearFilter,
-  Mesh,
   PerspectiveCamera,
   RGBAFormat,
   Scene,
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import { UILayerEvent, type UILayer } from "../layers/UILayer";
-import { UIMaterial } from "../materials/UIMaterial";
-import { geometry } from "../miscellaneous/threeInstances";
+import { type UILayer } from "../layers/UILayer";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
 /**
@@ -65,6 +64,8 @@ export interface UISceneOptions {
   /** Height of the scene render target in pixels. */
   height: number;
 
+  color: UIColor;
+
   /** Three.js scene to render. */
   scene: Scene;
   /** Camera to use for rendering the scene. */
@@ -95,13 +96,11 @@ export interface UISceneOptions {
  * @see {@link Scene} - Three.js scene for 3D content
  * @see {@link Camera} - Three.js camera for scene rendering
  */
-export class UIScene extends UIElement<Mesh> {
-  /** The material used for rendering the scene texture. */
-  private readonly material: UIMaterial;
-
+export class UIScene extends UIElement {
   /** The WebGL render target for off-screen scene rendering. */
   private readonly renderTarget: WebGLRenderTarget;
 
+  private readonly colorInternal: UIColor;
   /** Internal storage for the current Three.js scene. */
   private sceneInternal: Scene;
   /** Internal storage for the current camera. */
@@ -146,12 +145,12 @@ export class UIScene extends UIElement<Mesh> {
       );
     }
 
-    const width = options.width ?? DEFAULT_WIDTH;
-    const height = options.height ?? DEFAULT_HEIGHT;
+    const w = options.width ?? DEFAULT_WIDTH;
+    const h = options.height ?? DEFAULT_HEIGHT;
 
     const renderTarget = new WebGLRenderTarget(
-      width * resolutionFactor,
-      height * resolutionFactor,
+      w * resolutionFactor,
+      h * resolutionFactor,
       {
         format: RGBAFormat,
         minFilter: LinearFilter,
@@ -162,21 +161,22 @@ export class UIScene extends UIElement<Mesh> {
       },
     );
 
-    const material = new UIMaterial(renderTarget.texture);
-    const object = new Mesh(geometry, material);
+    const color = options.color ?? new UIColor();
 
-    super(layer, 0, 0, width, height, object);
-    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
+    super(layer, 0, 0, w, h, source, {
+      map: renderTarget.texture,
+      color,
+    });
 
-    this.material = material;
     this.renderTarget = renderTarget;
+    this.colorInternal = color;
 
     this.sceneInternal = options.scene ?? new Scene();
     this.cameraInternal =
       options.camera ??
       new PerspectiveCamera(
         DEFAULT_CAMERA_FOV,
-        width / height,
+        w / h,
         DEFAULT_CAMERA_NEAR,
         DEFAULT_CAMERA_FAR,
       );
@@ -190,30 +190,16 @@ export class UIScene extends UIElement<Mesh> {
     if (options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED) {
       this.renderRequired = true;
     }
+
+    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
   }
 
   /**
    * Gets the current color tint applied to the scene texture.
    * @returns The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public get color(): number {
-    return this.material.getColor();
-  }
-
-  /**
-   * Gets the current opacity level of the scene texture.
-   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public get opacity(): number {
-    return this.material.getOpacity();
-  }
-
-  /**
-   * Gets whether transparency is enabled for the scene texture.
-   * @returns True if transparency is enabled, false otherwise
-   */
-  public get transparency(): boolean {
-    return this.material.getTransparency();
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /**
@@ -268,24 +254,8 @@ export class UIScene extends UIElement<Mesh> {
    * Sets the color tint applied to the scene texture.
    * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public set color(value: number) {
-    this.material.setColor(value);
-  }
-
-  /**
-   * Sets the opacity level of the scene texture.
-   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public set opacity(value: number) {
-    this.material.setOpacity(value);
-  }
-
-  /**
-   * Sets whether transparency is enabled for the scene texture.
-   * @param value - True to enable transparency, false to disable
-   */
-  public set transparency(value: boolean) {
-    this.material.setTransparency(value);
+  public set color(value: UIColor) {
+    this.colorInternal.copy(value);
   }
 
   /**
@@ -366,8 +336,7 @@ export class UIScene extends UIElement<Mesh> {
    * After calling this method, the scene element should not be used anymore.
    */
   public override destroy(): void {
-    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
-    this.material.dispose();
+    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     this.renderTarget.dispose();
     super.destroy();
   }
@@ -382,7 +351,7 @@ export class UIScene extends UIElement<Mesh> {
     this.renderRequired = true;
   }
 
-  private readonly onWillRenderInternal = (renderer: WebGLRenderer): void => {
+  protected override onWillRender(renderer: WebGLRenderer): void {
     if (
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
@@ -405,5 +374,9 @@ export class UIScene extends UIElement<Mesh> {
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
+  }
+
+  private readonly onColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };
 }

@@ -9,6 +9,13 @@ import { UIAnchor } from "./UIAnchor";
 /** Default width and height value for UIDummy elements. */
 const DEFAULT_SIZE = 100;
 
+export interface UIDummyOptions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /**
  * Abstract UI element that extends UIAnchor with dimensions but without rendering.
  *
@@ -45,19 +52,18 @@ export abstract class UIDummy extends UIAnchor implements UIPlaneElement {
    * @throws Will throw an error if width or height are not valid positive numbers
    * @see {@link assertValidPositiveNumber}
    */
-  constructor(
-    layer: UILayer,
-    x: number,
-    y: number,
-    width: number = DEFAULT_SIZE,
-    height: number = DEFAULT_SIZE,
-  ) {
-    assertValidPositiveNumber(width, "UIDummy width");
-    assertValidPositiveNumber(height, "UIDummy height");
+  constructor(layer: UILayer, options: Partial<UIDummyOptions> = {}) {
+    const x = options.x ?? 0;
+    const y = options.y ?? 0;
+    const w = options.width ?? DEFAULT_SIZE;
+    const h = options.height ?? DEFAULT_SIZE;
+
+    assertValidPositiveNumber(w, "UIDummy width");
+    assertValidPositiveNumber(h, "UIDummy height");
 
     super(layer, x, y);
-    this.wVariable = this.solverWrapper.createVariable(width, UIPriority.P6);
-    this.hVariable = this.solverWrapper.createVariable(height, UIPriority.P6);
+    this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P6);
+    this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P6);
   }
 
   /**

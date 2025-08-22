@@ -12,7 +12,7 @@ export function splitText(text: string): string[] {
 }
 
 export function measureTextChunk(
-  context: CanvasRenderingContext2D,
+  context: OffscreenCanvasRenderingContext2D,
   chunk: string,
   style: UITextStyle,
 ): UIChunkMetrics {
@@ -138,7 +138,7 @@ export function renderText(
   y: number,
   text: string,
   style: UITextStyle,
-  context: CanvasRenderingContext2D,
+  context: OffscreenCanvasRenderingContext2D,
 ): void {
   context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
 
@@ -163,7 +163,7 @@ export function renderTextLines(
   paddingTop: number,
   paddingLeft: number,
   lines: UITextLine[],
-  context: CanvasRenderingContext2D,
+  context: OffscreenCanvasRenderingContext2D,
 ): void {
   let currentY = paddingTop;
 
@@ -180,7 +180,7 @@ export function renderTextLines(
 }
 
 export function calculateTextContentParameters(
-  context: CanvasRenderingContext2D,
+  context: OffscreenCanvasRenderingContext2D,
   content: UITextContent,
   maxLineWidth: number,
   commonStyle?: Partial<UITextStyle>,

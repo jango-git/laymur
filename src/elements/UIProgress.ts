@@ -1,10 +1,15 @@
-import type { Texture } from "three";
-import { MathUtils, Mesh } from "three";
+import { Texture } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { UIProgressMaterial } from "../materials/UIProgressMaterial";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { geometry } from "../miscellaneous/threeInstances";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import source from "../shaders/UIProgressShader.glsl";
 import { UIElement } from "./UIElement";
+
+const DEFAULT_TEXTURE = new Texture();
+
+const DEFAULT_MASK_FUNCTION = `float calculateMask() {
+  return step(progress, io_UV.x);
+}`;
 
 /**
  * Configuration options for creating a UIProgress element.
@@ -15,21 +20,17 @@ export interface UIProgressOptions {
   /** Y position of the element */
   y: number;
   /** Optional background texture (if not provided, only foreground is shown) */
-  textureBackground: Texture;
+  backgroundTexture: Texture;
+  /** Background color tint as hex number (e.g., 0xFFFFFF) */
+  color: UIColor;
+  /** Foreground color tint as hex number (e.g., 0xFFFFFF) */
+  foregroundColor: UIColor;
+  /** Background color tint as hex number (e.g., 0xFFFFFF) */
+  backgroundColor: UIColor;
+  maskFunction: string;
   /** Progress value between 0.0 (empty) and 1.0 (full) */
   progress: number;
-  /** Direction of progress fill (true = forward, false = reverse) */
-  isForwardDirection: boolean;
-  /** Angle of progress fill in degrees (0 = horizontal, 90 = vertical) */
-  angle: number;
-  /** Background color tint as hex number (e.g., 0xFFFFFF) */
-  backgroundColor: number;
-  /** Foreground color tint as hex number (e.g., 0xFFFFFF) */
-  foregroundColor: number;
-  /** Background opacity between 0.0 (transparent) and 1.0 (opaque) */
-  backgroundOpacity: number;
-  /** Foreground opacity between 0.0 (transparent) and 1.0 (opaque) */
-  foregroundOpacity: number;
+  inverseDirection: boolean;
 }
 
 /**
@@ -42,110 +43,89 @@ export interface UIProgressOptions {
  * The progress value ranges from 0.0 (empty) to 1.0 (completely filled).
  * The fill direction can be controlled both by angle and forward/reverse direction.
  */
-export class UIProgress extends UIElement<Mesh> {
-  private readonly material: UIProgressMaterial;
+export class UIProgress extends UIElement {
+  private foregroundTextureInternal: Texture;
+  private backgroundTextureInternal?: Texture;
+
+  private readonly colorInternal: UIColor;
+  private readonly foregroundColorInternal: UIColor;
+  private readonly backgroundColorInternal: UIColor;
+
+  private progressInternal: number;
+  private inverseDirectionInternal: boolean;
 
   /**
    * Creates a new progress bar UI element.
    *
    * @param layer - The UI layer to add this element to
-   * @param textureForeground - The texture used for the progress fill
+   * @param foregroundTexture - The texture used for the progress fill
    * @param options - Configuration options for the progress bar
    */
   constructor(
     layer: UILayer,
-    textureForeground: Texture,
+    foregroundTexture: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
-    const foregroundWidth = textureForeground.image?.width;
-    const foregroundHeight = textureForeground.image?.height;
+    const w = foregroundTexture.image?.width;
+    const h = foregroundTexture.image?.height;
 
-    assertValidPositiveNumber(
-      foregroundWidth,
-      "UIProgress foreground texture width",
-    );
-    assertValidPositiveNumber(
-      foregroundHeight,
-      "UIProgress foreground texture height",
-    );
+    assertValidPositiveNumber(w, "UIProgress foreground texture width");
+    assertValidPositiveNumber(h, "UIProgress foreground texture height");
 
-    const backgroundWidth = options.textureBackground?.image?.width;
-    const backgroundHeight = options.textureBackground?.image?.height;
-
-    if (options.textureBackground) {
+    if (options.backgroundTexture) {
       assertValidPositiveNumber(
-        backgroundWidth,
+        options.backgroundTexture.image.width,
         "UIProgress background texture width",
       );
       assertValidPositiveNumber(
-        backgroundHeight,
+        options.backgroundTexture.image.height,
         "UIProgress background texture height",
       );
     }
 
-    const material = new UIProgressMaterial(
-      textureForeground,
-      options.textureBackground,
-    );
-    const object = new Mesh(geometry, material);
-
-    if (options.progress !== undefined) {
-      material.setProgress(options.progress);
-    }
-
-    if (options.isForwardDirection !== undefined) {
-      material.setIsForwardDirection(options.isForwardDirection);
-    }
-
-    if (options.angle !== undefined) {
-      material.setAngle(MathUtils.degToRad(options.angle));
-    }
-
-    if (options.backgroundColor !== undefined) {
-      material.setBackgroundColor(options.backgroundColor);
-    }
-
-    if (options.foregroundColor !== undefined) {
-      material.setForegroundColor(options.foregroundColor);
-    }
-
-    if (options.backgroundOpacity !== undefined) {
-      material.setBackgroundOpacity(options.backgroundOpacity);
-    }
-
-    if (options.foregroundOpacity !== undefined) {
-      material.setForegroundOpacity(options.foregroundOpacity);
-    }
-
-    const imageWidth = backgroundWidth ?? foregroundWidth;
-    const imageHeight = foregroundHeight ?? backgroundHeight;
+    const color = options.color ?? new UIColor();
+    const foregroundColor = options.foregroundColor ?? new UIColor();
+    const backgroundColor = options.backgroundColor ?? new UIColor();
+    const progress = options.progress ?? 1;
+    const inverseDirection = options.inverseDirection ?? false;
 
     super(
       layer,
       options.x ?? 0,
       options.y ?? 0,
-      imageWidth,
-      imageHeight,
-      object,
+      w,
+      h,
+      (options.maskFunction ?? DEFAULT_MASK_FUNCTION) + source,
+      {
+        foregroundTexture,
+        backgroundTexture: options.backgroundTexture ?? DEFAULT_TEXTURE,
+        color,
+        foregroundColor,
+        backgroundColor,
+        progress,
+        direction: inverseDirection ? -1 : 1,
+      },
     );
 
-    this.material = material;
-  }
+    this.foregroundTextureInternal = foregroundTexture;
+    this.backgroundTextureInternal = options.backgroundTexture;
 
-  /**
-   * Gets the current progress value.
-   * @returns Progress value between 0.0 (empty) and 1.0 (full)
-   */
-  public get progress(): number {
-    return this.material.getProgress();
-  }
+    this.colorInternal = color;
+    this.foregroundColorInternal = foregroundColor;
+    this.backgroundColorInternal = backgroundColor;
 
-  /**
-   * Gets the background texture.
-   * @returns The background texture, or undefined if none is set
-   */
-  public get backgroundTexture(): Texture | undefined {
-    return this.material.getBackgroundTexture();
+    this.progressInternal = progress;
+    this.inverseDirectionInternal = inverseDirection;
+
+    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+    this.foregroundColorInternal.on(
+      UIColorEvent.CHANGE,
+      this.onForegroundColorChange,
+    );
+    this.backgroundColorInternal.on(
+      UIColorEvent.CHANGE,
+      this.onBackgroundColorChange,
+    );
   }
 
   /**
@@ -153,103 +133,55 @@ export class UIProgress extends UIElement<Mesh> {
    * @returns The foreground texture
    */
   public get foregroundTexture(): Texture {
-    return this.material.getForegroundTexture();
+    return this.foregroundTextureInternal;
+  }
+
+  /**
+   * Gets the background texture.
+   * @returns The background texture, or undefined if none is set
+   */
+  public get backgroundTexture(): Texture | undefined {
+    return this.backgroundTextureInternal;
   }
 
   /**
    * Gets the color tint.
    * @returns The color as a hex number (e.g., 0xFFFFFF)
    */
-  public get color(): number {
-    return this.material.getColor();
-  }
-
-  /**
-   * Gets the background color tint.
-   * @returns The background color as a hex number (e.g., 0xFFFFFF)
-   */
-  public get backgroundColor(): number {
-    return this.material.getBackgroundColor();
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /**
    * Gets the foreground color tint.
    * @returns The foreground color as a hex number (e.g., 0xFFFFFF)
    */
-  public get foregroundColor(): number {
-    return this.material.getForegroundColor();
+  public get foregroundColor(): UIColor {
+    return this.foregroundColorInternal;
   }
 
   /**
-   * Gets the opacity.
-   * @returns Opacity value between 0.0 (transparent) and 1.0 (opaque)
+   * Gets the background color tint.
+   * @returns The background color as a hex number (e.g., 0xFFFFFF)
    */
-  public get opacity(): number {
-    return this.material.getOpacity();
+  public get backgroundColor(): UIColor {
+    return this.backgroundColorInternal;
   }
 
   /**
-   * Gets the background opacity.
-   * @returns Opacity value between 0.0 (transparent) and 1.0 (opaque)
+   * Gets the current progress value.
+   * @returns Progress value between 0.0 (empty) and 1.0 (full)
    */
-  public get backgroundOpacity(): number {
-    return this.material.getBackgroundOpacity();
-  }
-
-  /**
-   * Gets the foreground opacity.
-   * @returns Opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public get foregroundOpacity(): number {
-    return this.material.getForegroundOpacity();
-  }
-
-  /**
-   * Gets whether transparency is enabled for the image.
-   * @returns True if transparency is enabled, false otherwise
-   */
-  public get transparency(): boolean {
-    return this.material.getTransparency();
-  }
-
-  /**
-   * Gets the progress fill angle in degrees.
-   * @returns Angle in degrees (0 = horizontal, 90 = vertical)
-   */
-  public get angle(): number {
-    return MathUtils.radToDeg(this.material.getAngle());
+  public get progress(): number {
+    return this.progressInternal;
   }
 
   /**
    * Gets whether the progress fills in forward direction.
    * @returns True if filling forward, false if filling in reverse
    */
-  public get isForwardDirection(): boolean {
-    return this.material.getIsForwardDirection();
-  }
-
-  /**
-   * Sets the progress value.
-   * @param value - Progress value between 0.0 (empty) and 1.0 (full)
-   */
-  public set progress(value: number) {
-    this.material.setProgress(value);
-  }
-
-  /**
-   * Sets the background texture.
-   * @param value - The background texture, or undefined to remove background
-   */
-  public set backgroundTexture(value: Texture | undefined) {
-    if (value) {
-      const width = value.image.width;
-      const height = value.image.height;
-
-      assertValidPositiveNumber(width, "UIProgress background texture width");
-      assertValidPositiveNumber(height, "UIProgress background texture height");
-    }
-
-    this.material.setBackgroundTexture(value);
+  public get inverseDirection(): boolean {
+    return this.inverseDirectionInternal;
   }
 
   /**
@@ -262,96 +194,107 @@ export class UIProgress extends UIElement<Mesh> {
    * @throws Will throw an error if the texture dimensions are not valid positive numbers
    */
   public set foregroundTexture(value: Texture) {
-    const width = value.image.width;
-    const height = value.image.height;
+    const w = value.image.width;
+    const h = value.image.height;
 
-    assertValidPositiveNumber(width, "UIProgress foreground texture width");
-    assertValidPositiveNumber(height, "UIProgress foreground texture height");
+    assertValidPositiveNumber(w, "UIProgress foreground texture width");
+    assertValidPositiveNumber(h, "UIProgress foreground texture height");
 
-    this.material.setForegroundTexture(value);
-    this.solverWrapper.suggestVariableValue(this.wVariable, width);
-    this.solverWrapper.suggestVariableValue(this.hVariable, height);
+    this.solverWrapper.suggestVariableValue(this.wVariable, w);
+    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+
+    this.foregroundTextureInternal = value;
+    this.sceneWrapper.setUniform(this.planeHandler, "foregroundTexture", value);
+  }
+
+  /**
+   * Sets the background texture.
+   * @param value - The background texture, or undefined to remove background
+   */
+  public set backgroundTexture(value: Texture | undefined) {
+    if (value !== undefined) {
+      assertValidPositiveNumber(
+        value.image.width,
+        "UIProgress background texture width",
+      );
+      assertValidPositiveNumber(
+        value.image.height,
+        "UIProgress background texture height",
+      );
+    }
+
+    this.backgroundTextureInternal = value;
+    this.sceneWrapper.setUniform(this.planeHandler, "backgroundTexture", value);
   }
 
   /**
    * Sets the color tint.
    * @param value - The color as a hex number (e.g., 0xFFFFFF)
    */
-  public set color(value: number) {
-    this.material.setColor(value);
-  }
-
-  /**
-   * Sets the background color tint.
-   * @param value - The background color as a hex number (e.g., 0xFFFFFF)
-   */
-  public set backgroundColor(value: number) {
-    this.material.setBackgroundColor(value);
+  public set color(value: UIColor) {
+    this.colorInternal.copy(value);
   }
 
   /**
    * Sets the foreground color tint.
    * @param value - The foreground color as a hex number (e.g., 0xFFFFFF)
    */
-  public set foregroundColor(value: number) {
-    this.material.setForegroundColor(value);
+  public set foregroundColor(value: UIColor) {
+    this.foregroundColorInternal.copy(value);
   }
 
   /**
-   * Sets the opacity.
-   * @param value - Opacity value between 0.0 (transparent) and 1.0 (opaque)
+   * Sets the background color tint.
+   * @param value - The background color as a hex number (e.g., 0xFFFFFF)
    */
-  public set opacity(value: number) {
-    this.material.setOpacity(value);
-  }
-
-  /**
-   * Sets the background opacity.
-   * @param value - Opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public set backgroundOpacity(value: number) {
-    this.material.setBackgroundOpacity(value);
-  }
-
-  /**
-   * Sets the foreground opacity.
-   * @param value - Opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public set foregroundOpacity(value: number) {
-    this.material.setForegroundOpacity(value);
-  }
-
-  /**
-   * Sets whether transparency is enabled for the image.
-   * @param value - True to enable transparency, false to disable
-   */
-  public set transparency(value: boolean) {
-    this.material.setTransparency(value);
-  }
-
-  /**
-   * Sets the progress fill angle.
-   * @param value - Angle in degrees (0 = horizontal, 90 = vertical)
-   */
-  public set angle(value: number) {
-    this.material.setAngle(MathUtils.degToRad(value));
+  public set backgroundColor(value: UIColor) {
+    this.backgroundColorInternal.copy(value);
   }
 
   /**
    * Sets the progress fill direction.
    * @param value - True for forward direction, false for reverse
    */
-  public set isForwardDirection(value: boolean) {
-    this.material.setIsForwardDirection(value);
+  public set inverseDirection(value: boolean) {
+    this.inverseDirectionInternal = value;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "direction",
+      value ? -1 : 1,
+    );
   }
 
   /**
-   * Destroys the progress bar element and cleans up resources.
-   *
-   * This method disposes of the material and calls the parent destroy method.
+   * Sets the progress value.
+   * @param value - Progress value between 0.0 (empty) and 1.0 (full)
    */
+  public set progress(value: number) {
+    this.progressInternal = value;
+    this.sceneWrapper.setUniform(this.planeHandler, "progress", value);
+  }
+
   public override destroy(): void {
-    this.material.dispose();
+    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
+    this.foregroundColorInternal.off(
+      UIColorEvent.CHANGE,
+      this.onForegroundColorChange,
+    );
+    this.backgroundColorInternal.off(
+      UIColorEvent.CHANGE,
+      this.onBackgroundColorChange,
+    );
     super.destroy();
   }
+
+  private readonly onColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+  };
+
+  private readonly onForegroundColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "foregroundcolor", color);
+  };
+
+  private readonly onBackgroundColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "backgroundcolor", color);
+  };
 }

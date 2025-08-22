@@ -1,6 +1,6 @@
 const DEFAULT_SLICE_BORDER = 0.25;
 
-export type UINineSliceBorder =
+export type UINineSliceBorders =
   | { left: number; right: number; top: number; bottom: number }
   | { horizontal: number; vertical: number }
   | number;
@@ -11,29 +11,29 @@ export type UINineSliceBorder =
  * @param value - The border value to resolve (can be number, partial object, or full object)
  * @returns Normalized border object with left, right, top, bottom properties
  */
-export function resolveNineSliceBorder(value: unknown): {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
+export function resolveNineSliceBorders(value: unknown): {
+  l: number;
+  r: number;
+  t: number;
+  b: number;
 } {
   // Handle null/undefined
   if (value === null || value === undefined) {
     return {
-      left: DEFAULT_SLICE_BORDER,
-      right: DEFAULT_SLICE_BORDER,
-      top: DEFAULT_SLICE_BORDER,
-      bottom: DEFAULT_SLICE_BORDER,
+      l: DEFAULT_SLICE_BORDER,
+      r: DEFAULT_SLICE_BORDER,
+      t: DEFAULT_SLICE_BORDER,
+      b: DEFAULT_SLICE_BORDER,
     };
   }
 
   // Handle number
   if (typeof value === "number") {
     return {
-      left: value,
-      right: value,
-      top: value,
-      bottom: value,
+      l: value,
+      r: value,
+      t: value,
+      b: value,
     };
   }
 
@@ -51,10 +51,10 @@ export function resolveNineSliceBorder(value: unknown): {
         typeof obj.vertical === "number" ? obj.vertical : DEFAULT_SLICE_BORDER;
 
       return {
-        left: horizontal,
-        right: horizontal,
-        top: vertical,
-        bottom: vertical,
+        l: horizontal,
+        r: horizontal,
+        t: vertical,
+        b: vertical,
       };
     }
 
@@ -66,14 +66,14 @@ export function resolveNineSliceBorder(value: unknown): {
     const bottom =
       typeof obj.bottom === "number" ? obj.bottom : DEFAULT_SLICE_BORDER;
 
-    return { left, right, top, bottom };
+    return { l: left, r: right, t: top, b: bottom };
   }
 
   // Fallback to default
   return {
-    left: DEFAULT_SLICE_BORDER,
-    right: DEFAULT_SLICE_BORDER,
-    top: DEFAULT_SLICE_BORDER,
-    bottom: DEFAULT_SLICE_BORDER,
+    l: DEFAULT_SLICE_BORDER,
+    r: DEFAULT_SLICE_BORDER,
+    t: DEFAULT_SLICE_BORDER,
+    b: DEFAULT_SLICE_BORDER,
   };
 }

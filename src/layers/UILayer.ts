@@ -1,10 +1,15 @@
 import { Eventail } from "eventail";
-import { type WebGLRenderer } from "three";
+import type { WebGLRenderer } from "three";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
+import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
 import { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
+
+export interface UILayerInputListener {
+  catchClick(x: number, y: number): boolean;
+}
 
 /**
  * Events that can be emitted by UI layers.
@@ -79,6 +84,11 @@ export abstract class UILayer extends Eventail {
 
   /** Internal storage for the current orientation state. */
   protected orientationInternal: UIOrientation;
+
+  private readonly inputListeners: {
+    zIndex: number;
+    listener: UILayerInputListener;
+  }[] = [];
 
   /**
    * Creates a new UILayer instance with specified dimensions.
@@ -189,7 +199,6 @@ export abstract class UILayer extends Eventail {
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.mode !== UIMode.HIDDEN) {
-      this.sceneWrapper.prepareRender(renderer);
       this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
       this.sceneWrapper.render(renderer);
     }
@@ -206,10 +215,11 @@ export abstract class UILayer extends Eventail {
    * @param y - The y-coordinate of the click
    * @protected
    */
-  protected clickInternal(x: number, y: number): void {
+  protected pointerClickInternal(x: number, y: number): void {
     if (this.mode === UIMode.INTERACTIVE) {
-      for (const element of this.sceneWrapper.getSortedVisibleElements()) {
-        if (element["onClickInternal"](x, y)) {
+      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
+      for (const listener of this.inputListeners) {
+        if (listener.listener.catchClick(x, y)) {
           return;
         }
       }
@@ -236,7 +246,35 @@ export abstract class UILayer extends Eventail {
    *
    * @returns The scene wrapper instance
    */
-  protected ["getSceneWrapperInternal"](): UISceneWrapper {
+  protected ["getSceneWrapperClientAPI"](): UISceneWrapperClientAPI {
     return this.sceneWrapper;
+  }
+
+  protected ["listenPointerInput"](
+    listener: UILayerInputListener,
+    zIndex: number,
+  ): void {
+    if (this.inputListeners.find((l) => l.listener === listener)) {
+      throw new Error("Listener already exists");
+    }
+    this.inputListeners.push({ zIndex, listener });
+  }
+
+  protected ["setListenerZIndex"](
+    listener: UILayerInputListener,
+    zIndex: number,
+  ): void {
+    if (this.inputListeners.findIndex((l) => l.listener === listener) === -1) {
+      throw new Error("Listener not found");
+    }
+    this.inputListeners.push({ zIndex, listener });
+  }
+
+  protected ["unlistenPointerInput"](listener: UILayerInputListener): void {
+    const index = this.inputListeners.findIndex((l) => l.listener === listener);
+    if (index === -1) {
+      throw new Error("Listener not found");
+    }
+    this.inputListeners.splice(index, 1);
   }
 }

@@ -1,17 +1,18 @@
-import { CanvasTexture, Mesh } from "three";
-import { UILayerEvent, type UILayer } from "../layers/UILayer";
-import { UIMaterial } from "../materials/UIMaterial";
+import type { WebGLRenderer } from "three";
+import { CanvasTexture } from "three";
+import { type UILayer } from "../layers/UILayer";
 import type { UITextContent } from "../miscellaneous/textInterfaces";
 import {
   calculateTextContentParameters,
   renderTextLines,
 } from "../miscellaneous/textTools";
-import { geometry } from "../miscellaneous/threeInstances";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
 import {
-  resolvePadding,
+  resolveTextPadding,
   type UITextPadding,
 } from "../miscellaneous/UITextPadding";
 import { type UITextStyle } from "../miscellaneous/UITextStyle";
+import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
 /** Default maximum width for text elements in pixels. */
@@ -21,16 +22,17 @@ const DEFAULT_MAX_WIDTH = 1024;
  * Configuration options for UIText element creation.
  */
 export interface UITextOptions {
+  /** X-coordinate of the text element. */
+  x: number;
+  /** Y-coordinate of the text element. */
+  y: number;
+  color: UIColor;
   /** Maximum width in pixels before text wrapping occurs. */
   maxWidth: number;
   /** Padding configuration for text content. */
   padding: Partial<UITextPadding>;
   /** Common style properties applied to all text content. */
   commonStyle: Partial<UITextStyle>;
-  /** X-coordinate of the text element. */
-  x: number;
-  /** Y-coordinate of the text element. */
-  y: number;
 }
 
 /**
@@ -47,18 +49,17 @@ export interface UITextOptions {
  * @see {@link UITextStyle} - Text styling options
  * @see {@link UITextPadding} - Padding configuration
  */
-export class UIText extends UIElement<Mesh> {
-  /** The material used for rendering the text texture. */
-  private readonly material: UIMaterial;
+export class UIText extends UIElement {
+  /** The HTML canvas element used for text rendering. */
+  private readonly canvas: OffscreenCanvas;
+
+  /** The 2D rendering context for drawing text on the canvas. */
+  private readonly context: OffscreenCanvasRenderingContext2D;
 
   /** The canvas texture containing the rendered text. */
   private readonly texture: CanvasTexture;
 
-  /** The HTML canvas element used for text rendering. */
-  private readonly canvas: HTMLCanvasElement;
-
-  /** The 2D rendering context for drawing text on the canvas. */
-  private readonly context: CanvasRenderingContext2D;
+  private readonly colorInternal: UIColor;
 
   /** Internal storage for the current text content. */
   private contentInternal: UITextContent;
@@ -97,31 +98,32 @@ export class UIText extends UIElement<Mesh> {
     content: UITextContent,
     options: Partial<UITextOptions> = {},
   ) {
-    const canvas = document.createElement("canvas");
+    const canvas = new OffscreenCanvas(2, 2);
     const context = canvas.getContext("2d");
 
     if (!context) {
-      throw new Error("Failed to create canvas context");
+      throw new Error("UIText failed to create canvas context");
     }
 
     const texture = new CanvasTexture(canvas);
-    const material = new UIMaterial(texture);
-    const object = new Mesh(geometry, material);
+    const color = options.color ?? new UIColor();
 
-    super(layer, options.x ?? 0, options.y ?? 0, 2, 2, object);
-    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
-
-    this.material = material;
-    this.texture = texture;
+    super(layer, options.x ?? 0, options.y ?? 0, 2, 2, source, {
+      map: texture,
+      color,
+    });
 
     this.canvas = canvas;
     this.context = context;
+    this.texture = texture;
+    this.colorInternal = color;
 
     this.contentInternal = content;
     this.maxWidthInternal = options.maxWidth ?? DEFAULT_MAX_WIDTH;
-    this.paddingInternal = resolvePadding(options.padding);
+    this.paddingInternal = resolveTextPadding(options.padding);
     this.commonStyleInternal = options.commonStyle ?? {};
 
+    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
     this.rebuildText();
   }
 
@@ -129,24 +131,8 @@ export class UIText extends UIElement<Mesh> {
    * Gets the current color tint applied to the text.
    * @returns The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public get color(): number {
-    return this.material.getColor();
-  }
-
-  /**
-   * Gets the current opacity level of the text.
-   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public get opacity(): number {
-    return this.material.getOpacity();
-  }
-
-  /**
-   * Gets whether transparency is enabled for the text.
-   * @returns True if transparency is enabled, false otherwise
-   */
-  public get transparency(): boolean {
-    return this.material.getTransparency();
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /**
@@ -185,24 +171,8 @@ export class UIText extends UIElement<Mesh> {
    * Sets the color tint applied to the text.
    * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public set color(value: number) {
-    this.material.setColor(value);
-  }
-
-  /**
-   * Sets the opacity level of the text.
-   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public set opacity(value: number) {
-    this.material.setOpacity(value);
-  }
-
-  /**
-   * Sets whether transparency is enabled for the text.
-   * @param value - True to enable transparency, false to disable
-   */
-  public set transparency(value: boolean) {
-    this.material.setTransparency(value);
+  public set color(value: UIColor) {
+    this.colorInternal.copy(value);
   }
 
   /**
@@ -250,19 +220,21 @@ export class UIText extends UIElement<Mesh> {
    * the text element should not be used anymore.
    */
   public override destroy(): void {
-    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
-    this.material.dispose();
+    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     this.texture.dispose();
-    this.canvas.remove();
     super.destroy();
   }
 
-  private readonly onWillRenderInternal = (): void => {
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    super.onWillRender(renderer, deltaTime);
     if (this.lastAspectRatio !== this.width / this.height) {
       this.lastAspectRatio = this.targetAspectRatio;
       this.height = this.width / this.targetAspectRatio;
     }
-  };
+  }
 
   /**
    * Rebuilds the text canvas and texture based on current content and settings.
@@ -301,4 +273,8 @@ export class UIText extends UIElement<Mesh> {
     );
     this.texture.needsUpdate = true;
   }
+
+  private readonly onColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+  };
 }

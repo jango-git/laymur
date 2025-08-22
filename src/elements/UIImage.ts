@@ -1,10 +1,15 @@
 import type { Texture } from "three";
-import { Mesh } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { UIMaterial } from "../materials/UIMaterial";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { geometry } from "../miscellaneous/threeInstances";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
+
+export interface UIImageOptions {
+  x: number;
+  y: number;
+  color: UIColor;
+}
 
 /**
  * UI element for displaying textured images.
@@ -18,12 +23,9 @@ import { UIElement } from "./UIElement";
  * @see {@link UIMaterial} - Material system for rendering
  * @see {@link Texture} - Three.js texture for image data
  */
-export class UIImage extends UIElement<Mesh> {
-  /** The material used for rendering the image. */
-  private readonly material: UIMaterial;
-
-  /** Internal storage for the current texture. */
-  private readonly textureInternal: Texture;
+export class UIImage extends UIElement {
+  private textureInternal: Texture;
+  private readonly colorInternal: UIColor;
 
   /**
    * Creates a new UIImage instance.
@@ -36,16 +38,24 @@ export class UIImage extends UIElement<Mesh> {
    * @param x - Initial x-coordinate position (defaults to 0)
    * @param y - Initial y-coordinate position (defaults to 0)
    */
-  constructor(layer: UILayer, texture: Texture, x = 0, y = 0) {
-    const width = texture.image.width;
-    const height = texture.image.height;
+  constructor(
+    layer: UILayer,
+    texture: Texture,
+    options: Partial<UIImageOptions> = {},
+  ) {
+    const w = texture.image.width;
+    const h = texture.image.height;
 
-    const material = new UIMaterial(texture);
-    const object = new Mesh(geometry, material);
+    const color = options.color ?? new UIColor();
 
-    super(layer, x, y, width, height, object);
-    this.material = material;
+    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
+      map: texture,
+      color,
+    });
+
     this.textureInternal = texture;
+    this.colorInternal = color;
+    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
   }
 
   /**
@@ -60,24 +70,8 @@ export class UIImage extends UIElement<Mesh> {
    * Gets the current color tint applied to the image.
    * @returns The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public get color(): number {
-    return this.material.getColor();
-  }
-
-  /**
-   * Gets the current opacity level of the image.
-   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public get opacity(): number {
-    return this.material.getOpacity();
-  }
-
-  /**
-   * Gets whether transparency is enabled for the image.
-   * @returns True if transparency is enabled, false otherwise
-   */
-  public get transparency(): boolean {
-    return this.material.getTransparency();
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /**
@@ -91,50 +85,33 @@ export class UIImage extends UIElement<Mesh> {
    * @see {@link assertValidPositiveNumber}
    */
   public set texture(value: Texture) {
-    const width = value.image.width;
-    const height = value.image.height;
+    const w = value.image.width;
+    const h = value.image.height;
 
-    assertValidPositiveNumber(width, "UIImage texture width");
-    assertValidPositiveNumber(height, "UIImage texture height");
+    assertValidPositiveNumber(w, "UIImage texture width");
+    assertValidPositiveNumber(h, "UIImage texture height");
 
-    this.material.setTexture(value);
-    this.solverWrapper.suggestVariableValue(this.wVariable, width);
-    this.solverWrapper.suggestVariableValue(this.hVariable, height);
+    this.solverWrapper.suggestVariableValue(this.wVariable, w);
+    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+
+    this.textureInternal = value;
+    this.sceneWrapper.setUniform(this.planeHandler, "map", value);
   }
 
   /**
    * Sets the color tint applied to the image.
    * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public set color(value: number) {
-    this.material.setColor(value);
+  public set color(value: UIColor) {
+    this.colorInternal.copy(value);
   }
 
-  /**
-   * Sets the opacity level of the image.
-   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
-   */
-  public set opacity(value: number) {
-    this.material.setOpacity(value);
-  }
-
-  /**
-   * Sets whether transparency is enabled for the image.
-   * @param value - True to enable transparency, false to disable
-   */
-  public set transparency(value: boolean) {
-    this.material.setTransparency(value);
-  }
-
-  /**
-   * Destroys the image by cleaning up all associated resources.
-   *
-   * This method disposes of the material resources and calls the parent
-   * destroy method to clean up the underlying UI element. After calling
-   * this method, the image should not be used anymore.
-   */
   public override destroy(): void {
-    this.material.dispose();
+    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     super.destroy();
   }
+
+  private readonly onColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+  };
 }

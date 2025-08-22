@@ -1,25 +1,26 @@
-import type { Texture } from "three";
-import { Mesh } from "three";
-import { UILayerEvent, type UILayer } from "../layers/UILayer";
-import { UINineSliceMaterial } from "../materials/UINineSliceMaterial";
+import type { Texture, WebGLRenderer } from "three";
+import { Vector4 } from "three";
+import { type UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { geometry } from "../miscellaneous/threeInstances";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
 import {
-  resolveNineSliceBorder,
-  type UINineSliceBorder,
+  resolveNineSliceBorders,
+  type UINineSliceBorders,
 } from "../miscellaneous/UINineSliceBorder";
+import source from "../shaders/UINineSliceShader.glsl";
 import { UIElement } from "./UIElement";
 
 /**
  * Configuration options for creating a UINineSlice element.
  */
 export interface UINineSliceOptions {
-  /** Nine-slice border configuration (can be number, object with horizontal/vertical, or full border object) */
-  sliceBorder: UINineSliceBorder;
   /** X position of the element */
   x: number;
   /** Y position of the element */
   y: number;
+  color: UIColor;
+  /** Nine-slice border configuration (can be number, object with horizontal/vertical, or full border object) */
+  sliceBorders: UINineSliceBorders;
 }
 
 /**
@@ -30,9 +31,11 @@ export interface UINineSliceOptions {
  * scales in both dimensions. This technique is commonly used for creating scalable UI
  * panels, buttons, and borders that maintain visual quality at any size.
  */
-export class UINineSlice extends UIElement<Mesh> {
-  private readonly material: UINineSliceMaterial;
+export class UINineSlice extends UIElement {
   private readonly textureInternal: Texture;
+  private readonly colorInternal: UIColor;
+  private readonly sliceBordersInternal: Vector4;
+  private readonly dimensions: Vector4; //texture pixel size, quad world size
 
   /**
    * Creates a new nine-slice UI element.
@@ -46,57 +49,32 @@ export class UINineSlice extends UIElement<Mesh> {
     texture: Texture,
     options: Partial<UINineSliceOptions> = {},
   ) {
-    const w = texture.image.width;
-    const h = texture.image.height;
+    const width = texture.image.width;
+    const height = texture.image.height;
 
-    const material = new UINineSliceMaterial(texture);
-    const object = new Mesh(geometry, material);
-
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, object);
-    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
-
-    this.material = material;
-    this.textureInternal = texture;
-
-    const sliceBorder = resolveNineSliceBorder(options.sliceBorder);
-    this.material.setSliceBorder(
-      sliceBorder.left,
-      sliceBorder.right,
-      sliceBorder.top,
-      sliceBorder.bottom,
+    const color = options.color ?? new UIColor();
+    const resolvedSliceBorders = resolveNineSliceBorders(options.sliceBorders);
+    const sliceBorders = new Vector4(
+      resolvedSliceBorders.l,
+      resolvedSliceBorders.r,
+      resolvedSliceBorders.t,
+      resolvedSliceBorders.b,
     );
-  }
+    const dimensions = new Vector4(width, height, width, height);
 
-  /**
-   * Gets the left border size for nine-slice scaling.
-   * @returns The left border size in texture UV coordinates
-   */
-  public get sliceBorderLeft(): number {
-    return this.material.getSliceBorderLeft();
-  }
+    super(layer, options.x ?? 0, options.y ?? 0, width, height, source, {
+      map: texture,
+      color,
+      sliceBorders,
+      dimensions,
+    });
 
-  /**
-   * Gets the right border size for nine-slice scaling.
-   * @returns The right border size in texture UV coordinates
-   */
-  public get sliceBorderRight(): number {
-    return this.material.getSliceBorderRight();
-  }
+    this.textureInternal = texture;
+    this.colorInternal = color;
+    this.sliceBordersInternal = sliceBorders;
+    this.dimensions = dimensions;
 
-  /**
-   * Gets the top border size for nine-slice scaling.
-   * @returns The top border size in texture UV coordinates
-   */
-  public get sliceBorderTop(): number {
-    return this.material.getSliceBorderTop();
-  }
-
-  /**
-   * Gets the bottom border size for nine-slice scaling.
-   * @returns The bottom border size in texture UV coordinates
-   */
-  public get sliceBorderBottom(): number {
-    return this.material.getSliceBorderBottom();
+    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
   }
 
   /**
@@ -111,56 +89,40 @@ export class UINineSlice extends UIElement<Mesh> {
    * Gets the current color tint applied to the image.
    * @returns The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public get color(): number {
-    return this.material.getColor();
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /**
-   * Gets the current opacity level of the image.
-   * @returns The opacity value between 0.0 (transparent) and 1.0 (opaque)
+   * Gets the left border size for nine-slice scaling.
+   * @returns The left border size in texture UV coordinates
    */
-  public get opacity(): number {
-    return this.material.getOpacity();
+  public get sliceBorderLeft(): number {
+    return this.sliceBordersInternal.x;
   }
 
   /**
-   * Gets whether transparency is enabled for the image.
-   * @returns True if transparency is enabled, false otherwise
+   * Gets the right border size for nine-slice scaling.
+   * @returns The right border size in texture UV coordinates
    */
-  public get transparency(): boolean {
-    return this.material.getTransparency();
+  public get sliceBorderRight(): number {
+    return this.sliceBordersInternal.y;
   }
 
   /**
-   * Sets the left border size for nine-slice scaling.
-   * @param value - The left border size in texture UV coordinates
+   * Gets the top border size for nine-slice scaling.
+   * @returns The top border size in texture UV coordinates
    */
-  public set sliceBorderLeft(value: number) {
-    this.material.setSliceBorderLeft(value);
+  public get sliceBorderTop(): number {
+    return this.sliceBordersInternal.z;
   }
 
   /**
-   * Sets the right border size for nine-slice scaling.
-   * @param value - The right border size in texture UV coordinates
+   * Gets the bottom border size for nine-slice scaling.
+   * @returns The bottom border size in texture UV coordinates
    */
-  public set sliceBorderRight(value: number) {
-    this.material.setSliceBorderRight(value);
-  }
-
-  /**
-   * Sets the top border size for nine-slice scaling.
-   * @param value - The top border size in texture UV coordinates
-   */
-  public set sliceBorderTop(value: number) {
-    this.material.setSliceBorderTop(value);
-  }
-
-  /**
-   * Sets the bottom border size for nine-slice scaling.
-   * @param value - The bottom border size in texture UV coordinates
-   */
-  public set sliceBorderBottom(value: number) {
-    this.material.setSliceBorderBottom(value);
+  public get sliceBorderBottom(): number {
+    return this.sliceBordersInternal.w;
   }
 
   /**
@@ -174,39 +136,83 @@ export class UINineSlice extends UIElement<Mesh> {
    * @see {@link assertValidPositiveNumber}
    */
   public set texture(value: Texture) {
-    const width = value.image.width;
-    const height = value.image.height;
+    const w = value.image.width;
+    const h = value.image.height;
 
-    assertValidPositiveNumber(width, "UINineSlice texture width");
-    assertValidPositiveNumber(height, "UINineSlice texture height");
+    assertValidPositiveNumber(w, "UINineSlice texture width");
+    assertValidPositiveNumber(h, "UINineSlice texture height");
 
-    this.material.setTexture(value);
-    this.solverWrapper.suggestVariableValue(this.wVariable, width);
-    this.solverWrapper.suggestVariableValue(this.hVariable, height);
+    this.solverWrapper.suggestVariableValue(this.wVariable, w);
+    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+
+    this.dimensions.x = w;
+    this.dimensions.y = h;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "dimensions",
+      this.dimensions,
+    );
+    this.sceneWrapper.setUniform(this.planeHandler, "map", value);
   }
 
   /**
    * Sets the color tint applied to the image.
    * @param value - The color value as a number (e.g., 0xFFFFFF for white)
    */
-  public set color(value: number) {
-    this.material.setColor(value);
+  public set color(value: UIColor) {
+    this.colorInternal.copy(value);
   }
 
   /**
-   * Sets the opacity level of the image.
-   * @param value - The opacity value between 0.0 (transparent) and 1.0 (opaque)
+   * Sets the left border size for nine-slice scaling.
+   * @param value - The left border size in texture UV coordinates
    */
-  public set opacity(value: number) {
-    this.material.setOpacity(value);
+  public set sliceBorderLeft(value: number) {
+    this.sliceBordersInternal.x = value;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "sliceBorders",
+      this.sliceBordersInternal,
+    );
   }
 
   /**
-   * Sets whether transparency is enabled for the image.
-   * @param value - True to enable transparency, false to disable
+   * Sets the right border size for nine-slice scaling.
+   * @param value - The right border size in texture UV coordinates
    */
-  public set transparency(value: boolean) {
-    this.material.setTransparency(value);
+  public set sliceBorderRight(value: number) {
+    this.sliceBordersInternal.y = value;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "sliceBorders",
+      this.sliceBordersInternal,
+    );
+  }
+
+  /**
+   * Sets the top border size for nine-slice scaling.
+   * @param value - The top border size in texture UV coordinates
+   */
+  public set sliceBorderTop(value: number) {
+    this.sliceBordersInternal.z = value;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "sliceBorders",
+      this.sliceBordersInternal,
+    );
+  }
+
+  /**
+   * Sets the bottom border size for nine-slice scaling.
+   * @param value - The bottom border size in texture UV coordinates
+   */
+  public set sliceBorderBottom(value: number) {
+    this.sliceBordersInternal.w = value;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "sliceBorders",
+      this.sliceBordersInternal,
+    );
   }
 
   /**
@@ -223,29 +229,35 @@ export class UINineSlice extends UIElement<Mesh> {
     top: number,
     bottom: number,
   ): void {
-    this.material.setSliceBorder(left, right, top, bottom);
+    this.sliceBordersInternal.set(left, right, top, bottom);
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "sliceBorders",
+      this.sliceBordersInternal,
+    );
   }
 
-  /**
-   * Destroys the nine-slice element and cleans up resources.
-   *
-   * This method removes event listeners, disposes of the material,
-   * and calls the parent destroy method.
-   */
   public override destroy(): void {
-    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRenderInternal);
-    this.material.dispose();
+    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     super.destroy();
   }
 
-  /**
-   * Internal render callback that updates the material's quad size.
-   * This ensures the nine-slice scaling works correctly with micro transformations.
-   */
-  private readonly onWillRenderInternal = (): void => {
-    this.material.setQuadSize(
-      this.width * this.micro.scaleX,
-      this.height * this.micro.scaleY,
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    super.onWillRender(renderer, deltaTime);
+
+    this.dimensions.z = this.width * this.micro.scaleX;
+    this.dimensions.w = this.height * this.micro.scaleY;
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "dimensions",
+      this.dimensions,
     );
+  }
+
+  private readonly onColorChange = (color: UIColor): void => {
+    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };
 }

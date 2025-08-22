@@ -197,6 +197,6 @@ export class UIFullscreenLayer extends UILayer {
     const y = r ? r.bottom - event.clientY : window.innerHeight - event.clientY;
 
     const scale = this.calculateScale();
-    this.clickInternal(x * scale, y * scale);
+    this.pointerClickInternal(x * scale, y * scale);
   };
 }

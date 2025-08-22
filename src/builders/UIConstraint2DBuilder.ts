@@ -18,7 +18,7 @@ import type { UIRelation } from "../miscellaneous/UIRelation";
  *
  * @template T - The type of values for horizontal and vertical properties
  */
-export interface UIType2D<T> {
+interface UIType2D<T> {
   /** Horizontal (x-axis) value. */
   h?: T;
   /** Vertical (y-axis) value. */

@@ -1,5 +1,8 @@
-varying vec2 vUv;
+out vec2 io_UV;
+#include <common>
+
 void main() {
-    vUv = uv;
+    #include <begin_vertex>
+    io_UV = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
