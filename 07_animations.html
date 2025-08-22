@@ -39,7 +39,7 @@
                 </p>
 
                 <pre><code class="language-javascript">// Enable transparency for animations
-logotype.transparency = true;
+logotype.transparency = UITransparencyMode.BLEND;
 
 // Animate logotype appearing from bottom-left
 UIAppearAnimator.appear(logotype, {
@@ -50,8 +50,8 @@ UIAppearAnimator.appear(logotype, {
 });
 
 // Animate multiple elements together
-text.transparency = true;
-bubble.transparency = true;
+text.transparency = UITransparencyMode.BLEND;
+bubble.transparency = UITransparencyMode.BLEND;
 UIAppearAnimator.appear([text, bubble], {
   xFrom: -100,
   yFrom: -50,

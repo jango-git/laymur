@@ -11,7 +11,8 @@ import {
   UIRelation,
   UIOrientation,
   UIMode,
-  UIElementEvent,
+  UIInputEvent,
+  UITransparencyMode,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
@@ -54,9 +55,8 @@ async function buildScene() {
     );
 
     // Configure appearance
-    vignette.transparency = true;
-    vignette.opacity = 0.75;
-    vignette.color = 0xffa500;
+    vignette.transparency = UITransparencyMode.BLEND;
+    vignette.color.setHexRGB(0xffa500, 0.75);
 
     // Use cover constraints to fill the entire layer
     UICoverConstraintBuilder.build(layer, vignette);
@@ -135,7 +135,7 @@ async function buildScene() {
       },
     });
 
-    text.transparency = true;
+    text.transparency = UITransparencyMode.BLEND;
 
     UIConstraint2DBuilder.distance(bubble, text, {
       anchorA: { h: 0.5, v: 0.525 },
@@ -173,7 +173,7 @@ async function buildScene() {
 
     logotype.mode = UIMode.INTERACTIVE;
 
-    logotype.on(UIElementEvent.CLICK, () => {
+    logotype.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(logotype.micro, {
@@ -218,7 +218,7 @@ async function buildScene() {
     download.mode = UIMode.INTERACTIVE;
 
     // Add click animation
-    download.on(UIElementEvent.CLICK, () => {
+    download.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(download.micro, {
@@ -263,7 +263,7 @@ async function buildScene() {
     battle.mode = UIMode.INTERACTIVE;
 
     // Add click animation
-    battle.on(UIElementEvent.CLICK, () => {
+    battle.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(battle.micro, {

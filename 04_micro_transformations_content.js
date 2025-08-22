@@ -10,8 +10,9 @@ import {
   UIRelation,
   UIOrientation,
   UIMode,
-  UIElementEvent,
   UIConstraint2DBuilder,
+  UIInputEvent,
+  UITransparencyMode,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
@@ -113,7 +114,7 @@ async function buildScene() {
       },
     });
 
-    text.transparency = true;
+    text.transparency = UITransparencyMode.BLEND;
 
     UIConstraint2DBuilder.distance(bubble, text, {
       anchorA: { h: 0.5, v: 0.525 },
@@ -151,7 +152,7 @@ async function buildScene() {
 
     logotype.mode = UIMode.INTERACTIVE;
 
-    logotype.on(UIElementEvent.CLICK, () => {
+    logotype.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(logotype.micro, {
@@ -196,7 +197,7 @@ async function buildScene() {
     download.mode = UIMode.INTERACTIVE;
 
     // Add click animation
-    download.on(UIElementEvent.CLICK, () => {
+    download.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(download.micro, {
@@ -241,7 +242,7 @@ async function buildScene() {
     battle.mode = UIMode.INTERACTIVE;
 
     // Add click animation
-    battle.on(UIElementEvent.CLICK, () => {
+    battle.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
         .to(battle.micro, {

@@ -12,16 +12,18 @@ import {
   UIRelation,
   UIOrientation,
   UIMode,
-  UIElementEvent,
+  UIInputEvent,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
+  UITransparencyMode,
+  UIColor,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import {
   UIAppearAnimator,
   UIClickAnimator,
   UIJumpCallAnimator,
-} from "https://esm.sh/laymur-animations@0.2.4?deps=laymur@latest,gsap@3.13.0&min";
+} from "https://esm.sh/laymur-animations@latest?deps=laymur@latest,gsap@3.13.0&min";
 import { BaseScene } from "./base-scene.js";
 
 let baseScene;
@@ -151,7 +153,7 @@ async function buildScene() {
   });
 
   logotype.mode = UIMode.INTERACTIVE;
-  logotype.on(UIElementEvent.CLICK, () => {
+  logotype.on(UIInputEvent.CLICK, () => {
     gsap
       .timeline()
       .to(logotype.micro, {
@@ -192,7 +194,7 @@ async function buildScene() {
   });
 
   download.mode = UIMode.INTERACTIVE;
-  download.on(UIElementEvent.CLICK, () => {
+  download.on(UIInputEvent.CLICK, () => {
     gsap
       .timeline()
       .to(download.micro, {
@@ -233,7 +235,7 @@ async function buildScene() {
   });
 
   battle.mode = UIMode.INTERACTIVE;
-  battle.on(UIElementEvent.CLICK, () => UIClickAnimator.click(battle));
+  battle.on(UIInputEvent.CLICK, () => UIClickAnimator.click(battle));
 
   // ========== VIGNETTE OVERLAY ==========
   const vignette = new UINineSlice(
@@ -244,9 +246,8 @@ async function buildScene() {
     },
   );
 
-  vignette.transparency = true;
-  vignette.opacity = 0.5;
-  vignette.color = 0xffa500;
+  vignette.transparency = UITransparencyMode.BLEND;
+  vignette.color.setHexRGB(0xffa500, 0.75);
 
   UICoverConstraintBuilder.build(layer, vignette);
 
@@ -255,10 +256,10 @@ async function buildScene() {
     layer,
     baseScene.loadedTextures["T_Progress_Foreground"],
     {
-      textureBackground: baseScene.loadedTextures["T_Progress_Background"],
+      backgroundTexture: baseScene.loadedTextures["T_Progress_Background"],
       progress: 0,
-      foregroundColor: 0xe26a36,
-      backgroundColor: 0xe26a36,
+      foregroundColor: new UIColor("orange"),
+      backgroundColor: new UIColor("orange"),
     },
   );
 
@@ -275,7 +276,7 @@ async function buildScene() {
   });
 
   // ========== ANIMATIONS ==========
-  logotype.transparency = true;
+  logotype.transparency = UITransparencyMode.BLEND;
   UIAppearAnimator.appear(logotype, {
     xFrom: -100,
     yFrom: 100,
@@ -283,7 +284,7 @@ async function buildScene() {
     duration: 0.5,
   });
 
-  download.transparency = true;
+  download.transparency = UITransparencyMode.BLEND;
   UIAppearAnimator.appear(download, {
     xFrom: 100,
     yFrom: 100,
@@ -291,8 +292,8 @@ async function buildScene() {
     duration: 0.5,
   }).then(() => UIJumpCallAnimator.jump(download));
 
-  bar.transparency = true;
-  character.transparency = true;
+  bar.transparency = UITransparencyMode.BLEND;
+  character.transparency = UITransparencyMode.BLEND;
   UIAppearAnimator.appear([bar, character], {
     xFrom: -100,
     scaleFrom: 1,
@@ -306,8 +307,8 @@ async function buildScene() {
     });
   });
 
-  text.transparency = true;
-  bubble.transparency = true;
+  text.transparency = UITransparencyMode.BLEND;
+  bubble.transparency = UITransparencyMode.BLEND;
   UIAppearAnimator.appear([text, bubble], {
     xFrom: -100,
     yFrom: -50,
@@ -315,7 +316,7 @@ async function buildScene() {
     duration: 0.5,
   });
 
-  battle.transparency = true;
+  battle.transparency = UITransparencyMode.BLEND;
   UIAppearAnimator.appear(battle, {
     xFrom: 100,
     yFrom: -100,

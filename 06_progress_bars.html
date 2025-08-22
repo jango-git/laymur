@@ -41,12 +41,12 @@
                 <pre><code class="language-javascript">// Create progress bar
 const bar = new UIProgress(
   layer,
-  textureForeground,
+  foregroundTexture,
   {
-    textureBackground, // Optional
-    progress: 0.75,    // Initial progress value
-    foregroundColor: 0xe26a36,
-    backgroundColor: 0xe26a36,
+    backgroundTexture,
+    progress: 0.75,
+    foregroundColor: new UIColor("orange"),
+    backgroundColor: new UIColor("orange"),
   },
 );</code></pre>
 

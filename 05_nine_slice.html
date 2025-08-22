@@ -39,19 +39,18 @@
                 </p>
 
                 <pre><code class="language-javascript">// Create nine-slice element with 15% border
-const image = new UINineSlice(
+const vignette = new UINineSlice(
   layer,
-  baseScene.loadedTextures["T_Vignette"],
+  vignetteTexture,
   { sliceBorder: 0.15 }
 );
 
 // Configure appearance
-image.transparency = true;
-image.opacity = 0.75;
-image.color = 0xffa500;
+vignette.transparency = UITransparencyMode.BLEND;
+vignette.color.setHexRGB(0xffa500, 0.75);
 
 // Use cover constraints to fill the entire layer
-UICoverConstraintBuilder.build(layer, image);</code></pre>
+UICoverConstraintBuilder.build(layer, vignette);</code></pre>
 
                 <div class="warning">
                     <strong>🎨 Nine-Slice Scaling:</strong> Nine-slice divides

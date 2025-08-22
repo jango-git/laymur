@@ -43,7 +43,7 @@ layer.mode = UIMode.INTERACTIVE;
 button.mode = UIMode.INTERACTIVE;
 
 // Add click animation using micro transformations
-button.on(UIElementEvent.CLICK, () => {
+button.on(UIInputEvent.CLICK, () => {
   // Micro transformations are independent of constraints
   // They allow animations without affecting layout
   gsap
