@@ -154,7 +154,6 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
    * For plane elements, the anchor determines the reference point within the element's height.
    *
    * @returns The UIExpression representing the vertical distance calculation
-   * @private
    */
   private buildLHS(): UIExpression {
     let aExpression: UIExpression;

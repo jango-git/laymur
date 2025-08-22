@@ -46,21 +46,24 @@ npm install laymur
 
 ```typescript
 import { UIFullscreenLayer, UIImage, UIText, UIWidthConstraint } from 'laymur';
-import { WebGLRenderer, TextureLoader } from 'three';
+import { WebGLRenderer, TextureLoader, Clock } from 'three';
 
 // Create renderer and fullscreen layer
 const renderer = new WebGLRenderer();
-const layer = new UIFullscreenLayer(1920, 1920); // Fixed design dimensions
+const layer = new UIFullscreenLayer(1920, 1080); // Fixed design dimensions
+const clock = new Clock();
 
 // Load a texture
 const texture = new TextureLoader().load('my-image.jpg');
 
 // Create UI elements
-const background = new UIImage(layer, texture, 0, 0);
+const background = new UIImage(layer, texture, { x: 0, y: 0 });
 const title = new UIText(layer, 'Welcome to Laymur!', {
+  x: 100,
+  y: 100,
   maxWidth: 800,
   commonStyle: { fontSize: 48, color: '#ffffff' }
-}, 100, 100);
+});
 
 // Add constraints for responsive layout
 new UIWidthConstraint(background, { width: layer.width });
@@ -115,7 +118,7 @@ import { UIImage, UIText, UIHorizontalDistanceConstraint, UIWidthConstraint } fr
 
 // Create elements
 const sidebar = new UIImage(layer, sidebarTexture, 0, 0);
-const content = new UIText(layer, 'Main content', {}, 0, 0);
+const content = new UIText(layer, 'Main content', { x: 0, y: 0 });
 
 // Define layout constraints
 new UIWidthConstraint(sidebar, { width: 300 }); // Fixed sidebar width
@@ -163,12 +166,10 @@ import { UIImage } from 'laymur';
 import { TextureLoader } from 'three';
 
 const texture = new TextureLoader().load('hero-image.jpg');
-const heroImage = new UIImage(layer, texture, 0, 0);
+const heroImage = new UIImage(layer, texture);
 
 // Modify appearance
-heroImage.color = 0xff8844;     // Orange tint
-heroImage.opacity = 0.8;        // Semi-transparent
-heroImage.transparency = true;  // Enable alpha blending
+heroImage.color.setHexRGB(0xff8844, 0.5);  // Orange tint, semi-transparent
 ```
 
 ### UIText - Dynamic Text Rendering
@@ -178,13 +179,11 @@ Render text with automatic word wrapping and styling:
 ```typescript
 import { UIText } from 'laymur';
 
-const description = new UIText(layer, {
-  content: [
-    { text: 'Welcome to ', style: { fontSize: 24, color: '#333333' } },
-    { text: 'Laymur', style: { fontSize: 32, color: '#0066cc', fontWeight: 'bold' } },
-    { text: '!', style: { fontSize: 24, color: '#333333' } }
-  ]
-}, {
+const description = new UIText(layer, [
+  { text: 'Welcome to ', style: { fontSize: 24, color: '#333333' } },
+  { text: 'Laymur', style: { fontSize: 32, color: '#0066cc', fontWeight: 'bold' } },
+  { text: '!', style: { fontSize: 24, color: '#333333' } }
+], {
   maxWidth: 600,
   padding: { top: 20, left: 20, right: 20, bottom: 20 },
   commonStyle: { fontFamily: 'Arial, sans-serif' }
@@ -246,12 +245,12 @@ element.micro.reset();
 Listen for user interactions and lifecycle events:
 
 ```typescript
-import { UIElementEvent } from 'laymur';
+import { UIInputEvent } from 'laymur';
 
 const button = new UIImage(layer, buttonTexture);
 button.mode = UIMode.INTERACTIVE; // Enable interaction
 
-button.on(UIElementEvent.CLICK, (x, y, element) => {
+button.on(UIInputEvent.CLICK, (x, y, element) => {
   console.log(`Button clicked at ${x}, ${y}`);
   // Handle button click
 });

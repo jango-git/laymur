@@ -5,9 +5,15 @@ import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
 import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
+/**
+ * Configuration options for creating a UIImage element.
+ */
 export interface UIImageOptions {
+  /** X position of the element */
   x: number;
+  /** Y position of the element */
   y: number;
+  /** Color tint applied to the image */
   color: UIColor;
 }
 
@@ -15,28 +21,29 @@ export interface UIImageOptions {
  * UI element for displaying textured images.
  *
  * UIImage is a concrete implementation of UIElement that renders a textured
- * image using Three.js Mesh and UIMaterial. It automatically sizes itself
+ * image using shader-based planes. It automatically sizes itself
  * to match the texture dimensions and provides control over visual properties
- * such as color tinting, opacity, and transparency.
+ * such as color tinting.
  *
  * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link UIMaterial} - Material system for rendering
  * @see {@link Texture} - Three.js texture for image data
  */
 export class UIImage extends UIElement {
+  /** Internal storage for the current texture */
   private textureInternal: Texture;
+  /** Internal storage for the color tint */
   private readonly colorInternal: UIColor;
 
   /**
    * Creates a new UIImage instance.
    *
    * The image will automatically size itself to match the texture's dimensions.
-   * The position defaults to (0, 0) if not specified.
+   * All options have default values if not specified.
    *
    * @param layer - The UI layer that contains this image
    * @param texture - The Three.js texture to display
-   * @param x - Initial x-coordinate position (defaults to 0)
-   * @param y - Initial y-coordinate position (defaults to 0)
+   * @param options - Configuration options for the image
+   * @throws Will throw an error if the texture dimensions are not valid positive numbers
    */
   constructor(
     layer: UILayer,
@@ -68,7 +75,7 @@ export class UIImage extends UIElement {
 
   /**
    * Gets the current color tint applied to the image.
-   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   * @returns The UIColor instance
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -100,17 +107,21 @@ export class UIImage extends UIElement {
 
   /**
    * Sets the color tint applied to the image.
-   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
+   * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
   }
 
+  /**
+   * Destroys the UI image by cleaning up color event listeners and all associated resources.
+   */
   public override destroy(): void {
     this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     super.destroy();
   }
 
+  /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

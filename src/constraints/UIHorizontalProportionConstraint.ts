@@ -9,7 +9,7 @@ import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
  */
 export interface UIHorizontalProportionConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element widths (elementA.width = elementB.width * proportion). */
+  /** The proportional relationship between element widths (elementA.width * proportion = elementB.width). */
   proportion: number;
 }
 
@@ -72,7 +72,7 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
 
   /**
    * Gets the current proportion value being enforced.
-   * @returns The proportion ratio (elementA.width = elementB.width * proportion)
+   * @returns The proportion ratio (elementA.width * proportion = elementB.width)
    */
   public get proportion(): number {
     return this.proportionInternal;
@@ -96,7 +96,6 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
    * This enforces the relationship: elementA.width * proportion = elementB.width
    *
    * @returns The UIExpression representing the proportional width relationship
-   * @private
    */
   private buildRHS(): UIExpression {
     return UIExpression.minus(

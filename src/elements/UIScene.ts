@@ -63,9 +63,8 @@ export interface UISceneOptions {
   width: number;
   /** Height of the scene render target in pixels. */
   height: number;
-
+  /** Color tint applied to the scene texture. */
   color: UIColor;
-
   /** Three.js scene to render. */
   scene: Scene;
   /** Camera to use for rendering the scene. */
@@ -100,6 +99,7 @@ export class UIScene extends UIElement {
   /** The WebGL render target for off-screen scene rendering. */
   private readonly renderTarget: WebGLRenderTarget;
 
+  /** Internal storage for the color tint. */
   private readonly colorInternal: UIColor;
   /** Internal storage for the current Three.js scene. */
   private sceneInternal: Scene;
@@ -196,7 +196,7 @@ export class UIScene extends UIElement {
 
   /**
    * Gets the current color tint applied to the scene texture.
-   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   * @returns The UIColor instance
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -252,7 +252,7 @@ export class UIScene extends UIElement {
 
   /**
    * Sets the color tint applied to the scene texture.
-   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
+   * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
@@ -351,6 +351,12 @@ export class UIScene extends UIElement {
     this.renderRequired = true;
   }
 
+  /**
+   * Called before each render frame to update the 3D scene rendering.
+   * Handles different update modes and renders the 3D scene to the render target
+   * based on the current update mode and property change state.
+   * @param renderer - The WebGL renderer used for scene rendering
+   */
   protected override onWillRender(renderer: WebGLRenderer): void {
     if (
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
@@ -376,6 +382,7 @@ export class UIScene extends UIElement {
     }
   }
 
+  /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

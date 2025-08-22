@@ -142,7 +142,6 @@ export class UIFullscreenLayer extends UILayer {
    * width takes precedence; in vertical orientation, fixed height takes precedence.
    *
    * @returns The scaling factor to apply to window dimensions
-   * @private
    */
   private calculateScale(): number {
     if (this.orientation === UIOrientation.HORIZONTAL) {
@@ -169,8 +168,6 @@ export class UIFullscreenLayer extends UILayer {
    *
    * Recalculates the scaling factor and updates the layer dimensions
    * based on the new window size and fixed dimension constraints.
-   *
-   * @private
    */
   private readonly onResize = (): void => {
     const scale = this.calculateScale();
@@ -185,7 +182,6 @@ export class UIFullscreenLayer extends UILayer {
    * The y-coordinate is flipped to match the UI coordinate system.
    *
    * @param event - The pointer event from the browser
-   * @private
    */
   private readonly onClick = (event: PointerEvent): void => {
     const r =

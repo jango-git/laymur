@@ -18,7 +18,7 @@ export interface UICoverConstraintBuilderOptions {
   keepActiveAspect: boolean;
   /** Horizontal anchor point (0.0 = left, 0.5 = center, 1.0 = right) */
   anchorH: number;
-  /** Vertical anchor point (0.0 = bottom, 0.5 = center, 1.0 = top) */
+  /** Vertical anchor point (0.0 = top, 0.5 = center, 1.0 = bottom) */
   anchorV: number;
   /** Orientation context for constraint calculations */
   orientation: UIOrientation;
@@ -35,6 +35,8 @@ export interface UICoverConstraintBuilderOptions {
  * - Positioned at the specified anchor point within the passive element
  * - Sized to be at least as large as the passive element in both dimensions
  * - Scaled proportionally to maintain aspect ratio (if enabled)
+ *
+ * The constraints ensure: passive.dimension * 1 ≤ active.dimension (active covers passive)
  */
 export class UICoverConstraintBuilder {
   /**

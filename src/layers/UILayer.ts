@@ -7,7 +7,16 @@ import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperCli
 import { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
+/**
+ * Interface for handling input events within UI layers.
+ */
 export interface UILayerInputListener {
+  /**
+   * Handles click events at the specified coordinates.
+   * @param x - The x-coordinate of the click
+   * @param y - The y-coordinate of the click
+   * @returns True if the click was handled, false otherwise
+   */
   catchClick(x: number, y: number): boolean;
 }
 
@@ -84,6 +93,8 @@ export abstract class UILayer extends Eventail {
 
   /** Internal storage for the current orientation state. */
   protected orientationInternal: UIOrientation;
+
+  /** Collection of input listeners for handling user interactions, sorted by z-index. */
 
   private readonly inputListeners: {
     zIndex: number;
@@ -250,6 +261,17 @@ export abstract class UILayer extends Eventail {
     return this.sceneWrapper;
   }
 
+  /**
+   * Internal method for registering an input listener for pointer events.
+   *
+   * Adds a listener to handle click events with the specified z-index priority.
+   * Higher z-index listeners are processed first during event handling.
+   *
+   * @param listener - The input listener to register
+   * @param zIndex - The z-index priority for event handling order
+   * @throws Will throw an error if the listener is already registered
+   */
+
   protected ["listenPointerInput"](
     listener: UILayerInputListener,
     zIndex: number,
@@ -260,15 +282,37 @@ export abstract class UILayer extends Eventail {
     this.inputListeners.push({ zIndex, listener });
   }
 
+  /**
+   * Internal method for updating the z-index of an existing input listener.
+   *
+   * Changes the priority order for event handling of an already registered listener.
+   * The listener must already exist in the system.
+   *
+   * @param listener - The input listener to update
+   * @param zIndex - The new z-index priority
+   * @throws Will throw an error if the listener is not found
+   */
+
   protected ["setListenerZIndex"](
     listener: UILayerInputListener,
     zIndex: number,
   ): void {
-    if (this.inputListeners.findIndex((l) => l.listener === listener) === -1) {
+    const index = this.inputListeners.findIndex((l) => l.listener === listener);
+    if (index === -1) {
       throw new Error("Listener not found");
     }
-    this.inputListeners.push({ zIndex, listener });
+    this.inputListeners[index].zIndex = zIndex;
   }
+
+  /**
+   * Internal method for unregistering an input listener.
+   *
+   * Removes the specified listener from the event handling system.
+   * The listener will no longer receive click events.
+   *
+   * @param listener - The input listener to remove
+   * @throws Will throw an error if the listener is not found
+   */
 
   protected ["unlistenPointerInput"](listener: UILayerInputListener): void {
     const index = this.inputListeners.findIndex((l) => l.listener === listener);

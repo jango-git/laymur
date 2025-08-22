@@ -9,7 +9,7 @@ import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
  */
 export interface UIVerticalProportionConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element heights (elementA.height = elementB.height * proportion). */
+  /** The proportional relationship between element heights (elementA.height * proportion = elementB.height). */
   proportion: number;
 }
 
@@ -72,7 +72,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
 
   /**
    * Gets the current proportion value being enforced.
-   * @returns The proportion ratio (elementA.height = elementB.height * proportion)
+   * @returns The proportion ratio (elementA.height * proportion = elementB.height)
    */
   public get proportion(): number {
     return this.proportionInternal;
@@ -96,7 +96,6 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
    * This enforces the relationship: elementA.height * proportion = elementB.height
    *
    * @returns The UIExpression representing the proportional height relationship
-   * @private
    */
   private buildRHS(): UIExpression {
     return UIExpression.minus(

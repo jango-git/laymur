@@ -18,6 +18,7 @@ export interface UINineSliceOptions {
   x: number;
   /** Y position of the element */
   y: number;
+  /** Color tint applied to the nine-slice element */
   color: UIColor;
   /** Nine-slice border configuration (can be number, object with horizontal/vertical, or full border object) */
   sliceBorders: UINineSliceBorders;
@@ -32,17 +33,25 @@ export interface UINineSliceOptions {
  * panels, buttons, and borders that maintain visual quality at any size.
  */
 export class UINineSlice extends UIElement {
+  /** Internal storage for the current texture */
   private readonly textureInternal: Texture;
+  /** Internal storage for the color tint */
   private readonly colorInternal: UIColor;
+  /** Internal storage for the nine-slice border values (left, right, top, bottom) */
   private readonly sliceBordersInternal: Vector4;
-  private readonly dimensions: Vector4; //texture pixel size, quad world size
+  /** Internal storage for texture and world dimensions (texture width, texture height, world width, world height) */
+  private readonly dimensions: Vector4;
 
   /**
    * Creates a new nine-slice UI element.
    *
+   * The element initially sizes itself to match the texture's dimensions.
+   * Border regions are defined by the slice borders configuration.
+   *
    * @param layer - The UI layer to add this element to
    * @param texture - The texture to use for nine-slice rendering
    * @param options - Configuration options for the nine-slice element
+   * @throws Will throw an error if the texture dimensions are not valid positive numbers
    */
   constructor(
     layer: UILayer,
@@ -86,8 +95,8 @@ export class UINineSlice extends UIElement {
   }
 
   /**
-   * Gets the current color tint applied to the image.
-   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   * Gets the current color tint applied to the nine-slice element.
+   * @returns The UIColor instance
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -95,7 +104,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Gets the left border size for nine-slice scaling.
-   * @returns The left border size in texture UV coordinates
+   * @returns The left border size as a percentage (0-1) of texture width
    */
   public get sliceBorderLeft(): number {
     return this.sliceBordersInternal.x;
@@ -103,7 +112,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Gets the right border size for nine-slice scaling.
-   * @returns The right border size in texture UV coordinates
+   * @returns The right border size as a percentage (0-1) of texture width
    */
   public get sliceBorderRight(): number {
     return this.sliceBordersInternal.y;
@@ -111,7 +120,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Gets the top border size for nine-slice scaling.
-   * @returns The top border size in texture UV coordinates
+   * @returns The top border size as a percentage (0-1) of texture height
    */
   public get sliceBorderTop(): number {
     return this.sliceBordersInternal.z;
@@ -119,17 +128,17 @@ export class UINineSlice extends UIElement {
 
   /**
    * Gets the bottom border size for nine-slice scaling.
-   * @returns The bottom border size in texture UV coordinates
+   * @returns The bottom border size as a percentage (0-1) of texture height
    */
   public get sliceBorderBottom(): number {
     return this.sliceBordersInternal.w;
   }
 
   /**
-   * Sets a new texture for the image.
+   * Sets a new texture for the nine-slice element.
    *
-   * When setting a new texture, the image will automatically resize to match
-   * the new texture's dimensions.
+   * When setting a new texture, the element will update its internal dimensions
+   * but maintain the current world size. The nine-slice borders remain unchanged.
    *
    * @param value - The new Three.js texture to display
    * @throws Will throw an error if the texture dimensions are not valid positive numbers
@@ -156,8 +165,8 @@ export class UINineSlice extends UIElement {
   }
 
   /**
-   * Sets the color tint applied to the image.
-   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
+   * Sets the color tint applied to the nine-slice element.
+   * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
@@ -165,7 +174,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Sets the left border size for nine-slice scaling.
-   * @param value - The left border size in texture UV coordinates
+   * @param value - The left border size as a percentage (0-1) of texture width
    */
   public set sliceBorderLeft(value: number) {
     this.sliceBordersInternal.x = value;
@@ -178,7 +187,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Sets the right border size for nine-slice scaling.
-   * @param value - The right border size in texture UV coordinates
+   * @param value - The right border size as a percentage (0-1) of texture width
    */
   public set sliceBorderRight(value: number) {
     this.sliceBordersInternal.y = value;
@@ -191,7 +200,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Sets the top border size for nine-slice scaling.
-   * @param value - The top border size in texture UV coordinates
+   * @param value - The top border size as a percentage (0-1) of texture height
    */
   public set sliceBorderTop(value: number) {
     this.sliceBordersInternal.z = value;
@@ -204,7 +213,7 @@ export class UINineSlice extends UIElement {
 
   /**
    * Sets the bottom border size for nine-slice scaling.
-   * @param value - The bottom border size in texture UV coordinates
+   * @param value - The bottom border size as a percentage (0-1) of texture height
    */
   public set sliceBorderBottom(value: number) {
     this.sliceBordersInternal.w = value;
@@ -218,10 +227,10 @@ export class UINineSlice extends UIElement {
   /**
    * Sets all four border sizes for nine-slice scaling at once.
    *
-   * @param left - The left border size in texture UV coordinates
-   * @param right - The right border size in texture UV coordinates
-   * @param top - The top border size in texture UV coordinates
-   * @param bottom - The bottom border size in texture UV coordinates
+   * @param left - The left border size as a percentage (0-1) of texture width
+   * @param right - The right border size as a percentage (0-1) of texture width
+   * @param top - The top border size as a percentage (0-1) of texture height
+   * @param bottom - The bottom border size as a percentage (0-1) of texture height
    */
   public setSliceBorders(
     left: number,
@@ -237,11 +246,20 @@ export class UINineSlice extends UIElement {
     );
   }
 
+  /**
+   * Destroys the nine-slice UI element by cleaning up color event listeners and all associated resources.
+   */
   public override destroy(): void {
     this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     super.destroy();
   }
 
+  /**
+   * Called before each render frame to update the element's dimensions for nine-slice scaling.
+   * Updates the world dimensions (z, w components) based on current width, height, and micro scaling.
+   * @param renderer - The WebGL renderer
+   * @param deltaTime - Time since last frame in seconds
+   */
   protected override onWillRender(
     renderer: WebGLRenderer,
     deltaTime: number,
@@ -257,6 +275,7 @@ export class UINineSlice extends UIElement {
     );
   }
 
+  /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

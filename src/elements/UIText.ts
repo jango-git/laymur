@@ -26,6 +26,7 @@ export interface UITextOptions {
   x: number;
   /** Y-coordinate of the text element. */
   y: number;
+  /** Color tint applied to the text. */
   color: UIColor;
   /** Maximum width in pixels before text wrapping occurs. */
   maxWidth: number;
@@ -59,6 +60,7 @@ export class UIText extends UIElement {
   /** The canvas texture containing the rendered text. */
   private readonly texture: CanvasTexture;
 
+  /** Internal storage for the color tint. */
   private readonly colorInternal: UIColor;
 
   /** Internal storage for the current text content. */
@@ -89,8 +91,6 @@ export class UIText extends UIElement {
    * @param layer - The UI layer that contains this text element
    * @param content - The text content to display
    * @param options - Configuration options for text rendering
-   * @param x - Initial x-coordinate position (defaults to 0)
-   * @param y - Initial y-coordinate position (defaults to 0)
    * @throws Will throw an error if canvas context creation fails
    */
   constructor(
@@ -129,7 +129,7 @@ export class UIText extends UIElement {
 
   /**
    * Gets the current color tint applied to the text.
-   * @returns The color value as a number (e.g., 0xFFFFFF for white)
+   * @returns The UIColor instance
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -169,7 +169,7 @@ export class UIText extends UIElement {
 
   /**
    * Sets the color tint applied to the text.
-   * @param value - The color value as a number (e.g., 0xFFFFFF for white)
+   * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
@@ -214,8 +214,7 @@ export class UIText extends UIElement {
   /**
    * Destroys the text element by cleaning up all associated resources.
    *
-   * This method disposes of the material and texture resources, removes
-   * the canvas element from the DOM, and calls the parent destroy method
+   * This method disposes of the texture resources and calls the parent destroy method
    * to clean up the underlying UI element. After calling this method,
    * the text element should not be used anymore.
    */
@@ -225,6 +224,12 @@ export class UIText extends UIElement {
     super.destroy();
   }
 
+  /**
+   * Called before each render frame to maintain proper text aspect ratio.
+   * Adjusts the height based on the target aspect ratio calculated from text content.
+   * @param renderer - The WebGL renderer
+   * @param deltaTime - Time since last frame in seconds
+   */
   protected override onWillRender(
     renderer: WebGLRenderer,
     deltaTime: number,
@@ -242,8 +247,6 @@ export class UIText extends UIElement {
    * This method calculates the text layout, resizes the canvas to fit the content
    * with padding, renders the text lines to the canvas, and updates the texture.
    * It also calculates and sets the target aspect ratio for proper display.
-   *
-   * @private
    */
   private rebuildText(): void {
     const { lines, size } = calculateTextContentParameters(
@@ -274,6 +277,7 @@ export class UIText extends UIElement {
     this.texture.needsUpdate = true;
   }
 
+  /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

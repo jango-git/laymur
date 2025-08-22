@@ -7,30 +7,59 @@ import { UIElement } from "./UIElement";
 
 const DEFAULT_TEXTURE = new Texture();
 
-const DEFAULT_MASK_FUNCTION = `float calculateMask() {
-  return step(progress, io_UV.x);
-}`;
+/**
+ * Predefined mask functions that control how the progress bar fills.
+ * Each function defines a different fill pattern using GLSL shader code.
+ */
+export enum UIProgressMaskFunction {
+  /** Fill horizontally from left to right (or right to left if inverse) */
+  HORIZONTAL = `float calculateMask() {
+    return step((direction * io_UV.x + (1.0 - direction) * 0.5), progress);
+  }`,
+
+  /** Fill vertically from bottom to top (or top to bottom if inverse) */
+  VERTICAL = `float calculateMask() {
+    return step((direction * io_UV.y + (1.0 - direction) * 0.5), progress);
+  }`,
+
+  /** Fill diagonally from bottom-left to top-right */
+  DIAGONAL = `float calculateMask() {
+    float d = (io_UV.x + io_UV.y) * (0.1);
+    return step((direction * d + (1.0 - direction) * 0.5), progress);
+  }`,
+
+  /** Fill in a circular pattern around the center */
+  CIRCLE = `float calculateMask() {
+    vec2 p = io_UV - 0.5;
+    float angle = atan(p.y, p.x);
+    angle = (angle + 3.14159265) / 3.14159265;
+    angle *= 0.5;
+    return step((direction * angle + (1.0 - direction) * 0.5), progress);
+  }`,
+}
 
 /**
  * Configuration options for creating a UIProgress element.
  */
 export interface UIProgressOptions {
   /** X position of the element */
-  x: number;
+  x?: number;
   /** Y position of the element */
-  y: number;
-  /** Optional background texture (if not provided, only foreground is shown) */
-  backgroundTexture: Texture;
-  /** Background color tint as hex number (e.g., 0xFFFFFF) */
-  color: UIColor;
-  /** Foreground color tint as hex number (e.g., 0xFFFFFF) */
-  foregroundColor: UIColor;
-  /** Background color tint as hex number (e.g., 0xFFFFFF) */
-  backgroundColor: UIColor;
-  maskFunction: string;
+  y?: number;
+  /** Optional background texture (if not provided, default texture is used) */
+  backgroundTexture?: Texture;
+  /** Overall color tint applied to the entire progress bar */
+  color?: UIColor;
+  /** Foreground color tint applied to the filled portion */
+  foregroundColor?: UIColor;
+  /** Background color tint applied to the unfilled portion */
+  backgroundColor?: UIColor;
+  /** Mask function that defines how the progress bar fills (predefined enum or custom GLSL code) */
+  maskFunction?: UIProgressMaskFunction | string;
   /** Progress value between 0.0 (empty) and 1.0 (full) */
-  progress: number;
-  inverseDirection: boolean;
+  progress?: number;
+  /** Whether to fill in reverse direction (true for reverse, false for normal) */
+  inverseDirection?: boolean;
 }
 
 /**
@@ -44,14 +73,21 @@ export interface UIProgressOptions {
  * The fill direction can be controlled both by angle and forward/reverse direction.
  */
 export class UIProgress extends UIElement {
+  /** Internal storage for the foreground texture */
   private foregroundTextureInternal: Texture;
+  /** Internal storage for the optional background texture */
   private backgroundTextureInternal?: Texture;
 
+  /** Internal storage for the overall color tint */
   private readonly colorInternal: UIColor;
+  /** Internal storage for the foreground color tint */
   private readonly foregroundColorInternal: UIColor;
+  /** Internal storage for the background color tint */
   private readonly backgroundColorInternal: UIColor;
 
+  /** Internal storage for the current progress value */
   private progressInternal: number;
+  /** Internal storage for the fill direction flag */
   private inverseDirectionInternal: boolean;
 
   /**
@@ -95,7 +131,7 @@ export class UIProgress extends UIElement {
       options.y ?? 0,
       w,
       h,
-      (options.maskFunction ?? DEFAULT_MASK_FUNCTION) + source,
+      (options.maskFunction ?? UIProgressMaskFunction.HORIZONTAL) + source,
       {
         foregroundTexture,
         backgroundTexture: options.backgroundTexture ?? DEFAULT_TEXTURE,
@@ -146,7 +182,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the color tint.
-   * @returns The color as a hex number (e.g., 0xFFFFFF)
+   * @returns The UIColor instance
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -154,7 +190,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the foreground color tint.
-   * @returns The foreground color as a hex number (e.g., 0xFFFFFF)
+   * @returns The foreground color UIColor instance
    */
   public get foregroundColor(): UIColor {
     return this.foregroundColorInternal;
@@ -162,7 +198,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the background color tint.
-   * @returns The background color as a hex number (e.g., 0xFFFFFF)
+   * @returns The background color UIColor instance
    */
   public get backgroundColor(): UIColor {
     return this.backgroundColorInternal;
@@ -177,8 +213,8 @@ export class UIProgress extends UIElement {
   }
 
   /**
-   * Gets whether the progress fills in forward direction.
-   * @returns True if filling forward, false if filling in reverse
+   * Gets whether the progress fills in reverse direction.
+   * @returns True if filling in reverse, false if filling forward
    */
   public get inverseDirection(): boolean {
     return this.inverseDirectionInternal;
@@ -229,7 +265,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the color tint.
-   * @param value - The color as a hex number (e.g., 0xFFFFFF)
+   * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
@@ -237,7 +273,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the foreground color tint.
-   * @param value - The foreground color as a hex number (e.g., 0xFFFFFF)
+   * @param value - The foreground color UIColor instance
    */
   public set foregroundColor(value: UIColor) {
     this.foregroundColorInternal.copy(value);
@@ -245,7 +281,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the background color tint.
-   * @param value - The background color as a hex number (e.g., 0xFFFFFF)
+   * @param value - The background color UIColor instance
    */
   public set backgroundColor(value: UIColor) {
     this.backgroundColorInternal.copy(value);
@@ -253,7 +289,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the progress fill direction.
-   * @param value - True for forward direction, false for reverse
+   * @param value - True for reverse direction, false for forward
    */
   public set inverseDirection(value: boolean) {
     this.inverseDirectionInternal = value;
@@ -286,15 +322,18 @@ export class UIProgress extends UIElement {
     super.destroy();
   }
 
+  /** Event handler for when the overall color changes */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };
 
+  /** Event handler for when the foreground color changes */
   private readonly onForegroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "foregroundcolor", color);
+    this.sceneWrapper.setUniform(this.planeHandler, "foregroundColor", color);
   };
 
+  /** Event handler for when the background color changes */
   private readonly onBackgroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "backgroundcolor", color);
+    this.sceneWrapper.setUniform(this.planeHandler, "backgroundColor", color);
   };
 }

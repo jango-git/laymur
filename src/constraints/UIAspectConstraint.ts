@@ -89,7 +89,6 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
    * This enforces the relationship: width = height * aspect
    *
    * @returns The UIExpression representing the constraint equation
-   * @private
    */
   private buildLHS(): UIExpression {
     return new UIExpression(0, [

@@ -164,8 +164,6 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
    *
    * Updates the constraint's enabled state in the solver based on the
    * current orientation and the constraint's orientation setting.
-   *
-   * @private
    */
   private readonly onOrientationChange = (): void => {
     this.solverWrapper.setConstraintEnabled(

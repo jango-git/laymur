@@ -26,6 +26,9 @@ export abstract class UIConstraint {
   /**
    * Creates a new UIConstraint instance.
    *
+   * Automatically connects to the layer's constraint solver for managing
+   * layout relationships and constraint operations.
+   *
    * @param layer - The UI layer that contains this constraint
    */
   constructor(public readonly layer: UILayer) {

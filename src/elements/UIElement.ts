@@ -21,6 +21,13 @@ const scale = new Vector3();
 const matrix = new Matrix4();
 const axis = new Vector3(0, 0, 1);
 
+/**
+ * Checks if a point (x, y) is within the bounds of a UI element.
+ * @param x - The x coordinate to test
+ * @param y - The y coordinate to test
+ * @param element - The UI element to test against
+ * @returns True if the point is within the element's bounds
+ */
 function isElementClicked(x: number, y: number, element: UIElement): boolean {
   return (
     x > element.x &&
@@ -35,14 +42,12 @@ function isElementClicked(x: number, y: number, element: UIElement): boolean {
  *
  * UIElement serves as the fundamental building block for all other UI elements
  * that need to be visually rendered. It extends UIAnchor with dimensional properties
- * and integrates with the Three.js rendering system through Object3D. This class
+ * and integrates with the Three.js rendering system through shader-based planes. This class
  * provides essential functionality for positioning, sizing, rendering, visibility,
  * z-index management, and user interaction.
  *
- * @template T - The type of Three.js Object3D used for rendering
  * @see {@link UIAnchor} - Base class providing position functionality
  * @see {@link UIPlaneElement} - Interface defining dimensional element behavior
- * @see {@link UISceneWrapper} - Scene management for rendering
  * @see {@link UIMicro} - Micro-optimization utilities
  */
 export abstract class UIElement
@@ -67,13 +72,18 @@ export abstract class UIElement
   /** Internal storage for the current visibility/interaction mode. */
   protected modeInternal: UIMode = UIMode.VISIBLE;
 
+  /** Internal storage for the transparency rendering mode. */
   protected transparencyInternal: UITransparencyMode = UITransparencyMode.CLIP;
 
+  /** Internal storage for the z-index (depth) value. */
   protected zIndexInternal = 0;
 
+  /** Optional input listener for handling user interactions when in interactive mode. */
   protected listener?: UILayerInputListener;
 
+  /** Client API for interacting with the scene wrapper (rendering system). */
   protected readonly sceneWrapper: UISceneWrapperClientAPI;
+  /** Handle to the plane object in the rendering system. */
   protected readonly planeHandler: number;
 
   /**
@@ -84,7 +94,8 @@ export abstract class UIElement
    * @param y - Initial y-coordinate position
    * @param width - Initial width dimension (must be positive)
    * @param height - Initial height dimension (must be positive)
-   * @param object - The Three.js Object3D used for rendering this element
+   * @param source - GLSL shader source code for rendering this element
+   * @param uniforms - Uniform values to pass to the shader
    * @throws Will throw an error if width or height are not valid positive numbers
    * @see {@link assertValidPositiveNumber}
    */
@@ -126,6 +137,10 @@ export abstract class UIElement
     return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
+  /**
+   * Gets the current z-index (depth) value.
+   * @returns The current z-index value
+   */
   public get zIndex(): number {
     return this.zIndexInternal;
   }
@@ -139,6 +154,11 @@ export abstract class UIElement
     return this.modeInternal;
   }
 
+  /**
+   * Gets the current transparency rendering mode.
+   * @returns The current transparency mode
+   * @see {@link UITransparencyMode}
+   */
   public get transparency(): UITransparencyMode {
     return this.transparencyInternal;
   }
@@ -165,8 +185,15 @@ export abstract class UIElement
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
+  /**
+   * Sets the z-index (depth) value for rendering order and input handling.
+   * @param value - The new z-index value
+   * @throws Will throw an error if value is not a valid number
+   * @see {@link assertValidNumber}
+   */
   public set zIndex(value: number) {
     assertValidNumber(value, "UIElement zIndex");
+    this.zIndexInternal = value;
     if (this.listener) {
       this.layer["setListenerZIndex"](this.listener, value);
     }
@@ -195,6 +222,11 @@ export abstract class UIElement
     }
   }
 
+  /**
+   * Sets the transparency rendering mode.
+   * @param value - The new transparency mode
+   * @see {@link UITransparencyMode}
+   */
   public set transparency(value: UITransparencyMode) {
     this.transparencyInternal = value;
     this.sceneWrapper.setTransparency(this.planeHandler, value);
@@ -204,18 +236,27 @@ export abstract class UIElement
    * Destroys the UI element by cleaning up all associated resources.
    *
    * This method removes the element from the rendering scene, cleans up
-   * dimension solver variables, and calls the parent destroy method to
-   * clean up position variables. After calling this method, the element
-   * should not be used anymore.
+   * dimension solver variables, removes input listeners, and calls the parent
+   * destroy method to clean up position variables. After calling this method,
+   * the element should not be used anymore.
    */
   public override destroy(): void {
     this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRender, this);
+    if (this.listener) {
+      this.layer["unlistenPointerInput"](this.listener);
+    }
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);
     this.sceneWrapper.destroyPlane(this.planeHandler);
     super.destroy();
   }
 
+  /**
+   * Handles click events when the element is in interactive mode.
+   * @param x - The x coordinate of the click
+   * @param y - The y coordinate of the click
+   * @returns True if the click was within this element's bounds
+   */
   protected readonly onClick = (x: number, y: number): boolean => {
     const clicked = isElementClicked(x, y, this);
     if (clicked) {
@@ -224,6 +265,13 @@ export abstract class UIElement
     return clicked;
   };
 
+  /**
+   * Called before each render frame to update the element's transform matrix.
+   * Applies micro-transformations (position, rotation, scale, anchor) and updates
+   * the rendering system with the final transformation matrix.
+   * @param renderer - The WebGL renderer (unused in base implementation)
+   * @param deltaTime - Time since last frame in seconds (unused in base implementation)
+   */
   protected onWillRender(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
     renderer: WebGLRenderer,

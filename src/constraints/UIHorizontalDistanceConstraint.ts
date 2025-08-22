@@ -154,7 +154,6 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
    * For plane elements, the anchor determines the reference point within the element's width.
    *
    * @returns The UIExpression representing the horizontal distance calculation
-   * @private
    */
   private buildLHS(): UIExpression {
     let aExpression: UIExpression;
