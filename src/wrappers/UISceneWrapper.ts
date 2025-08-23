@@ -120,7 +120,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
       lights: false,
       fog: false,
       depthWrite: false,
-      depthTest: false,
+      depthTest: true,
     });
 
     const plane = new Mesh(geometry, material);

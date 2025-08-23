@@ -1,5 +1,4 @@
 import {
-  Color,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Matrix2,
@@ -14,44 +13,178 @@ import {
   Vector4,
 } from "three";
 import { UIColor } from "../miscellaneous/UIColor";
-
-const CAPACITY_STEP = 16;
-
-const GLSL_TYPE_MAP: Record<string, string | undefined> = {
-  [Texture.name]: "sampler2D",
-  [UIColor.name]: "vec4",
-  [Color.name]: "vec3",
-  [Vector2.name]: "vec2",
-  [Vector3.name]: "vec3",
-  [Vector4.name]: "vec4",
-  [Matrix2.name]: "mat2",
-  [Matrix3.name]: "mat3",
-  [Matrix4.name]: "mat4",
-};
+import { UITransparencyMode } from "./UITransparencyMode";
 
 export type UIPropertyType =
   | Texture
   | UIColor
-  | Color
   | Vector2
   | Vector3
   | Vector4
   | Matrix2
   | Matrix3
-  | Matrix4;
+  | Matrix4
+  | number;
 
-function isInstantiableProperty(type: UIPropertyType): boolean {
-  return !(type instanceof Texture);
-}
+export type UIPropertyTypeName =
+  | "Texture"
+  | "UIColor"
+  | "Vector2"
+  | "Vector3"
+  | "Vector4"
+  | "Matrix2"
+  | "Matrix3"
+  | "Matrix4"
+  | "number";
 
 interface RangeDescriptor {
   firstIndex: number;
   count: number;
 }
 
+const INSTANCED_GEOMETRY = ((): InstancedBufferGeometry => {
+  const planeGeometry = new PlaneGeometry(1, 1);
+  const geometry = new InstancedBufferGeometry();
+  geometry.index = planeGeometry.index;
+  geometry.setAttribute("position", planeGeometry.attributes["position"]);
+  geometry.setAttribute("uv", planeGeometry.attributes["uv"]);
+  planeGeometry.dispose();
+  return geometry;
+})();
+
+const ITEM_1_OFFSET = 1;
+const ITEM_2_OFFSET = 2;
+const ITEM_3_OFFSET = 3;
+
+const CAPACITY_STEP = 16;
+const ALPHA_TEST = 0.5;
+
+function resolveTypeInfo(property: UIPropertyType | UIPropertyTypeName): {
+  instantiable: boolean;
+  glslType: string;
+  itemSize: number;
+} {
+  if (property === "Texture" || property instanceof Texture) {
+    return { glslType: "sampler2D", instantiable: false, itemSize: -1 };
+  } else if (property === "UIColor" || property instanceof UIColor) {
+    return { glslType: "vec4", instantiable: true, itemSize: 4 };
+  } else if (property === "Vector2" || property instanceof Vector2) {
+    return { glslType: "vec2", instantiable: true, itemSize: 2 };
+  } else if (property === "Vector3" || property instanceof Vector3) {
+    return { glslType: "vec3", instantiable: true, itemSize: 3 };
+  } else if (property === "Vector4" || property instanceof Vector4) {
+    return { glslType: "vec4", instantiable: true, itemSize: 4 };
+  } else if (property === "Matrix2" || property instanceof Matrix2) {
+    return { glslType: "mat2", instantiable: true, itemSize: 4 };
+  } else if (property === "Matrix3" || property instanceof Matrix3) {
+    return { glslType: "mat3", instantiable: true, itemSize: 9 };
+  } else if (property === "Matrix4" || property instanceof Matrix4) {
+    return { glslType: "mat4", instantiable: true, itemSize: 16 };
+  } else if (property === "number" || typeof property === "number") {
+    return { glslType: "float", instantiable: true, itemSize: 1 };
+  } else {
+    throw new Error(`Unsupported property type: ${property}`);
+  }
+}
+
+function buildEmptyInstancedBufferAttribute(
+  property: UIPropertyType | UIPropertyTypeName,
+  capacity: number,
+): InstancedBufferAttribute {
+  const info = resolveTypeInfo(property);
+  if (!info.instantiable) {
+    throw new Error(`Invalid property type: ${property}`);
+  }
+  return new InstancedBufferAttribute(
+    new Float32Array(capacity * info.itemSize),
+    info.itemSize,
+  );
+}
+
+function buildMaterial(
+  source: string,
+  uniformLayout: Record<string, UIPropertyTypeName>,
+  varyingLayout: Record<string, UIPropertyTypeName>,
+  transparency: UITransparencyMode,
+): ShaderMaterial {
+  const uniforms: Record<string, { value: null }> = {};
+
+  const uniformDeclarations: string[] = [];
+  const attributeDeclarations: string[] = [];
+  const varyingDeclarations: string[] = [];
+  const vertexAssignments: string[] = [];
+
+  for (const [name, propertyTypeName] of Object.entries(uniformLayout)) {
+    const glslType = resolveTypeInfo(propertyTypeName).glslType;
+    uniforms[`u_${name}`] = { value: null };
+    uniformDeclarations.push(`uniform ${glslType} u_${name};`);
+  }
+
+  for (const [name, propertyTypeName] of Object.entries(varyingLayout)) {
+    const glslType = resolveTypeInfo(propertyTypeName).glslType;
+    attributeDeclarations.push(`attribute ${glslType} a_${name};`);
+    varyingDeclarations.push(`varying ${glslType} v_${name};`);
+    vertexAssignments.push(`v_${name} = a_${name};`);
+  }
+
+  const vertexShader = `
+    ${attributeDeclarations.join("\n")}
+    ${uniformDeclarations.join("\n")}
+    ${varyingDeclarations.join("\n")}
+    varying vec3 v_position;
+    varying vec2 v_uv;
+
+    void main() {
+      ${vertexAssignments.join("\n")}
+
+      v_position = position;
+      v_uv = (a_uvTransform * vec3(uv, 1.0)).xy;
+
+      gl_Position = projectionMatrix * modelViewMatrix * a_instanceTransform * vec4(position, 1.0);
+    }
+  `;
+
+  const fragmentShader = `
+    ${uniformDeclarations.join("\n")}
+    ${varyingDeclarations.join("\n")}
+    varying vec3 v_position;
+    varying vec2 v_uv;
+
+    #include <alphahash_pars_fragment>
+
+    // Source have to define 'draw' function
+    ${source}
+
+    void main() {
+      vec4 diffuseColor = draw();
+
+      #ifdef USE_ALPHATEST
+        if (diffuseColor.a < v_alphaTest) {
+          discard;
+        }
+      #endif
+
+      #ifdef USE_ALPHAHASH
+        if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
+          discard;
+        }
+      #endif
+
+      gl_FragColor = linearToOutputTexel(diffuseColor);
+    }
+  `;
+
+  return new ShaderMaterial({
+    uniforms,
+    vertexShader,
+    fragmentShader,
+    transparent: transparency === UITransparencyMode.BLEND,
+    alphaTest: transparency === UITransparencyMode.CLIP ? ALPHA_TEST : 0.0,
+    alphaHash: transparency === UITransparencyMode.HASH,
+  });
+}
+
 export class UIGenericInstancedPlane extends Mesh {
-  protected instancedGeometry: InstancedBufferGeometry;
-  protected shaderMaterial: ShaderMaterial;
   protected userIndexToRangeDescriptor: Map<number, RangeDescriptor> =
     new Map();
 
@@ -59,24 +192,36 @@ export class UIGenericInstancedPlane extends Mesh {
   protected capacity = 0;
   protected propertyBuffers: Map<string, InstancedBufferAttribute> = new Map();
 
+  private readonly instancedGeometry: InstancedBufferGeometry;
+  private readonly shaderMaterial: ShaderMaterial;
+
   constructor(
     source: string,
-    private readonly properties: Record<string, UIPropertyType>,
-    initialCapacity: number,
+    layout: Record<string, UIPropertyTypeName>,
+    transparency: UITransparencyMode = UITransparencyMode.CLIP,
+    capacity: number = CAPACITY_STEP,
   ) {
-    // Create plane geometry
-    const plane = new PlaneGeometry(1, 1);
-    const instancedGeometry = new InstancedBufferGeometry();
-    instancedGeometry.index = plane.index;
-    instancedGeometry.setAttribute("position", plane.attributes["position"]);
-    instancedGeometry.setAttribute("uv", plane.attributes["uv"]);
+    const uniformLayout: Record<string, UIPropertyTypeName> = {};
+    const varyingLayout: Record<string, UIPropertyTypeName> = {
+      instanceTransform: "Matrix4",
+      uvTransform: "Matrix3",
+      ...(transparency === UITransparencyMode.CLIP
+        ? { alphaTest: "number" }
+        : {}),
+    };
 
-    plane.dispose();
+    for (const [name, propertyTypeName] of Object.entries(layout)) {
+      (resolveTypeInfo(propertyTypeName).instantiable
+        ? varyingLayout
+        : uniformLayout)[name] = propertyTypeName;
+    }
 
-    // Create shader material
-    const shaderMaterial = UIGenericInstancedPlane.createShaderMaterial(
+    const instancedGeometry = INSTANCED_GEOMETRY.clone();
+    const shaderMaterial = buildMaterial(
       source,
-      properties,
+      uniformLayout,
+      varyingLayout,
+      transparency,
     );
 
     super(instancedGeometry, shaderMaterial);
@@ -85,120 +230,17 @@ export class UIGenericInstancedPlane extends Mesh {
     this.instancedGeometry.instanceCount = 0;
 
     this.shaderMaterial = shaderMaterial;
-    this.capacity = Math.max(initialCapacity, CAPACITY_STEP);
+    this.capacity = Math.max(capacity, CAPACITY_STEP);
 
-    for (const [name, property] of Object.entries(this.properties)) {
-      if (isInstantiableProperty(property)) {
-        let attribute: InstancedBufferAttribute;
+    for (const [name, propertyTypeName] of Object.entries(varyingLayout)) {
+      const attribute = buildEmptyInstancedBufferAttribute(
+        propertyTypeName,
+        this.capacity,
+      );
 
-        if (property instanceof UIColor) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 4),
-            4,
-          );
-        } else if (property instanceof Color) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 3),
-            3,
-          );
-        } else if (property instanceof Vector2) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 2),
-            2,
-          );
-        } else if (property instanceof Vector3) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 3),
-            3,
-          );
-        } else if (property instanceof Vector4) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 4),
-            4,
-          );
-        } else if (property instanceof Matrix2) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 4),
-            4,
-          );
-        } else if (property instanceof Matrix3) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 9),
-            9,
-          );
-        } else if (property instanceof Matrix4) {
-          attribute = new InstancedBufferAttribute(
-            new Float32Array(this.capacity * 16),
-            16,
-          );
-        } else {
-          throw new Error(
-            `Unsupported property type: ${property.constructor.name}`,
-          );
-        }
-
-        this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-        this.propertyBuffers.set(name, attribute);
-      }
+      this.instancedGeometry.setAttribute(`a_${name}`, attribute);
+      this.propertyBuffers.set(name, attribute);
     }
-  }
-
-  private static createShaderMaterial(
-    source: string,
-    properties: Record<string, UIPropertyType>,
-  ): ShaderMaterial {
-    const uniforms: Record<string, { value: unknown }> = {};
-
-    const uniformDeclarations: string[] = [];
-    const attributeDeclarations: string[] = [];
-    const varyingDeclarations: string[] = [];
-    const vertexAssignments: string[] = [];
-
-    for (const [name, property] of Object.entries(properties)) {
-      const glslType = GLSL_TYPE_MAP[property.constructor.name];
-      if (glslType === undefined) {
-        throw new Error(
-          `Unsupported property type: ${property.constructor.name}`,
-        );
-      }
-
-      if (isInstantiableProperty(property)) {
-        attributeDeclarations.push(`attribute ${glslType} a_${name};`);
-        varyingDeclarations.push(`varying ${glslType} v_${name};`);
-        vertexAssignments.push(`v_${name} = a_${name};`);
-      } else {
-        uniforms[`u_${name}`] = { value: property };
-        uniformDeclarations.push(`uniform ${glslType} u_${name};`);
-      }
-    }
-
-    const vertexShader = `
-      ${attributeDeclarations.join("\n      ")}
-      ${uniformDeclarations.join("\n      ")}
-
-      ${varyingDeclarations.join("\n      ")}
-      varying vec2 v_uv;
-
-      void main() {
-        ${vertexAssignments.join("\n        ")}
-        v_uv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `;
-
-    const fragmentShader = `
-      ${uniformDeclarations.join("\n      ")}
-      ${varyingDeclarations.join("\n      ")}
-      varying vec2 v_uv;
-
-      ${source}
-    `;
-
-    return new ShaderMaterial({
-      uniforms,
-      vertexShader,
-      fragmentShader,
-    });
   }
 
   public allocateInstances(count: number): number {
@@ -210,12 +252,12 @@ export class UIGenericInstancedPlane extends Mesh {
       );
     }
 
-    this.instancedGeometry.instanceCount += count;
     this.userIndexToRangeDescriptor.set(userIndex, {
       firstIndex: this.instancedGeometry.instanceCount,
       count,
     });
 
+    this.instancedGeometry.instanceCount += count;
     return userIndex;
   }
 
@@ -240,19 +282,14 @@ export class UIGenericInstancedPlane extends Mesh {
     }
 
     if (replacementDescriptor) {
-      // Copy data from replacement range to deleted range position
       this.copyRangeData(replacementDescriptor, releasedDescriptor);
-
-      // Update replacement range position
       replacementDescriptor.firstIndex = releasedDescriptor.firstIndex;
 
-      // Shift all ranges above the replacement range down
       this.shiftRangesDown(
         replacementDescriptor.firstIndex + replacementDescriptor.count,
         replacementDescriptor.count,
       );
     } else {
-      // No replacement found, shift all ranges above down
       this.shiftRangesDown(
         releasedDescriptor.firstIndex + releasedDescriptor.count,
         releasedDescriptor.count,
@@ -262,73 +299,139 @@ export class UIGenericInstancedPlane extends Mesh {
     this.instancedGeometry.instanceCount -= releasedDescriptor.count;
   }
 
-  public updatePoperties(
+  public updateInstances(
     userIndex: number,
-    properties: Record<string, UIPropertyType>,
+    instances: Record<string, UIPropertyType>[],
   ): void {
-    const descriptor = this.userIndexToRangeDescriptor.get(userIndex);
-    if (descriptor === undefined) {
-      throw new Error(`No active range found for userIndex: ${userIndex}`);
+    const descriptor = this.resolveDescriptor(userIndex);
+
+    if (instances.length !== descriptor.count) {
+      throw new Error(
+        `Invalid number of instances for userIndex: ${userIndex}`,
+      );
     }
 
-    for (const [name, value] of Object.entries(properties)) {
-      if (!isInstantiableProperty(value)) {
-        this.shaderMaterial.uniforms[`u_${name}`].value = value;
-        this.shaderMaterial.uniformsNeedUpdate = true;
-      } else {
-        const attribute = this.propertyBuffers.get(name);
-        if (attribute === undefined) {
-          throw new Error(`No attribute found for property: ${name}`);
-        }
+    for (let i = 0; i < instances.length; i++) {
+      const instance = instances[i];
 
-        const array = attribute.array as Float32Array;
-        const itemSize = attribute.itemSize;
-        const startIndex = descriptor.firstIndex * itemSize;
-
-        for (let i = 0; i < descriptor.count; i++) {
-          const instanceOffset = startIndex + i * itemSize;
+      for (const [name, value] of Object.entries(instance)) {
+        if (!resolveTypeInfo(value).instantiable) {
+          this.shaderMaterial.uniforms[`u_${name}`].value = value;
+          this.shaderMaterial.uniformsNeedUpdate = true;
+        } else {
+          const attribute = this.resolveBufferAttribute(name);
+          const array = attribute.array as Float32Array;
+          const itemSize = attribute.itemSize;
+          const instanceOffset = (descriptor.firstIndex + i) * itemSize;
 
           if (value instanceof UIColor) {
             array[instanceOffset] = value.r;
-            array[instanceOffset + 1] = value.g;
-            array[instanceOffset + 2] = value.b;
-            array[instanceOffset + 3] = value.a;
-          } else if (value instanceof Color) {
-            array[instanceOffset] = value.r;
-            array[instanceOffset + 1] = value.g;
-            array[instanceOffset + 2] = value.b;
+            array[instanceOffset + ITEM_1_OFFSET] = value.g;
+            array[instanceOffset + ITEM_2_OFFSET] = value.b;
+            array[instanceOffset + ITEM_3_OFFSET] = value.a;
           } else if (value instanceof Vector2) {
             array[instanceOffset] = value.x;
-            array[instanceOffset + 1] = value.y;
+            array[instanceOffset + ITEM_1_OFFSET] = value.y;
           } else if (value instanceof Vector3) {
             array[instanceOffset] = value.x;
-            array[instanceOffset + 1] = value.y;
-            array[instanceOffset + 2] = value.z;
+            array[instanceOffset + ITEM_1_OFFSET] = value.y;
+            array[instanceOffset + ITEM_2_OFFSET] = value.z;
           } else if (value instanceof Vector4) {
             array[instanceOffset] = value.x;
-            array[instanceOffset + 1] = value.y;
-            array[instanceOffset + 2] = value.z;
-            array[instanceOffset + 3] = value.w;
+            array[instanceOffset + ITEM_1_OFFSET] = value.y;
+            array[instanceOffset + ITEM_2_OFFSET] = value.z;
+            array[instanceOffset + ITEM_3_OFFSET] = value.w;
           } else if (value instanceof Matrix2) {
             const elements = value.elements;
-            for (let j = 0; j < 4; j++) {
+            for (let j = 0; j < elements.length; j++) {
               array[instanceOffset + j] = elements[j];
             }
           } else if (value instanceof Matrix3) {
             const elements = value.elements;
-            for (let j = 0; j < 9; j++) {
+            for (let j = 0; j < elements.length; j++) {
               array[instanceOffset + j] = elements[j];
             }
           } else if (value instanceof Matrix4) {
             const elements = value.elements;
-            for (let j = 0; j < 16; j++) {
+            for (let j = 0; j < elements.length; j++) {
               array[instanceOffset + j] = elements[j];
             }
+          } else if (typeof value === "number") {
+            array[instanceOffset] = value;
           }
-        }
 
-        attribute.needsUpdate = true;
+          attribute.needsUpdate = true;
+        }
       }
+    }
+  }
+
+  public updateInstanceTransform(
+    userIndex: number,
+    instances: Matrix4[],
+  ): void {
+    const descriptor = this.resolveDescriptor(userIndex);
+
+    if (instances.length > descriptor.count) {
+      throw new Error(
+        `Invalid number of instances for userIndex: ${userIndex}`,
+      );
+    }
+
+    for (let i = 0; i < instances.length; i++) {
+      const attribute = this.resolveBufferAttribute("v_instanceTransform");
+
+      const array = attribute.array as Float32Array;
+      const itemSize = attribute.itemSize;
+      const instanceOffset = (descriptor.firstIndex + i) * itemSize;
+      const elements = instances[i].elements;
+      for (let j = 0; j < elements.length; j++) {
+        array[instanceOffset + j] = elements[j];
+      }
+      attribute.needsUpdate = true;
+    }
+  }
+
+  public updateUVTransform(userIndex: number, instances: Matrix3[]): void {
+    const descriptor = this.resolveDescriptor(userIndex);
+
+    if (instances.length > descriptor.count) {
+      throw new Error(
+        `Invalid number of instances for userIndex: ${userIndex}`,
+      );
+    }
+
+    for (let i = 0; i < instances.length; i++) {
+      const attribute = this.resolveBufferAttribute("v_uvTransform");
+
+      const array = attribute.array as Float32Array;
+      const itemSize = attribute.itemSize;
+      const instanceOffset = (descriptor.firstIndex + i) * itemSize;
+      const elements = instances[i].elements;
+      for (let j = 0; j < elements.length; j++) {
+        array[instanceOffset + j] = elements[j];
+      }
+      attribute.needsUpdate = true;
+    }
+  }
+
+  public updateAlphaClip(userIndex: number, instances: number[]): void {
+    const descriptor = this.resolveDescriptor(userIndex);
+
+    if (instances.length !== descriptor.count) {
+      throw new Error(
+        `Invalid number of instances for userIndex: ${userIndex}`,
+      );
+    }
+
+    for (let i = 0; i < instances.length; i++) {
+      const attribute = this.resolveBufferAttribute("v_alphaTest");
+
+      const array = attribute.array as Float32Array;
+      const itemSize = attribute.itemSize;
+      const instanceOffset = (descriptor.firstIndex + i) * itemSize;
+      array[instanceOffset] = instances[i];
+      attribute.needsUpdate = true;
     }
   }
 
@@ -337,18 +440,30 @@ export class UIGenericInstancedPlane extends Mesh {
     this.shaderMaterial.dispose();
   }
 
+  private resolveDescriptor(userIndex: number): RangeDescriptor {
+    const descriptor = this.userIndexToRangeDescriptor.get(userIndex);
+    if (descriptor === undefined) {
+      throw new Error(`No active range found for userIndex: ${userIndex}`);
+    }
+    return descriptor;
+  }
+
+  private resolveBufferAttribute(name: string): InstancedBufferAttribute {
+    const attribute = this.propertyBuffers.get(name);
+    if (attribute === undefined) {
+      throw new Error(`No attribute found for property: ${name}`);
+    }
+    return attribute;
+  }
+
   private resizeGeometry(newCapacity: number): void {
     for (const [name, oldAttribute] of this.propertyBuffers.entries()) {
       const itemSize = oldAttribute.itemSize;
       const newArray = new Float32Array(newCapacity * itemSize);
 
-      // Copy existing data
       newArray.set(oldAttribute.array as Float32Array);
-
-      // Create new attribute
       const newAttribute = new InstancedBufferAttribute(newArray, itemSize);
 
-      // Update geometry
       this.instancedGeometry.setAttribute(`a_${name}`, newAttribute);
       this.propertyBuffers.set(name, newAttribute);
     }
@@ -368,7 +483,6 @@ export class UIGenericInstancedPlane extends Mesh {
       const targetStart = targetRange.firstIndex * itemSize;
       const dataLength = sourceRange.count * itemSize;
 
-      // Copy data from source to target
       for (let i = 0; i < dataLength; i++) {
         array[targetStart + i] = array[sourceStart + i];
       }
@@ -378,14 +492,12 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   private shiftRangesDown(startIndex: number, shiftAmount: number): void {
-    // Update firstIndex for all ranges that need to be shifted
     for (const descriptor of this.userIndexToRangeDescriptor.values()) {
       if (descriptor.firstIndex >= startIndex) {
         descriptor.firstIndex -= shiftAmount;
       }
     }
 
-    // Shift actual data in buffers
     for (const attribute of this.propertyBuffers.values()) {
       const array = attribute.array as Float32Array;
       const itemSize = attribute.itemSize;
@@ -394,7 +506,6 @@ export class UIGenericInstancedPlane extends Mesh {
       const endByteIndex = this.instancedGeometry.instanceCount * itemSize;
       const shiftByteAmount = shiftAmount * itemSize;
 
-      // Shift data down
       for (let i = startByteIndex; i < endByteIndex - shiftByteAmount; i++) {
         array[i] = array[i + shiftByteAmount];
       }

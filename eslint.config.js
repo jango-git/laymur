@@ -58,9 +58,7 @@ export default [
       "no-magic-numbers": [
         "warn",
         {
-          ignore: [
-            0, 1, -1, 2, 0xff, 0xffff, 0xffffff, 360, 270, 180, 90, 100, 1000,
-          ],
+          ignore: [0, 1, -1, 2, 0xff, 0xffff, 0xffffff, 360, 270, 180, 90, 100],
           ignoreEnums: true,
           ignoreArrayIndexes: true,
           enforceConst: true,
