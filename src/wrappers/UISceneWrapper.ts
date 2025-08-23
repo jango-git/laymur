@@ -1,4 +1,4 @@
-import type { WebGLRenderer } from "three";
+import type { Object3D, WebGLRenderer } from "three";
 import {
   Color,
   Matrix2,
@@ -36,6 +36,17 @@ const UNIFROM_TYPE_MAP = new Map<Constructor, string>([
   [Matrix3, "mat3"],
   [Matrix4, "mat4"],
 ]);
+
+type UIPropertyType =
+  | UIColor
+  | Color
+  | Texture
+  | Vector2
+  | Vector3
+  | Vector4
+  | Matrix2
+  | Matrix3
+  | Matrix4;
 
 function buildUniformDeclaraction(name: string, value: unknown): string {
   if (typeof value === "number") {
@@ -83,7 +94,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
 
   public createPlane(
     source: string,
-    uniforms: Record<string, unknown>,
+    uniforms: Record<string, UIPropertyType>,
   ): number {
     const entries = Object.entries(uniforms);
     const material = new ShaderMaterial({
@@ -113,6 +124,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
     });
 
     const plane = new Mesh(geometry, material);
+    plane.frustumCulled = false;
     plane.matrixAutoUpdate = false;
     this.scene.add(plane);
 
@@ -136,7 +148,11 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
     return this;
   }
 
-  public setUniform(handler: number, uniform: string, value: unknown): this {
+  public setUniform(
+    handler: number,
+    uniform: string,
+    value: UIPropertyType,
+  ): this {
     const descriptor = this.resolveDescriptor(handler);
     if (!(uniform in descriptor.material.uniforms)) {
       throw new Error(`Uniform ${uniform} not found in material`);
@@ -180,6 +196,16 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
   public setVisibility(handler: number, visible: boolean): this {
     const descriptor = this.resolveDescriptor(handler);
     descriptor.plane.visible = visible;
+    return this;
+  }
+
+  public insertCustomObject(object: Object3D): this {
+    this.scene.add(object);
+    return this;
+  }
+
+  public removeCustomObject(object: Object3D): this {
+    this.scene.remove(object);
     return this;
   }
 
