@@ -362,7 +362,7 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes with tests
+3. Make your changes
 4. Submit a pull request
 
 ## License
