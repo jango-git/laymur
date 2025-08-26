@@ -5,6 +5,8 @@ import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /**
  * Configuration options for UIHeightConstraint creation.
+ *
+ * @public
  */
 export interface UIHeightConstraintOptions
   extends UISingleParameterConstraintOptions {
@@ -15,30 +17,25 @@ export interface UIHeightConstraintOptions
 /**
  * Constraint that enforces a specific height value for UI elements.
  *
- * UIHeightConstraint creates a mathematical relationship that fixes an element's
- * height to a constant value. The constraint equation is: element.height = height.
- * This is useful for ensuring elements maintain a specific height regardless of
- * other layout changes or for setting fixed dimensions in responsive layouts.
+ * Creates the relationship: element.height = height. Useful for fixing
+ * element heights regardless of other layout changes.
  *
- * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIPlaneElement} - Elements that can have height constraints applied
- * @see {@link UIExpression} - Mathematical expressions for constraint equations
+ * @public
  */
 export class UIHeightConstraint extends UISingleParameterConstraint {
-  /** The constraint descriptor managed by the solver system. */
+  /** @internal */
   protected override readonly constraint: number;
 
-  /** Internal storage for the current height value. */
+  /** @internal */
   private heightInternal: number;
 
   /**
-   * Creates a new UIHeightConstraint instance.
+   * Creates a height constraint.
    *
-   * If no height is specified in options, the constraint will use the
-   * element's current height as the target height value.
+   * Uses element's current height if no height is specified.
    *
-   * @param element - The UI element to apply the height constraint to
-   * @param options - Configuration options for the constraint
+   * @param element - UI element to constrain
+   * @param options - Configuration options
    */
   constructor(
     private readonly element: UIPlaneElement & UILayerElement,
@@ -63,16 +60,18 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Gets the current height value being enforced.
-   * @returns The height value in pixels
+   * Gets the height value.
+   *
+   * @returns Height value in pixels
    */
   public get height(): number {
     return this.heightInternal;
   }
 
   /**
-   * Sets a new height value and updates the constraint equation.
-   * @param value - The new height value in pixels
+   * Sets the height value and updates the constraint.
+   *
+   * @param value - New height value in pixels
    */
   public set height(value: number) {
     if (this.heightInternal !== value) {

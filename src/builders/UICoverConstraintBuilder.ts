@@ -12,38 +12,37 @@ const DEFAULT_ANCHOR = 0.5;
 
 /**
  * Configuration options for the UICoverConstraintBuilder.
+ *
+ * @public
  */
 export interface UICoverConstraintBuilderOptions {
   /** Whether to maintain the aspect ratio of the active (content) element */
   keepActiveAspect: boolean;
   /** Horizontal anchor point (0.0 = left, 0.5 = center, 1.0 = right) */
   anchorH: number;
-  /** Vertical anchor point (0.0 = top, 0.5 = center, 1.0 = bottom) */
+  /** Vertical anchor point (0.0 = bottom, 0.5 = center, 1.0 = top) */
   anchorV: number;
   /** Orientation context for constraint calculations */
   orientation: UIOrientation;
 }
 
 /**
- * Builder for creating "cover" layout constraints that make an element cover its container.
+ * Builder for creating "cover" layout constraints.
  *
- * Cover layout ensures the active element is large enough to completely cover the passive
- * element while maintaining proportions. This is similar to CSS `background-size: cover`
- * or `object-fit: cover` behavior.
+ * Makes the active element large enough to cover the passive element while
+ * maintaining proportions. Similar to CSS `background-size: cover` behavior.
  *
- * The active element will be:
- * - Positioned at the specified anchor point within the passive element
- * - Sized to be at least as large as the passive element in both dimensions
- * - Scaled proportionally to maintain aspect ratio (if enabled)
+ * The active element is positioned at the specified anchor point and sized to
+ * be at least as large as the passive element in both dimensions.
  *
- * The constraints ensure: passive.dimension * 1 ≤ active.dimension (active covers passive)
+ * @public
  */
 export class UICoverConstraintBuilder {
   /**
-   * Creates a set of constraints for cover layout behavior.
+   * Creates constraints for cover layout behavior.
    *
-   * @param passive - The container element (what gets covered)
-   * @param active - The content element (what does the covering)
+   * @param passive - Container element (what gets covered)
+   * @param active - Content element (what does the covering)
    * @param options - Configuration options for the cover layout
    * @returns Object containing all created constraints
    */

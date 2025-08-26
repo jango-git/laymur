@@ -12,38 +12,37 @@ const DEFAULT_ANCHOR = 0.5;
 
 /**
  * Configuration options for the UIFitConstraintBuilder.
+ *
+ * @public
  */
 export interface UIFitConstraintBuilderOptions {
   /** Whether to maintain the aspect ratio of the active (content) element */
   keepActiveAspect: boolean;
   /** Horizontal anchor point (0.0 = left, 0.5 = center, 1.0 = right) */
   anchorH: number;
-  /** Vertical anchor point (0.0 = top, 0.5 = center, 1.0 = bottom) */
+  /** Vertical anchor point (0.0 = bottom, 0.5 = center, 1.0 = top) */
   anchorV: number;
   /** Orientation context for constraint calculations */
   orientation: UIOrientation;
 }
 
 /**
- * Builder for creating "fit" layout constraints that make an element fit within its container.
+ * Builder for creating "fit" layout constraints.
  *
- * Fit layout ensures the active element is sized to completely fit within the passive
- * element while maintaining proportions. This is similar to CSS `background-size: contain`
- * or `object-fit: contain` behavior.
+ * Makes the active element fit within the passive element while maintaining
+ * proportions. Similar to CSS `background-size: contain` behavior.
  *
- * The active element will be:
- * - Positioned at the specified anchor point within the passive element
- * - Sized to fit entirely within the passive element in both dimensions
- * - Scaled proportionally to maintain aspect ratio (if enabled)
+ * The active element is positioned at the specified anchor point and sized to
+ * fit entirely within the passive element in both dimensions.
  *
- * The constraints ensure: passive.dimension * 1 ≥ active.dimension (active fits within passive)
+ * @public
  */
 export class UIFitConstraintBuilder {
   /**
-   * Creates a set of constraints for fit layout behavior.
+   * Creates constraints for fit layout behavior.
    *
-   * @param passive - The container element (what contains the content)
-   * @param active - The content element (what gets fitted within the container)
+   * @param passive - Container element (what contains the content)
+   * @param active - Content element (what gets fitted within the container)
    * @param options - Configuration options for the fit layout
    * @returns Object containing all created constraints
    */

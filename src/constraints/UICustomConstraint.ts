@@ -6,37 +6,33 @@ import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 /**
  * Constraint that allows custom mathematical relationships between UI elements.
  *
- * UICustomConstraint provides maximum flexibility by allowing direct specification
- * of the left-hand side (LHS) and right-hand side (RHS) expressions for constraint
- * equations. This enables creation of complex mathematical relationships that may
- * not be covered by the specialized constraint types. The constraint equation is:
+ * Allows direct specification of left-hand side (LHS) and right-hand side (RHS)
+ * expressions for constraint equations. The constraint equation is:
  * LHS relation RHS (e.g., LHS = RHS, LHS ≤ RHS, or LHS ≥ RHS)
  *
- * This is useful for implementing custom layout logic, complex mathematical
- * relationships between multiple elements, or prototype new constraint types.
+ * Useful for custom layout logic or relationships not covered by specialized
+ * constraint types.
  *
- * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIExpression} - Mathematical expressions for constraint equations
- * @see {@link UILayer} - Container layer for constraints
+ * @public
  */
 export class UICustomConstraint extends UISingleParameterConstraint {
-  /** The constraint descriptor managed by the solver system. */
+  /** @internal */
   protected override readonly constraint: number;
-  /** Internal storage for the left-hand side expression. */
+  /** @internal */
   private lhsInternal: UIExpression;
-  /** Internal storage for the right-hand side expression. */
+  /** @internal */
   private rhsInternal: UIExpression;
 
   /**
-   * Creates a new UICustomConstraint instance with custom expressions.
+   * Creates a custom constraint with specified expressions.
    *
-   * The constraint will enforce the relationship: LHS relation RHS, where
-   * the relation is determined by the options (defaults to equality).
+   * Enforces the relationship: LHS relation RHS, where the relation is
+   * determined by the options (defaults to equality).
    *
-   * @param layer - The UI layer that contains this constraint
-   * @param lhs - The left-hand side expression of the constraint equation
-   * @param rhs - The right-hand side expression of the constraint equation
-   * @param options - Configuration options for the constraint
+   * @param layer - UI layer that contains this constraint
+   * @param lhs - Left-hand side expression
+   * @param rhs - Right-hand side expression
+   * @param options - Configuration options
    */
   constructor(
     layer: UILayer,
@@ -59,24 +55,27 @@ export class UICustomConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Gets the current left-hand side expression.
-   * @returns The LHS expression of the constraint equation
+   * Gets the left-hand side expression.
+   *
+   * @returns LHS expression
    */
   public get lhs(): UIExpression {
     return this.lhsInternal;
   }
 
   /**
-   * Gets the current right-hand side expression.
-   * @returns The RHS expression of the constraint equation
+   * Gets the right-hand side expression.
+   *
+   * @returns RHS expression
    */
   public get rhs(): UIExpression {
     return this.rhsInternal;
   }
 
   /**
-   * Sets a new left-hand side expression and updates the constraint.
-   * @param value - The new LHS expression for the constraint equation
+   * Sets the left-hand side expression and updates the constraint.
+   *
+   * @param value - New LHS expression
    */
   public setLHS(value: UIExpression): void {
     this.lhsInternal = value;
@@ -84,8 +83,9 @@ export class UICustomConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Sets a new right-hand side expression and updates the constraint.
-   * @param value - The new RHS expression for the constraint equation
+   * Sets the right-hand side expression and updates the constraint.
+   *
+   * @param value - New RHS expression
    */
   public setRHS(value: UIExpression): void {
     this.rhsInternal = value;

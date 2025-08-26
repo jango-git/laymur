@@ -13,10 +13,8 @@ import type { UIRelation } from "../miscellaneous/UIRelation";
 /**
  * Generic 2D type for specifying horizontal and vertical values.
  *
- * This interface allows configuration of properties that can have
- * different values for horizontal and vertical directions.
- *
- * @template T - The type of values for horizontal and vertical properties
+ * @template T - Type of values for horizontal and vertical properties
+ * @public
  */
 interface UIType2D<T> {
   /** Horizontal (x-axis) value. */
@@ -27,6 +25,8 @@ interface UIType2D<T> {
 
 /**
  * Base options for 2D constraint configuration.
+ *
+ * @public
  */
 interface UIConstraint2DOptions {
   /** Priority levels for horizontal and vertical constraints. */
@@ -39,6 +39,8 @@ interface UIConstraint2DOptions {
 
 /**
  * Configuration options for 2D size constraints.
+ *
+ * @public
  */
 export interface UIConstraintSize2DOptions extends UIConstraint2DOptions {
   /** Size values for horizontal (width) and vertical (height) dimensions. */
@@ -47,6 +49,8 @@ export interface UIConstraintSize2DOptions extends UIConstraint2DOptions {
 
 /**
  * Configuration options for 2D distance constraints.
+ *
+ * @public
  */
 export interface UIConstraintDistance2DOptions extends UIConstraint2DOptions {
   /** Anchor points for element A in horizontal and vertical directions. */
@@ -59,6 +63,8 @@ export interface UIConstraintDistance2DOptions extends UIConstraint2DOptions {
 
 /**
  * Configuration options for 2D proportion constraints.
+ *
+ * @public
  */
 export interface UIConstraintProportion2DOptions extends UIConstraint2DOptions {
   /** Proportion ratios for horizontal and vertical relationships. */
@@ -68,8 +74,9 @@ export interface UIConstraintProportion2DOptions extends UIConstraint2DOptions {
 /**
  * Result object containing horizontal and vertical constraint instances.
  *
- * @template TH - The type of the horizontal constraint
- * @template TV - The type of the vertical constraint
+ * @template TH - Type of the horizontal constraint
+ * @template TV - Type of the vertical constraint
+ * @public
  */
 export interface UIConstraint2DResult<TH, TV> {
   /** The horizontal constraint instance. */
@@ -81,29 +88,18 @@ export interface UIConstraint2DResult<TH, TV> {
 /**
  * Builder utility for creating paired horizontal and vertical constraints.
  *
- * UIConstraint2DBuilder simplifies the creation of constraint pairs that work
- * together to define 2D relationships between UI elements. Instead of manually
- * creating separate horizontal and vertical constraints, this builder allows
- * you to specify both dimensions at once with a unified interface.
+ * Creates constraint pairs that work together to define 2D relationships
+ * between UI elements. Allows specifying both dimensions at once instead
+ * of manually creating separate horizontal and vertical constraints.
  *
- * This is particularly useful for creating consistent spacing, sizing, and
- * proportional relationships across both axes simultaneously.
- *
- * @see {@link UIWidthConstraint} - Horizontal size constraints
- * @see {@link UIHeightConstraint} - Vertical size constraints
- * @see {@link UIHorizontalDistanceConstraint} - Horizontal spacing constraints
- * @see {@link UIVerticalDistanceConstraint} - Vertical spacing constraints
+ * @public
  */
 export class UIConstraint2DBuilder {
   /**
    * Creates paired width and height constraints for an element.
    *
-   * This method generates both horizontal (width) and vertical (height)
-   * size constraints simultaneously, allowing you to set fixed dimensions
-   * for both axes with a single call.
-   *
-   * @param element - The UI element to apply size constraints to
-   * @param options - Configuration options for both width and height constraints
+   * @param element - UI element to apply size constraints to
+   * @param options - Configuration options for width and height constraints
    * @returns Object containing the created width and height constraint instances
    */
   public static size(
@@ -129,13 +125,9 @@ export class UIConstraint2DBuilder {
   /**
    * Creates paired horizontal and vertical distance constraints between two elements.
    *
-   * This method generates both horizontal and vertical spacing constraints
-   * simultaneously, allowing you to define 2D spacing relationships with
-   * configurable anchor points for both axes.
-   *
-   * @param a - The first UI element (point or plane element)
-   * @param b - The second UI element (point or plane element)
-   * @param options - Configuration options for both horizontal and vertical distance constraints
+   * @param a - First UI element (point or plane element)
+   * @param b - Second UI element (point or plane element)
+   * @param options - Configuration options for horizontal and vertical distance constraints
    * @returns Object containing the created horizontal and vertical distance constraint instances
    */
   public static distance(
@@ -169,13 +161,9 @@ export class UIConstraint2DBuilder {
   /**
    * Creates paired horizontal and vertical proportion constraints between two elements.
    *
-   * This method generates both horizontal (width) and vertical (height)
-   * proportion constraints simultaneously, allowing you to define proportional
-   * relationships for both dimensions with a single call.
-   *
-   * @param a - The first UI plane element (whose dimensions will be multiplied by proportion)
-   * @param b - The second UI plane element (target dimensions for the proportion)
-   * @param options - Configuration options for both horizontal and vertical proportion constraints
+   * @param a - First UI plane element (whose dimensions will be multiplied by proportion)
+   * @param b - Second UI plane element (target dimensions for the proportion)
+   * @param options - Configuration options for horizontal and vertical proportion constraints
    * @returns Object containing the created horizontal and vertical proportion constraint instances
    */
   public static proportion(

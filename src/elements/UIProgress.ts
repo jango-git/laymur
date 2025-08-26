@@ -10,6 +10,8 @@ const DEFAULT_TEXTURE = new Texture();
 /**
  * Predefined mask functions that control how the progress bar fills.
  * Each function defines a different fill pattern using GLSL shader code.
+ *
+ * @public
  */
 export enum UIProgressMaskFunction {
   /** Fill horizontally from left to right (or right to left if inverse) */
@@ -40,6 +42,8 @@ export enum UIProgressMaskFunction {
 
 /**
  * Configuration options for creating a UIProgress element.
+ *
+ * @public
  */
 export interface UIProgressOptions {
   /** X position of the element */
@@ -63,39 +67,40 @@ export interface UIProgressOptions {
 }
 
 /**
- * Progress bar UI element with customizable fill direction and appearance.
+ * Progress bar UI element with customizable fill patterns.
  *
- * UIProgress displays a progress bar that can be filled in various directions
- * (horizontal, vertical, or at custom angles). It supports separate background
- * and foreground textures with independent color tinting and opacity control.
+ * Displays a progress bar that can fill horizontally, vertically, or in custom
+ * patterns. Supports separate textures for filled and empty areas with
+ * independent color control.
  *
- * The progress value ranges from 0.0 (empty) to 1.0 (completely filled).
- * The fill direction can be controlled both by angle and forward/reverse direction.
+ * Progress value ranges from 0.0 (empty) to 1.0 (full).
+ *
+ * @public
  */
 export class UIProgress extends UIElement {
-  /** Internal storage for the foreground texture */
+  /** @internal */
   private foregroundTextureInternal: Texture;
-  /** Internal storage for the optional background texture */
+  /** @internal */
   private backgroundTextureInternal?: Texture;
 
-  /** Internal storage for the overall color tint */
+  /** @internal */
   private readonly colorInternal: UIColor;
-  /** Internal storage for the foreground color tint */
+  /** @internal */
   private readonly foregroundColorInternal: UIColor;
-  /** Internal storage for the background color tint */
+  /** @internal */
   private readonly backgroundColorInternal: UIColor;
 
-  /** Internal storage for the current progress value */
+  /** @internal */
   private progressInternal: number;
-  /** Internal storage for the fill direction flag */
+  /** @internal */
   private inverseDirectionInternal: boolean;
 
   /**
-   * Creates a new progress bar UI element.
+   * Creates a progress bar UI element.
    *
-   * @param layer - The UI layer to add this element to
-   * @param foregroundTexture - The texture used for the progress fill
-   * @param options - Configuration options for the progress bar
+   * @param layer - UI layer to contain this element
+   * @param foregroundTexture - Texture for the progress fill
+   * @param options - Configuration options
    */
   constructor(
     layer: UILayer,
@@ -165,8 +170,9 @@ export class UIProgress extends UIElement {
   }
 
   /**
-   * Gets the foreground (fill) texture.
-   * @returns The foreground texture
+   * Gets the foreground texture.
+   *
+   * @returns Foreground texture
    */
   public get foregroundTexture(): Texture {
     return this.foregroundTextureInternal;
@@ -174,7 +180,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the background texture.
-   * @returns The background texture, or undefined if none is set
+   *
+   * @returns Background texture, or undefined if none is set
    */
   public get backgroundTexture(): Texture | undefined {
     return this.backgroundTextureInternal;
@@ -182,7 +189,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the color tint.
-   * @returns The UIColor instance
+   *
+   * @returns Color tint
    */
   public get color(): UIColor {
     return this.colorInternal;
@@ -190,7 +198,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the foreground color tint.
-   * @returns The foreground color UIColor instance
+   *
+   * @returns Foreground color tint
    */
   public get foregroundColor(): UIColor {
     return this.foregroundColorInternal;
@@ -198,7 +207,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the background color tint.
-   * @returns The background color UIColor instance
+   *
+   * @returns Background color tint
    */
   public get backgroundColor(): UIColor {
     return this.backgroundColorInternal;
@@ -206,6 +216,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets the current progress value.
+   *
    * @returns Progress value between 0.0 (empty) and 1.0 (full)
    */
   public get progress(): number {
@@ -214,6 +225,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Gets whether the progress fills in reverse direction.
+   *
    * @returns True if filling in reverse, false if filling forward
    */
   public get inverseDirection(): boolean {
@@ -221,13 +233,12 @@ export class UIProgress extends UIElement {
   }
 
   /**
-   * Sets the foreground (fill) texture.
+   * Sets the foreground texture.
    *
-   * When setting a new texture, the progress bar will automatically resize
-   * to match the new texture's dimensions.
+   * Automatically resizes the progress bar to match the new texture dimensions.
    *
-   * @param value - The new foreground texture
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
+   * @param value - New foreground texture
+   * @throws Error when texture dimensions are invalid
    */
   public set foregroundTexture(value: Texture) {
     const w = value.image.width;
@@ -245,7 +256,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the background texture.
-   * @param value - The background texture, or undefined to remove background
+   *
+   * @param value - Background texture, or undefined to remove background
    */
   public set backgroundTexture(value: Texture | undefined) {
     if (value !== undefined) {
@@ -265,7 +277,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the color tint.
-   * @param value - The UIColor instance
+   *
+   * @param value - Color tint
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
@@ -273,7 +286,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the foreground color tint.
-   * @param value - The foreground color UIColor instance
+   *
+   * @param value - Foreground color tint
    */
   public set foregroundColor(value: UIColor) {
     this.foregroundColorInternal.copy(value);
@@ -281,7 +295,8 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the background color tint.
-   * @param value - The background color UIColor instance
+   *
+   * @param value - Background color tint
    */
   public set backgroundColor(value: UIColor) {
     this.backgroundColorInternal.copy(value);
@@ -289,6 +304,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the progress fill direction.
+   *
    * @param value - True for reverse direction, false for forward
    */
   public set inverseDirection(value: boolean) {
@@ -302,6 +318,7 @@ export class UIProgress extends UIElement {
 
   /**
    * Sets the progress value.
+   *
    * @param value - Progress value between 0.0 (empty) and 1.0 (full)
    */
   public set progress(value: number) {
@@ -322,17 +339,17 @@ export class UIProgress extends UIElement {
     super.destroy();
   }
 
-  /** Event handler for when the overall color changes */
+  /** @internal */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };
 
-  /** Event handler for when the foreground color changes */
+  /** @internal */
   private readonly onForegroundColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "foregroundColor", color);
   };
 
-  /** Event handler for when the background color changes */
+  /** @internal */
   private readonly onBackgroundColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "backgroundColor", color);
   };

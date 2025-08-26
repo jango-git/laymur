@@ -14,6 +14,8 @@ import { UIElement } from "./UIElement";
 
 /**
  * Update modes for controlling when the 3D scene should be re-rendered.
+ *
+ * @public
  */
 export enum UISceneUpdateMode {
   /** Re-render the scene every frame. */
@@ -53,6 +55,8 @@ const DEFAULT_USE_DEPTH = true;
 
 /**
  * Configuration options for UIScene element creation.
+ *
+ * @public
  */
 export interface UISceneOptions {
   /** Initial x-coordinate position. */
@@ -82,55 +86,49 @@ export interface UISceneOptions {
 }
 
 /**
- * UI element for rendering 3D scenes to texture within the UI system.
+ * UI element that renders 3D scenes to texture.
  *
- * UIScene is a concrete implementation of UIElement that renders a Three.js
- * scene to a WebGL render target and displays it as a texture. It provides
- * control over rendering frequency, resolution, and visual properties. This
- * allows embedding complex 3D content within the 2D UI layout system with
- * performance optimizations through configurable update modes.
+ * Renders a Three.js scene to a WebGL render target and displays it as a texture.
+ * Provides basic control over rendering frequency and resolution to help with
+ * performance when embedding 3D content in 2D UI layouts.
  *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link UISceneUpdateMode} - Update mode configuration
- * @see {@link Scene} - Three.js scene for 3D content
- * @see {@link Camera} - Three.js camera for scene rendering
+ * @public
  */
 export class UIScene extends UIElement {
-  /** The WebGL render target for off-screen scene rendering. */
+  /** @internal */
   private readonly renderTarget: WebGLRenderTarget;
 
-  /** Internal storage for the color tint. */
+  /** @internal */
   private readonly colorInternal: UIColor;
-  /** Internal storage for the current Three.js scene. */
+  /** @internal */
   private sceneInternal: Scene;
-  /** Internal storage for the current camera. */
+  /** @internal */
   private cameraInternal: Camera;
-  /** Internal storage for the current update mode. */
+  /** @internal */
   private updateModeInternal: UISceneUpdateMode;
-  /** Internal storage for the current resolution factor. */
+  /** @internal */
   private resolutionFactorInternal: number;
-  /** Internal storage for the current clear color. */
+  /** @internal */
   private clearColorInternal: number;
-  /** Internal storage for the current clear alpha. */
+  /** @internal */
   private clearAlphaInternal: number;
 
-  /** Frame alternation boolean for EACH_SECOND_FRAME update mode. */
+  /** @internal */
   private frameBoolean = true;
-  /** Flag indicating if properties have changed requiring a re-render. */
+  /** @internal */
   private propertyChanged = false;
-  /** Flag indicating if a manual render has been requested. */
+  /** @internal */
   private renderRequired = false;
 
   /**
-   * Creates a new UIScene instance with 3D scene rendering capabilities.
+   * Creates a UIScene element.
    *
-   * The scene element creates a WebGL render target for off-screen rendering
-   * and displays the result as a texture. A default perspective camera is
-   * created if none is provided.
+   * Creates a WebGL render target for off-screen rendering and displays the result
+   * as a texture. Creates a default perspective camera if none is provided.
    *
-   * @param layer - The UI layer that contains this scene element
-   * @param options - Configuration options for scene rendering
-   * @throws Will throw an error if resolution factor is outside valid range (0.1-2.0)
+   * @param layer - UI layer to contain this element
+   * @param options - Configuration options
+   * @throws Error when resolution factor is outside valid range (0.1-2.0)
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     const resolutionFactor =
@@ -195,72 +193,81 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Gets the current color tint applied to the scene texture.
-   * @returns The UIColor instance
+   * Gets the color tint.
+   *
+   * @returns Color tint
    */
   public get color(): UIColor {
     return this.colorInternal;
   }
 
   /**
-   * Gets the Three.js scene being rendered.
-   * @returns The current Three.js scene
+   * Gets the Three.js scene.
+   *
+   * @returns Current scene
    */
   public get scene(): Scene {
     return this.sceneInternal;
   }
 
   /**
-   * Gets the camera used for rendering the scene.
-   * @returns The current Three.js camera
+   * Gets the camera.
+   *
+   * @returns Current camera
    */
   public get camera(): Camera {
     return this.cameraInternal;
   }
 
   /**
-   * Gets the current update mode controlling render frequency.
-   * @returns The current update mode
+   * Gets the update mode.
+   *
+   * @returns Current update mode
    */
   public get updateMode(): UISceneUpdateMode {
     return this.updateModeInternal;
   }
 
   /**
-   * Gets the resolution factor for render target sizing.
-   * @returns The resolution factor between 0.1 and 2.0
+   * Gets the resolution factor.
+   *
+   * @returns Resolution factor between 0.1 and 2.0
    */
   public get resolutionFactor(): number {
     return this.resolutionFactorInternal;
   }
 
   /**
-   * Gets the clear color used for the render target background.
-   * @returns The clear color as a number
+   * Gets the clear color.
+   *
+   * @returns Clear color as a number
    */
   public get clearColor(): number {
     return this.clearColorInternal;
   }
 
   /**
-   * Gets the clear alpha used for the render target background.
-   * @returns The clear alpha value between 0.0 and 1.0
+   * Gets the clear alpha.
+   *
+   * @returns Clear alpha value between 0.0 and 1.0
    */
   public get clearAlpha(): number {
     return this.clearAlphaInternal;
   }
 
   /**
-   * Sets the color tint applied to the scene texture.
-   * @param value - The UIColor instance
+   * Sets the color tint.
+   *
+   * @param value - Color tint
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
   }
 
   /**
-   * Sets a new Three.js scene to render and marks for re-render.
-   * @param value - The new Three.js scene
+   * Sets the Three.js scene and marks for re-render.
+   *
+   * @param value - New scene
    */
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
@@ -270,8 +277,9 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Sets a new camera for rendering and marks for re-render.
-   * @param value - The new Three.js camera
+   * Sets the camera and marks for re-render.
+   *
+   * @param value - New camera
    */
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
@@ -281,8 +289,9 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Sets the update mode controlling render frequency and marks for re-render.
-   * @param value - The new update mode
+   * Sets the update mode and marks for re-render.
+   *
+   * @param value - New update mode
    */
   public set updateMode(value: UISceneUpdateMode) {
     if (this.updateModeInternal !== value) {
@@ -292,8 +301,9 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Sets the resolution factor and resizes the render target accordingly.
-   * @param value - The new resolution factor between 0.1 and 2.0
+   * Sets the resolution factor and resizes the render target.
+   *
+   * @param value - New resolution factor between 0.1 and 2.0
    */
   public set resolutionFactor(value: number) {
     if (this.resolutionFactorInternal !== value) {
@@ -307,8 +317,9 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Sets the clear color for the render target background and marks for re-render.
-   * @param value - The new clear color as a number
+   * Sets the clear color and marks for re-render.
+   *
+   * @param value - New clear color as a number
    */
   public set clearColor(value: number) {
     if (this.clearColorInternal !== value) {
@@ -318,8 +329,9 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Sets the clear alpha for the render target background and marks for re-render.
-   * @param value - The new clear alpha value between 0.0 and 1.0
+   * Sets the clear alpha and marks for re-render.
+   *
+   * @param value - New clear alpha value between 0.0 and 1.0
    */
   public set clearAlpha(value: number) {
     if (this.clearAlphaInternal !== value) {
@@ -329,11 +341,7 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Destroys the scene element by cleaning up all associated resources.
-   *
-   * This method disposes of the material and render target resources,
-   * and calls the parent destroy method to clean up the underlying UI element.
-   * After calling this method, the scene element should not be used anymore.
+   * Destroys the element and cleans up resources.
    */
   public override destroy(): void {
     this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
@@ -342,20 +350,20 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Manually requests a re-render of the scene.
+   * Manually requests a re-render.
    *
-   * This method is useful when the update mode is set to MANUAL and you
-   * want to trigger a scene re-render without changing any properties.
+   * Useful when update mode is MANUAL and you want to trigger a re-render
+   * without changing properties.
    */
   public requestRender(): void {
     this.renderRequired = true;
   }
 
   /**
-   * Called before each render frame to update the 3D scene rendering.
-   * Handles different update modes and renders the 3D scene to the render target
-   * based on the current update mode and property change state.
-   * @param renderer - The WebGL renderer used for scene rendering
+   * Updates 3D scene rendering before each frame.
+   *
+   * @param renderer - WebGL renderer
+   * @internal
    */
   protected override onWillRender(renderer: WebGLRenderer): void {
     if (
@@ -382,7 +390,7 @@ export class UIScene extends UIElement {
     }
   }
 
-  /** Event handler for when the color changes */
+  /** @internal */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

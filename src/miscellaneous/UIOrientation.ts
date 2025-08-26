@@ -1,34 +1,28 @@
 /**
- * Defines the screen orientation states for UI constraints.
+ * Screen orientation states for UI constraints.
  *
- * This enum is used to specify when certain UI constraints should be active
- * based on the current device/screen orientation.
+ * Specifies when certain UI constraints should be active based on the
+ * current device/screen orientation.
+ *
+ * @public
  */
 export enum UIOrientation {
-  /**
-   * Indicates a landscape orientation (width > height).
-   * Constraints using this value will only be active in landscape mode.
-   */
+  /** Landscape orientation (width > height). */
   HORIZONTAL = 0,
 
-  /**
-   * Indicates a portrait orientation (height > width).
-   * Constraints using this value will only be active in portrait mode.
-   */
+  /** Portrait orientation (height > width). */
   VERTICAL = 1,
 
-  /**
-   * Indicates that the constraint should always be active,
-   * regardless of screen orientation.
-   */
+  /** Constraint always active, regardless of orientation. */
   ALWAYS = 2,
 }
 
 /**
  * Resolves an optional orientation to a definite value.
  *
- * @param orientation - The orientation to resolve, or undefined
- * @returns The provided orientation, or ALWAYS if none was provided
+ * @param orientation - Orientation to resolve, or undefined
+ * @returns Provided orientation, or ALWAYS if none was provided
+ * @public
  */
 export function resolveOrientation(orientation?: UIOrientation): UIOrientation {
   return orientation ?? UIOrientation.ALWAYS;

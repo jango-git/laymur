@@ -13,12 +13,14 @@ const DEFAULT_ANCHOR = 0.5;
 
 /**
  * Configuration options for UIVerticalDistanceConstraint creation.
+ *
+ * @public
  */
 export interface UIVerticalDistanceConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** Anchor point for element A (0.0 = top edge, 0.5 = center, 1.0 = bottom edge). */
+  /** Anchor point for element A (0.0 = bottom edge, 0.5 = center, 1.0 = top edge). */
   anchorA: number;
-  /** Anchor point for element B (0.0 = top edge, 0.5 = center, 1.0 = bottom edge). */
+  /** Anchor point for element B (0.0 = bottom edge, 0.5 = center, 1.0 = top edge). */
   anchorB: number;
   /** The desired vertical distance between the elements. */
   distance: number;
@@ -27,39 +29,33 @@ export interface UIVerticalDistanceConstraintOptions
 /**
  * Constraint that enforces vertical distance between two UI elements.
  *
- * UIVerticalDistanceConstraint creates a mathematical relationship that maintains
- * a specific vertical distance between two elements using configurable anchor points.
- * For plane elements, anchors determine the reference point (0.0 = top, 0.5 = center, 1.0 = bottom).
- * For point elements, the anchor is always the element's position. The constraint equation is:
- * (elementB.y + elementB.height * anchorB) - (elementA.y + elementA.height * anchorA) = distance
+ * Maintains distance between elements using configurable anchor points.
+ * For plane elements, anchors determine the reference point (0.0 = bottom, 0.5 = center, 1.0 = top).
+ * For point elements, the anchor is always the element's position.
  *
- * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIPointElement} - Point elements that can be constrained
- * @see {@link UIPlaneElement} - Plane elements that can be constrained
- * @see {@link UIExpression} - Mathematical expressions for constraint equations
+ * @public
  */
 export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
-  /** The constraint descriptor managed by the solver system. */
+  /** @internal */
   protected override readonly constraint: number;
 
-  /** Internal storage for element A's anchor point. */
+  /** @internal */
   private anchorAInternal: number;
-  /** Internal storage for element B's anchor point. */
+  /** @internal */
   private anchorBInternal: number;
-  /** Internal storage for the vertical distance value. */
+  /** @internal */
   private distanceInternal: number;
 
   /**
-   * Creates a new UIVerticalDistanceConstraint instance.
+   * Creates a vertical distance constraint.
    *
-   * The constraint will use default anchor points (0.5 = center) and zero distance
-   * if not specified in options. Both elements must be from the same layer.
+   * Uses default anchor points (0.5 = center) and zero distance if not specified.
+   * Both elements must be from the same layer.
    *
-   * @param a - The first UI element (point or plane element)
-   * @param b - The second UI element (point or plane element)
-   * @param options - Configuration options for the constraint
-   * @throws Will throw an error if elements are not from the same layer
-   * @see {@link assertValidConstraintSubjects}
+   * @param a - First UI element
+   * @param b - Second UI element
+   * @param options - Configuration options
+   * @throws Error when elements are not from the same layer
    */
   constructor(
     private readonly a: UIPointElement | UIPlaneElement,
@@ -87,8 +83,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Gets the current vertical distance being enforced.
-   * @returns The vertical distance in pixels
+   * Gets the vertical distance.
+   *
+   * @returns Vertical distance in pixels
    */
   public get distance(): number {
     return this.distanceInternal;
@@ -96,7 +93,8 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
 
   /**
    * Gets the anchor point for element A.
-   * @returns The anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
+   *
+   * @returns Anchor value (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public get anchorA(): number {
     return this.anchorAInternal;
@@ -104,15 +102,17 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
 
   /**
    * Gets the anchor point for element B.
-   * @returns The anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
+   *
+   * @returns Anchor value (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public get anchorB(): number {
     return this.anchorBInternal;
   }
 
   /**
-   * Sets a new vertical distance and updates the constraint equation.
-   * @param value - The new vertical distance in pixels
+   * Sets the vertical distance and updates the constraint.
+   *
+   * @param value - New vertical distance in pixels
    */
   public set distance(value: number) {
     if (this.distanceInternal !== value) {
@@ -125,8 +125,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Sets a new anchor point for element A and updates the constraint equation.
-   * @param value - The new anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
+   * Sets the anchor point for element A and updates the constraint.
+   *
+   * @param value - New anchor value (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public set anchorA(value: number) {
     if (this.anchorAInternal !== value) {
@@ -136,8 +137,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Sets a new anchor point for element B and updates the constraint equation.
-   * @param value - The new anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
+   * Sets the anchor point for element B and updates the constraint.
+   *
+   * @param value - New anchor value (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public set anchorB(value: number) {
     if (this.anchorBInternal !== value) {
@@ -147,13 +149,10 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   }
 
   /**
-   * Builds the left-hand side expression for the constraint equation.
+   * Builds the constraint expression for vertical distance calculation.
    *
-   * Creates the expression: (elementB.y + elementB.height * anchorB) - (elementA.y + elementA.height * anchorA)
-   * For point elements, only the y position is used since they have no height.
-   * For plane elements, the anchor determines the reference point within the element's height.
-   *
-   * @returns The UIExpression representing the vertical distance calculation
+   * @returns Constraint expression
+   * @internal
    */
   private buildLHS(): UIExpression {
     let aExpression: UIExpression;

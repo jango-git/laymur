@@ -20,6 +20,8 @@ const DEFAULT_MAX_WIDTH = 1024;
 
 /**
  * Configuration options for UIText element creation.
+ *
+ * @public
  */
 export interface UITextOptions {
   /** X-coordinate of the text element. */
@@ -37,61 +39,55 @@ export interface UITextOptions {
 }
 
 /**
- * UI element for rendering dynamic text with canvas-based rendering.
+ * UI element that renders text using canvas-based rendering.
  *
- * UIText is a concrete implementation of UIElement that renders text content
- * using HTML5 Canvas and displays it as a texture. It supports rich text
- * formatting, automatic text wrapping, padding, and dynamic resizing based
- * on content. The text is rendered to a canvas texture which is then applied
- * to a Three.js mesh for display in the 3D scene.
+ * Renders text content to an HTML5 Canvas and displays it as a texture.
+ * Supports basic text formatting, wrapping, padding, and resizing based
+ * on content.
  *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link UITextContent} - Text content structure
- * @see {@link UITextStyle} - Text styling options
- * @see {@link UITextPadding} - Padding configuration
+ * @public
  */
 export class UIText extends UIElement {
-  /** The HTML canvas element used for text rendering. */
+  /** @internal */
   private readonly canvas: OffscreenCanvas;
 
-  /** The 2D rendering context for drawing text on the canvas. */
+  /** @internal */
   private readonly context: OffscreenCanvasRenderingContext2D;
 
-  /** The canvas texture containing the rendered text. */
+  /** @internal */
   private readonly texture: CanvasTexture;
 
-  /** Internal storage for the color tint. */
+  /** @internal */
   private readonly colorInternal: UIColor;
 
-  /** Internal storage for the current text content. */
+  /** @internal */
   private contentInternal: UITextContent;
 
-  /** Internal storage for the maximum width before text wrapping. */
+  /** @internal */
   private maxWidthInternal: number;
 
-  /** Internal storage for the current padding configuration. */
+  /** @internal */
   private paddingInternal: UITextPadding;
 
-  /** Internal storage for the common text style properties. */
+  /** @internal */
   private commonStyleInternal: Partial<UITextStyle>;
 
-  /** Target aspect ratio for the text element based on content. */
+  /** @internal */
   private targetAspectRatio = 1;
 
-  /** Last calculated aspect ratio for comparison during rendering. */
+  /** @internal */
   private lastAspectRatio = 1;
 
   /**
-   * Creates a new UIText instance with dynamic text rendering.
+   * Creates a UIText element.
    *
-   * The text element will automatically size itself based on the content
-   * and specified options. A canvas is created for rendering the text,
-   * which is then used as a texture for the 3D mesh.
+   * Automatically sizes itself based on content. Creates a canvas for rendering
+   * text, which is then used as a texture.
    *
-   * @param layer - The UI layer that contains this text element
-   * @param content - The text content to display
-   * @param options - Configuration options for text rendering
-   * @throws Will throw an error if canvas context creation fails
+   * @param layer - UI layer to contain this element
+   * @param content - Text content to display
+   * @param options - Configuration options
+   * @throws Error when canvas context creation fails
    */
   constructor(
     layer: UILayer,
@@ -128,56 +124,63 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Gets the current color tint applied to the text.
-   * @returns The UIColor instance
+   * Gets the color tint.
+   *
+   * @returns Color tint
    */
   public get color(): UIColor {
     return this.colorInternal;
   }
 
   /**
-   * Gets the current text content being displayed.
-   * @returns The current text content structure
+   * Gets the text content.
+   *
+   * @returns Current text content
    */
   public get content(): UITextContent {
     return this.contentInternal;
   }
 
   /**
-   * Gets the maximum width before text wrapping occurs.
-   * @returns The maximum width in pixels
+   * Gets the maximum width before text wrapping.
+   *
+   * @returns Maximum width in pixels
    */
   public get maxWidth(): number {
     return this.maxWidthInternal;
   }
 
   /**
-   * Gets the current padding configuration.
-   * @returns The padding configuration for all sides
+   * Gets the padding configuration.
+   *
+   * @returns Padding configuration for all sides
    */
   public get padding(): UITextPadding {
     return this.paddingInternal;
   }
 
   /**
-   * Gets the common style properties applied to the text.
-   * @returns The partial text style configuration
+   * Gets the common style properties.
+   *
+   * @returns Partial text style configuration
    */
   public get commonStyle(): Partial<UITextStyle> {
     return this.commonStyleInternal;
   }
 
   /**
-   * Sets the color tint applied to the text.
-   * @param value - The UIColor instance
+   * Sets the color tint.
+   *
+   * @param value - Color tint
    */
   public set color(value: UIColor) {
     this.colorInternal.copy(value);
   }
 
   /**
-   * Sets new text content and triggers a rebuild.
-   * @param value - The new text content structure
+   * Sets the text content and triggers a rebuild.
+   *
+   * @param value - New text content
    */
   public set content(value: UITextContent) {
     this.contentInternal = value;
@@ -185,8 +188,9 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Sets the maximum width before text wrapping and triggers a rebuild.
-   * @param value - The new maximum width in pixels
+   * Sets the maximum width and triggers a rebuild.
+   *
+   * @param value - New maximum width in pixels
    */
   public set maxWidth(value: number) {
     this.maxWidthInternal = value;
@@ -194,8 +198,9 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Sets new padding configuration and triggers a rebuild.
-   * @param value - The new padding configuration
+   * Sets the padding configuration and triggers a rebuild.
+   *
+   * @param value - New padding configuration
    */
   public set padding(value: UITextPadding) {
     this.paddingInternal = value;
@@ -203,8 +208,9 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Sets new common style properties and triggers a rebuild.
-   * @param value - The new partial text style configuration
+   * Sets the common style properties and triggers a rebuild.
+   *
+   * @param value - New partial text style configuration
    */
   public set commonStyle(value: Partial<UITextStyle>) {
     this.commonStyleInternal = value;
@@ -212,11 +218,7 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Destroys the text element by cleaning up all associated resources.
-   *
-   * This method disposes of the texture resources and calls the parent destroy method
-   * to clean up the underlying UI element. After calling this method,
-   * the text element should not be used anymore.
+   * Destroys the element and cleans up resources.
    */
   public override destroy(): void {
     this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
@@ -225,10 +227,11 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Called before each render frame to maintain proper text aspect ratio.
-   * Adjusts the height based on the target aspect ratio calculated from text content.
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time since last frame in seconds
+   * Maintains proper text aspect ratio before rendering.
+   *
+   * @param renderer - WebGL renderer
+   * @param deltaTime - Time since last frame
+   * @internal
    */
   protected override onWillRender(
     renderer: WebGLRenderer,
@@ -242,11 +245,9 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Rebuilds the text canvas and texture based on current content and settings.
+   * Rebuilds the text canvas and texture based on current settings.
    *
-   * This method calculates the text layout, resizes the canvas to fit the content
-   * with padding, renders the text lines to the canvas, and updates the texture.
-   * It also calculates and sets the target aspect ratio for proper display.
+   * @internal
    */
   private rebuildText(): void {
     const { lines, size } = calculateTextContentParameters(
@@ -277,7 +278,7 @@ export class UIText extends UIElement {
     this.texture.needsUpdate = true;
   }
 
-  /** Event handler for when the color changes */
+  /** @internal */
   private readonly onColorChange = (color: UIColor): void => {
     this.sceneWrapper.setUniform(this.planeHandler, "color", color);
   };

@@ -11,67 +11,67 @@ const DEFAULT_SCALE = 1;
 const DEFAULT_ROTATION = 0;
 
 /**
- * Micro-transformation system for non-constraint based UI element adjustments.
+ * Lightweight transformation system for UI elements.
  *
- * UIMicro provides a lightweight transformation system that operates independently
- * of the constraint solver. It manages position offsets, anchor points, scaling,
- * and rotation transformations that can be applied to UI elements for animations,
- * visual effects, or fine-tuned positioning without affecting the constraint-based
- * layout system.
+ * Manages position offsets, anchor points, scaling, and rotation that operate
+ * independently of the constraint solver. Useful for animations and visual
+ * effects without affecting the constraint-based layout.
  *
- * All transformations are tracked with change detection to optimize rendering
- * performance by only recalculating when properties have actually changed.
+ * Tracks changes to optimize rendering performance.
  *
- * @see {@link UIElement} - Elements that use micro transformations
+ * @public
  */
 export class UIMicro {
-  /** Internal storage for x-coordinate offset. */
+  /** @internal */
   private xInternal: number = DEFAULT_POSITION;
-  /** Internal storage for y-coordinate offset. */
+  /** @internal */
   private yInternal: number = DEFAULT_POSITION;
-  /** Internal storage for x-axis anchor point. */
+  /** @internal */
   private anchorXInternal: number = DEFAULT_ANCHOR;
-  /** Internal storage for y-axis anchor point. */
+  /** @internal */
   private anchorYInternal: number = DEFAULT_ANCHOR;
-  /** Internal storage for x-axis scale factor. */
+  /** @internal */
   private scaleXInternal: number = DEFAULT_SCALE;
-  /** Internal storage for y-axis scale factor. */
+  /** @internal */
   private scaleYInternal: number = DEFAULT_SCALE;
-  /** Internal storage for rotation in radians. */
+  /** @internal */
   private rotationInternal: number = DEFAULT_ROTATION;
-  /** Internal storage for anchor mode determining which transformations are applied around the anchor point. */
+  /** @internal */
   private anchorModeInternal: UIMicroAnchorMode =
     UIMicroAnchorMode.ROTATION_SCALE;
-  /** Flag indicating if any transformation properties have changed. */
+  /** @internal */
   private recalculationRequired = false;
 
   /**
-   * Gets the x-coordinate offset for micro positioning.
-   * @returns The x-offset value
+   * Gets the x-coordinate offset.
+   *
+   * @returns X-offset value
    */
   public get x(): number {
     return this.xInternal;
   }
 
   /**
-   * Gets the y-coordinate offset for micro positioning.
-   * @returns The y-offset value
+   * Gets the y-coordinate offset.
+   *
+   * @returns Y-offset value
    */
   public get y(): number {
     return this.yInternal;
   }
 
   /**
-   * Gets the x-axis anchor point for transformations.
-   * @returns The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
+   * Gets the x-axis anchor point.
+   *
+   * @returns Anchor point (0.0 = left, 0.5 = center, 1.0 = right)
    */
   public get anchorX(): number {
     return this.anchorXInternal;
   }
 
   /**
-   * Gets the y-axis anchor point for transformations.
-   * @returns The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
+   * Gets the y-axis scale factor.
+   * @returns The anchor point (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public get anchorY(): number {
     return this.anchorYInternal;
@@ -79,7 +79,8 @@ export class UIMicro {
 
   /**
    * Gets the x-axis scale factor.
-   * @returns The scale factor (1.0 = normal size)
+   *
+   * @returns Scale factor (1.0 = normal size)
    */
   public get scaleX(): number {
     return this.scaleXInternal;
@@ -87,15 +88,17 @@ export class UIMicro {
 
   /**
    * Gets the y-axis scale factor.
-   * @returns The scale factor (1.0 = normal size)
+   *
+   * @returns Scale factor (1.0 = normal size)
    */
   public get scaleY(): number {
     return this.scaleYInternal;
   }
 
   /**
-   * Gets the uniform scale factor (maximum of scaleX and scaleY).
-   * @returns The larger of the two scale factors
+   * Gets the uniform scale factor.
+   *
+   * @returns Larger of the two scale factors
    */
   public get size(): number {
     return Math.max(this.scaleXInternal, this.scaleYInternal);
@@ -103,15 +106,17 @@ export class UIMicro {
 
   /**
    * Gets the rotation angle in degrees.
-   * @returns The rotation angle in degrees
+   *
+   * @returns Rotation angle in degrees
    */
   public get angle(): number {
     return MathUtils.radToDeg(this.rotationInternal);
   }
 
   /**
-   * Gets the current anchor mode determining which transformations are applied around the anchor point.
-   * @returns The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
+   * Gets the anchor mode.
+   *
+   * @returns Anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
    */
   public get anchorMode(): UIMicroAnchorMode {
     return this.anchorModeInternal;
@@ -119,15 +124,17 @@ export class UIMicro {
 
   /**
    * Gets the rotation angle in radians.
-   * @returns The rotation angle in radians
+   *
+   * @returns Rotation angle in radians
    */
   public get rotation(): number {
     return this.rotationInternal;
   }
 
   /**
-   * Sets the x-coordinate offset for micro positioning.
-   * @param value - The new x-offset value
+   * Sets the x-coordinate offset.
+   *
+   * @param value - New x-offset value
    */
   public set x(value: number) {
     if (value !== this.xInternal) {
@@ -137,8 +144,9 @@ export class UIMicro {
   }
 
   /**
-   * Sets the y-coordinate offset for micro positioning.
-   * @param value - The new y-offset value
+   * Sets the y-coordinate offset.
+   *
+   * @param value - New y-offset value
    */
   public set y(value: number) {
     if (value !== this.yInternal) {
@@ -148,8 +156,9 @@ export class UIMicro {
   }
 
   /**
-   * Sets the x-axis anchor point for transformations.
-   * @param value - The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
+   * Sets the x-axis anchor point.
+   *
+   * @param value - Anchor point (0.0 = left, 0.5 = center, 1.0 = right)
    */
   public set anchorX(value: number) {
     if (value !== this.anchorXInternal) {
@@ -160,7 +169,7 @@ export class UIMicro {
 
   /**
    * Sets the y-axis anchor point for transformations.
-   * @param value - The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
+   * @param value - The anchor point (0.0 = bottom, 0.5 = center, 1.0 = top)
    */
   public set anchorY(value: number) {
     if (value !== this.anchorYInternal) {
@@ -171,7 +180,8 @@ export class UIMicro {
 
   /**
    * Sets the x-axis scale factor.
-   * @param value - The scale factor (1.0 = normal size)
+   *
+   * @param value - Scale factor (1.0 = normal size)
    */
   public set scaleX(value: number) {
     if (value !== this.scaleXInternal) {
@@ -182,7 +192,8 @@ export class UIMicro {
 
   /**
    * Sets the y-axis scale factor.
-   * @param value - The scale factor (1.0 = normal size)
+   *
+   * @param value - Scale factor (1.0 = normal size)
    */
   public set scaleY(value: number) {
     if (value !== this.scaleYInternal) {
@@ -192,8 +203,9 @@ export class UIMicro {
   }
 
   /**
-   * Sets both scale factors to the same value for uniform scaling.
-   * @param value - The uniform scale factor (1.0 = normal size)
+   * Sets both scale factors for uniform scaling.
+   *
+   * @param value - Uniform scale factor (1.0 = normal size)
    */
   public set size(value: number) {
     if (value !== this.scaleXInternal || value !== this.scaleYInternal) {
@@ -205,7 +217,8 @@ export class UIMicro {
 
   /**
    * Sets the rotation angle in degrees.
-   * @param value - The rotation angle in degrees
+   *
+   * @param value - Rotation angle in degrees
    */
   public set angle(value: number) {
     const rotation = MathUtils.degToRad(value);
@@ -217,7 +230,8 @@ export class UIMicro {
 
   /**
    * Sets the rotation angle in radians.
-   * @param value - The rotation angle in radians
+   *
+   * @param value - Rotation angle in radians
    */
   public set rotation(value: number) {
     if (value !== this.rotationInternal) {
@@ -227,8 +241,9 @@ export class UIMicro {
   }
 
   /**
-   * Sets the anchor mode determining which transformations are applied around the anchor point.
-   * @param value - The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
+   * Sets the anchor mode.
+   *
+   * @param value - Anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
    */
   public set anchorMode(value: UIMicroAnchorMode) {
     if (value !== this.anchorModeInternal) {
@@ -238,11 +253,10 @@ export class UIMicro {
   }
 
   /**
-   * Resets all transformation properties to their default values.
+   * Resets all transformations to default values.
    *
-   * This method restores position (0,0), anchor (0,0), scale (1,1),
-   * and rotation (0) to their initial states. Only triggers recalculation
-   * if any values actually change.
+   * Restores position (0,0), anchor (0.5,0.5), scale (1,1), and rotation (0).
+   * Only triggers recalculation if values actually change.
    */
   public reset(): void {
     if (
@@ -266,12 +280,9 @@ export class UIMicro {
   }
 
   /**
-   * Gets whether any transformation properties have changed since last reset.
+   * Gets whether transformations have changed since last reset.
    *
-   * This method is used internally by the rendering system to determine
-   * if transformation matrices need to be recalculated.
-   *
-   * @returns True if recalculation is required, false otherwise
+   * @returns True if recalculation is required
    * @internal
    */
   protected ["getRecalculationRequiredInternal"](): boolean {
@@ -279,10 +290,7 @@ export class UIMicro {
   }
 
   /**
-   * Resets the recalculation flag after transformations have been applied.
-   *
-   * This method is called internally by the rendering system after
-   * transformation matrices have been updated.
+   * Resets the recalculation flag after transformations are applied.
    *
    * @internal
    */

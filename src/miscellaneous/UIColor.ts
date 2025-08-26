@@ -3,7 +3,8 @@ import type { Color } from "three";
 
 /**
  * Database of predefined color names mapped to their hexadecimal RGB values.
- * Used for creating UIColor instances from named colors.
+ *
+ * @public
  */
 const COLOR_NAMES: Record<string, number | undefined> = {
   // Basic colors
@@ -52,8 +53,9 @@ const COLOR_NAMES: Record<string, number | undefined> = {
 };
 
 /**
- * Union type of all supported color names that can be used with UIColor.
- * These names correspond to the predefined colors in the COLOR_NAMES database.
+ * Supported color names that can be used with UIColor.
+ *
+ * @public
  */
 export type UIColorName =
   | "black"
@@ -97,6 +99,8 @@ export type UIColorName =
 
 /**
  * Events that can be emitted by UIColor instances.
+ *
+ * @public
  */
 export enum UIColorEvent {
   /** Emitted when any color property (r, g, b, a) changes. */
@@ -104,27 +108,23 @@ export enum UIColorEvent {
 }
 
 /**
- * Event-based RGBA color class with support for multiple color formats and named colors.
+ * RGBA color class with support for multiple color formats.
  *
- * UIColor provides a comprehensive color management system with support for RGB, HSL,
- * hexadecimal formats, and named colors. It extends Eventail to emit change events
- * when color properties are modified, enabling reactive color updates throughout
- * the UI system.
+ * Supports RGB, HSL, hexadecimal formats, and named colors. Emits change events
+ * when color properties are modified for reactive updates.
  *
- * Color components are stored as normalized values (0-1) for precision and
- * compatibility with graphics APIs.
+ * Color components are stored as normalized values (0-1).
  *
- * @see {@link UIColorEvent} - Events emitted by color instances
- * @see {@link UIColorName} - Supported named color values
+ * @public
  */
 export class UIColor extends Eventail {
-  /** Internal storage for the red component (0-1). */
+  /** @internal */
   public rInternal = 1;
-  /** Internal storage for the green component (0-1). */
+  /** @internal */
   public gInternal = 1;
-  /** Internal storage for the blue component (0-1). */
+  /** @internal */
   public bInternal = 1;
-  /** Internal storage for the alpha component (0-1). */
+  /** @internal */
   public aInternal = 1;
 
   /**
@@ -132,25 +132,28 @@ export class UIColor extends Eventail {
    */
   constructor();
   /**
-   * Creates a new UIColor instance from a named color.
-   * @param colorName - The name of the color from the predefined color database
-   * @param a - Optional alpha value (0-1), defaults to 1
+   * Creates a UIColor instance from a named color.
+   *
+   * @param colorName - Name of the color from the predefined color database
+   * @param a - Alpha value (0-1), defaults to 1
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(colorName: UIColorName, a?: number);
   /**
-   * Creates a new UIColor instance from RGB components.
+   * Creates a UIColor instance from RGB components.
+   *
    * @param r - Red component (0-1)
    * @param g - Green component (0-1)
    * @param b - Blue component (0-1)
-   * @param a - Optional alpha value (0-1), defaults to 1
+   * @param a - Alpha value (0-1), defaults to 1
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(r: number, g: number, b: number, a?: number);
   /**
-   * Creates a new UIColor instance from a hexadecimal RGB value.
+   * Creates a UIColor instance from a hexadecimal RGB value.
+   *
    * @param hexRGB - Hexadecimal RGB value (e.g., 0xFF0000 for red)
-   * @param a - Optional alpha value (0-1), defaults to 1
+   * @param a - Alpha value (0-1), defaults to 1
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(hexRGB: number, a?: number);
@@ -175,7 +178,8 @@ export class UIColor extends Eventail {
 
   /**
    * Gets the red component value.
-   * @returns The red component (0-1)
+   *
+   * @returns Red component (0-1)
    */
   public get r(): number {
     return this.rInternal;
@@ -183,7 +187,8 @@ export class UIColor extends Eventail {
 
   /**
    * Gets the green component value.
-   * @returns The green component (0-1)
+   *
+   * @returns Green component (0-1)
    */
   public get g(): number {
     return this.gInternal;
@@ -191,7 +196,8 @@ export class UIColor extends Eventail {
 
   /**
    * Gets the blue component value.
-   * @returns The blue component (0-1)
+   *
+   * @returns Blue component (0-1)
    */
   public get b(): number {
     return this.bInternal;
@@ -199,7 +205,8 @@ export class UIColor extends Eventail {
 
   /**
    * Gets the alpha component value.
-   * @returns The alpha component (0-1)
+   *
+   * @returns Alpha component (0-1)
    */
   public get a(): number {
     return this.aInternal;
@@ -207,7 +214,8 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the red component value and emits change event.
-   * @param value - The red component (0-1)
+   *
+   * @param value - Red component (0-1)
    */
   public set r(value: number) {
     this.rInternal = value;
@@ -216,7 +224,8 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the green component value and emits change event.
-   * @param value - The green component (0-1)
+   *
+   * @param value - Green component (0-1)
    */
   public set g(value: number) {
     this.gInternal = value;
@@ -225,7 +234,8 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the blue component value and emits change event.
-   * @param value - The blue component (0-1)
+   *
+   * @param value - Blue component (0-1)
    */
   public set b(value: number) {
     this.bInternal = value;
@@ -234,7 +244,8 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the alpha component value and emits change event.
-   * @param value - The alpha component (0-1)
+   *
+   * @param value - Alpha component (0-1)
    */
   public set a(value: number) {
     this.aInternal = value;
@@ -242,7 +253,8 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Sets all color components at once and emits change event.
+   * Sets all color components and emits change event.
+   *
    * @param r - Red component (0-1)
    * @param g - Green component (0-1)
    * @param b - Blue component (0-1)
@@ -265,6 +277,7 @@ export class UIColor extends Eventail {
 
   /**
    * Converts the color to a 32-bit hexadecimal RGBA value.
+   *
    * @returns Hexadecimal RGBA value with alpha in the most significant byte
    */
   public getHexRGBA(): number {
@@ -277,7 +290,8 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Converts the color to a 24-bit hexadecimal RGB value (ignores alpha).
+   * Converts the color to a 24-bit hexadecimal RGB value.
+   *
    * @returns Hexadecimal RGB value (e.g., 0xFF0000 for red)
    */
   public getHexRGB(): number {
@@ -289,7 +303,8 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Converts the color to HSL (Hue, Saturation, Lightness) format.
+   * Converts the color to HSL format.
+   *
    * @returns Object containing h (0-360), s (0-1), and l (0-1) values
    */
   public getHSL(): { h: number; s: number; l: number } {
@@ -317,6 +332,7 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the color from a 32-bit hexadecimal RGBA value and emits change event.
+   *
    * @param hex - Hexadecimal RGBA value with alpha in the most significant byte
    * @returns This UIColor instance for method chaining
    */
@@ -331,6 +347,7 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the color from a 24-bit hexadecimal RGB value and emits change event.
+   *
    * @param hex - Hexadecimal RGB value (e.g., 0xFF0000 for red)
    * @param a - Alpha value (0-1), defaults to current alpha
    * @returns This UIColor instance for method chaining
@@ -345,7 +362,8 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Sets the color from HSL (Hue, Saturation, Lightness) values and emits change event.
+   * Sets the color from HSL values and emits change event.
+   *
    * @param h - Hue value (0-360)
    * @param s - Saturation value (0-1)
    * @param l - Lightness value (0-1)
@@ -375,10 +393,11 @@ export class UIColor extends Eventail {
 
   /**
    * Sets the color from a predefined color name and emits change event.
+   *
    * @param colorName - Name of the color from the predefined color database
    * @param a - Alpha value (0-1), defaults to current alpha
    * @returns This UIColor instance for method chaining
-   * @throws Will throw an error if the color name is not recognized
+   * @throws Error when the color name is not recognized
    */
   public setName(colorName: UIColorName, a = this.aInternal): this {
     const normalizedName = colorName.toLowerCase().trim();
@@ -392,8 +411,9 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Copies color values from another UIColor or Three.js Color instance and emits change event.
-   * @param color - The color to copy from (UIColor or Three.js Color)
+   * Copies color values from another color instance and emits change event.
+   *
+   * @param color - Color to copy from (UIColor or Three.js Color)
    * @returns This UIColor instance for method chaining
    */
   public copy(color: UIColor | Color): this {
@@ -415,7 +435,8 @@ export class UIColor extends Eventail {
 
   /**
    * Creates a new UIColor instance with identical color values.
-   * @returns A new UIColor instance with the same RGBA values
+   *
+   * @returns New UIColor instance with the same RGBA values
    */
   public clone(): UIColor {
     return new UIColor(

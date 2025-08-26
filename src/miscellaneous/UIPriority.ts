@@ -10,16 +10,13 @@ const LOW_PRIORITY = 10;
 /**
  * Priority levels for UI layout constraints and variables.
  *
- * UIPriority defines a hierarchical system of priority levels used by the
- * constraint solver to determine which constraints should take precedence
- * when conflicts arise. Lower numeric values represent higher priority,
- * with P0 being the highest priority and P7 being the lowest.
+ * Hierarchical system used by the constraint solver to determine which
+ * constraints take precedence when conflicts arise. Lower numeric values
+ * represent higher priority (P0 = highest, P7 = lowest).
  *
- * The priority system maps to Kiwi solver strength values with different
- * strength components (required, strong, medium, weak) to create a nuanced
- * priority hierarchy for layout solving.
+ * Maps to Kiwi solver strength values with different strength components.
  *
- * @see {@link convertPriority} - Converts to Kiwi solver strength values
+ * @public
  */
 export enum UIPriority {
   /** Highest priority - required constraints that must be satisfied. */
@@ -43,14 +40,13 @@ export enum UIPriority {
 /**
  * Converts UIPriority enum values to Kiwi solver strength values.
  *
- * This function maps the UI priority levels to the three-component strength
- * system used by the Kiwi constraint solver (required, strong, medium, weak).
- * Higher priority levels get stronger constraint strength values.
+ * Maps UI priority levels to the three-component strength system used by
+ * the Kiwi constraint solver. Higher priority levels get stronger values.
  *
- * @param priority - The UI priority level to convert
- * @returns The corresponding Kiwi solver strength value
- * @throws Will throw an error if an invalid priority is provided
- * @see {@link UIPriority} - Priority level definitions
+ * @param priority - UI priority level to convert
+ * @returns Corresponding Kiwi solver strength value
+ * @throws Error when an invalid priority is provided
+ * @public
  */
 export function convertPriority(priority: UIPriority): number {
   switch (priority) {
@@ -78,12 +74,12 @@ export function convertPriority(priority: UIPriority): number {
 /**
  * Resolves an optional priority value to a concrete UIPriority.
  *
- * If no priority is provided, returns the default highest priority (P0).
- * This function is commonly used in constraint creation where priority
- * is an optional parameter.
+ * Returns the default highest priority (P0) if no priority is provided.
+ * Used in constraint creation where priority is optional.
  *
- * @param priority - The optional priority value to resolve
- * @returns The resolved priority, defaulting to P0 if undefined
+ * @param priority - Optional priority value to resolve
+ * @returns Resolved priority, defaulting to P0 if undefined
+ * @public
  */
 export function resolvePriority(priority?: UIPriority): UIPriority {
   return priority ?? UIPriority.P0;

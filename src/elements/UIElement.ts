@@ -23,10 +23,14 @@ const axis = new Vector3(0, 0, 1);
 
 /**
  * Checks if a point (x, y) is within the bounds of a UI element.
+ *
  * @param x - The x coordinate to test
  * @param y - The y coordinate to test
  * @param element - The UI element to test against
+ *
  * @returns True if the point is within the element's bounds
+ *
+ * @internal
  */
 function isElementClicked(x: number, y: number, element: UIElement): boolean {
   return (
@@ -38,50 +42,44 @@ function isElementClicked(x: number, y: number, element: UIElement): boolean {
 }
 
 /**
- * Abstract base class for all renderable UI elements with dimensions.
+ * Base class for all renderable UI elements with dimensions.
  *
- * UIElement serves as the fundamental building block for all other UI elements
- * that need to be visually rendered. It extends UIAnchor with dimensional properties
- * and integrates with the Three.js rendering system through shader-based planes. This class
- * provides essential functionality for positioning, sizing, rendering, visibility,
- * z-index management, and user interaction.
+ * Extends UIAnchor with dimensional properties and integrates with the Three.js
+ * rendering system through shader-based planes. Provides positioning, sizing,
+ * rendering, visibility, z-index management, and user interaction.
  *
- * @see {@link UIAnchor} - Base class providing position functionality
- * @see {@link UIPlaneElement} - Interface defining dimensional element behavior
- * @see {@link UIMicro} - Micro-optimization utilities
+ * @public
  */
 export abstract class UIElement
   extends UIAnchor
   implements UIPlaneElement, UILayerElement
 {
-  /** Micro-transformation system for non-constraint based positioning, scaling, and rotation adjustments. */
+  /** Micro-transformation system for positioning, scaling, and rotation adjustments. */
   public readonly micro = new UIMicro();
 
   /**
-   * Solver variable descriptor for the width dimension.
-   * This variable is managed by the constraint solver system.
+   * Solver variable for the width dimension.
    */
   public readonly wVariable: number;
 
   /**
-   * Solver variable descriptor for the height dimension.
-   * This variable is managed by the constraint solver system.
+   * Solver variable for the height dimension.
    */
   public readonly hVariable: number;
 
-  /** Internal storage for the current visibility/interaction mode. */
+  /** Current visibility/interaction mode. */
   protected modeInternal: UIMode = UIMode.VISIBLE;
 
-  /** Internal storage for the transparency rendering mode. */
+  /** Current transparency rendering mode. */
   protected transparencyInternal: UITransparencyMode = UITransparencyMode.CLIP;
 
-  /** Internal storage for the z-index (depth) value. */
+  /** Current z-index (depth) value. */
   protected zIndexInternal = 0;
 
-  /** Optional input listener for handling user interactions when in interactive mode. */
+  /** Input listener for handling user interactions when in interactive mode. */
   protected listener?: UILayerInputListener;
 
-  /** Client API for interacting with the scene wrapper (rendering system). */
+  /** Client API for interacting with the scene wrapper. */
   protected readonly sceneWrapper: UISceneWrapperClientAPI;
   /** Handle to the plane object in the rendering system. */
   protected readonly planeHandler: number;
@@ -96,8 +94,8 @@ export abstract class UIElement
    * @param height - Initial height dimension (must be positive)
    * @param source - GLSL shader source code for rendering this element
    * @param uniforms - Uniform values to pass to the shader
-   * @throws Will throw an error if width or height are not valid positive numbers
-   * @see {@link assertValidPositiveNumber}
+   *
+   * @throws Error if width or height are not valid positive numbers
    */
   constructor(
     layer: UILayer,
@@ -123,6 +121,7 @@ export abstract class UIElement
 
   /**
    * Gets the current width value from the solver.
+   *
    * @returns The current width dimension
    */
   public get width(): number {
@@ -131,6 +130,7 @@ export abstract class UIElement
 
   /**
    * Gets the current height value from the solver.
+   *
    * @returns The current height dimension
    */
   public get height(): number {
@@ -139,6 +139,7 @@ export abstract class UIElement
 
   /**
    * Gets the current z-index (depth) value.
+   *
    * @returns The current z-index value
    */
   public get zIndex(): number {
@@ -147,8 +148,8 @@ export abstract class UIElement
 
   /**
    * Gets the current visibility and interaction mode.
+   *
    * @returns The current UIMode setting
-   * @see {@link UIMode}
    */
   public get mode(): UIMode {
     return this.modeInternal;
@@ -156,8 +157,8 @@ export abstract class UIElement
 
   /**
    * Gets the current transparency rendering mode.
+   *
    * @returns The current transparency mode
-   * @see {@link UITransparencyMode}
    */
   public get transparency(): UITransparencyMode {
     return this.transparencyInternal;
@@ -165,9 +166,10 @@ export abstract class UIElement
 
   /**
    * Sets the width value through the solver system.
+   *
    * @param value - The new width dimension (must be positive)
-   * @throws Will throw an error if value is not a valid positive number
-   * @see {@link assertValidPositiveNumber}
+   *
+   * @throws Error if value is not a valid positive number
    */
   public set width(value: number) {
     assertValidPositiveNumber(value, "UIElement width");
@@ -176,9 +178,10 @@ export abstract class UIElement
 
   /**
    * Sets the height value through the solver system.
+   *
    * @param value - The new height dimension (must be positive)
-   * @throws Will throw an error if value is not a valid positive number
-   * @see {@link assertValidPositiveNumber}
+   *
+   * @throws Error if value is not a valid positive number
    */
   public set height(value: number) {
     assertValidPositiveNumber(value, "UIElement height");
@@ -187,9 +190,10 @@ export abstract class UIElement
 
   /**
    * Sets the z-index (depth) value for rendering order and input handling.
+   *
    * @param value - The new z-index value
-   * @throws Will throw an error if value is not a valid number
-   * @see {@link assertValidNumber}
+   *
+   * @throws Error if value is not a valid number
    */
   public set zIndex(value: number) {
     assertValidNumber(value, "UIElement zIndex");
@@ -201,8 +205,8 @@ export abstract class UIElement
 
   /**
    * Sets the current visibility and interaction mode.
+   *
    * @param value - The new UIMode setting
-   * @see {@link UIMode}
    */
   public set mode(value: UIMode) {
     if (this.modeInternal !== value) {
@@ -224,8 +228,8 @@ export abstract class UIElement
 
   /**
    * Sets the transparency rendering mode.
+   *
    * @param value - The new transparency mode
-   * @see {@link UITransparencyMode}
    */
   public set transparency(value: UITransparencyMode) {
     this.transparencyInternal = value;
@@ -234,11 +238,7 @@ export abstract class UIElement
 
   /**
    * Destroys the UI element by cleaning up all associated resources.
-   *
-   * This method removes the element from the rendering scene, cleans up
-   * dimension solver variables, removes input listeners, and calls the parent
-   * destroy method to clean up position variables. After calling this method,
-   * the element should not be used anymore.
+   * After calling this method, the element should not be used anymore.
    */
   public override destroy(): void {
     this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRender, this);
@@ -253,9 +253,13 @@ export abstract class UIElement
 
   /**
    * Handles click events when the element is in interactive mode.
+   *
    * @param x - The x coordinate of the click
    * @param y - The y coordinate of the click
+   *
    * @returns True if the click was within this element's bounds
+   *
+   * @protected
    */
   protected readonly onClick = (x: number, y: number): boolean => {
     const clicked = isElementClicked(x, y, this);
@@ -267,10 +271,12 @@ export abstract class UIElement
 
   /**
    * Called before each render frame to update the element's transform matrix.
-   * Applies micro-transformations (position, rotation, scale, anchor) and updates
-   * the rendering system with the final transformation matrix.
+   * Applies micro-transformations and updates the rendering system.
+   *
    * @param renderer - The WebGL renderer (unused in base implementation)
    * @param deltaTime - Time since last frame in seconds (unused in base implementation)
+   *
+   * @protected
    */
   protected onWillRender(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation

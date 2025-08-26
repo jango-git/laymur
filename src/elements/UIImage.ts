@@ -7,6 +7,8 @@ import { UIElement } from "./UIElement";
 
 /**
  * Configuration options for creating a UIImage element.
+ *
+ * @public
  */
 export interface UIImageOptions {
   /** X position of the element */
@@ -20,30 +22,26 @@ export interface UIImageOptions {
 /**
  * UI element for displaying textured images.
  *
- * UIImage is a concrete implementation of UIElement that renders a textured
- * image using shader-based planes. It automatically sizes itself
- * to match the texture dimensions and provides control over visual properties
- * such as color tinting.
+ * Renders a textured image using shader-based planes. Automatically sizes itself
+ * to match the texture dimensions and provides color tinting control.
  *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link Texture} - Three.js texture for image data
+ * @public
  */
 export class UIImage extends UIElement {
-  /** Internal storage for the current texture */
+  /** Current texture */
   private textureInternal: Texture;
-  /** Internal storage for the color tint */
+  /** Current color tint */
   private readonly colorInternal: UIColor;
 
   /**
    * Creates a new UIImage instance.
-   *
-   * The image will automatically size itself to match the texture's dimensions.
-   * All options have default values if not specified.
+   * The image automatically sizes itself to match the texture's dimensions.
    *
    * @param layer - The UI layer that contains this image
    * @param texture - The Three.js texture to display
    * @param options - Configuration options for the image
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
+   *
+   * @throws Error if the texture dimensions are not valid positive numbers
    */
   constructor(
     layer: UILayer,
@@ -67,6 +65,7 @@ export class UIImage extends UIElement {
 
   /**
    * Gets the current texture being displayed.
+   *
    * @returns The current Three.js texture
    */
   public get texture(): Texture {
@@ -75,6 +74,7 @@ export class UIImage extends UIElement {
 
   /**
    * Gets the current color tint applied to the image.
+   *
    * @returns The UIColor instance
    */
   public get color(): UIColor {
@@ -83,13 +83,11 @@ export class UIImage extends UIElement {
 
   /**
    * Sets a new texture for the image.
-   *
-   * When setting a new texture, the image will automatically resize to match
-   * the new texture's dimensions.
+   * The image will automatically resize to match the new texture's dimensions.
    *
    * @param value - The new Three.js texture to display
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
-   * @see {@link assertValidPositiveNumber}
+   *
+   * @throws Error if the texture dimensions are not valid positive numbers
    */
   public set texture(value: Texture) {
     const w = value.image.width;
@@ -107,6 +105,7 @@ export class UIImage extends UIElement {
 
   /**
    * Sets the color tint applied to the image.
+   *
    * @param value - The UIColor instance
    */
   public set color(value: UIColor) {
