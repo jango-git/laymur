@@ -20,7 +20,7 @@ export default {
         terser({
           compress: {
             ecma: 2020,
-            passes: 5,
+            passes: 8,
             arrows: true,
             arguments: true,
             collapse_vars: true,

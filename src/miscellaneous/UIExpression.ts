@@ -1,27 +1,25 @@
 /**
- * Mathematical expression builder for constraint equations in the UI layout system.
+ * Mathematical expression builder for constraint equations.
  *
- * UIExpression represents linear mathematical expressions of the form:
- * constant + coefficient₁ × variable₁ + coefficient₂ × variable₂ + ... + coefficientₙ × variableₙ
+ * Represents linear expressions of the form:
+ * constant + coefficient₁ × variable₁ + coefficient₂ × variable₂ + ...
  *
- * These expressions are used to build constraint equations for the Kiwi solver,
- * enabling complex mathematical relationships between UI element properties.
- * Variables are referenced by their numeric descriptors from the solver system.
+ * Used to build constraint equations for the Kiwi solver. Variables are
+ * referenced by their numeric descriptors from the solver system.
  *
- * @see {@link UIConstraint} - Constraints that use expressions
- * @see {@link UISolverWrapper} - Solver integration that creates variables
+ * @public
  */
 export class UIExpression {
   /** The constant term of the expression. */
   public constant: number;
-  /** Map of variable descriptors to their coefficients in the expression. */
+  /** @internal */
   private readonly terms: Map<number, number>;
 
   /**
-   * Creates a new UIExpression instance.
+   * Creates a UIExpression instance.
    *
-   * @param constant - The constant term of the expression (defaults to 0)
-   * @param terms - Optional array of [variableDescriptor, coefficient] pairs
+   * @param constant - Constant term of the expression (defaults to 0)
+   * @param terms - Array of [variableDescriptor, coefficient] pairs
    */
   constructor(constant = 0, terms?: [number, number][]) {
     this.constant = constant;
@@ -29,14 +27,14 @@ export class UIExpression {
   }
 
   /**
-   * Creates a new expression that represents the sum of two expressions.
+   * Creates an expression representing the sum of two expressions.
    *
    * Performs mathematical addition: (a.constant + a.terms) + (b.constant + b.terms)
    * Coefficients for the same variables are combined.
    *
-   * @param a - The first expression
-   * @param b - The second expression
-   * @returns A new expression representing a + b
+   * @param a - First expression
+   * @param b - Second expression
+   * @returns New expression representing a + b
    */
   public static plus(a: UIExpression, b: UIExpression): UIExpression {
     const result = new UIExpression(
@@ -50,14 +48,14 @@ export class UIExpression {
   }
 
   /**
-   * Creates a new expression that represents the difference of two expressions.
+   * Creates an expression representing the difference of two expressions.
    *
    * Performs mathematical subtraction: (a.constant + a.terms) - (b.constant + b.terms)
    * Coefficients for the same variables are combined with subtraction.
    *
-   * @param a - The first expression (minuend)
-   * @param b - The second expression (subtrahend)
-   * @returns A new expression representing a - b
+   * @param a - First expression (minuend)
+   * @param b - Second expression (subtrahend)
+   * @returns New expression representing a - b
    */
   public static minus(a: UIExpression, b: UIExpression): UIExpression {
     const result = new UIExpression(
@@ -73,11 +71,11 @@ export class UIExpression {
   /**
    * Adds a variable term to this expression (mutating operation).
    *
-   * If the variable already exists in the expression, its coefficient is
-   * increased by the specified amount. Otherwise, a new term is added.
+   * If the variable already exists, its coefficient is increased by the
+   * specified amount. Otherwise, a new term is added.
    *
-   * @param variableIndex - The variable descriptor from the solver
-   * @param coefficient - The coefficient to add for this variable
+   * @param variableIndex - Variable descriptor from the solver
+   * @param coefficient - Coefficient to add for this variable
    * @returns This expression instance for method chaining
    */
   public plus(variableIndex: number, coefficient: number): this {
@@ -91,12 +89,11 @@ export class UIExpression {
   /**
    * Subtracts a variable term from this expression (mutating operation).
    *
-   * If the variable already exists in the expression, its coefficient is
-   * decreased by the specified amount. Otherwise, a new term with negative
-   * coefficient is added.
+   * If the variable already exists, its coefficient is decreased by the
+   * specified amount. Otherwise, a new term with negative coefficient is added.
    *
-   * @param variableIndex - The variable descriptor from the solver
-   * @param coefficient - The coefficient to subtract for this variable
+   * @param variableIndex - Variable descriptor from the solver
+   * @param coefficient - Coefficient to subtract for this variable
    * @returns This expression instance for method chaining
    */
   public minus(variableIndex: number, coefficient: number): this {
@@ -104,12 +101,12 @@ export class UIExpression {
   }
 
   /**
-   * Multiplies all terms in this expression by a scalar value (mutating operation).
+   * Multiplies all terms by a scalar value (mutating operation).
    *
    * Both the constant term and all variable coefficients are multiplied
    * by the specified value.
    *
-   * @param value - The scalar value to multiply by
+   * @param value - Scalar value to multiply by
    * @returns This expression instance for method chaining
    */
   public multiply(value: number): this {
@@ -121,12 +118,12 @@ export class UIExpression {
   }
 
   /**
-   * Divides all terms in this expression by a scalar value (mutating operation).
+   * Divides all terms by a scalar value (mutating operation).
    *
    * Both the constant term and all variable coefficients are divided
    * by the specified value.
    *
-   * @param value - The scalar value to divide by (must not be zero)
+   * @param value - Scalar value to divide by (must not be zero)
    * @returns This expression instance for method chaining
    */
   public divide(value: number): this {
@@ -136,8 +133,8 @@ export class UIExpression {
   /**
    * Checks if the expression contains a term for the specified variable.
    *
-   * @param variableIndex - The variable descriptor to check for
-   * @returns True if the expression has a term for this variable, false otherwise
+   * @param variableIndex - Variable descriptor to check for
+   * @returns True if the expression has a term for this variable
    */
   public hasTerm(variableIndex: number): boolean {
     return this.terms.has(variableIndex);
@@ -146,10 +143,9 @@ export class UIExpression {
   /**
    * Copies the content of another expression into this expression (mutating operation).
    *
-   * Replaces all terms and the constant of this expression with those
-   * from the source expression.
+   * Replaces all terms and the constant with those from the source expression.
    *
-   * @param expression - The source expression to copy from
+   * @param expression - Source expression to copy from
    * @returns This expression instance for method chaining
    */
   public copy(expression: UIExpression): this {
@@ -164,20 +160,17 @@ export class UIExpression {
   /**
    * Creates a deep copy of this expression.
    *
-   * The returned expression is completely independent and can be modified
-   * without affecting the original.
+   * The returned expression is independent and can be modified without
+   * affecting the original.
    *
-   * @returns A new UIExpression instance with the same content
+   * @returns New UIExpression instance with the same content
    */
   public clone(): UIExpression {
     return new UIExpression(this.constant, Array.from(this.terms.entries()));
   }
 
   /**
-   * Prepares the variable terms for internal solver operations.
-   *
-   * Converts the internal terms map to an array format suitable for
-   * integration with the constraint solver system.
+   * Prepares variable terms for internal solver operations.
    *
    * @returns Array of [variableDescriptor, coefficient] pairs
    * @internal

@@ -1,6 +1,23 @@
 import { Eventail } from "eventail";
 import type { Color } from "three";
 
+// Color manipulation constants
+const RGB_MIN_ARGS = 3;
+const RGB_MAX_VALUE = 255;
+const HEX_SHIFT_RED = 16;
+const HEX_SHIFT_GREEN = 8;
+
+const HEX_SHIFT_ALPHA = 24;
+const HEX_MASK = 0xff;
+
+const HSL_HUE_STEP = 60;
+
+const HSL_HUE_SECTOR_3 = 3;
+const HSL_HUE_SECTOR_4 = 4;
+const HSL_HUE_SECTOR_5 = 5;
+const HSL_HUE_SECTOR_6 = 6;
+const HSL_LIGHTNESS_MULTIPLIER = 2;
+
 /**
  * Database of predefined color names mapped to their hexadecimal RGB values.
  *
@@ -160,7 +177,7 @@ export class UIColor extends Eventail {
   constructor(...args: unknown[]) {
     super();
 
-    if (args.length >= 3 && typeof args[0] === "number") {
+    if (args.length >= RGB_MIN_ARGS && typeof args[0] === "number") {
       const [r, g, b, a = 1] = args as number[];
       this.rInternal = r;
       this.gInternal = g;
@@ -282,10 +299,10 @@ export class UIColor extends Eventail {
    */
   public getHexRGBA(): number {
     return (
-      (Math.round(this.rInternal * 255) << 24) |
-      (Math.round(this.gInternal * 255) << 16) |
-      (Math.round(this.bInternal * 255) << 8) |
-      Math.round(this.aInternal * 255)
+      (Math.round(this.rInternal * RGB_MAX_VALUE) << HEX_SHIFT_ALPHA) |
+      (Math.round(this.gInternal * RGB_MAX_VALUE) << HEX_SHIFT_RED) |
+      (Math.round(this.bInternal * RGB_MAX_VALUE) << HEX_SHIFT_GREEN) |
+      Math.round(this.aInternal * RGB_MAX_VALUE)
     );
   }
 
@@ -296,9 +313,9 @@ export class UIColor extends Eventail {
    */
   public getHexRGB(): number {
     return (
-      (Math.round(this.rInternal * 255) << 16) |
-      (Math.round(this.gInternal * 255) << 8) |
-      Math.round(this.bInternal * 255)
+      (Math.round(this.rInternal * RGB_MAX_VALUE) << HEX_SHIFT_RED) |
+      (Math.round(this.gInternal * RGB_MAX_VALUE) << HEX_SHIFT_GREEN) |
+      Math.round(this.bInternal * RGB_MAX_VALUE)
     );
   }
 
@@ -317,16 +334,17 @@ export class UIColor extends Eventail {
     let h = 0;
     if (d !== 0) {
       if (max === r) {
-        h = (g - b) / d + (g < b ? 6 : 0);
+        h = (g - b) / d + (g < b ? HSL_HUE_SECTOR_6 : 0);
       } else if (max === g) {
         h = (b - r) / d + 2;
       } else {
-        h = (r - g) / d + 4;
+        h = (r - g) / d + HSL_HUE_SECTOR_4;
       }
-      h *= 60;
+      h *= HSL_HUE_STEP;
     }
 
-    const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+    const s =
+      d === 0 ? 0 : d / (1 - Math.abs(HSL_LIGHTNESS_MULTIPLIER * l - 1));
     return { h, s, l };
   }
 
@@ -337,10 +355,10 @@ export class UIColor extends Eventail {
    * @returns This UIColor instance for method chaining
    */
   public setHexRGBA(hex: number): this {
-    this.rInternal = ((hex >> 16) & 0xff) / 255;
-    this.gInternal = ((hex >> 8) & 0xff) / 255;
-    this.bInternal = (hex & 0xff) / 255;
-    this.aInternal = ((hex >> 24) & 0xff) / 255;
+    this.rInternal = ((hex >> HEX_SHIFT_RED) & HEX_MASK) / RGB_MAX_VALUE;
+    this.gInternal = ((hex >> HEX_SHIFT_GREEN) & HEX_MASK) / RGB_MAX_VALUE;
+    this.bInternal = (hex & HEX_MASK) / RGB_MAX_VALUE;
+    this.aInternal = ((hex >> HEX_SHIFT_ALPHA) & HEX_MASK) / RGB_MAX_VALUE;
     this.emit(UIColorEvent.CHANGE, this);
     return this;
   }
@@ -353,9 +371,9 @@ export class UIColor extends Eventail {
    * @returns This UIColor instance for method chaining
    */
   public setHexRGB(hex: number, a = this.aInternal): this {
-    this.rInternal = ((hex >> 16) & 0xff) / 255;
-    this.gInternal = ((hex >> 8) & 0xff) / 255;
-    this.bInternal = (hex & 0xff) / 255;
+    this.rInternal = ((hex >> HEX_SHIFT_RED) & HEX_MASK) / RGB_MAX_VALUE;
+    this.gInternal = ((hex >> HEX_SHIFT_GREEN) & HEX_MASK) / RGB_MAX_VALUE;
+    this.bInternal = (hex & HEX_MASK) / RGB_MAX_VALUE;
     this.aInternal = a;
     this.emit(UIColorEvent.CHANGE, this);
     return this;
@@ -372,22 +390,22 @@ export class UIColor extends Eventail {
    */
   public setHSL(h: number, s: number, l: number, a = this.aInternal): this {
     const c = (1 - Math.abs(2 * l - 1)) * s;
-    const hp = h / 60;
+    const hp = h / HSL_HUE_STEP;
     const x = c * (1 - Math.abs((hp % 2) - 1));
     let [r, g, b] =
       hp < 1
         ? [c, x, 0]
         : hp < 2
           ? [x, c, 0]
-          : hp < 3
+          : hp < HSL_HUE_SECTOR_3
             ? [0, c, x]
-            : hp < 4
+            : hp < HSL_HUE_SECTOR_4
               ? [0, x, c]
-              : hp < 5
+              : hp < HSL_HUE_SECTOR_5
                 ? [x, 0, c]
                 : [c, 0, x];
 
-    const m = l - c / 2;
+    const m = l - c / HSL_LIGHTNESS_MULTIPLIER;
     return this.set(r + m, g + m, b + m, a);
   }
 

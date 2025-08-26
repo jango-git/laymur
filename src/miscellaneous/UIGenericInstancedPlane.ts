@@ -89,7 +89,7 @@ function resolveTypeInfo(property: UIPropertyType | UIPropertyTypeName): {
   }
 }
 
-function udpateProperty(
+function updateProperty(
   value: UIPropertyType,
   attribute: InstancedBufferAttribute,
   itemOffset: number,
@@ -114,20 +114,11 @@ function udpateProperty(
     array[itemOffset + ITEM_2_OFFSET] = value.z;
     array[itemOffset + ITEM_3_OFFSET] = value.w;
   } else if (value instanceof Matrix2) {
-    const elements = value.elements;
-    for (let j = 0; j < elements.length; j++) {
-      array[itemOffset + j] = elements[j];
-    }
+    array.set(value.elements, itemOffset);
   } else if (value instanceof Matrix3) {
-    const elements = value.elements;
-    for (let j = 0; j < elements.length; j++) {
-      array[itemOffset + j] = elements[j];
-    }
+    array.set(value.elements, itemOffset);
   } else if (value instanceof Matrix4) {
-    const elements = value.elements;
-    for (let j = 0; j < elements.length; j++) {
-      array[itemOffset + j] = elements[j];
-    }
+    array.set(value.elements, itemOffset);
   } else if (typeof value === "number") {
     array[itemOffset] = value;
   }
@@ -260,6 +251,7 @@ export class UIGenericInstancedPlane extends Mesh {
     const varyingLayout: Record<string, UIPropertyTypeName> = {
       instanceTransform: "Matrix4",
       uvTransform: "Matrix3",
+      visibility: "number",
       ...(transparency === UITransparencyMode.CLIP
         ? { alphaTest: "number" }
         : {}),
@@ -328,9 +320,11 @@ export class UIGenericInstancedPlane extends Mesh {
     const edge = releasedDescriptor.firstIndex + releasedDescriptor.count;
     let replacementDescriptor: Descriptor | undefined;
 
-    for (let i = values.length - 1; i > edge; i--) {
-      const descriptor = values[i];
-      if (descriptor.count === releasedDescriptor.count) {
+    for (const descriptor of values) {
+      if (
+        descriptor.firstIndex > edge &&
+        descriptor.count === releasedDescriptor.count
+      ) {
         replacementDescriptor = descriptor;
         break;
       }
@@ -380,7 +374,7 @@ export class UIGenericInstancedPlane extends Mesh {
         if (resolveTypeInfo(value).instantiable) {
           const attribute = this.resolveBufferAttribute(name);
           const itemOffset = instanceOffset * attribute.itemSize;
-          udpateProperty(value, attribute, itemOffset);
+          updateProperty(value, attribute, itemOffset);
         } else {
           const uniform = this.resolveUniform(name);
           uniform.value = value;
@@ -408,18 +402,15 @@ export class UIGenericInstancedPlane extends Mesh {
       );
     }
 
-    for (let i = 0; i < instancesTransforms.length; i++) {
-      const attribute = this.resolveBufferAttribute("instanceTransform");
-      const instanceOffset = descriptor.firstIndex + offset + i;
+    const attribute = this.resolveBufferAttribute("instanceTransform");
+    const array = attribute.array as Float32Array;
 
-      const array = attribute.array as Float32Array;
+    for (let i = 0; i < instancesTransforms.length; i++) {
+      const instanceOffset = descriptor.firstIndex + offset + i;
       const itemOffset = instanceOffset * attribute.itemSize;
-      const elements = instancesTransforms[i].elements;
-      for (let j = 0; j < elements.length; j++) {
-        array[itemOffset + j] = elements[j];
-      }
-      attribute.needsUpdate = true;
+      array.set(instancesTransforms[i].elements, itemOffset);
     }
+    attribute.needsUpdate = true;
   }
 
   public updateUVTransforms(
@@ -440,18 +431,15 @@ export class UIGenericInstancedPlane extends Mesh {
       );
     }
 
-    for (let i = 0; i < uvTransforms.length; i++) {
-      const attribute = this.resolveBufferAttribute("uvTransform");
-      const instanceOffset = descriptor.firstIndex + offset + i;
+    const attribute = this.resolveBufferAttribute("uvTransform");
+    const array = attribute.array as Float32Array;
 
-      const array = attribute.array as Float32Array;
+    for (let i = 0; i < uvTransforms.length; i++) {
+      const instanceOffset = descriptor.firstIndex + offset + i;
       const itemOffset = instanceOffset * attribute.itemSize;
-      const elements = uvTransforms[i].elements;
-      for (let j = 0; j < elements.length; j++) {
-        array[itemOffset + j] = elements[j];
-      }
-      attribute.needsUpdate = true;
+      array.set(uvTransforms[i].elements, itemOffset);
     }
+    attribute.needsUpdate = true;
   }
 
   public updateVisibility(
@@ -472,15 +460,15 @@ export class UIGenericInstancedPlane extends Mesh {
       );
     }
 
-    for (let i = 0; i < instancesVisibility.length; i++) {
-      const attribute = this.resolveBufferAttribute("visibility");
-      const instanceOffset = descriptor.firstIndex + offset + i;
+    const attribute = this.resolveBufferAttribute("visibility");
+    const array = attribute.array as Float32Array;
 
-      const array = attribute.array as Float32Array;
+    for (let i = 0; i < instancesVisibility.length; i++) {
+      const instanceOffset = descriptor.firstIndex + offset + i;
       const itemOffset = instanceOffset * attribute.itemSize;
       array[itemOffset] = instancesVisibility[i] ? 1 : 0;
-      attribute.needsUpdate = true;
     }
+    attribute.needsUpdate = true;
   }
 
   public destroy(): void {
@@ -510,7 +498,7 @@ export class UIGenericInstancedPlane extends Mesh {
       | undefined;
 
     if (uniform === undefined) {
-      throw new Error(`No uniform found for handler: ${name}`);
+      throw new Error(`No uniform found for property: ${name}`);
     }
     return uniform;
   }
@@ -542,9 +530,8 @@ export class UIGenericInstancedPlane extends Mesh {
       const targetStart = targetRange.firstIndex * itemSize;
       const dataLength = sourceRange.count * itemSize;
 
-      for (let i = 0; i < dataLength; i++) {
-        array[targetStart + i] = array[sourceStart + i];
-      }
+      const sourceData = array.subarray(sourceStart, sourceStart + dataLength);
+      array.set(sourceData, targetStart);
 
       attribute.needsUpdate = true;
     }
@@ -565,9 +552,11 @@ export class UIGenericInstancedPlane extends Mesh {
       const endByteIndex = this.instancedGeometry.instanceCount * itemSize;
       const shiftByteAmount = shiftAmount * itemSize;
 
-      for (let i = startByteIndex; i < endByteIndex - shiftByteAmount; i++) {
-        array[i] = array[i + shiftByteAmount];
-      }
+      const sourceData = array.subarray(
+        startByteIndex + shiftByteAmount,
+        endByteIndex,
+      );
+      array.set(sourceData, startByteIndex);
 
       attribute.needsUpdate = true;
     }
