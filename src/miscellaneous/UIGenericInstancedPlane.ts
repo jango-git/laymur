@@ -241,6 +241,10 @@ export class UIGenericInstancedPlane extends Mesh {
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
 
+  private readonly configSource: string;
+  private readonly configLayout: Record<string, UIPropertyTypeName>;
+  private readonly configTransparency: UITransparencyMode;
+
   constructor(
     source: string,
     layout: Record<string, UIPropertyTypeName>,
@@ -288,6 +292,39 @@ export class UIGenericInstancedPlane extends Mesh {
       this.instancedGeometry.setAttribute(`a_${name}`, attribute);
       this.propertyBuffers.set(`a_${name}`, attribute);
     }
+
+    this.configSource = source;
+    this.configLayout = { ...layout };
+    this.configTransparency = transparency;
+  }
+
+  public canAccept(
+    source: string,
+    layout: Record<string, UIPropertyTypeName>,
+    transparency: UITransparencyMode,
+  ): boolean {
+    if (this.configSource !== source) {
+      return false;
+    }
+
+    if (this.configTransparency !== transparency) {
+      return false;
+    }
+
+    const layoutKeys = Object.keys(layout);
+    const configKeys = Object.keys(this.configLayout);
+
+    if (layoutKeys.length !== configKeys.length) {
+      return false;
+    }
+
+    for (const [key, value] of Object.entries(layout)) {
+      if (this.configLayout[key] !== value) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   public createInstances(count: number): number {
