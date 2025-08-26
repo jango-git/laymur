@@ -19,6 +19,7 @@ export * from "./elements/UIText";
 export * from "./layers/UIFullscreenLayer";
 export * from "./miscellaneous/UIColor";
 export * from "./miscellaneous/UIExpression";
+export * from "./miscellaneous/UIGenericInstancedPlane";
 export * from "./miscellaneous/UIInputEvent";
 export * from "./miscellaneous/UIMicro";
 export * from "./miscellaneous/UIMicroAnchorMode";

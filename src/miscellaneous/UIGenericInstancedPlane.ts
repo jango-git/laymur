@@ -211,11 +211,11 @@ function buildMaterial(
         }
       #endif
 
-      #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
-          discard;
-        }
-      #endif
+      // #ifdef USE_ALPHAHASH
+      //   if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
+      //     discard;
+      //   }
+      // #endif
 
       gl_FragColor = linearToOutputTexel(diffuseColor);
     }
@@ -228,6 +228,10 @@ function buildMaterial(
     transparent: transparency === UITransparencyMode.BLEND,
     alphaTest: transparency === UITransparencyMode.CLIP ? ALPHA_TEST : 0.0,
     alphaHash: transparency === UITransparencyMode.HASH,
+    lights: false,
+    fog: false,
+    depthWrite: false,
+    depthTest: false,
   });
 }
 
@@ -290,7 +294,7 @@ export class UIGenericInstancedPlane extends Mesh {
       );
 
       this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-      this.propertyBuffers.set(`a_${name}`, attribute);
+      this.propertyBuffers.set(name, attribute);
     }
 
     this.configSource = source;
@@ -332,7 +336,9 @@ export class UIGenericInstancedPlane extends Mesh {
 
     if (this.instancedGeometry.instanceCount + count > this.capacity) {
       this.resizeGeometry(
-        Math.ceil((this.capacity + count) / CAPACITY_STEP) * CAPACITY_STEP,
+        Math.ceil(
+          (this.instancedGeometry.instanceCount + count) / CAPACITY_STEP,
+        ) * CAPACITY_STEP,
       );
     }
 
@@ -432,7 +438,6 @@ export class UIGenericInstancedPlane extends Mesh {
     );
 
     const descriptor = this.resolveDescriptor(handler);
-
     if (instancesTransforms.length + offset > descriptor.count) {
       throw new Error(
         `Too many instances for handler: ${handler}, offset: ${offset}, and count: ${instancesTransforms.length}`,
@@ -461,7 +466,6 @@ export class UIGenericInstancedPlane extends Mesh {
     );
 
     const descriptor = this.resolveDescriptor(handler);
-
     if (uvTransforms.length + offset > descriptor.count) {
       throw new Error(
         `Too many instances for handler: ${handler}, offset: ${offset}, and count: ${uvTransforms.length}`,
@@ -479,6 +483,34 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
+  public updateAlphaTest(
+    handler: number,
+    offset: number,
+    instancesAlphaTest: boolean[],
+  ): void {
+    assertValidNonNegativeNumber(
+      offset,
+      "UIGenericInstancedPlane updateAlphaTest offset",
+    );
+
+    const descriptor = this.resolveDescriptor(handler);
+    if (instancesAlphaTest.length + offset > descriptor.count) {
+      throw new Error(
+        `Too many instances for handler: ${handler}, offset: ${offset}, and count: ${instancesAlphaTest.length}`,
+      );
+    }
+
+    const attribute = this.resolveBufferAttribute("alphaTest");
+    const array = attribute.array as Float32Array;
+
+    for (let i = 0; i < instancesAlphaTest.length; i++) {
+      const instanceOffset = descriptor.firstIndex + offset + i;
+      const itemOffset = instanceOffset * attribute.itemSize;
+      array[itemOffset] = instancesAlphaTest[i] ? 1 : 0;
+    }
+    attribute.needsUpdate = true;
+  }
+
   public updateVisibility(
     handler: number,
     offset: number,
@@ -490,7 +522,6 @@ export class UIGenericInstancedPlane extends Mesh {
     );
 
     const descriptor = this.resolveDescriptor(handler);
-
     if (instancesVisibility.length + offset > descriptor.count) {
       throw new Error(
         `Too many instances for handler: ${handler}, offset: ${offset}, and count: ${instancesVisibility.length}`,
@@ -522,7 +553,7 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   private resolveBufferAttribute(name: string): InstancedBufferAttribute {
-    const attribute = this.propertyBuffers.get(`a_${name}`);
+    const attribute = this.propertyBuffers.get(name);
     if (attribute === undefined) {
       throw new Error(`No attribute found for property: ${name} (a_${name})`);
     }
@@ -541,15 +572,16 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   private resizeGeometry(newCapacity: number): void {
-    for (const [name, oldAttribute] of this.propertyBuffers.entries()) {
+    const snapshot = Array.from(this.propertyBuffers.entries());
+    for (const [name, oldAttribute] of snapshot) {
       const itemSize = oldAttribute.itemSize;
       const newArray = new Float32Array(newCapacity * itemSize);
-
-      newArray.set(oldAttribute.array as Float32Array);
+      newArray.set(oldAttribute.array, 0);
       const newAttribute = new InstancedBufferAttribute(newArray, itemSize);
 
       this.instancedGeometry.setAttribute(`a_${name}`, newAttribute);
-      this.propertyBuffers.set(`a_${name}`, newAttribute);
+      this.propertyBuffers.set(name, newAttribute);
+      newAttribute.needsUpdate = true;
     }
 
     this.capacity = newCapacity;
