@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">Laymur</h1>
   <p align="center">
-      A TypeScript Three.js UI layout library with constraint-based positioning and rendering.
+      A constraint-based UI library for Three.js mobile advertisements
   </p>
 </p>
 
@@ -14,18 +14,19 @@
 
 ⚠️ **Early Alpha / Work in Progress** ⚠️
 
-This library is in very early development stage. APIs may change significantly.
+This library is in early development. APIs may change.
 
-## Features
+## What it does
 
-- 🎯 **Constraint-Based Layout** - Powerful Cassowary constraint solver for flexible positioning
-- 📐 **Anchor Points** - Flexible element positioning with configurable anchor points
-- 🖼️ **Rich Elements** - Images, text, scenes, and custom UI components
-- 📱 **Responsive Design** - Orientation-aware layouts that adapt to screen changes
-- ✨ **Micro-Transformations** - Lightweight animations and effects without constraint changes
-- 🎨 **Three.js Integration** - Native 3D scene rendering within UI elements
-- 📦 **Full TypeScript Support** - Complete type safety and IntelliSense
-- 🎪 **Event System** - Comprehensive interaction and lifecycle events
+A compact UI library designed for Three.js mobile advertisements where bundle size matters. Uses constraint-based positioning to handle responsive layouts across different screen sizes and orientations.
+
+- 📱 Constraint-based layout system
+- 🖼️ Basic UI elements (images, text, progress bars)
+- 📐 Responsive design for mobile ads
+- 🎯 Lightweight animations
+- 📦 TypeScript support
+
+Originally built for mobile ad development scenarios where you need to keep the bundle small while supporting various screen configurations.
 
 ## Installation
 
@@ -33,347 +34,160 @@ This library is in very early development stage. APIs may change significantly.
 npm install laymur
 ```
 
-## Requirements
+Requires Three.js ^0.175.0 as a peer dependency.
 
-- Three.js ^0.175.0 (peer dependency)
-- Modern JavaScript environment with ES2020+ support
-
-## Live Examples
-
-🎮 **[Live Examples](https://jango-git.github.io/laymur/)** - Explore constraint-based layouts, proportional positioning, and responsive UI components in action.
-
-## Quick Start
+## Quick Example
 
 ```typescript
 import { UIFullscreenLayer, UIImage, UIText, UIWidthConstraint } from 'laymur';
 import { WebGLRenderer, TextureLoader, Clock } from 'three';
 
-// Create renderer and fullscreen layer
 const renderer = new WebGLRenderer();
-const layer = new UIFullscreenLayer(1920, 1080); // Fixed design dimensions
+const layer = new UIFullscreenLayer(1920, 1920);
 const clock = new Clock();
 
-// Load a texture
-const texture = new TextureLoader().load('my-image.jpg');
-
-// Create UI elements
+const texture = new TextureLoader().load('background.jpg');
 const background = new UIImage(layer, texture, { x: 0, y: 0 });
-const title = new UIText(layer, 'Welcome to Laymur!', {
+const title = new UIText(layer, 'Mobile Ad Title', {
   x: 100,
   y: 100,
-  maxWidth: 800,
-  commonStyle: { fontSize: 48, color: '#ffffff' }
+  maxWidth: 800
 });
 
-// Add constraints for responsive layout
-new UIWidthConstraint(background, { width: layer.width });
-
-// Render loop
 function animate() {
-  const deltaTime = clock.getDelta();
-  layer.render(renderer, deltaTime);
+  layer.render(renderer, clock.getDelta());
   requestAnimationFrame(animate);
 }
 
 animate();
 ```
 
-## Core Concepts
+## Basic Components
 
 ### Layers
-
-Layers are containers that manage UI elements, constraint solving, and rendering:
-
-- **UIFullscreenLayer** - Automatic browser window integration with responsive scaling
-- **UILayer** - Base layer class for custom implementations
+- **UIFullscreenLayer** - Handles browser window scaling
+- **UILayer** - Base layer for custom setups
 
 ### Elements
-
-UI elements are the building blocks of your interface:
-
-- **UIAnchor** - Basic positioned point in 2D space
-- **UIImage** - Textured image display with color tinting
-- **UIText** - Dynamic text rendering with rich formatting
-- **UIScene** - Embedded 3D scene rendering
-- **UIElement** - Base class for custom elements
+- **UIImage** - Display textures
+- **UIText** - Text rendering with word wrapping
+- **UIScene** - Embed 3D scenes
+- **UIProgress** - Progress bars
+- **UINineSline** - Scalable UI panels
+- **UIAnchor** - Positioning points
 
 ### Constraints
-
-Constraints define relationships between elements for automatic layout:
-
-- **UIWidthConstraint** / **UIHeightConstraint** - Fixed dimensions
+- **UIWidthConstraint** / **UIHeightConstraint** - Fixed sizes
 - **UIAspectConstraint** - Maintain aspect ratios
-- **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing between elements
+- **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing
 - **UIHorizontalProportionConstraint** / **UIVerticalProportionConstraint** - Proportional sizing
-- **UICustomConstraint** - Custom mathematical relationships
 
-## Layout System
+## Constraint Layout
 
-### Constraint-Based Positioning
-
-Laymur uses the Cassowary constraint solving algorithm to automatically calculate element positions and sizes based on relationships you define:
+The constraint system automatically calculates positions and sizes based on relationships you define:
 
 ```typescript
-import { UIImage, UIText, UIHorizontalDistanceConstraint, UIWidthConstraint } from 'laymur';
+import { UIImage, UIHorizontalDistanceConstraint, UIWidthConstraint } from 'laymur';
 
-// Create elements
-const sidebar = new UIImage(layer, sidebarTexture, 0, 0);
-const content = new UIText(layer, 'Main content', { x: 0, y: 0 });
+const sidebar = new UIImage(layer, sidebarTexture, { x: 0, y: 0 });
+const content = new UIImage(layer, contentTexture, { x: 0, y: 0 });
 
-// Define layout constraints
-new UIWidthConstraint(sidebar, { width: 300 }); // Fixed sidebar width
+// Fixed sidebar width
+new UIWidthConstraint(sidebar, { width: 300 });
+
+// 20px spacing between sidebar and content
 new UIHorizontalDistanceConstraint(sidebar, content, {
-  distance: 20,    // 20px spacing
-  anchorA: 1.0,    // Right edge of sidebar
-  anchorB: 0.0     // Left edge of content
+  distance: 20,
+  anchorA: 1.0,  // Right edge of sidebar
+  anchorB: 0.0   // Left edge of content
 });
 ```
 
-### Anchor Points
+## Responsive Design
 
-Elements support flexible anchor points for precise positioning control:
+Handle different orientations:
 
 ```typescript
-// Anchor values: 0.0 = left/top, 0.5 = center, 1.0 = right/bottom
-new UIHorizontalDistanceConstraint(elementA, elementB, {
-  anchorA: 0.5,  // Center of element A
-  anchorB: 0.5,  // Center of element B
-  distance: 100  // 100px between centers
+import { UIOrientation } from 'laymur';
+
+// Different widths for landscape vs portrait
+new UIWidthConstraint(sidebar, {
+  width: 300,
+  orientation: UIOrientation.HORIZONTAL
+});
+
+new UIWidthConstraint(sidebar, {
+  width: 200,
+  orientation: UIOrientation.VERTICAL
 });
 ```
 
-### Proportional Layouts
-
-Create responsive layouts that maintain proportions:
-
-```typescript
-import { UIHorizontalProportionConstraint } from 'laymur';
-
-// Make content area 3x wider than sidebar
-new UIHorizontalProportionConstraint(content, sidebar, {
-  proportion: 3.0
-});
-```
-
-## UI Elements
-
-### UIImage - Textured Images
-
-Display and manipulate images with full control over appearance:
-
-```typescript
-import { UIImage } from 'laymur';
-import { TextureLoader } from 'three';
-
-const texture = new TextureLoader().load('hero-image.jpg');
-const heroImage = new UIImage(layer, texture);
-
-// Modify appearance
-heroImage.color.setHexRGB(0xff8844, 0.5);  // Orange tint, semi-transparent
-```
-
-### UIText - Dynamic Text Rendering
-
-Render text with automatic word wrapping and styling:
+## Text Rendering
 
 ```typescript
 import { UIText } from 'laymur';
 
-const description = new UIText(layer, [
-  { text: 'Welcome to ', style: { fontSize: 24, color: '#333333' } },
-  { text: 'Laymur', style: { fontSize: 32, color: '#0066cc', fontWeight: 'bold' } },
-  { text: '!', style: { fontSize: 24, color: '#333333' } }
+const text = new UIText(layer, [
+  { text: 'Download ', style: { fontSize: 24, color: '#333333' } },
+  { text: 'Now!', style: { fontSize: 32, color: '#ff0000', fontWeight: 'bold' } }
 ], {
   maxWidth: 600,
-  padding: { top: 20, left: 20, right: 20, bottom: 20 },
-  commonStyle: { fontFamily: 'Arial, sans-serif' }
-});
-
-// Update content dynamically
-description.content = 'New text content';
-```
-
-### UIScene - Embedded 3D Scenes
-
-Render Three.js scenes directly within your UI:
-
-```typescript
-import { UIScene, UISceneUpdateMode } from 'laymur';
-import { Scene, PerspectiveCamera, BoxGeometry, Mesh } from 'three';
-
-// Create 3D scene
-const scene3d = new Scene();
-const camera = new PerspectiveCamera(75, 1, 0.1, 1000);
-const cube = new Mesh(new BoxGeometry(), new MeshBasicMaterial({ color: 0x00ff00 }));
-scene3d.add(cube);
-
-// Embed in UI
-const sceneElement = new UIScene(layer, {
-  width: 400,
-  height: 300,
-  scene: scene3d,
-  camera: camera,
-  updateMode: UISceneUpdateMode.EACH_FRAME,
-  resolutionFactor: 1.0
+  padding: { top: 10, left: 10, right: 10, bottom: 10 }
 });
 ```
 
 ## Micro-Transformations
 
-Apply lightweight transformations independent of the constraint system:
+Apply lightweight animations without affecting the constraint layout:
 
 ```typescript
-// Access micro-transformation system
 const element = new UIImage(layer, texture);
 
-// Apply transformations for animations or effects
-element.micro.x = 10;           // Offset position
-element.micro.y = -5;
-element.micro.scaleX = 1.2;     // Scale up horizontally
-element.micro.rotation = 0.1;   // Rotate in radians
-element.micro.anchorX = 0.5;    // Transform around center
-element.micro.anchorY = 0.5;
+// Apply transformations for animations
+element.micro.x = 10;
+element.micro.scaleX = 1.2;
+element.micro.rotation = 0.1;
+element.micro.anchorX = 0.5;
 
-// Reset all transformations
+// Reset transformations
 element.micro.reset();
 ```
 
 ## Event Handling
 
-### Element Events
-
-Listen for user interactions and lifecycle events:
-
 ```typescript
-import { UIInputEvent } from 'laymur';
+import { UIInputEvent, UIMode } from 'laymur';
 
 const button = new UIImage(layer, buttonTexture);
-button.mode = UIMode.INTERACTIVE; // Enable interaction
+button.mode = UIMode.INTERACTIVE;
 
 button.on(UIInputEvent.CLICK, (x, y, element) => {
-  console.log(`Button clicked at ${x}, ${y}`);
-  // Handle button click
+  console.log('Button clicked');
 });
 ```
 
-### Layer Events
+## Live Examples
 
-Respond to layer-level changes:
-
-```typescript
-import { UILayerEvent } from 'laymur';
-
-layer.on(UILayerEvent.ORIENTATION_CHANGE, (orientation, layer) => {
-  console.log('Orientation changed to:', orientation);
-  // Adjust layout for new orientation
-});
-
-layer.on(UILayerEvent.MODE_CHANGE, (mode, layer) => {
-  console.log('Layer mode changed to:', mode);
-});
-```
-
-## Advanced Features
-
-### Custom Constraints
-
-Create complex mathematical relationships:
-
-```typescript
-import { UICustomConstraint, UIExpression } from 'laymur';
-
-// Create custom constraint: elementA.width = elementB.width + elementC.height * 2
-const lhs = new UIExpression(0, [[elementA.wVariable, 1]]);
-const rhs = new UIExpression(0, [
-  [elementB.wVariable, 1],
-  [elementC.hVariable, 2]
-]);
-
-new UICustomConstraint(layer, lhs, rhs, {
-  priority: UIPriority.P2,
-  relation: UIRelation.EQUAL
-});
-```
-
-### Responsive Design
-
-Handle different screen orientations and sizes:
-
-```typescript
-import { UIOrientation } from 'laymur';
-
-// Constraints that only apply in specific orientations
-new UIWidthConstraint(sidebar, {
-  width: 300,
-  orientation: UIOrientation.HORIZONTAL // Only in landscape
-});
-
-new UIWidthConstraint(sidebar, {
-  width: 200,
-  orientation: UIOrientation.VERTICAL   // Only in portrait
-});
-```
-
-## API Reference
-
-### Priority Levels
-
-Constraint priorities from highest to lowest:
-
-- `UIPriority.P0` - Required constraints (highest)
-- `UIPriority.P1` - Strong constraints
-- `UIPriority.P2` - Medium-strong constraints
-- `UIPriority.P3` - Medium constraints
-- `UIPriority.P4` - Medium-weak constraints
-- `UIPriority.P5` - Weak constraints
-- `UIPriority.P6` - Very weak constraints
-- `UIPriority.P7` - Suggestion constraints (lowest)
-
-### Relation Types
-
-Mathematical relationships for constraints:
-
-- `UIRelation.EQUAL` - Left-hand side equals right-hand side
-- `UIRelation.LESS_THAN` - Left-hand side ≤ right-hand side
-- `UIRelation.GREATER_THAN` - Left-hand side ≥ right-hand side
-
-### UI Modes
-
-Element visibility and interaction states:
-
-- `UIMode.HIDDEN` - Not rendered, no interaction
-- `UIMode.VISIBLE` - Rendered, no interaction
-- `UIMode.INTERACTIVE` - Rendered with interaction
+🎮 **[Live Examples](https://jango-git.github.io/laymur/)** - See constraint-based layouts and responsive components in action.
 
 ## Addons
 
 ### laymur-animations
 
-A collection of standard UI animations for smooth, performant motion effects built on top of GSAP.
+Animation library built on GSAP for common UI effects:
 
 - **GitHub**: [https://github.com/jango-git/laymur-animations](https://github.com/jango-git/laymur-animations)
 - **NPM**: [https://www.npmjs.com/package/laymur-animations](https://www.npmjs.com/package/laymur-animations)
 
-Includes common animations like appear/disappear effects, pulsing, jumping, spinning, and click feedback for Laymur UI elements.
+## Notes
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues and pull requests.
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+- This was built specifically for mobile ad development where bundle size is important
+- The constraint solver is based on Cassowary algorithm via Kiwi.js
+- Currently in alpha - expect API changes
+- Works best for relatively simple UI layouts
 
 ## License
 
-Laymur is licensed under the [MIT License](./LICENSE).
+MIT © [jango](https://github.com/jango-git)
 
-It uses [Kiwi.js](https://github.com/lume/kiwi) as its constraint solving engine — a fast and lightweight Cassowary implementation in TypeScript.
-
-Kiwi.js is licensed under the [BSD-3-Clause License](https://github.com/lume/kiwi/blob/main/LICENSE).
-
-It is built on top of [Three.js](https://threejs.org/) for 3D rendering support — a cross-browser JavaScript library for creating and displaying 3D graphics.
-
-Three.js is licensed under the [MIT License](https://github.com/mrdoob/three.js/blob/dev/LICENSE).
-All licenses used are compatible and permissive.
+Uses [Kiwi.js](https://github.com/lume/kiwi) (BSD-3-Clause) for constraint solving and [Three.js](https://threejs.org/) (MIT) for 3D rendering.
