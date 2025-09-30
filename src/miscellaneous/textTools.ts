@@ -20,7 +20,7 @@ export function measureTextChunk(
 
   if (chunk === "\n") {
     return {
-      width: Math.ceil(0),
+      width: Math.ceil(1),
       height: style.lineHeight,
       baseline: 0,
       lineHeight: style.lineHeight,
@@ -115,22 +115,14 @@ export function calculateTextSize(lines: UITextLine[]): UITextSize {
   }
 
   const maxLineWidth = Math.max(...lines.map((line) => line.width));
-
   let totalHeight = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     totalHeight += i === 0 ? line.height : line.lineHeight;
-
-    if (i === lines.length - 1) {
-      totalHeight += line.baseline;
-    }
   }
 
-  return {
-    width: maxLineWidth,
-    height: totalHeight,
-  };
+  return { width: maxLineWidth, height: totalHeight };
 }
 
 export function renderText(
@@ -165,7 +157,6 @@ export function renderTextLines(
   lines: UITextLine[],
   context: OffscreenCanvasRenderingContext2D,
 ): void {
-  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   let currentY = paddingTop;
 
   for (let i = 0; i < lines.length; i++) {
@@ -203,7 +194,5 @@ export function calculateTextContentParameters(
   }
 
   const lines = buildLines(maxLineWidth, chunks);
-  const textSize = calculateTextSize(lines);
-
-  return { lines, size: textSize };
+  return { lines, size: calculateTextSize(lines) };
 }

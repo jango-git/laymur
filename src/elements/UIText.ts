@@ -78,9 +78,6 @@ export class UIText extends UIElement {
   /** Target aspect ratio for the text element based on content. */
   private targetAspectRatio = 1;
 
-  /** Last calculated aspect ratio for comparison during rendering. */
-  private lastAspectRatio = 1;
-
   /**
    * Creates a new UIText instance with dynamic text rendering.
    *
@@ -235,8 +232,7 @@ export class UIText extends UIElement {
     deltaTime: number,
   ): void {
     super.onWillRender(renderer, deltaTime);
-    if (this.lastAspectRatio !== this.width / this.height) {
-      this.lastAspectRatio = this.targetAspectRatio;
+    if (this.targetAspectRatio !== this.width / this.height) {
       this.height = this.width / this.targetAspectRatio;
     }
   }
@@ -264,9 +260,7 @@ export class UIText extends UIElement {
     this.width = this.canvas.width;
     this.height = this.canvas.height;
 
-    this.targetAspectRatio =
-      (size.width + this.paddingInternal.left + this.paddingInternal.right) /
-      (size.height + this.paddingInternal.top + this.paddingInternal.bottom);
+    this.targetAspectRatio = this.canvas.width / this.canvas.height;
 
     renderTextLines(
       this.paddingInternal.top,
@@ -274,6 +268,7 @@ export class UIText extends UIElement {
       lines,
       this.context,
     );
+
     this.texture.needsUpdate = true;
   }
 

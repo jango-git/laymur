@@ -28,12 +28,21 @@ export enum UIProgressMaskFunction {
     return step((direction * d + (1.0 - direction) * 0.5), progress);
   }`,
 
-  /** Fill in a circular pattern around the center */
-  CIRCLE = `float calculateMask() {
+  /** Fill in a circular pattern around the center, starting from the left */
+  CIRCLE_LEFT = `float calculateMask() {
     vec2 p = io_UV - 0.5;
     float angle = atan(p.y, p.x);
     angle = (angle + 3.14159265) / 3.14159265;
     angle *= 0.5;
+    return step((direction * angle + (1.0 - direction) * 0.5), progress);
+  }`,
+
+  /** Fill in a circular pattern around the center, starting from the top */
+  CIRCLE_TOP = `float calculateMask() {
+    vec2 p = io_UV - 0.5;
+    float angle = atan(p.y, p.x);
+    angle = (angle + 3.14159265) / (2.0 * 3.14159265);
+    angle = mod(angle + 0.25, 1.0);
     return step((direction * angle + (1.0 - direction) * 0.5), progress);
   }`,
 }
