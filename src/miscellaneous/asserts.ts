@@ -11,7 +11,7 @@ export const EPSILON = 1e-6;
  */
 export interface UILayerElement {
   /** The UI layer that contains this element. */
-  layer: UILayer;
+  readonly layer: UILayer;
 }
 
 /**
@@ -22,14 +22,14 @@ export interface UILayerElement {
  */
 export interface UIPointElement {
   /** Solver variable descriptor for the x-coordinate. */
-  xVariable: number;
+  readonly xVariable: number;
   /** Solver variable descriptor for the y-coordinate. */
-  yVariable: number;
+  readonly yVariable: number;
 
   /** The x-coordinate of the element. */
-  x: number;
+  readonly x: number;
   /** The y-coordinate of the element. */
-  y: number;
+  readonly y: number;
 }
 
 /**
@@ -40,14 +40,14 @@ export interface UIPointElement {
  */
 export interface UIPlaneElement extends UIPointElement {
   /** Solver variable descriptor for the width dimension. */
-  wVariable: number;
+  readonly wVariable: number;
   /** Solver variable descriptor for the height dimension. */
-  hVariable: number;
+  readonly hVariable: number;
 
   /** The width of the element. */
-  width: number;
+  readonly width: number;
   /** The height of the element. */
-  height: number;
+  readonly height: number;
 }
 
 /**

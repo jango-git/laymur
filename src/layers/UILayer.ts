@@ -1,5 +1,6 @@
 import { Eventail } from "eventail";
 import type { WebGLRenderer } from "three";
+import type { UIPlaneElement } from "../miscellaneous/asserts";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
@@ -48,7 +49,7 @@ export enum UILayerEvent {
  * @see {@link UISceneWrapper} - 3D scene management
  * @see {@link UIOrientation} - Layer orientation states
  */
-export abstract class UILayer extends Eventail {
+export abstract class UILayer extends Eventail implements UIPlaneElement {
   /** Optional name identifier for the layer. */
   public name = "";
 
@@ -123,6 +124,22 @@ export abstract class UILayer extends Eventail {
   }
 
   /**
+   * Gets the current x position value from the constraint solver.
+   * @returns The current x position in pixels
+   */
+  public get x(): number {
+    return this.solverWrapper.readVariableValue(this.xVariable);
+  }
+
+  /**
+   * Gets the current y position value from the constraint solver.
+   * @returns The current y position in pixels
+   */
+  public get y(): number {
+    return this.solverWrapper.readVariableValue(this.yVariable);
+  }
+
+  /**
    * Gets the current width value from the constraint solver.
    * @returns The current layer width in pixels
    */
@@ -155,6 +172,22 @@ export abstract class UILayer extends Eventail {
   public get orientation(): UIOrientation {
     return this.orientationInternal;
   }
+
+  // public set x(value: number) {
+  //   throw new Error("You cannot set the x position of a UI layer.");
+  // }
+
+  // public set y(value: number) {
+  //   throw new Error("You cannot set the y position of a UI layer.");
+  // }
+
+  // public set width(value: number) {
+  //   throw new Error("You cannot set the width of a UI layer.");
+  // }
+
+  // public set height(value: number) {
+  //   throw new Error("You cannot set the height of a UI layer.");
+  // }
 
   /**
    * Sets the visibility and interaction mode and emits change event.
