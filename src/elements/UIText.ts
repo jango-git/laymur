@@ -272,6 +272,7 @@ export class UIText extends UIElement {
     this.texture.dispose();
     this.texture = new CanvasTexture(this.canvas);
     this.texture.needsUpdate = true;
+    this.sceneWrapper.setUniform(this.planeHandler, "map", this.texture);
   }
 
   /** Event handler for when the color changes */
