@@ -165,6 +165,7 @@ export function renderTextLines(
   lines: UITextLine[],
   context: OffscreenCanvasRenderingContext2D,
 ): void {
+  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   let currentY = paddingTop;
 
   for (let i = 0; i < lines.length; i++) {
