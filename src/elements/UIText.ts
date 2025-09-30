@@ -58,7 +58,7 @@ export class UIText extends UIElement {
   private readonly context: OffscreenCanvasRenderingContext2D;
 
   /** The canvas texture containing the rendered text. */
-  private readonly texture: CanvasTexture;
+  private texture: CanvasTexture;
 
   /** Internal storage for the color tint. */
   private readonly colorInternal: UIColor;
@@ -269,6 +269,8 @@ export class UIText extends UIElement {
       this.context,
     );
 
+    this.texture.dispose();
+    this.texture = new CanvasTexture(this.canvas);
     this.texture.needsUpdate = true;
   }
 
