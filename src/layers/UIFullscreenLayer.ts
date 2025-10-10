@@ -1,4 +1,9 @@
-import type { WebGLRenderer } from "three";
+import {
+  MathUtils,
+  type Camera,
+  type Vector3,
+  type WebGLRenderer,
+} from "three";
 import {
   assertValidNumber,
   assertValidPositiveNumber,
@@ -132,6 +137,32 @@ export class UIFullscreenLayer extends UILayer {
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.deltaTime");
     super.renderInternal(renderer, deltaTime);
+  }
+
+  /**
+   * Projects a 3D world position to 2D screen coordinates within this layer.
+   *
+   * @param position - The 3D world position to project
+   * @param camera - The camera used for projection
+   * @returns The projected 2D position in layer coordinates
+   */
+  public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
+    const projectedPosition = position.project(camera);
+    projectedPosition.x = MathUtils.mapLinear(
+      projectedPosition.x,
+      -1,
+      1,
+      this.x,
+      this.width,
+    );
+    projectedPosition.y = MathUtils.mapLinear(
+      projectedPosition.y,
+      -1,
+      1,
+      this.y,
+      this.height,
+    );
+    return projectedPosition;
   }
 
   /**
