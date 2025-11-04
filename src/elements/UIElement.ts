@@ -73,7 +73,7 @@ export abstract class UIElement
   protected modeInternal: UIMode = UIMode.VISIBLE;
 
   /** Internal storage for the transparency rendering mode. */
-  protected transparencyInternal: UITransparencyMode = UITransparencyMode.CLIP;
+  protected transparencyInternal: UITransparencyMode = UITransparencyMode.BLEND;
 
   /** Internal storage for the z-index (depth) value. */
   protected zIndexInternal = 0;
@@ -119,6 +119,10 @@ export abstract class UIElement
 
     this.sceneWrapper = layer["getSceneWrapperClientAPI"]();
     this.planeHandler = this.sceneWrapper.createPlane(source, uniforms);
+    this.sceneWrapper.setTransparency(
+      this.planeHandler,
+      this.transparencyInternal,
+    );
   }
 
   /**

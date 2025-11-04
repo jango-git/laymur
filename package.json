@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "scripts": {
     "clean": "rm -rf dist",
