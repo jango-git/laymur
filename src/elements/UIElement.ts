@@ -142,6 +142,34 @@ export abstract class UIElement
   }
 
   /**
+   * The right edge X coordinate of this element (x + width).
+   */
+  public get oppositeX(): number {
+    return this.x + this.width;
+  }
+
+  /**
+   * The bottom edge Y coordinate of this element (y + height).
+   */
+  public get oppositeY(): number {
+    return this.y + this.height;
+  }
+
+  /**
+   * The X coordinate of the center of this element.
+   */
+  public get centerX(): number {
+    return this.x + this.width / 2;
+  }
+
+  /**
+   * The Y coordinate of the center of this element.
+   */
+  public get centerY(): number {
+    return this.y + this.height / 2;
+  }
+
+  /**
    * Gets the current z-index (depth) value.
    * @returns The current z-index value
    */
