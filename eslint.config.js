@@ -46,8 +46,6 @@ export default [
       "@typescript-eslint/no-empty-interface": "error",
       "@typescript-eslint/no-duplicate-type-constituents": "error",
       "@typescript-eslint/no-duplicate-enum-values": "error",
-      // "max-params": "off",
-      // "@typescript-eslint/max-params": "error",
 
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "error",
@@ -58,7 +56,9 @@ export default [
       "no-magic-numbers": [
         "warn",
         {
-          ignore: [0, 1, -1, 2, 0xff, 0xffff, 0xffffff, 360, 270, 180, 90, 100],
+          ignore: [
+            0, 1, -1, 2, 0xff, 0xffff, 0xffffff, 360, 270, 180, 90, 100, 1000,
+          ],
           ignoreEnums: true,
           ignoreArrayIndexes: true,
           enforceConst: true,
