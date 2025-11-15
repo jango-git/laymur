@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture } from "three";
+import { CanvasTexture, Matrix3 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import type { UITextContent } from "../miscellaneous/textInterfaces";
 import {
@@ -9,7 +9,7 @@ import {
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
 import {
   resolveTextPadding,
-  type UITextPadding,
+  type UIPadding,
 } from "../miscellaneous/UITextPadding";
 import { type UITextStyle } from "../miscellaneous/UITextStyle";
 import source from "../shaders/UIDefaultShader.glsl";
@@ -31,7 +31,7 @@ export interface UITextOptions {
   /** Maximum width in pixels before text wrapping occurs. */
   maxWidth: number;
   /** Padding configuration for text content. */
-  padding: Partial<UITextPadding>;
+  padding: Partial<UIPadding>;
   /** Common style properties applied to all text content. */
   commonStyle: Partial<UITextStyle>;
 }
@@ -48,7 +48,7 @@ export interface UITextOptions {
  * @see {@link UIElement} - Base class providing UI element functionality
  * @see {@link UITextContent} - Text content structure
  * @see {@link UITextStyle} - Text styling options
- * @see {@link UITextPadding} - Padding configuration
+ * @see {@link UIPadding} - Padding configuration
  */
 export class UIText extends UIElement {
   /** The HTML canvas element used for text rendering. */
@@ -70,7 +70,7 @@ export class UIText extends UIElement {
   private maxWidthInternal: number;
 
   /** Internal storage for the current padding configuration. */
-  private paddingInternal: UITextPadding;
+  private paddingInternal: UIPadding;
 
   /** Internal storage for the common text style properties. */
   private commonStyleInternal: Partial<UITextStyle>;
@@ -107,6 +107,7 @@ export class UIText extends UIElement {
 
     super(layer, options.x ?? 0, options.y ?? 0, 2, 2, source, {
       map: texture,
+      uvTransform: new Matrix3(),
       color,
     });
 
@@ -152,7 +153,7 @@ export class UIText extends UIElement {
    * Gets the current padding configuration.
    * @returns The padding configuration for all sides
    */
-  public get padding(): UITextPadding {
+  public get padding(): UIPadding {
     return this.paddingInternal;
   }
 
@@ -194,7 +195,7 @@ export class UIText extends UIElement {
    * Sets new padding configuration and triggers a rebuild.
    * @param value - The new padding configuration
    */
-  public set padding(value: UITextPadding) {
+  public set padding(value: UIPadding) {
     this.paddingInternal = value;
     this.rebuildText();
   }

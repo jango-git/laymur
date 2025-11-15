@@ -1,6 +1,7 @@
 import type { Camera, WebGLRenderer } from "three";
 import {
   LinearFilter,
+  Matrix3,
   PerspectiveCamera,
   RGBAFormat,
   Scene,
@@ -165,6 +166,7 @@ export class UIScene extends UIElement {
 
     super(layer, 0, 0, w, h, source, {
       map: renderTarget.texture,
+      uvTransform: new Matrix3(),
       color,
     });
 

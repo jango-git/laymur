@@ -13,6 +13,10 @@ export interface UIImageOptions {
   x: number;
   /** Y position of the element */
   y: number;
+  /** Width of the element */
+  width: number;
+  /** Height of the element */
+  height: number;
   /** Color tint applied to the image */
   color: UIColor;
 }
@@ -50,13 +54,14 @@ export class UIImage extends UIElement {
     texture: Texture,
     options: Partial<UIImageOptions> = {},
   ) {
-    const w = texture.image.width;
-    const h = texture.image.height;
+    const w = options.width ?? texture.image.width;
+    const h = options.height ?? texture.image.height;
 
     const color = options.color ?? new UIColor();
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
       map: texture,
+      uvTransform: texture.matrix,
       color,
     });
 
@@ -103,6 +108,11 @@ export class UIImage extends UIElement {
 
     this.textureInternal = value;
     this.sceneWrapper.setUniform(this.planeHandler, "map", value);
+    this.sceneWrapper.setUniform(
+      this.planeHandler,
+      "uvTransform",
+      value.matrix,
+    );
   }
 
   /**
