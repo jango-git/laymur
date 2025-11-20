@@ -15,9 +15,9 @@ export type UIAnimatedImageSequence =
   | Texture[];
 
 /**
- * Configuration options for creating a UIImage element.
+ * Configuration options for creating a UIAnimatedImage element.
  */
-export interface UIImageOptions {
+export interface UIAnimatedImageOptions {
   /** X position of the element */
   x: number;
   /** Y position of the element */
@@ -37,7 +37,7 @@ export interface UIImageOptions {
 /**
  * UI element for displaying textured images.
  *
- * UIImage is a concrete implementation of UIElement that renders a textured
+ * UIAnimatedImage is a concrete implementation of UIElement that renders a textured
  * image using shader-based planes. It automatically sizes itself
  * to match the texture dimensions and provides control over visual properties
  * such as color tinting.
@@ -45,7 +45,7 @@ export interface UIImageOptions {
  * @see {@link UIElement} - Base class providing UI element functionality
  * @see {@link Texture} - Three.js texture for image data
  */
-export class UIImage extends UIElement {
+export class UIAnimatedImage extends UIElement {
   /** Internal storage for the current texture */
   private readonly sequenceInternal: {
     texture: Texture;
@@ -61,7 +61,7 @@ export class UIImage extends UIElement {
   private currentFrameIndex = 0;
 
   /**
-   * Creates a new UIImage instance.
+   * Creates a new UIAnimatedImage instance.
    *
    * The image will automatically size itself to match the texture's dimensions.
    * All options have default values if not specified.
@@ -74,7 +74,7 @@ export class UIImage extends UIElement {
   constructor(
     layer: UILayer,
     sequence: UIAnimatedImageSequence,
-    options: Partial<UIImageOptions> = {},
+    options: Partial<UIAnimatedImageOptions> = {},
   ) {
     const w = options.width ?? 100;
     const h = options.height ?? 100;

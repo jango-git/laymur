@@ -1,5 +1,10 @@
+import { Eventail } from "eventail";
 import { MathUtils } from "three";
 import { UIMicroAnchorMode } from "./UIMicroAnchorMode";
+
+export enum UIMicroEvent {
+  CHANGE = 0,
+}
 
 /** Default position value for x and y coordinates. */
 const DEFAULT_POSITION = 0;
@@ -24,7 +29,7 @@ const DEFAULT_ROTATION = 0;
  *
  * @see {@link UIElement} - Elements that use micro transformations
  */
-export class UIMicro {
+export class UIMicro extends Eventail {
   /** Internal storage for x-coordinate offset. */
   private xInternal: number = DEFAULT_POSITION;
   /** Internal storage for y-coordinate offset. */
@@ -133,6 +138,7 @@ export class UIMicro {
     if (value !== this.xInternal) {
       this.xInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -144,6 +150,7 @@ export class UIMicro {
     if (value !== this.yInternal) {
       this.yInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -155,6 +162,7 @@ export class UIMicro {
     if (value !== this.anchorXInternal) {
       this.anchorXInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -166,6 +174,7 @@ export class UIMicro {
     if (value !== this.anchorYInternal) {
       this.anchorYInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -177,6 +186,7 @@ export class UIMicro {
     if (value !== this.scaleXInternal) {
       this.scaleXInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -188,6 +198,7 @@ export class UIMicro {
     if (value !== this.scaleYInternal) {
       this.scaleYInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -200,6 +211,7 @@ export class UIMicro {
       this.scaleXInternal = value;
       this.scaleYInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -212,6 +224,7 @@ export class UIMicro {
     if (rotation !== this.rotationInternal) {
       this.rotationInternal = rotation;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -223,6 +236,7 @@ export class UIMicro {
     if (value !== this.rotationInternal) {
       this.rotationInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -234,6 +248,7 @@ export class UIMicro {
     if (value !== this.anchorModeInternal) {
       this.anchorModeInternal = value;
       this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
     }
   }
 
@@ -261,6 +276,32 @@ export class UIMicro {
       this.scaleXInternal = DEFAULT_SCALE;
       this.scaleYInternal = DEFAULT_SCALE;
       this.rotationInternal = DEFAULT_ROTATION;
+      this.recalculationRequired = true;
+      this.emit(UIMicroEvent.CHANGE, this);
+    }
+  }
+
+  public copy(value: UIMicro): void {
+    if (
+      this.xInternal !== value.xInternal &&
+      this.yInternal !== value.yInternal &&
+      this.anchorXInternal !== value.anchorXInternal &&
+      this.anchorYInternal !== value.anchorYInternal &&
+      this.scaleXInternal !== value.scaleXInternal &&
+      this.scaleYInternal !== value.scaleYInternal &&
+      this.rotationInternal !== value.rotationInternal &&
+      this.anchorModeInternal !== value.anchorModeInternal
+    ) {
+      this.xInternal = value.xInternal;
+      this.yInternal = value.yInternal;
+      this.anchorXInternal = value.anchorXInternal;
+      this.anchorYInternal = value.anchorYInternal;
+      this.scaleXInternal = value.scaleXInternal;
+      this.scaleYInternal = value.scaleYInternal;
+      this.rotationInternal = value.rotationInternal;
+      this.anchorModeInternal = value.anchorModeInternal;
+
+      this.emit(UIMicroEvent.CHANGE, this);
       this.recalculationRequired = true;
     }
   }

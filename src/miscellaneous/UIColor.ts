@@ -398,18 +398,33 @@ export class UIColor extends Eventail {
    */
   public copy(color: UIColor | Color): this {
     if (color instanceof UIColor) {
-      this.rInternal = color.rInternal;
-      this.gInternal = color.gInternal;
-      this.bInternal = color.bInternal;
-      this.aInternal = color.aInternal;
+      if (
+        this.rInternal !== color.rInternal &&
+        this.gInternal !== color.gInternal &&
+        this.bInternal !== color.bInternal &&
+        this.aInternal !== color.aInternal
+      ) {
+        this.rInternal = color.rInternal;
+        this.gInternal = color.gInternal;
+        this.bInternal = color.bInternal;
+        this.aInternal = color.aInternal;
+        this.emit(UIColorEvent.CHANGE, this);
+      }
     } else {
-      this.rInternal = color.r;
-      this.gInternal = color.g;
-      this.bInternal = color.b;
-      this.aInternal = 1;
+      if (
+        this.rInternal !== color.r &&
+        this.gInternal !== color.g &&
+        this.bInternal !== color.b &&
+        this.aInternal !== 1
+      ) {
+        this.rInternal = color.r;
+        this.gInternal = color.g;
+        this.bInternal = color.b;
+        this.aInternal = 1;
+        this.emit(UIColorEvent.CHANGE, this);
+      }
     }
 
-    this.emit(UIColorEvent.CHANGE, this);
     return this;
   }
 
