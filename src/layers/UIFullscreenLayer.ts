@@ -22,15 +22,16 @@ import { UILayer } from "./UILayer";
  * @see {@link UIResizePolicy}
  */
 export class UIFullscreenLayer extends UILayer {
-  private resizePolicyInternal: UIResizePolicy = new UIResizePolicyNone();
+  private resizePolicyInternal: UIResizePolicy;
 
   /**
    * Creates a fullscreen layer and sets up window event listeners.
    */
-  constructor() {
+  constructor(resizePolicy: UIResizePolicy = new UIResizePolicyNone()) {
     super(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onClick);
+    this.resizePolicyInternal = resizePolicy;
     this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
     this.onResize();
   }
