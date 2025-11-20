@@ -429,6 +429,17 @@ export class UIColor extends Eventail {
   }
 
   /**
+   * Converts the color to a CSS rgba() string.
+   * @returns CSS rgba string (e.g., "rgba(255, 0, 0, 1)")
+   */
+  public toCSSColor(): string {
+    const r = Math.round(this.rInternal * 255);
+    const g = Math.round(this.gInternal * 255);
+    const b = Math.round(this.bInternal * 255);
+    return `rgba(${r}, ${g}, ${b}, ${this.aInternal})`;
+  }
+
+  /**
    * Creates a new UIColor instance with identical color values.
    * @returns A new UIColor instance with the same RGBA values
    */

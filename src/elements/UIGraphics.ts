@@ -76,20 +76,6 @@ export class UIGraphics extends UIElement {
   }
 
   /**
-   * Gets the canvas width.
-   */
-  public get canvasWidth(): number {
-    return this.canvas.width;
-  }
-
-  /**
-   * Gets the canvas height.
-   */
-  public get canvasHeight(): number {
-    return this.canvas.height;
-  }
-
-  /**
    * Gets the current color tint applied to the graphics.
    */
   public get color(): UIColor {
@@ -106,12 +92,12 @@ export class UIGraphics extends UIElement {
   /**
    * Clears the canvas with optional fill color.
    *
-   * @param fillColor - Optional color to fill after clearing (CSS color string)
+   * @param fillColor - Optional color to fill after clearing
    */
-  public clear(fillColor?: string): this {
+  public clear(fillColor?: UIColor): this {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (fillColor !== undefined) {
-      this.ctx.fillStyle = fillColor;
+      this.ctx.fillStyle = fillColor.toCSSColor();
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.canvasTexture.needsUpdate = true;
@@ -212,16 +198,17 @@ export class UIGraphics extends UIElement {
   /**
    * Sets the fill style.
    */
-  public setFillStyle(style: string | CanvasGradient | CanvasPattern): this {
-    this.ctx.fillStyle = style;
+  public setFillStyle(style: UIColor | CanvasGradient | CanvasPattern): this {
+    this.ctx.fillStyle = style instanceof UIColor ? style.toCSSColor() : style;
     return this;
   }
 
   /**
    * Sets the stroke style.
    */
-  public setStrokeStyle(style: string | CanvasGradient | CanvasPattern): this {
-    this.ctx.strokeStyle = style;
+  public setStrokeStyle(style: UIColor | CanvasGradient | CanvasPattern): this {
+    this.ctx.strokeStyle =
+      style instanceof UIColor ? style.toCSSColor() : style;
     return this;
   }
 
