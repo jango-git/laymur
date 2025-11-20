@@ -108,119 +108,129 @@ export class UIGraphics extends UIElement {
    *
    * @param fillColor - Optional color to fill after clearing (CSS color string)
    */
-  public clear(fillColor?: string): void {
+  public clear(fillColor?: string): this {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (fillColor !== undefined) {
       this.ctx.fillStyle = fillColor;
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Draws a rectangle on the canvas.
    */
-  public rect(x: number, y: number, width: number, height: number): void {
+  public rect(x: number, y: number, width: number, height: number): this {
     this.ctx.rect(x, y, width, height);
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Draws a filled rectangle on the canvas.
    */
-  public fillRect(x: number, y: number, width: number, height: number): void {
+  public fillRect(x: number, y: number, width: number, height: number): this {
     this.ctx.fillRect(x, y, width, height);
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Draws a stroked rectangle on the canvas.
    */
-  public strokeRect(x: number, y: number, width: number, height: number): void {
+  public strokeRect(x: number, y: number, width: number, height: number): this {
     this.ctx.strokeRect(x, y, width, height);
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Draws a circle on the canvas.
    */
-  public circle(x: number, y: number, radius: number): void {
+  public circle(x: number, y: number, radius: number): this {
     this.ctx.beginPath();
     this.ctx.arc(x, y, radius, 0, Math.PI * 2);
     this.ctx.closePath();
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Begins a new path.
    */
-  public beginPath(): void {
+  public beginPath(): this {
     this.ctx.beginPath();
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Closes the current path.
    */
-  public closePath(): void {
+  public closePath(): this {
     this.ctx.closePath();
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Fills the current path.
    */
-  public fill(): void {
+  public fill(): this {
     this.ctx.fill();
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Strokes the current path.
    */
-  public stroke(): void {
+  public stroke(): this {
     this.ctx.stroke();
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Moves the path to a point.
    */
-  public moveTo(x: number, y: number): void {
+  public moveTo(x: number, y: number): this {
     this.ctx.moveTo(x, y);
-    this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Draws a line to a point.
    */
-  public lineTo(x: number, y: number): void {
+  public lineTo(x: number, y: number): this {
     this.ctx.lineTo(x, y);
     this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Sets the fill style.
    */
-  public setFillStyle(style: string | CanvasGradient | CanvasPattern): void {
+  public setFillStyle(style: string | CanvasGradient | CanvasPattern): this {
     this.ctx.fillStyle = style;
-    this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Sets the stroke style.
    */
-  public setStrokeStyle(style: string | CanvasGradient | CanvasPattern): void {
+  public setStrokeStyle(style: string | CanvasGradient | CanvasPattern): this {
     this.ctx.strokeStyle = style;
-    this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**
    * Sets the line width.
    */
-  public setLineWidth(width: number): void {
+  public setLineWidth(width: number): this {
     this.ctx.lineWidth = width;
-    this.canvasTexture.needsUpdate = true;
+    return this;
   }
 
   /**

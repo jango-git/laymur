@@ -10,6 +10,7 @@ import {
   UIResizePolicyEvent,
   UIResizePolicyNone,
 } from "../miscellaneous/resizePolicies";
+import { UIMode } from "../miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 
 /**
@@ -27,10 +28,14 @@ export class UIFullscreenLayer extends UILayer {
   /**
    * Creates a fullscreen layer and sets up window event listeners.
    */
-  constructor(resizePolicy: UIResizePolicy = new UIResizePolicyNone()) {
+  constructor(
+    resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
+    mode: UIMode = UIMode.VISIBLE,
+  ) {
     super(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onClick);
+    this.mode = mode;
     this.resizePolicyInternal = resizePolicy;
     this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
     this.onResize();
