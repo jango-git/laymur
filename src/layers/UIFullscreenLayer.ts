@@ -6,7 +6,10 @@ import {
 } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import type { UIResizePolicy } from "../miscellaneous/resizePolicies";
-import { UIResizePolicyNone } from "../miscellaneous/resizePolicies";
+import {
+  UIResizePolicyEvent,
+  UIResizePolicyNone,
+} from "../miscellaneous/resizePolicies";
 import { UILayer } from "./UILayer";
 
 /**
@@ -19,7 +22,7 @@ import { UILayer } from "./UILayer";
  * @see {@link UIResizePolicy}
  */
 export class UIFullscreenLayer extends UILayer {
-  public resizePolicy: UIResizePolicy = new UIResizePolicyNone();
+  private resizePolicyInternal: UIResizePolicy = new UIResizePolicyNone();
 
   /**
    * Creates a fullscreen layer and sets up window event listeners.
@@ -28,7 +31,27 @@ export class UIFullscreenLayer extends UILayer {
     super(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onClick);
+    this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
     this.onResize();
+  }
+
+  /**
+   * Gets the current resize policy.
+   */
+  public get resizePolicy(): UIResizePolicy {
+    return this.resizePolicyInternal;
+  }
+
+  /**
+   * Sets a new resize policy. Unsubscribes from old policy and subscribes to new one.
+   */
+  public set resizePolicy(value: UIResizePolicy) {
+    if (this.resizePolicyInternal !== value) {
+      this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
+      this.resizePolicyInternal = value;
+      this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
+      this.onResize();
+    }
   }
 
   /**
@@ -37,6 +60,7 @@ export class UIFullscreenLayer extends UILayer {
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onClick);
+    this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
   }
 
   /**
@@ -80,7 +104,7 @@ export class UIFullscreenLayer extends UILayer {
    * Handles window resize. Updates layer dimensions according to resize policy.
    */
   private readonly onResize = (): void => {
-    const scale = this.resizePolicy.calculateScaleInternal(
+    const scale = this.resizePolicyInternal.calculateScaleInternal(
       window.innerWidth,
       window.innerHeight,
     );
@@ -104,7 +128,7 @@ export class UIFullscreenLayer extends UILayer {
       ? rect.bottom - event.clientY
       : window.innerHeight - event.clientY;
 
-    const scale = this.resizePolicy.calculateScaleInternal(
+    const scale = this.resizePolicyInternal.calculateScaleInternal(
       window.innerWidth,
       window.innerHeight,
     );

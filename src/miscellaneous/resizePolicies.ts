@@ -1,4 +1,9 @@
+import { Eventail } from "eventail";
 import { assertValidPositiveNumber } from "./asserts";
+
+export enum UIResizePolicyEvent {
+  CHANGE = 0,
+}
 
 /**
  * Base class for UI resize policies.
@@ -6,7 +11,7 @@ import { assertValidPositiveNumber } from "./asserts";
  * Calculates scale factors based on viewport dimensions. Different policies
  * implement different scaling strategies.
  */
-export abstract class UIResizePolicy {
+export abstract class UIResizePolicy extends Eventail {
   /**
    * Calculates scale factor for given dimensions.
    *
@@ -35,14 +40,14 @@ export class UIResizePolicyNone extends UIResizePolicy {
  * Uses different widths for landscape vs portrait orientation.
  */
 export class UIResizePolicyFixedWidth extends UIResizePolicy {
+  private fixedWidthLandscapeInternal: number;
+  private fixedWidthPortraitInternal: number;
+
   /**
    * @param fixedWidthLandscape - Target width for landscape (width > height)
    * @param fixedWidthPortrait - Target width for portrait (width <= height)
    */
-  constructor(
-    public fixedWidthLandscape: number,
-    public fixedWidthPortrait: number,
-  ) {
+  constructor(fixedWidthLandscape: number, fixedWidthPortrait: number) {
     super();
     assertValidPositiveNumber(
       fixedWidthLandscape,
@@ -52,12 +57,44 @@ export class UIResizePolicyFixedWidth extends UIResizePolicy {
       fixedWidthPortrait,
       "UIResizePolicyFixedWidth.fixedWidthPortrait",
     );
+    this.fixedWidthLandscapeInternal = fixedWidthLandscape;
+    this.fixedWidthPortraitInternal = fixedWidthPortrait;
+  }
+
+  public get fixedWidthLandscape(): number {
+    return this.fixedWidthLandscapeInternal;
+  }
+
+  public get fixedWidthPortrait(): number {
+    return this.fixedWidthPortraitInternal;
+  }
+
+  public set fixedWidthLandscape(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyFixedWidth.fixedWidthLandscape",
+    );
+    if (value !== this.fixedWidthLandscapeInternal) {
+      this.fixedWidthLandscapeInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
+  }
+
+  public set fixedWidthPortrait(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyFixedWidth.fixedWidthPortrait",
+    );
+    if (value !== this.fixedWidthPortraitInternal) {
+      this.fixedWidthPortraitInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
   }
 
   public calculateScaleInternal(width: number, height: number): number {
     return width > height
-      ? this.fixedWidthLandscape / width
-      : this.fixedWidthPortrait / width;
+      ? this.fixedWidthLandscapeInternal / width
+      : this.fixedWidthPortraitInternal / width;
   }
 }
 
@@ -67,14 +104,14 @@ export class UIResizePolicyFixedWidth extends UIResizePolicy {
  * Uses different heights for landscape vs portrait orientation.
  */
 export class UIResizePolicyFixedHeight extends UIResizePolicy {
+  private fixedHeightLandscapeInternal: number;
+  private fixedHeightPortraitInternal: number;
+
   /**
    * @param fixedHeightLandscape - Target height for landscape (width > height)
    * @param fixedHeightPortrait - Target height for portrait (width <= height)
    */
-  constructor(
-    public fixedHeightLandscape: number,
-    public fixedHeightPortrait: number,
-  ) {
+  constructor(fixedHeightLandscape: number, fixedHeightPortrait: number) {
     super();
     assertValidPositiveNumber(
       fixedHeightLandscape,
@@ -84,12 +121,44 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
       fixedHeightPortrait,
       "UIResizePolicyFixedHeight.fixedHeightPortrait",
     );
+    this.fixedHeightLandscapeInternal = fixedHeightLandscape;
+    this.fixedHeightPortraitInternal = fixedHeightPortrait;
+  }
+
+  public get fixedHeightLandscape(): number {
+    return this.fixedHeightLandscapeInternal;
+  }
+
+  public get fixedHeightPortrait(): number {
+    return this.fixedHeightPortraitInternal;
+  }
+
+  public set fixedHeightLandscape(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyFixedHeight.fixedHeightLandscape",
+    );
+    if (value !== this.fixedHeightLandscapeInternal) {
+      this.fixedHeightLandscapeInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
+  }
+
+  public set fixedHeightPortrait(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyFixedHeight.fixedHeightPortrait",
+    );
+    if (value !== this.fixedHeightPortraitInternal) {
+      this.fixedHeightPortraitInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
   }
 
   public calculateScaleInternal(width: number, height: number): number {
     return width > height
-      ? this.fixedHeightLandscape / height
-      : this.fixedHeightPortrait / height;
+      ? this.fixedHeightLandscapeInternal / height
+      : this.fixedHeightPortraitInternal / height;
   }
 }
 
@@ -97,14 +166,14 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
  * Scales by width in landscape, by height in portrait.
  */
 export class UIResizePolicyCross extends UIResizePolicy {
+  private fixedWidthLandscapeInternal: number;
+  private fixedHeightPortraitInternal: number;
+
   /**
    * @param fixedWidthLandscape - Target width for landscape
    * @param fixedHeightPortrait - Target height for portrait
    */
-  constructor(
-    public fixedWidthLandscape: number,
-    public fixedHeightPortrait: number,
-  ) {
+  constructor(fixedWidthLandscape: number, fixedHeightPortrait: number) {
     super();
     assertValidPositiveNumber(
       fixedWidthLandscape,
@@ -114,12 +183,38 @@ export class UIResizePolicyCross extends UIResizePolicy {
       fixedHeightPortrait,
       "UIResizePolicyCross.fixedHeightPortrait",
     );
+    this.fixedWidthLandscapeInternal = fixedWidthLandscape;
+    this.fixedHeightPortraitInternal = fixedHeightPortrait;
+  }
+
+  public get fixedWidthLandscape(): number {
+    return this.fixedWidthLandscapeInternal;
+  }
+
+  public get fixedHeightPortrait(): number {
+    return this.fixedHeightPortraitInternal;
+  }
+
+  public set fixedWidthLandscape(value: number) {
+    assertValidPositiveNumber(value, "UIResizePolicyCross.fixedWidthLandscape");
+    if (value !== this.fixedWidthLandscapeInternal) {
+      this.fixedWidthLandscapeInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
+  }
+
+  public set fixedHeightPortrait(value: number) {
+    assertValidPositiveNumber(value, "UIResizePolicyCross.fixedHeightPortrait");
+    if (value !== this.fixedHeightPortraitInternal) {
+      this.fixedHeightPortraitInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
   }
 
   public calculateScaleInternal(width: number, height: number): number {
     return width > height
-      ? this.fixedWidthLandscape / width
-      : this.fixedHeightPortrait / height;
+      ? this.fixedWidthLandscapeInternal / width
+      : this.fixedHeightPortraitInternal / height;
   }
 }
 
@@ -127,14 +222,14 @@ export class UIResizePolicyCross extends UIResizePolicy {
  * Scales by height in landscape, by width in portrait.
  */
 export class UIResizePolicyCrossInverted extends UIResizePolicy {
+  private fixedHeightLandscapeInternal: number;
+  private fixedWidthPortraitInternal: number;
+
   /**
    * @param fixedHeightLandscape - Target height for landscape
    * @param fixedWidthPortrait - Target width for portrait
    */
-  constructor(
-    public fixedHeightLandscape: number,
-    public fixedWidthPortrait: number,
-  ) {
+  constructor(fixedHeightLandscape: number, fixedWidthPortrait: number) {
     super();
     assertValidPositiveNumber(
       fixedHeightLandscape,
@@ -144,11 +239,43 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
       fixedWidthPortrait,
       "UIResizePolicyCrossInverted.fixedWidthPortrait",
     );
+    this.fixedHeightLandscapeInternal = fixedHeightLandscape;
+    this.fixedWidthPortraitInternal = fixedWidthPortrait;
+  }
+
+  public get fixedHeightLandscape(): number {
+    return this.fixedHeightLandscapeInternal;
+  }
+
+  public get fixedWidthPortrait(): number {
+    return this.fixedWidthPortraitInternal;
+  }
+
+  public set fixedHeightLandscape(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyCrossInverted.fixedHeightLandscape",
+    );
+    if (value !== this.fixedHeightLandscapeInternal) {
+      this.fixedHeightLandscapeInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
+  }
+
+  public set fixedWidthPortrait(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIResizePolicyCrossInverted.fixedWidthPortrait",
+    );
+    if (value !== this.fixedWidthPortraitInternal) {
+      this.fixedWidthPortraitInternal = value;
+      this.emit(UIResizePolicyEvent.CHANGE);
+    }
   }
 
   public calculateScaleInternal(width: number, height: number): number {
     return width > height
-      ? this.fixedHeightLandscape / height
-      : this.fixedWidthPortrait / width;
+      ? this.fixedHeightLandscapeInternal / height
+      : this.fixedWidthPortraitInternal / width;
   }
 }
