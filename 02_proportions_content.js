@@ -1,5 +1,6 @@
 import {
   UIFullscreenLayer,
+  UIResizePolicyFixedHeight,
   UIImage,
   UIHorizontalDistanceConstraint,
   UIVerticalDistanceConstraint,
@@ -29,7 +30,7 @@ async function buildScene() {
   baseScene.initRenderer();
 
   // Create UI layer
-  layer = new UIFullscreenLayer(1920, 1920);
+  layer = new UIFullscreenLayer(new UIResizePolicyFixedHeight(1920, 1920));
 
   {
     const character = new UIImage(

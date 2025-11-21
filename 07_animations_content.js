@@ -1,5 +1,6 @@
 import {
   UIFullscreenLayer,
+  UIResizePolicyFixedHeight,
   UIImage,
   UIText,
   UINineSlice,
@@ -48,8 +49,10 @@ async function buildScene() {
   await baseScene.initScene();
   baseScene.initRenderer();
 
-  layer = new UIFullscreenLayer(1920, 1920);
-  layer.mode = UIMode.INTERACTIVE;
+  layer = new UIFullscreenLayer(
+    new UIResizePolicyFixedHeight(1920, 1920),
+    UIMode.INTERACTIVE,
+  );
 
   // ========== CHARACTER ==========
   const character = new UIImage(layer, baseScene.loadedTextures["T_Character"]);

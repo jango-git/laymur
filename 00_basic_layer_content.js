@@ -1,5 +1,6 @@
 import {
   UIFullscreenLayer,
+  UIResizePolicyFixedHeight,
   UIImage,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { BaseScene } from "./base-scene.js";
@@ -18,7 +19,7 @@ async function buildScene() {
   baseScene.initRenderer();
 
   // Create UI layer
-  layer = new UIFullscreenLayer(1920, 1920);
+  layer = new UIFullscreenLayer(new UIResizePolicyFixedHeight(1920, 1920));
 
   // Add a single image without any constraints
   {

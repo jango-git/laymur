@@ -41,8 +41,7 @@
 
                 <pre><code class="language-javascript">// Create the UI layer
 const layer = new UIFullscreenLayer(
-  1920, // Fixed width
-  1920  // Fixed height
+  new UIResizePolicyFixedHeight(1920, 1920) // Fixed width and height
 );
 
 // Add an image to the layer

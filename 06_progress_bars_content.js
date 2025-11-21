@@ -1,5 +1,6 @@
 import {
   UIFullscreenLayer,
+  UIResizePolicyFixedHeight,
   UIImage,
   UIText,
   UINineSlice,
@@ -45,8 +46,10 @@ async function buildScene() {
   baseScene.initRenderer();
 
   // Create UI layer
-  layer = new UIFullscreenLayer(1920, 1920);
-  layer.mode = UIMode.INTERACTIVE;
+  layer = new UIFullscreenLayer(
+    new UIResizePolicyFixedHeight(1920, 1920),
+    UIMode.INTERACTIVE,
+  );
 
   let character;
   {
