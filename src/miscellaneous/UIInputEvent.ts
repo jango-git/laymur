@@ -5,4 +5,6 @@ export enum UIInputEvent {
   DOWN = "click",
   MOVE = "move",
   UP = "up",
+  IN = "in",
+  OUT = "out",
 }

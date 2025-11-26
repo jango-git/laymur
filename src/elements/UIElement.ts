@@ -81,6 +81,8 @@ export abstract class UIElement
   /** Optional input listener for handling user interactions when in interactive mode. */
   protected listener?: UILayerInputListener;
 
+  protected isPointerInside = false;
+
   /** Client API for interacting with the scene wrapper (rendering system). */
   protected readonly sceneWrapper: UISceneWrapperClientAPI;
   /** Handle to the plane object in the rendering system. */
@@ -316,28 +318,34 @@ export abstract class UIElement
   }
 
   protected readonly onDown = (x: number, y: number): boolean => {
-    const clicked = isInsideElement(x, y, this);
-    if (clicked) {
-      this.emit(UIInputEvent.DOWN, x, y, this);
-    }
-    return clicked;
+    return this.handleInputEvent(x, y, UIInputEvent.DOWN);
   };
 
   protected readonly onMove = (x: number, y: number): boolean => {
-    const clicked = isInsideElement(x, y, this);
-    if (clicked) {
-      this.emit(UIInputEvent.MOVE, x, y, this);
-    }
-    return clicked;
+    return this.handleInputEvent(x, y, UIInputEvent.MOVE);
   };
 
   protected readonly onUp = (x: number, y: number): boolean => {
-    const clicked = isInsideElement(x, y, this);
-    if (clicked) {
-      this.emit(UIInputEvent.UP, x, y, this);
-    }
-    return clicked;
+    return this.handleInputEvent(x, y, UIInputEvent.UP);
   };
+
+  protected handleInputEvent(
+    x: number,
+    y: number,
+    inputEvent: UIInputEvent,
+  ): boolean {
+    const inside = isInsideElement(x, y, this);
+    if (inside) {
+      this.emit(inputEvent, x, y, this);
+    }
+    if (this.isPointerInside && !inside) {
+      this.emit(UIInputEvent.OUT, x, y, this);
+    } else if (!this.isPointerInside && inside) {
+      this.emit(UIInputEvent.IN, x, y, this);
+    }
+    this.isPointerInside = inside;
+    return inside;
+  }
 
   /**
    * Called before each render frame to update the element's transform matrix.
