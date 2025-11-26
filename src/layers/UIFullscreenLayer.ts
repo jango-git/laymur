@@ -5,12 +5,10 @@ import {
   type WebGLRenderer,
 } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
-import type { UIResizePolicy } from "../miscellaneous/resizePolicies";
-import {
-  UIResizePolicyEvent,
-  UIResizePolicyNone,
-} from "../miscellaneous/resizePolicies";
 import { UIMode } from "../miscellaneous/UIMode";
+import type { UIResizePolicy } from "../miscellaneous/UIResizePolicy";
+import { UIResizePolicyEvent } from "../miscellaneous/UIResizePolicy";
+import { UIResizePolicyNone } from "../miscellaneous/UIResizePolicyNone";
 import { UILayer } from "./UILayer";
 
 /**
@@ -110,7 +108,7 @@ export class UIFullscreenLayer extends UILayer {
    * Handles window resize. Updates layer dimensions according to resize policy.
    */
   private readonly onResize = (): void => {
-    const scale = this.resizePolicyInternal.calculateScaleInternal(
+    const scale = this.resizePolicyInternal["calculateScaleInternal"](
       window.innerWidth,
       window.innerHeight,
     );
@@ -134,7 +132,7 @@ export class UIFullscreenLayer extends UILayer {
       ? rect.bottom - event.clientY
       : window.innerHeight - event.clientY;
 
-    const scale = this.resizePolicyInternal.calculateScaleInternal(
+    const scale = this.resizePolicyInternal["calculateScaleInternal"](
       window.innerWidth,
       window.innerHeight,
     );
