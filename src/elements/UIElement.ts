@@ -142,6 +142,14 @@ export abstract class UIElement
   }
 
   /**
+   * Gets the current z-index (depth) value.
+   * @returns The current z-index value
+   */
+  public get zIndex(): number {
+    return this.zIndexInternal;
+  }
+
+  /**
    * The right edge X coordinate of this element (x + width).
    */
   public get oppositeX(): number {
@@ -167,14 +175,6 @@ export abstract class UIElement
    */
   public get centerY(): number {
     return this.y + this.height / 2;
-  }
-
-  /**
-   * Gets the current z-index (depth) value.
-   * @returns The current z-index value
-   */
-  public get zIndex(): number {
-    return this.zIndexInternal;
   }
 
   /**
@@ -229,6 +229,34 @@ export abstract class UIElement
     if (this.listener) {
       this.layer["setListenerZIndex"](this.listener, value);
     }
+  }
+
+  /**
+   * The right edge X coordinate of this element (x + width).
+   */
+  public set oppositeX(value: number) {
+    this.x = value - this.width;
+  }
+
+  /**
+   * The bottom edge Y coordinate of this element (y + height).
+   */
+  public set oppositeY(value: number) {
+    this.y = value - this.height;
+  }
+
+  /**
+   * The X coordinate of the center of this element.
+   */
+  public set centerX(value: number) {
+    this.x = value - this.width / 2;
+  }
+
+  /**
+   * The Y coordinate of the center of this element.
+   */
+  public set centerY(value: number) {
+    this.y = value - this.height / 2;
   }
 
   /**
