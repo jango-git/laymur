@@ -148,6 +148,7 @@ export function renderText(
   }
 
   context.fillStyle = style.color;
+  context.textAlign = style.align;
   context.fillText(text, x, y);
 }
 

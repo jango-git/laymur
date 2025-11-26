@@ -6,6 +6,7 @@ import {
 
 export interface UITextStyle {
   color: string;
+  align: "left" | "center" | "right";
 
   fontFamily: string;
   fontSize: number;
@@ -33,6 +34,9 @@ export function isUITextStyle(obj: unknown): obj is UITextStyle {
 
   return (
     typeof candidate.color === "string" &&
+    (candidate.align === "left" ||
+      candidate.align === "center" ||
+      candidate.align === "right") &&
     typeof candidate.fontFamily === "string" &&
     typeof candidate.fontSize === "number" &&
     (candidate.fontStyle === "normal" ||
@@ -57,6 +61,7 @@ export function isUITextStyle(obj: unknown): obj is UITextStyle {
 
 const DEFAULT_TEXT_STYLE: UITextStyle = {
   color: "#000000",
+  align: "left",
 
   fontFamily: "Arial",
   fontSize: 16,
@@ -120,6 +125,7 @@ export function resolveTextStyle(
 
   return {
     color: style?.color ?? commonStyle?.color ?? DEFAULT_TEXT_STYLE.color,
+    align: style?.align ?? commonStyle?.align ?? DEFAULT_TEXT_STYLE.align,
 
     fontFamily:
       style?.fontFamily ??
