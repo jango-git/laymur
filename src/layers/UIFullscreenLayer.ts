@@ -32,7 +32,9 @@ export class UIFullscreenLayer extends UILayer {
   ) {
     super(window.innerWidth, window.innerHeight);
     window.addEventListener("resize", this.onResize);
-    window.addEventListener("pointerdown", this.onClick);
+    window.addEventListener("pointerdown", this.onDown);
+    window.addEventListener("pointermove", this.onMove);
+    window.addEventListener("pointerup", this.onUp);
     this.mode = mode;
     this.resizePolicyInternal = resizePolicy;
     this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
@@ -63,7 +65,7 @@ export class UIFullscreenLayer extends UILayer {
    */
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
-    window.removeEventListener("pointerdown", this.onClick);
+    window.removeEventListener("pointerdown", this.onDown);
     this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
   }
 
@@ -115,13 +117,7 @@ export class UIFullscreenLayer extends UILayer {
     this.resizeInternal(window.innerWidth * scale, window.innerHeight * scale);
   };
 
-  /**
-   * Handles pointer down. Converts browser coordinates to layer space.
-   * Y-coordinate is flipped to match UI coordinate system.
-   *
-   * @param event - Browser pointer event
-   */
-  private readonly onClick = (event: PointerEvent): void => {
+  private readonly onDown = (event: PointerEvent): void => {
     const rect =
       event.target instanceof HTMLElement
         ? event.target.getBoundingClientRect()
@@ -136,6 +132,42 @@ export class UIFullscreenLayer extends UILayer {
       window.innerWidth,
       window.innerHeight,
     );
-    this.pointerClickInternal(x * scale, y * scale);
+    this.pointerDownInternal(x * scale, y * scale);
+  };
+
+  private readonly onMove = (event: PointerEvent): void => {
+    const rect =
+      event.target instanceof HTMLElement
+        ? event.target.getBoundingClientRect()
+        : null;
+
+    const x = rect ? event.clientX - rect.left : event.clientX;
+    const y = rect
+      ? rect.bottom - event.clientY
+      : window.innerHeight - event.clientY;
+
+    const scale = this.resizePolicyInternal["calculateScaleInternal"](
+      window.innerWidth,
+      window.innerHeight,
+    );
+    this.pointerMoveInternal(x * scale, y * scale);
+  };
+
+  private readonly onUp = (event: PointerEvent): void => {
+    const rect =
+      event.target instanceof HTMLElement
+        ? event.target.getBoundingClientRect()
+        : null;
+
+    const x = rect ? event.clientX - rect.left : event.clientX;
+    const y = rect
+      ? rect.bottom - event.clientY
+      : window.innerHeight - event.clientY;
+
+    const scale = this.resizePolicyInternal["calculateScaleInternal"](
+      window.innerWidth,
+      window.innerHeight,
+    );
+    this.pointerUpInternal(x * scale, y * scale);
   };
 }

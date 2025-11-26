@@ -12,13 +12,9 @@ import { UISolverWrapper } from "../wrappers/UISolverWrapper";
  * Interface for handling input events within UI layers.
  */
 export interface UILayerInputListener {
-  /**
-   * Handles click events at the specified coordinates.
-   * @param x - The x-coordinate of the click
-   * @param y - The y-coordinate of the click
-   * @returns True if the click was handled, false otherwise
-   */
-  catchClick(x: number, y: number): boolean;
+  catchDown(x: number, y: number): boolean;
+  catchMove(x: number, y: number): boolean;
+  catchUp(x: number, y: number): boolean;
 }
 
 /**
@@ -248,22 +244,33 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     }
   }
 
-  /**
-   * Internal method for handling click events on the layer.
-   *
-   * Processes click events by testing elements in reverse z-order (top to bottom)
-   * until one handles the click. Only processes clicks when the layer is in
-   * interactive mode.
-   *
-   * @param x - The x-coordinate of the click
-   * @param y - The y-coordinate of the click
-   * @protected
-   */
-  protected pointerClickInternal(x: number, y: number): void {
+  protected pointerDownInternal(x: number, y: number): void {
     if (this.mode === UIMode.INTERACTIVE) {
       this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
       for (const listener of this.inputListeners) {
-        if (listener.listener.catchClick(x, y)) {
+        if (listener.listener.catchDown(x, y)) {
+          return;
+        }
+      }
+    }
+  }
+
+  protected pointerMoveInternal(x: number, y: number): void {
+    if (this.mode === UIMode.INTERACTIVE) {
+      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
+      for (const listener of this.inputListeners) {
+        if (listener.listener.catchMove(x, y)) {
+          return;
+        }
+      }
+    }
+  }
+
+  protected pointerUpInternal(x: number, y: number): void {
+    if (this.mode === UIMode.INTERACTIVE) {
+      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
+      for (const listener of this.inputListeners) {
+        if (listener.listener.catchUp(x, y)) {
           return;
         }
       }

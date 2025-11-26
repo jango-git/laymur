@@ -28,7 +28,7 @@ const axis = new Vector3(0, 0, 1);
  * @param element - The UI element to test against
  * @returns True if the point is within the element's bounds
  */
-function isElementClicked(x: number, y: number, element: UIElement): boolean {
+function isInsideElement(x: number, y: number, element: UIElement): boolean {
   return (
     x > element.x &&
     x < element.x + element.width &&
@@ -267,7 +267,11 @@ export abstract class UIElement
   public set mode(value: UIMode) {
     if (this.modeInternal !== value) {
       if (value === UIMode.INTERACTIVE) {
-        this.listener = { catchClick: this.onClick };
+        this.listener = {
+          catchDown: this.onDown,
+          catchMove: this.onMove,
+          catchUp: this.onUp,
+        };
         this.layer["listenPointerInput"](this.listener, this.zIndexInternal);
       } else if (this.modeInternal === UIMode.INTERACTIVE && this.listener) {
         this.layer["unlistenPointerInput"](this.listener);
@@ -311,16 +315,26 @@ export abstract class UIElement
     super.destroy();
   }
 
-  /**
-   * Handles click events when the element is in interactive mode.
-   * @param x - The x coordinate of the click
-   * @param y - The y coordinate of the click
-   * @returns True if the click was within this element's bounds
-   */
-  protected readonly onClick = (x: number, y: number): boolean => {
-    const clicked = isElementClicked(x, y, this);
+  protected readonly onDown = (x: number, y: number): boolean => {
+    const clicked = isInsideElement(x, y, this);
     if (clicked) {
-      this.emit(UIInputEvent.CLICK, x, y, this);
+      this.emit(UIInputEvent.DOWN, x, y, this);
+    }
+    return clicked;
+  };
+
+  protected readonly onMove = (x: number, y: number): boolean => {
+    const clicked = isInsideElement(x, y, this);
+    if (clicked) {
+      this.emit(UIInputEvent.MOVE, x, y, this);
+    }
+    return clicked;
+  };
+
+  protected readonly onUp = (x: number, y: number): boolean => {
+    const clicked = isInsideElement(x, y, this);
+    if (clicked) {
+      this.emit(UIInputEvent.UP, x, y, this);
     }
     return clicked;
   };
