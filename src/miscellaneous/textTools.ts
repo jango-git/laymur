@@ -5,7 +5,11 @@ import type {
   UITextLine,
   UITextSize,
 } from "./textInterfaces";
-import { resolveTextStyle, type UITextStyle } from "./UITextStyle";
+import {
+  DEFAULT_TEXT_STYLE,
+  resolveTextStyle,
+  type UITextStyle,
+} from "./UITextStyle";
 
 export function splitText(text: string): string[] {
   return text.match(/\S+|\s|\n/g) ?? [];
@@ -148,7 +152,6 @@ export function renderText(
   }
 
   context.fillStyle = style.color;
-  context.textAlign = style.align;
   context.fillText(text, x, y);
 }
 
@@ -160,9 +163,29 @@ export function renderTextLines(
 ): void {
   let currentY = paddingTop;
 
+  let textWidth = 0;
+  for (const line of lines) {
+    textWidth = Math.max(line.width, textWidth);
+  }
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    let currentX = paddingLeft;
+
+    const firstAlign = line.chunks[0]?.style.align ?? DEFAULT_TEXT_STYLE.align;
+    const isUniformAlign = line.chunks.every(
+      (c) => c.style.align === firstAlign,
+    );
+    const lineAlign = isUniformAlign ? firstAlign : DEFAULT_TEXT_STYLE.align;
+
+    let offsetX = 0;
+
+    if (lineAlign === "center") {
+      offsetX = (textWidth - line.width) / 2;
+    } else if (lineAlign === "right") {
+      offsetX = textWidth - line.width;
+    }
+
+    let currentX = paddingLeft + offsetX;
     currentY += i === 0 ? line.height : line.lineHeight;
 
     for (const chunk of line.chunks) {

@@ -59,7 +59,7 @@ export function isUITextStyle(obj: unknown): obj is UITextStyle {
   );
 }
 
-const DEFAULT_TEXT_STYLE: UITextStyle = {
+export const DEFAULT_TEXT_STYLE: UITextStyle = {
   color: "#000000",
   align: "left",
 
