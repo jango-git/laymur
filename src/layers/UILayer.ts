@@ -12,9 +12,10 @@ import { UISolverWrapper } from "../wrappers/UISolverWrapper";
  * Interface for handling input events within UI layers.
  */
 export interface UILayerInputListener {
-  catchDown(x: number, y: number): boolean;
-  catchMove(x: number, y: number): boolean;
-  catchUp(x: number, y: number): boolean;
+  zIndex: number;
+  catchPointerDown(x: number, y: number): boolean;
+  catchPointerMove(x: number, y: number): boolean;
+  catchPointerUp(x: number, y: number): boolean;
 }
 
 /**
@@ -93,10 +94,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
 
   /** Collection of input listeners for handling user interactions, sorted by z-index. */
 
-  private readonly inputListeners: {
-    zIndex: number;
-    listener: UILayerInputListener;
-  }[] = [];
+  private readonly inputListeners: UILayerInputListener[] = [];
 
   /**
    * Creates a new UILayer instance with specified dimensions.
@@ -169,22 +167,6 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     return this.orientationInternal;
   }
 
-  // public set x(value: number) {
-  //   throw new Error("You cannot set the x position of a UI layer.");
-  // }
-
-  // public set y(value: number) {
-  //   throw new Error("You cannot set the y position of a UI layer.");
-  // }
-
-  // public set width(value: number) {
-  //   throw new Error("You cannot set the width of a UI layer.");
-  // }
-
-  // public set height(value: number) {
-  //   throw new Error("You cannot set the height of a UI layer.");
-  // }
-
   /**
    * Sets the visibility and interaction mode and emits change event.
    * @param value - The new UIMode setting
@@ -244,37 +226,16 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     }
   }
 
-  protected pointerDownInternal(x: number, y: number): void {
-    if (this.mode === UIMode.INTERACTIVE) {
-      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
-      for (const listener of this.inputListeners) {
-        if (listener.listener.catchDown(x, y)) {
-          return;
-        }
-      }
-    }
+  protected onPointerDownInternal(x: number, y: number): void {
+    this.handleInputEvent(x, y, "catchPointerDown");
   }
 
-  protected pointerMoveInternal(x: number, y: number): void {
-    if (this.mode === UIMode.INTERACTIVE) {
-      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
-      for (const listener of this.inputListeners) {
-        if (listener.listener.catchMove(x, y)) {
-          return;
-        }
-      }
-    }
+  protected onPointerMoveInternal(x: number, y: number): void {
+    this.handleInputEvent(x, y, "catchPointerMove");
   }
 
-  protected pointerUpInternal(x: number, y: number): void {
-    if (this.mode === UIMode.INTERACTIVE) {
-      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
-      for (const listener of this.inputListeners) {
-        if (listener.listener.catchUp(x, y)) {
-          return;
-        }
-      }
-    }
+  protected onPointerUpInternal(x: number, y: number): void {
+    this.handleInputEvent(x, y, "catchPointerUp");
   }
 
   /**
@@ -312,36 +273,11 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @throws Will throw an error if the listener is already registered
    */
 
-  protected ["listenPointerInput"](
-    listener: UILayerInputListener,
-    zIndex: number,
-  ): void {
-    if (this.inputListeners.find((l) => l.listener === listener)) {
+  protected ["subscribePointerInput"](listener: UILayerInputListener): void {
+    if (this.inputListeners.find((l) => l === listener)) {
       throw new Error("Listener already exists");
     }
-    this.inputListeners.push({ zIndex, listener });
-  }
-
-  /**
-   * Internal method for updating the z-index of an existing input listener.
-   *
-   * Changes the priority order for event handling of an already registered listener.
-   * The listener must already exist in the system.
-   *
-   * @param listener - The input listener to update
-   * @param zIndex - The new z-index priority
-   * @throws Will throw an error if the listener is not found
-   */
-
-  protected ["setListenerZIndex"](
-    listener: UILayerInputListener,
-    zIndex: number,
-  ): void {
-    const index = this.inputListeners.findIndex((l) => l.listener === listener);
-    if (index === -1) {
-      throw new Error("Listener not found");
-    }
-    this.inputListeners[index].zIndex = zIndex;
+    this.inputListeners.push(listener);
   }
 
   /**
@@ -354,11 +290,29 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @throws Will throw an error if the listener is not found
    */
 
-  protected ["unlistenPointerInput"](listener: UILayerInputListener): void {
-    const index = this.inputListeners.findIndex((l) => l.listener === listener);
+  protected ["unsubscribePointerInput"](listener: UILayerInputListener): void {
+    const index = this.inputListeners.findIndex((l) => l === listener);
     if (index === -1) {
       throw new Error("Listener not found");
     }
     this.inputListeners.splice(index, 1);
+  }
+
+  private handleInputEvent(
+    x: number,
+    y: number,
+    catchFunctionName:
+      | "catchPointerDown"
+      | "catchPointerMove"
+      | "catchPointerUp",
+  ): void {
+    if (this.mode === UIMode.INTERACTIVE) {
+      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
+      for (const listener of this.inputListeners) {
+        if (listener[catchFunctionName](x, y)) {
+          return;
+        }
+      }
+    }
   }
 }

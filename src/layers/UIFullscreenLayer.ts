@@ -66,6 +66,8 @@ export class UIFullscreenLayer extends UILayer {
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onDown);
+    window.removeEventListener("pointermove", this.onMove);
+    window.removeEventListener("pointerup", this.onUp);
     this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
   }
 
@@ -118,42 +120,24 @@ export class UIFullscreenLayer extends UILayer {
   };
 
   private readonly onDown = (event: PointerEvent): void => {
-    const rect =
-      event.target instanceof HTMLElement
-        ? event.target.getBoundingClientRect()
-        : null;
-
-    const x = rect ? event.clientX - rect.left : event.clientX;
-    const y = rect
-      ? rect.bottom - event.clientY
-      : window.innerHeight - event.clientY;
-
-    const scale = this.resizePolicyInternal["calculateScaleInternal"](
-      window.innerWidth,
-      window.innerHeight,
-    );
-    this.pointerDownInternal(x * scale, y * scale);
+    this.handleWindowInput(event, "onPointerDownInternal");
   };
 
   private readonly onMove = (event: PointerEvent): void => {
-    const rect =
-      event.target instanceof HTMLElement
-        ? event.target.getBoundingClientRect()
-        : null;
-
-    const x = rect ? event.clientX - rect.left : event.clientX;
-    const y = rect
-      ? rect.bottom - event.clientY
-      : window.innerHeight - event.clientY;
-
-    const scale = this.resizePolicyInternal["calculateScaleInternal"](
-      window.innerWidth,
-      window.innerHeight,
-    );
-    this.pointerMoveInternal(x * scale, y * scale);
+    this.handleWindowInput(event, "onPointerMoveInternal");
   };
 
   private readonly onUp = (event: PointerEvent): void => {
+    this.handleWindowInput(event, "onPointerUpInternal");
+  };
+
+  private handleWindowInput(
+    event: PointerEvent,
+    pointerFunctionName:
+      | "onPointerDownInternal"
+      | "onPointerMoveInternal"
+      | "onPointerUpInternal",
+  ): void {
     const rect =
       event.target instanceof HTMLElement
         ? event.target.getBoundingClientRect()
@@ -168,6 +152,6 @@ export class UIFullscreenLayer extends UILayer {
       window.innerWidth,
       window.innerHeight,
     );
-    this.pointerUpInternal(x * scale, y * scale);
-  };
+    this[pointerFunctionName](x * scale, y * scale);
+  }
 }

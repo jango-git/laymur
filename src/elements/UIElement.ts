@@ -15,27 +15,12 @@ import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
 import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 import { UIAnchor } from "./UIAnchor";
+
 const position = new Vector3();
 const quaternion = new Quaternion();
 const scale = new Vector3();
 const matrix = new Matrix4();
 const axis = new Vector3(0, 0, 1);
-
-/**
- * Checks if a point (x, y) is within the bounds of a UI element.
- * @param x - The x coordinate to test
- * @param y - The y coordinate to test
- * @param element - The UI element to test against
- * @returns True if the point is within the element's bounds
- */
-function isInsideElement(x: number, y: number, element: UIElement): boolean {
-  return (
-    x > element.x &&
-    x < element.x + element.width &&
-    y > element.y &&
-    y < element.y + element.height
-  );
-}
 
 /**
  * Abstract base class for all renderable UI elements with dimensions.
@@ -229,7 +214,7 @@ export abstract class UIElement
     assertValidNumber(value, "UIElement zIndex");
     this.zIndexInternal = value;
     if (this.listener) {
-      this.layer["setListenerZIndex"](this.listener, value);
+      this.listener.zIndex = this.zIndexInternal;
     }
   }
 
@@ -270,13 +255,14 @@ export abstract class UIElement
     if (this.modeInternal !== value) {
       if (value === UIMode.INTERACTIVE) {
         this.listener = {
-          catchDown: this.onDown,
-          catchMove: this.onMove,
-          catchUp: this.onUp,
+          catchPointerDown: this.catchPointerDown,
+          catchPointerMove: this.catchPointerMove,
+          catchPointerUp: this.catchPointerUp,
+          zIndex: this.zIndexInternal,
         };
-        this.layer["listenPointerInput"](this.listener, this.zIndexInternal);
+        this.layer["subscribePointerInput"](this.listener);
       } else if (this.modeInternal === UIMode.INTERACTIVE && this.listener) {
-        this.layer["unlistenPointerInput"](this.listener);
+        this.layer["unsubscribePointerInput"](this.listener);
         this.listener = undefined;
       }
 
@@ -309,7 +295,7 @@ export abstract class UIElement
   public override destroy(): void {
     this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRender, this);
     if (this.listener) {
-      this.layer["unlistenPointerInput"](this.listener);
+      this.layer["unsubscribePointerInput"](this.listener);
     }
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);
@@ -317,15 +303,15 @@ export abstract class UIElement
     super.destroy();
   }
 
-  protected readonly onDown = (x: number, y: number): boolean => {
+  protected readonly catchPointerDown = (x: number, y: number): boolean => {
     return this.handleInputEvent(x, y, UIInputEvent.DOWN);
   };
 
-  protected readonly onMove = (x: number, y: number): boolean => {
+  protected readonly catchPointerMove = (x: number, y: number): boolean => {
     return this.handleInputEvent(x, y, UIInputEvent.MOVE);
   };
 
-  protected readonly onUp = (x: number, y: number): boolean => {
+  protected readonly catchPointerUp = (x: number, y: number): boolean => {
     return this.handleInputEvent(x, y, UIInputEvent.UP);
   };
 
@@ -334,17 +320,24 @@ export abstract class UIElement
     y: number,
     inputEvent: UIInputEvent,
   ): boolean {
-    const inside = isInsideElement(x, y, this);
-    if (inside) {
+    const isPointerInside =
+      x > this.x &&
+      x < this.x + this.width &&
+      y > this.y &&
+      y < this.y + this.height;
+
+    if (isPointerInside) {
       this.emit(inputEvent, x, y, this);
     }
-    if (this.isPointerInside && !inside) {
-      this.emit(UIInputEvent.OUT, x, y, this);
-    } else if (!this.isPointerInside && inside) {
-      this.emit(UIInputEvent.IN, x, y, this);
+
+    if (this.isPointerInside && !isPointerInside) {
+      this.emit(UIInputEvent.LEAVE, x, y, this);
+    } else if (!this.isPointerInside && isPointerInside) {
+      this.emit(UIInputEvent.ENTER, x, y, this);
     }
-    this.isPointerInside = inside;
-    return inside;
+
+    this.isPointerInside = isPointerInside;
+    return isPointerInside;
   }
 
   /**
