@@ -2,6 +2,7 @@ import { Texture } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import source from "../shaders/UIProgressShader.glsl";
 import { UIElement } from "./UIElement";
 
@@ -52,23 +53,25 @@ export enum UIProgressMaskFunction {
  */
 export interface UIProgressOptions {
   /** X position of the element */
-  x?: number;
+  x: number;
   /** Y position of the element */
-  y?: number;
+  y: number;
   /** Optional background texture (if not provided, default texture is used) */
-  backgroundTexture?: Texture;
+  backgroundTexture: Texture;
   /** Overall color tint applied to the entire progress bar */
-  color?: UIColor;
+  color: UIColor;
   /** Foreground color tint applied to the filled portion */
-  foregroundColor?: UIColor;
+  foregroundColor: UIColor;
   /** Background color tint applied to the unfilled portion */
-  backgroundColor?: UIColor;
+  backgroundColor: UIColor;
   /** Mask function that defines how the progress bar fills (predefined enum or custom GLSL code) */
-  maskFunction?: UIProgressMaskFunction | string;
+  maskFunction: UIProgressMaskFunction | string;
   /** Progress value between 0.0 (empty) and 1.0 (full) */
-  progress?: number;
+  progress: number;
   /** Whether to fill in reverse direction (true for reverse, false for normal) */
-  inverseDirection?: boolean;
+  inverseDirection: boolean;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -171,6 +174,10 @@ export class UIProgress extends UIElement {
       UIColorEvent.CHANGE,
       this.onBackgroundColorChange,
     );
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**

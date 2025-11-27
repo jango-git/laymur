@@ -3,6 +3,7 @@ import { Vector4 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import {
   resolveNineSliceBorders,
   type UINineSliceBorders,
@@ -22,6 +23,8 @@ export interface UINineSliceOptions {
   color: UIColor;
   /** Nine-slice border configuration (can be number, object with horizontal/vertical, or full border object) */
   sliceBorders: UINineSliceBorders;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -79,11 +82,15 @@ export class UINineSlice extends UIElement {
     });
 
     this.textureInternal = texture;
-    this.colorInternal = color;
     this.sliceBordersInternal = sliceBorders;
     this.dimensions = dimensions;
 
+    this.colorInternal = color;
     this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**

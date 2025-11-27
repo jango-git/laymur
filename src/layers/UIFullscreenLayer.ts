@@ -152,6 +152,6 @@ export class UIFullscreenLayer extends UILayer {
       window.innerWidth,
       window.innerHeight,
     );
-    this[pointerFunctionName](x * scale, y * scale);
+    this[pointerFunctionName](x * scale, y * scale, event.pointerId);
   }
 }

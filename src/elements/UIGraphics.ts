@@ -1,6 +1,7 @@
 import { CanvasTexture, LinearFilter } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
@@ -9,15 +10,17 @@ import { UIElement } from "./UIElement";
  */
 export interface UIGraphicsOptions {
   /** X position of the element */
-  x?: number;
+  x: number;
   /** Y position of the element */
-  y?: number;
+  y: number;
   /** Width of the canvas (default: 512) */
-  width?: number;
+  width: number;
   /** Height of the canvas (default: 512) */
-  height?: number;
+  height: number;
   /** Color tint applied to the graphics */
-  color?: UIColor;
+  color: UIColor;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -43,7 +46,7 @@ export class UIGraphics extends UIElement {
    * @param layer - The UI layer that contains this graphics element
    * @param options - Configuration options for the graphics element
    */
-  constructor(layer: UILayer, options: UIGraphicsOptions = {}) {
+  constructor(layer: UILayer, options: Partial<UIGraphicsOptions> = {}) {
     const defaultCanvasSize = 512;
     const width = options.width ?? defaultCanvasSize;
     const height = options.height ?? defaultCanvasSize;
@@ -73,6 +76,10 @@ export class UIGraphics extends UIElement {
     this.canvasTexture = canvasTexture;
     this.colorInternal = color;
     this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**

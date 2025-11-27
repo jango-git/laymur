@@ -13,9 +13,9 @@ import { UISolverWrapper } from "../wrappers/UISolverWrapper";
  */
 export interface UILayerInputListener {
   zIndex: number;
-  catchPointerDown(x: number, y: number): boolean;
-  catchPointerMove(x: number, y: number): boolean;
-  catchPointerUp(x: number, y: number): boolean;
+  catchPointerDown(x: number, y: number, identifier: number): boolean;
+  catchPointerMove(x: number, y: number, identifier: number): boolean;
+  catchPointerUp(x: number, y: number, identifier: number): boolean;
 }
 
 /**
@@ -226,16 +226,28 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     }
   }
 
-  protected onPointerDownInternal(x: number, y: number): void {
-    this.handleInputEvent(x, y, "catchPointerDown");
+  protected onPointerDownInternal(
+    x: number,
+    y: number,
+    identifier: number,
+  ): void {
+    this.handleInputEvent(x, y, "catchPointerDown", identifier);
   }
 
-  protected onPointerMoveInternal(x: number, y: number): void {
-    this.handleInputEvent(x, y, "catchPointerMove");
+  protected onPointerMoveInternal(
+    x: number,
+    y: number,
+    identifier: number,
+  ): void {
+    this.handleInputEvent(x, y, "catchPointerMove", identifier);
   }
 
-  protected onPointerUpInternal(x: number, y: number): void {
-    this.handleInputEvent(x, y, "catchPointerUp");
+  protected onPointerUpInternal(
+    x: number,
+    y: number,
+    identifier: number,
+  ): void {
+    this.handleInputEvent(x, y, "catchPointerUp", identifier);
   }
 
   /**
@@ -305,11 +317,12 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
       | "catchPointerDown"
       | "catchPointerMove"
       | "catchPointerUp",
+    identifier: number,
   ): void {
     if (this.mode === UIMode.INTERACTIVE) {
       this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
       for (const listener of this.inputListeners) {
-        if (listener[catchFunctionName](x, y)) {
+        if (listener[catchFunctionName](x, y, identifier)) {
           return;
         }
       }

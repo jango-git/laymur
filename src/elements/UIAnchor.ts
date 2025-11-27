@@ -6,7 +6,7 @@ import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
 /**
- * Abstract base class representing a minimal UI element as a point in 2D space.
+ * Base class representing a minimal UI element as a point in 2D space.
  *
  * A UIAnchor serves as the fundamental building block for UI layout systems,
  * representing a single point with x and y coordinates. It provides constraint-based
@@ -17,7 +17,7 @@ import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
  * @see {@link UILayer} - Container layer for UI elements
  * @see {@link UISolverWrapper} - Constraint solver integration
  */
-export abstract class UIAnchor extends Eventail implements UIPointElement {
+export class UIAnchor extends Eventail implements UIPointElement {
   /** Optional name identifier for the anchor. */
   public name = "";
 

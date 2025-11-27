@@ -7,6 +7,7 @@ import {
   renderTextLines,
 } from "../miscellaneous/textTools";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import {
   resolveTextPadding,
   type UIPadding,
@@ -34,6 +35,8 @@ export interface UITextOptions {
   padding: Partial<UIPadding>;
   /** Common style properties applied to all text content. */
   commonStyle: Partial<UITextStyle>;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -114,15 +117,19 @@ export class UIText extends UIElement {
     this.canvas = canvas;
     this.context = context;
     this.texture = texture;
-    this.colorInternal = color;
 
     this.contentInternal = content;
     this.maxWidthInternal = options.maxWidth ?? DEFAULT_MAX_WIDTH;
     this.paddingInternal = resolveTextPadding(options.padding);
     this.commonStyleInternal = options.commonStyle ?? {};
 
+    this.colorInternal = color;
     this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
     this.rebuildText();
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**

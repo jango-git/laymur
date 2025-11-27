@@ -303,37 +303,47 @@ export abstract class UIElement
     super.destroy();
   }
 
-  protected readonly catchPointerDown = (x: number, y: number): boolean => {
-    return this.handleInputEvent(x, y, UIInputEvent.DOWN);
+  protected readonly catchPointerDown = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.DOWN);
   };
 
-  protected readonly catchPointerMove = (x: number, y: number): boolean => {
-    return this.handleInputEvent(x, y, UIInputEvent.MOVE);
+  protected readonly catchPointerMove = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.MOVE);
   };
 
-  protected readonly catchPointerUp = (x: number, y: number): boolean => {
-    return this.handleInputEvent(x, y, UIInputEvent.UP);
+  protected readonly catchPointerUp = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.UP);
   };
 
   protected handleInputEvent(
     x: number,
     y: number,
+    identifier: number,
     inputEvent: UIInputEvent,
   ): boolean {
     const isPointerInside =
-      x > this.x &&
-      x < this.x + this.width &&
-      y > this.y &&
-      y < this.y + this.height;
+      x > this.x && x < this.oppositeX && y > this.y && y < this.oppositeY;
 
     if (isPointerInside) {
-      this.emit(inputEvent, x, y, this);
+      this.emit(inputEvent, x, y, identifier, this);
     }
 
     if (this.isPointerInside && !isPointerInside) {
-      this.emit(UIInputEvent.LEAVE, x, y, this);
+      this.emit(UIInputEvent.LEAVE, x, y, identifier, this);
     } else if (!this.isPointerInside && isPointerInside) {
-      this.emit(UIInputEvent.ENTER, x, y, this);
+      this.emit(UIInputEvent.ENTER, x, y, identifier, this);
     }
 
     this.isPointerInside = isPointerInside;

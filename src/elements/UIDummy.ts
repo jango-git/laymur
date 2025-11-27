@@ -17,7 +17,7 @@ export interface UIDummyOptions {
 }
 
 /**
- * Abstract UI element that extends UIAnchor with dimensions but without rendering.
+ * UI element that extends UIAnchor with dimensions but without rendering.
  *
  * UIDummy represents a rectangular area in the UI layout system that has position
  * and dimensions (width and height) but does not perform any visual rendering.
@@ -28,7 +28,7 @@ export interface UIDummyOptions {
  * @see {@link UIPlaneElement} - Interface defining dimensional element behavior
  * @see {@link UILayer} - Container layer for UI elements
  */
-export abstract class UIDummy extends UIAnchor implements UIPlaneElement {
+export class UIDummy extends UIAnchor implements UIPlaneElement {
   /**
    * Solver variable descriptor for the width dimension.
    * This variable is managed by the constraint solver system.

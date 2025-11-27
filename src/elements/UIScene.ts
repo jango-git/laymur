@@ -10,6 +10,7 @@ import {
 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
@@ -80,6 +81,8 @@ export interface UISceneOptions {
   clearAlpha: number;
   /** Whether to enable depth buffer for the render target. */
   enableDepthBuffer: boolean;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -171,7 +174,6 @@ export class UIScene extends UIElement {
     });
 
     this.renderTarget = renderTarget;
-    this.colorInternal = color;
 
     this.sceneInternal = options.scene ?? new Scene();
     this.cameraInternal =
@@ -193,7 +195,12 @@ export class UIScene extends UIElement {
       this.renderRequired = true;
     }
 
+    this.colorInternal = color;
     this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**

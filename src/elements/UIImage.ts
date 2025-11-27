@@ -2,6 +2,7 @@ import type { Texture } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
 import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
 
@@ -19,6 +20,8 @@ export interface UIImageOptions {
   height: number;
   /** Color tint applied to the image */
   color: UIColor;
+  /** Default UIMode */
+  mode: UIMode;
 }
 
 /**
@@ -68,6 +71,10 @@ export class UIImage extends UIElement {
     this.textureInternal = texture;
     this.colorInternal = color;
     this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+
+    if (options.mode !== undefined) {
+      this.mode = options.mode;
+    }
   }
 
   /**
