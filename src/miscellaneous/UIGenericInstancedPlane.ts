@@ -230,10 +230,6 @@ function buildMaterial(
     }
   `;
 
-  console.log(vertexShader);
-  console.log(fragmentShader);
-  console.log(uniforms);
-
   return new ShaderMaterial({
     uniforms,
     vertexShader,

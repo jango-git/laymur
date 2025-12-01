@@ -1,15 +1,19 @@
 import {
   MathUtils,
+  Vector2,
+  Vector3,
   type Camera,
-  type Vector3,
   type WebGLRenderer,
 } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
+import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
 import type { UIResizePolicy } from "../miscellaneous/UIResizePolicy";
 import { UIResizePolicyEvent } from "../miscellaneous/UIResizePolicy";
 import { UIResizePolicyNone } from "../miscellaneous/UIResizePolicyNone";
 import { UILayer } from "./UILayer";
+
+const TEMP_POSITION = new Vector3();
 
 /**
  * UI layer that covers the full browser window.
@@ -89,8 +93,8 @@ export class UIFullscreenLayer extends UILayer {
    * @param camera - Camera for projection
    * @returns 2D position in layer space
    */
-  public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
-    const projectedPosition = position.project(camera);
+  public projectWorldPosition(position: Vector3, camera: Camera): Vector2 {
+    const projectedPosition = TEMP_POSITION.copy(position).project(camera);
     projectedPosition.x = MathUtils.mapLinear(
       projectedPosition.x,
       -1,
@@ -105,7 +109,39 @@ export class UIFullscreenLayer extends UILayer {
       this.y,
       this.height,
     );
-    return projectedPosition;
+    return new Vector2(projectedPosition.x, projectedPosition.y);
+  }
+
+  /**
+   * Projects 2D layer position to 3D world coordinates.
+   *
+   * @param position - 2D position in layer space
+   * @param camera - Camera for unprojection
+   * @param z - Z depth in camera space (defaults to 1)
+   * @returns 3D position in world space
+   */
+  public projectLayerPosition(
+    position: Vector2,
+    camera: Camera,
+    z = -1,
+  ): Vector3 {
+    TEMP_POSITION.x = MathUtils.mapLinear(
+      position.x,
+      this.x,
+      this.width,
+      -1,
+      1,
+    );
+    TEMP_POSITION.y = MathUtils.mapLinear(
+      position.y,
+      this.y,
+      this.height,
+      -1,
+      1,
+    );
+    TEMP_POSITION.z = z;
+
+    return TEMP_POSITION.unproject(camera);
   }
 
   /**
@@ -120,15 +156,15 @@ export class UIFullscreenLayer extends UILayer {
   };
 
   private readonly onDown = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerDownInternal");
+    this.handleWindowInput(event, "onPointerDownInternal", UIInputEvent.DOWN);
   };
 
   private readonly onMove = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerMoveInternal");
+    this.handleWindowInput(event, "onPointerMoveInternal", UIInputEvent.MOVE);
   };
 
   private readonly onUp = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerUpInternal");
+    this.handleWindowInput(event, "onPointerUpInternal", UIInputEvent.UP);
   };
 
   private handleWindowInput(
@@ -137,6 +173,7 @@ export class UIFullscreenLayer extends UILayer {
       | "onPointerDownInternal"
       | "onPointerMoveInternal"
       | "onPointerUpInternal",
+    inputEvent: UIInputEvent,
   ): void {
     const rect =
       event.target instanceof HTMLElement
@@ -152,6 +189,13 @@ export class UIFullscreenLayer extends UILayer {
       window.innerWidth,
       window.innerHeight,
     );
-    this[pointerFunctionName](x * scale, y * scale, event.pointerId);
+    const scaledX = x * scale;
+    const scaledY = y * scale;
+
+    if (this.mode === UIMode.INTERACTIVE) {
+      this.emit(inputEvent, scaledX, scaledY, event.pointerId);
+    }
+
+    this[pointerFunctionName](scaledX, scaledY, event.pointerId);
   }
 }
