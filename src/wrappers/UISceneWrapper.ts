@@ -21,6 +21,7 @@ import fragmentShader from "../shaders/UIPlane.fs";
 import vertexShader from "../shaders/UIPlane.vs";
 
 const DEFAULT_ALPHA_TEST = 0.25;
+const COLOR = new Color();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Constructor type needs to accept any arguments for generic type mapping
 type Constructor = new (...args: any[]) => any;
@@ -158,10 +159,13 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
       throw new Error(`Uniform ${uniform} not found in material`);
     }
     if (value instanceof UIColor) {
+      const linear = COLOR.set(value.r, value.g, value.b);
+      linear.convertSRGBToLinear();
+
       descriptor.material.uniforms[uniform].value.set(
-        value.r,
-        value.g,
-        value.b,
+        linear.r,
+        linear.g,
+        linear.b,
         value.a,
       );
     } else {

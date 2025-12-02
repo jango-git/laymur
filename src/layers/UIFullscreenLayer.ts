@@ -1,10 +1,5 @@
-import {
-  MathUtils,
-  Vector2,
-  Vector3,
-  type Camera,
-  type WebGLRenderer,
-} from "three";
+import type { Vector2 } from "three";
+import { MathUtils, Vector3, type Camera, type WebGLRenderer } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
@@ -12,8 +7,6 @@ import type { UIResizePolicy } from "../miscellaneous/UIResizePolicy";
 import { UIResizePolicyEvent } from "../miscellaneous/UIResizePolicy";
 import { UIResizePolicyNone } from "../miscellaneous/UIResizePolicyNone";
 import { UILayer } from "./UILayer";
-
-const TEMP_POSITION = new Vector3();
 
 /**
  * UI layer that covers the full browser window.
@@ -93,8 +86,8 @@ export class UIFullscreenLayer extends UILayer {
    * @param camera - Camera for projection
    * @returns 2D position in layer space
    */
-  public projectWorldPosition(position: Vector3, camera: Camera): Vector2 {
-    const projectedPosition = TEMP_POSITION.copy(position).project(camera);
+  public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
+    const projectedPosition = position.clone().project(camera);
     projectedPosition.x = MathUtils.mapLinear(
       projectedPosition.x,
       -1,
@@ -109,7 +102,7 @@ export class UIFullscreenLayer extends UILayer {
       this.y,
       this.height,
     );
-    return new Vector2(projectedPosition.x, projectedPosition.y);
+    return projectedPosition;
   }
 
   /**
@@ -117,7 +110,7 @@ export class UIFullscreenLayer extends UILayer {
    *
    * @param position - 2D position in layer space
    * @param camera - Camera for unprojection
-   * @param z - Z depth in camera space (defaults to 1)
+   * @param z - z in NDC space (defaults to -1)
    * @returns 3D position in world space
    */
   public projectLayerPosition(
@@ -125,23 +118,11 @@ export class UIFullscreenLayer extends UILayer {
     camera: Camera,
     z = -1,
   ): Vector3 {
-    TEMP_POSITION.x = MathUtils.mapLinear(
-      position.x,
-      this.x,
-      this.width,
-      -1,
-      1,
-    );
-    TEMP_POSITION.y = MathUtils.mapLinear(
-      position.y,
-      this.y,
-      this.height,
-      -1,
-      1,
-    );
-    TEMP_POSITION.z = z;
-
-    return TEMP_POSITION.unproject(camera);
+    return new Vector3(
+      MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
+      MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
+      z,
+    ).unproject(camera);
   }
 
   /**
