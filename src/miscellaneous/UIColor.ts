@@ -1,6 +1,5 @@
 import { Eventail } from "eventail";
-import type { Color } from "three";
-import { Vector4 } from "three";
+import { Color, Vector4 } from "three";
 
 /**
  * Converts sRGB component to linear color space.
@@ -124,12 +123,6 @@ export class UIColor extends Eventail {
 
   constructor();
   /**
-   * @param colorName - Named color
-   * @param a - Alpha (0-1)
-   */
-  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
-  constructor(colorName: UIColorName, a?: number);
-  /**
    * @param r - Red (0-1)
    * @param g - Green (0-1)
    * @param b - Blue (0-1)
@@ -137,6 +130,18 @@ export class UIColor extends Eventail {
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(r: number, g: number, b: number, a?: number);
+  /**
+   * @param colorName - Named color
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(colorName: UIColorName, a?: number);
+  /**
+   * @param threeColor - Three.js Color object
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(threeColor: Color, a?: number);
   /**
    * @param hexRGB - Hex RGB value (e.g., 0xFF0000)
    * @param a - Alpha (0-1)
@@ -152,12 +157,17 @@ export class UIColor extends Eventail {
       this.gInternal = g;
       this.bInternal = b;
       this.aInternal = a;
-    } else if (args.length >= 1) {
-      const [first, a = 1] = args;
-      if (typeof first === "string") {
-        this.setColorName(first as UIColorName, a as number);
+    } else {
+      const [firstArgument, a = 1] = args;
+      if (typeof firstArgument === "string") {
+        this.setColorName(firstArgument as UIColorName, a as number);
+      } else if (firstArgument instanceof Color) {
+        this.rInternal = firstArgument.r;
+        this.gInternal = firstArgument.g;
+        this.bInternal = firstArgument.b;
+        this.aInternal = a as number;
       } else {
-        this.setHexRGB(first as number, a as number);
+        this.setHexRGB(firstArgument as number, a as number);
       }
     }
   }
@@ -614,6 +624,31 @@ export class UIColor extends Eventail {
   }
 
   /**
+   * Sets color from Three.js Color object.
+   *
+   * @param threeColor - Three.js Color object
+   * @param a - Alpha (0-1)
+   * @returns This instance
+   */
+  public setThreeColor(threeColor: Color, a = this.aInternal): this {
+    this.ensureRGBUpdatedFromHSL();
+    if (
+      threeColor.r !== this.rInternal ||
+      threeColor.g !== this.gInternal ||
+      threeColor.b !== this.bInternal ||
+      a !== this.aInternal
+    ) {
+      this.rInternal = threeColor.r;
+      this.gInternal = threeColor.g;
+      this.bInternal = threeColor.b;
+      this.aInternal = a;
+      this.hslDirty = true;
+      this.emit(UIColorEvent.CHANGE, this);
+    }
+    return this;
+  }
+
+  /**
    * Returns CSS rgba() string.
    */
   public toCSSColor(): string {
@@ -637,6 +672,22 @@ export class UIColor extends Eventail {
     result.y = sRGBToLinear(this.gInternal);
     result.z = sRGBToLinear(this.bInternal);
     result.w = this.aInternal;
+
+    return result;
+  }
+
+  /**
+   * Converts color to Three.js Color object (without alpha).
+   *
+   * @param result - Color object to store the result
+   * @returns Color with RGB values
+   */
+  public toThreeColor(result: Color = new Color()): Color {
+    this.ensureRGBUpdatedFromHSL();
+
+    result.r = this.rInternal;
+    result.g = this.gInternal;
+    result.b = this.bInternal;
 
     return result;
   }
