@@ -157,7 +157,7 @@ export class UIColor extends Eventail {
       this.gInternal = g;
       this.bInternal = b;
       this.aInternal = a;
-    } else {
+    } else if (args.length >= 1) {
       const [firstArgument, a = 1] = args;
       if (typeof firstArgument === "string") {
         this.setColorName(firstArgument as UIColorName, a as number);
