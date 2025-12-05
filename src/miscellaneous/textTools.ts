@@ -20,7 +20,7 @@ export function measureTextChunk(
   chunk: string,
   style: UITextStyle,
 ): UIChunkMetrics {
-  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`;
 
   if (chunk === "\n") {
     return {
@@ -136,7 +136,7 @@ export function renderText(
   style: UITextStyle,
   context: OffscreenCanvasRenderingContext2D,
 ): void {
-  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${style.fontFamily}`;
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`;
 
   if (style.enableShadow) {
     context.shadowOffsetX = style.shadowOffsetX;
