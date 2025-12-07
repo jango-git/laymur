@@ -13,7 +13,10 @@ export function buildMaterial(
   uniformLayout: Record<string, UIPropertyTypeName>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
-  const uniforms: Record<string, { value: null }> = {};
+  const uniforms: Record<string, { value: null }> = {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    u_transform: { value: null },
+  };
 
   const uniformDeclarations: string[] = [];
   const varyingDeclarations: string[] = [];
@@ -26,6 +29,9 @@ export function buildMaterial(
   }
 
   const vertexShader = `
+    // Default uniform declaractions
+    uniform mat4 u_transform;
+
     // Custom uniform declaractions
     ${uniformDeclarations.join("\n")}
 
@@ -42,7 +48,7 @@ export function buildMaterial(
       v_position = position;
       v_uv = uv;
 
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * u_transform * vec4(position, 1.0);
     }
   `;
 

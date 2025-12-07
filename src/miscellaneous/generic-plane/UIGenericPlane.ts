@@ -1,5 +1,6 @@
-import type { Matrix4, ShaderMaterial } from "three";
+import type { Matrix4, ShaderMaterial, Vector4 } from "three";
 import { Mesh } from "three";
+import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
   resolveUniform,
@@ -39,7 +40,9 @@ export class UIGenericPlane extends Mesh {
 
     this.shaderMaterial = shaderMaterial;
     this.frustumCulled = false;
+
     this.matrixAutoUpdate = false;
+    this.matrixWorldAutoUpdate = false;
   }
 
   public updateVisibility(visibility: boolean): void {
@@ -52,7 +55,9 @@ export class UIGenericPlane extends Mesh {
    * @param transform - Matrix4 transform to apply
    */
   public updateTransform(transform: Matrix4): void {
-    this.matrixWorld.copy(transform);
+    const uniform = resolveUniform("transform", this.shaderMaterial);
+    uniform.value = transform;
+    this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
   /**
@@ -65,7 +70,11 @@ export class UIGenericPlane extends Mesh {
   public updateProperties(properties: Record<string, UIPropertyType>): void {
     for (const [name, value] of Object.entries(properties)) {
       const uniform = resolveUniform(name, this.shaderMaterial);
-      uniform.value = value;
+      if (value instanceof UIColor) {
+        value.toGLSLColor(uniform.value as Vector4);
+      } else {
+        uniform.value = value;
+      }
       this.shaderMaterial.uniformsNeedUpdate = true;
     }
   }

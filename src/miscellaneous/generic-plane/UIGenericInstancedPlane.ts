@@ -69,7 +69,7 @@ export class UIGenericInstancedPlane extends Mesh {
       }
     }
 
-    const instancedGeometry = INSTANCED_PLANE_GEOMETRY;
+    const instancedGeometry = INSTANCED_PLANE_GEOMETRY.clone();
     const shaderMaterial = buildMaterial(
       source,
       uniformLayout,

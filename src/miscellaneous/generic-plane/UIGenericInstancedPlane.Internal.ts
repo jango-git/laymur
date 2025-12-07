@@ -31,7 +31,7 @@ export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
 })();
 
 export const CAPACITY_STEP = 4;
-export const TEMP_VECTOR_4 = new Vector4();
+const TEMP_COLOR_VECTOR = new Vector4();
 
 export function writePropertyToArray(
   value: UIPropertyType,
@@ -39,11 +39,11 @@ export function writePropertyToArray(
   itemOffset: number,
 ): void {
   if (value instanceof UIColor) {
-    value.toGLSLColor(TEMP_VECTOR_4);
-    array[itemOffset] = TEMP_VECTOR_4.x;
-    array[itemOffset + 1] = TEMP_VECTOR_4.y;
-    array[itemOffset + 2] = TEMP_VECTOR_4.z;
-    array[itemOffset + 3] = TEMP_VECTOR_4.w;
+    value.toGLSLColor(TEMP_COLOR_VECTOR);
+    array[itemOffset] = TEMP_COLOR_VECTOR.x;
+    array[itemOffset + 1] = TEMP_COLOR_VECTOR.y;
+    array[itemOffset + 2] = TEMP_COLOR_VECTOR.z;
+    array[itemOffset + 3] = TEMP_COLOR_VECTOR.w;
   } else if (value instanceof Vector2) {
     array[itemOffset] = value.x;
     array[itemOffset + 1] = value.y;
