@@ -15,36 +15,36 @@ const DEFAULT_TEXTURE = new Texture();
 export enum UIProgressMaskFunction {
   /** Fill horizontally from left to right (or right to left if inverse) */
   HORIZONTAL = `float calculateMask() {
-    return step((direction * io_UV.x + (1.0 - direction) * 0.5), progress);
+    return step((p_direction * p_uv.x + (1.0 - p_direction) * 0.5), p_progress);
   }`,
 
   /** Fill vertically from bottom to top (or top to bottom if inverse) */
   VERTICAL = `float calculateMask() {
-    return step((direction * io_UV.y + (1.0 - direction) * 0.5), progress);
+    return step((p_direction * p_uv.y + (1.0 - p_direction) * 0.5), p_progress);
   }`,
 
   /** Fill diagonally from bottom-left to top-right */
   DIAGONAL = `float calculateMask() {
-    float d = (io_UV.x + io_UV.y) * (0.1);
-    return step((direction * d + (1.0 - direction) * 0.5), progress);
+    float d = (p_uv.x + p_uv.y) * (0.1);
+    return step((p_direction * d + (1.0 - p_direction) * 0.5), p_progress);
   }`,
 
   /** Fill in a circular pattern around the center, starting from the left */
   CIRCLE_LEFT = `float calculateMask() {
-    vec2 p = io_UV - 0.5;
+    vec2 p = p_uv - 0.5;
     float angle = atan(p.y, p.x);
     angle = (angle + 3.14159265) / 3.14159265;
     angle *= 0.5;
-    return step((direction * angle + (1.0 - direction) * 0.5), progress);
+    return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
   }`,
 
   /** Fill in a circular pattern around the center, starting from the top */
   CIRCLE_TOP = `float calculateMask() {
-    vec2 p = io_UV - 0.5;
+    vec2 p = p_uv - 0.5;
     float angle = atan(p.y, p.x);
     angle = (angle + 3.14159265) / (2.0 * 3.14159265);
     angle = mod(angle + 0.25, 1.0);
-    return step((direction * angle + (1.0 - direction) * 0.5), progress);
+    return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
   }`,
 }
 

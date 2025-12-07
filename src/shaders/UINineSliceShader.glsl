@@ -1,4 +1,4 @@
-vec2 draw() {
+vec4 draw() {
     vec2 localUV = p_uv;
 
     float left = p_sliceBorders.x;
@@ -40,5 +40,5 @@ vec2 draw() {
         localUV.y = regionT * yT + regionC * yC + regionB * yB;
     }
 
-    return texture(p_map, localUV) * p_color;
+    return texture2D(p_map, localUV) * p_color;
 }
