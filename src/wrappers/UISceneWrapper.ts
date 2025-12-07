@@ -1,8 +1,8 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
-import {
-  resolveTypeInfo,
-  type UIPropertyType,
+import type {
+  PlaneData,
+  UIPropertyType,
 } from "../miscellaneous/generic-plane/shared";
 import { UIGenericInstancedPlane } from "../miscellaneous/generic-plane/UIGenericInstancedPlane";
 import { UIGenericPlane } from "../miscellaneous/generic-plane/UIGenericPlane";
@@ -18,6 +18,7 @@ let originalAutoClearStencil = false;
 interface PlaneDescriptor {
   plane: UIGenericPlane | UIGenericInstancedPlane;
   instanceHandler?: number;
+  forceSingleInstance: boolean;
 }
 
 export class UISceneWrapper {
@@ -48,48 +49,21 @@ export class UISceneWrapper {
   ): number {
     const handler = this.lastHandler++;
 
-    if (!forceSingleInstance) {
-      // Try to find compatible UIGenericPlane for promotion
-      const promotable = this.findCompatibleSinglePlane(
-        source,
-        properties,
-        transparency,
-      );
-      if (promotable) {
-        const instancedPlane = this.promoteToInstanced(promotable, properties);
-        const instanceHandler = instancedPlane.createInstances(1);
-        instancedPlane.setProperties(instanceHandler, 0, [properties]);
+    const descriptor: PlaneDescriptor = {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      plane: undefined!,
+      forceSingleInstance,
+    };
+    this.descriptors.set(handler, descriptor);
 
-        this.descriptors.set(handler, {
-          plane: instancedPlane,
-          instanceHandler,
-        });
-        return handler;
-      }
-
-      // Try to find compatible UIGenericInstancedPlane
-      const compatibleInstanced = this.findCompatibleInstancedPlane(
-        source,
-        properties,
-        transparency,
-      );
-      if (compatibleInstanced) {
-        const instanceHandler = compatibleInstanced.createInstances(1);
-        compatibleInstanced.setProperties(instanceHandler, 0, [properties]);
-
-        this.descriptors.set(handler, {
-          plane: compatibleInstanced,
-          instanceHandler,
-        });
-        return handler;
-      }
-    }
-
-    // Create single UIGenericPlane
-    const plane = new UIGenericPlane(source, properties, transparency);
-    plane.setProperties(properties);
-    this.scene.add(plane);
-    this.descriptors.set(handler, { plane });
+    this.placeInstance(descriptor, {
+      source,
+      properties,
+      transparency,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      transform: undefined!,
+      visibility: true,
+    });
 
     return handler;
   }
@@ -101,28 +75,8 @@ export class UISceneWrapper {
    */
   public destroyPlane(handler: number): void {
     const descriptor = this.resolveDescriptor(handler);
-
-    if (
-      descriptor.plane instanceof UIGenericInstancedPlane &&
-      descriptor.instanceHandler !== undefined
-    ) {
-      const instancedPlane = descriptor.plane;
-      instancedPlane.destroyInstances(descriptor.instanceHandler);
-
-      if (instancedPlane.instanceCount === 0) {
-        // Empty — remove completely
-        this.scene.remove(instancedPlane);
-        instancedPlane.destroy();
-      } else if (instancedPlane.instanceCount === 1) {
-        // One instance left — demote to UIGenericPlane
-        this.demoteToSingle(instancedPlane, descriptor.instanceHandler);
-      }
-    } else {
-      this.scene.remove(descriptor.plane);
-      descriptor.plane.destroy();
-    }
-
     this.descriptors.delete(handler);
+    this.removeFromCurrentPlane(descriptor);
   }
 
   /**
@@ -158,34 +112,29 @@ export class UISceneWrapper {
   ): void {
     const descriptor = this.resolveDescriptor(handler);
 
-    if (
-      descriptor.plane instanceof UIGenericInstancedPlane &&
-      descriptor.instanceHandler !== undefined
-    ) {
-      const currentProperties = descriptor.plane.properties;
-      let compatibilityBroken = false;
+    if (descriptor.forceSingleInstance) {
+      (descriptor.plane as UIGenericPlane).setProperties(properties);
+      return;
+    }
 
-      for (const [name, newValue] of Object.entries(properties)) {
-        if (!(name in currentProperties)) {
-          continue;
-        }
+    const currentData = this.extractInstanceData(descriptor);
+    const newProperties = { ...currentData.properties, ...properties };
 
-        const info = resolveTypeInfo(newValue);
-        if (!info.instantiable && currentProperties[name] !== newValue) {
-          compatibilityBroken = true;
-          break;
-        }
-      }
+    const needsRelocation = this.checkNeedsRelocation(
+      descriptor,
+      currentData,
+      newProperties,
+      currentData.transparency,
+    );
 
-      if (compatibilityBroken) {
-        this.relocateInstance(descriptor, properties);
-      } else {
-        descriptor.plane.setProperties(descriptor.instanceHandler, 0, [
-          properties,
-        ]);
-      }
-    } else if (descriptor.plane instanceof UIGenericPlane) {
-      descriptor.plane.setProperties(properties);
+    if (needsRelocation) {
+      this.removeFromCurrentPlane(descriptor);
+      this.placeInstance(descriptor, {
+        ...currentData,
+        properties: newProperties,
+      });
+    } else {
+      this.updatePropertiesInPlace(descriptor, properties);
     }
   }
 
@@ -219,14 +168,30 @@ export class UISceneWrapper {
     transparency: UITransparencyMode,
   ): void {
     const descriptor = this.resolveDescriptor(handler);
+    const currentData = this.extractInstanceData(descriptor);
 
-    if (
-      descriptor.plane instanceof UIGenericInstancedPlane &&
-      descriptor.instanceHandler !== undefined
-    ) {
-      if (descriptor.plane.transparency !== transparency) {
-        this.relocateInstance(descriptor, undefined, transparency);
-      }
+    if (currentData.transparency === transparency) {
+      return;
+    }
+
+    if (descriptor.forceSingleInstance) {
+      (descriptor.plane as UIGenericPlane).setTransparency(transparency);
+      return;
+    }
+
+    const needsRelocation = this.checkNeedsRelocation(
+      descriptor,
+      currentData,
+      currentData.properties,
+      transparency,
+    );
+
+    if (needsRelocation) {
+      this.removeFromCurrentPlane(descriptor);
+      this.placeInstance(descriptor, {
+        ...currentData,
+        transparency,
+      });
     } else if (descriptor.plane instanceof UIGenericPlane) {
       descriptor.plane.setTransparency(transparency);
     }
@@ -234,8 +199,6 @@ export class UISceneWrapper {
 
   /**
    * Adds a custom Three.js object to the scene.
-   *
-   * @param object - Object3D to add
    */
   public insertCustomObject(object: Object3D): this {
     this.scene.add(object);
@@ -244,8 +207,6 @@ export class UISceneWrapper {
 
   /**
    * Removes a custom Three.js object from the scene.
-   *
-   * @param object - Object3D to remove
    */
   public removeCustomObject(object: Object3D): this {
     this.scene.remove(object);
@@ -254,9 +215,6 @@ export class UISceneWrapper {
 
   /**
    * Updates camera dimensions.
-   *
-   * @param width - New width
-   * @param height - New height
    */
   public resize(width: number, height: number): this {
     this.camera.right = width;
@@ -267,8 +225,6 @@ export class UISceneWrapper {
 
   /**
    * Renders the scene.
-   *
-   * @param renderer - WebGLRenderer to use
    */
   public render(renderer: WebGLRenderer): this {
     originalClearColor = renderer.getClearColor(originalClearColor);
@@ -296,74 +252,207 @@ export class UISceneWrapper {
     return this;
   }
 
-  private relocateInstance(
-    descriptor: PlaneDescriptor,
-    newProperties?: Record<string, UIPropertyType>,
-    newTransparency?: UITransparencyMode,
-  ): void {
-    const oldInstancedPlane = descriptor.plane as UIGenericInstancedPlane;
-    const oldInstanceHandler = descriptor.instanceHandler as number;
+  /**
+   * Places an instance into the optimal plane (existing or new).
+   */
+  private placeInstance(descriptor: PlaneDescriptor, data: PlaneData): void {
+    const { source, properties, transparency, transform, visibility } = data;
 
-    const currentProperties =
-      oldInstancedPlane.extractInstanceProperties(oldInstanceHandler);
-    const transform =
-      oldInstancedPlane.extractInstanceTransform(oldInstanceHandler);
-    const visibility =
-      oldInstancedPlane.extractInstanceVisibility(oldInstanceHandler);
+    if (!descriptor.forceSingleInstance) {
+      // Try to find compatible instanced plane
+      const compatibleInstanced = this.findCompatibleInstancedPlane(
+        source,
+        properties,
+        transparency,
+      );
 
-    const source = oldInstancedPlane.source;
-    const properties = newProperties
-      ? { ...currentProperties, ...newProperties }
-      : currentProperties;
-    const transparency = newTransparency ?? oldInstancedPlane.transparency;
+      if (compatibleInstanced) {
+        this.attachToInstancedPlane(
+          descriptor,
+          compatibleInstanced,
+          properties,
+          transform,
+          visibility,
+        );
+        return;
+      }
 
-    oldInstancedPlane.destroyInstances(oldInstanceHandler);
+      // Try to find compatible single plane for promotion
+      const promotable = this.findCompatibleSinglePlane(
+        source,
+        properties,
+        transparency,
+        descriptor,
+      );
 
-    if (oldInstancedPlane.instanceCount === 0) {
-      this.scene.remove(oldInstancedPlane);
-      oldInstancedPlane.destroy();
-    } else if (oldInstancedPlane.instanceCount === 1) {
-      this.demoteToSingle(oldInstancedPlane, oldInstanceHandler);
+      if (promotable) {
+        const instancedPlane = this.promoteToInstanced(
+          promotable.descriptor,
+          properties,
+        );
+        this.attachToInstancedPlane(
+          descriptor,
+          instancedPlane,
+          properties,
+          transform,
+          visibility,
+        );
+        return;
+      }
     }
 
-    const compatibleInstanced = this.findCompatibleInstancedPlane(
+    // Create new single plane
+    this.createSinglePlane(
+      descriptor,
       source,
       properties,
       transparency,
+      transform,
+      visibility,
     );
+  }
 
+  /**
+   * Extracts current instance data from descriptor.
+   */
+  private extractInstanceData(descriptor: PlaneDescriptor): PlaneData {
+    if (
+      descriptor.plane instanceof UIGenericInstancedPlane &&
+      descriptor.instanceHandler !== undefined
+    ) {
+      return descriptor.plane.extractInstanceData(descriptor.instanceHandler);
+    }
+
+    return (descriptor.plane as UIGenericPlane).extractData();
+  }
+
+  /**
+   * Removes instance from its current plane, handling demote/destroy as needed.
+   */
+  private removeFromCurrentPlane(descriptor: PlaneDescriptor): void {
+    if (
+      descriptor.plane instanceof UIGenericInstancedPlane &&
+      descriptor.instanceHandler !== undefined
+    ) {
+      const instancedPlane = descriptor.plane;
+      instancedPlane.destroyInstances(descriptor.instanceHandler);
+
+      if (instancedPlane.instanceCount === 0) {
+        this.scene.remove(instancedPlane);
+        instancedPlane.destroy();
+      } else if (instancedPlane.instanceCount === 1) {
+        this.demoteToSingle(instancedPlane, descriptor);
+      }
+    } else if (descriptor.plane instanceof UIGenericPlane) {
+      this.scene.remove(descriptor.plane);
+      descriptor.plane.destroy();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    descriptor.plane = null!;
+    delete descriptor.instanceHandler;
+  }
+
+  /**
+   * Updates properties in place without relocation.
+   */
+  private updatePropertiesInPlace(
+    descriptor: PlaneDescriptor,
+    properties: Record<string, UIPropertyType>,
+  ): void {
+    if (
+      descriptor.plane instanceof UIGenericInstancedPlane &&
+      descriptor.instanceHandler !== undefined
+    ) {
+      descriptor.plane.setProperties(descriptor.instanceHandler, 0, [
+        properties,
+      ]);
+    } else if (descriptor.plane instanceof UIGenericPlane) {
+      descriptor.plane.setProperties(properties);
+    }
+  }
+
+  /**
+   * Checks if relocation is needed based on property/transparency changes.
+   */
+  private checkNeedsRelocation(
+    descriptor: PlaneDescriptor,
+    currentData: PlaneData,
+    newProperties: Record<string, UIPropertyType>,
+    newTransparency: UITransparencyMode,
+  ): boolean {
+    const isInstanced = descriptor.plane instanceof UIGenericInstancedPlane;
+
+    if (isInstanced) {
+      // Transparency change always requires relocation for instanced
+      if (currentData.transparency !== newTransparency) {
+        return true;
+      }
+
+      // Check if properties are still compatible
+      return !descriptor.plane.arePropertiesCompatible(newProperties);
+    }
+
+    // For single plane: check if we can now merge with something
+    const compatibleInstanced = this.findCompatibleInstancedPlane(
+      currentData.source,
+      newProperties,
+      newTransparency,
+    );
     if (compatibleInstanced) {
-      const newInstanceHandler = compatibleInstanced.createInstances(1);
-      compatibleInstanced.setProperties(newInstanceHandler, 0, [properties]);
-      compatibleInstanced.setTransforms(newInstanceHandler, 0, [transform]);
-      compatibleInstanced.setVisibility(newInstanceHandler, 0, [visibility]);
-
-      descriptor.plane = compatibleInstanced;
-      descriptor.instanceHandler = newInstanceHandler;
-      return;
+      return true;
     }
 
     const promotable = this.findCompatibleSinglePlane(
-      source,
-      properties,
-      transparency,
+      currentData.source,
+      newProperties,
+      newTransparency,
+      descriptor,
     );
-
     if (promotable) {
-      const instancedPlane = this.promoteToInstanced(promotable, properties);
-      const newInstanceHandler = instancedPlane.createInstances(1);
-      instancedPlane.setProperties(newInstanceHandler, 0, [properties]);
-      instancedPlane.setTransforms(newInstanceHandler, 0, [transform]);
-      instancedPlane.setVisibility(newInstanceHandler, 0, [visibility]);
-
-      descriptor.plane = instancedPlane;
-      descriptor.instanceHandler = newInstanceHandler;
-      return;
+      return true;
     }
 
+    return false;
+  }
+
+  /**
+   * Attaches descriptor to an instanced plane.
+   */
+  private attachToInstancedPlane(
+    descriptor: PlaneDescriptor,
+    instancedPlane: UIGenericInstancedPlane,
+    properties: Record<string, UIPropertyType>,
+    transform: Matrix4 | null,
+    visibility: boolean,
+  ): void {
+    const instanceHandler = instancedPlane.createInstances(1);
+    instancedPlane.setProperties(instanceHandler, 0, [properties]);
+    if (transform) {
+      instancedPlane.setTransforms(instanceHandler, 0, [transform]);
+    }
+    instancedPlane.setVisibility(instanceHandler, 0, [visibility]);
+
+    descriptor.plane = instancedPlane;
+    descriptor.instanceHandler = instanceHandler;
+  }
+
+  /**
+   * Creates a new single plane and attaches descriptor to it.
+   */
+  private createSinglePlane(
+    descriptor: PlaneDescriptor,
+    source: string,
+    properties: Record<string, UIPropertyType>,
+    transparency: UITransparencyMode,
+    transform: Matrix4 | null,
+    visibility: boolean,
+  ): void {
     const singlePlane = new UIGenericPlane(source, properties, transparency);
     singlePlane.setProperties(properties);
-    singlePlane.setTransform(transform);
+    if (transform) {
+      singlePlane.setTransform(transform);
+    }
     singlePlane.setVisibility(visibility);
     this.scene.add(singlePlane);
 
@@ -375,8 +464,16 @@ export class UISceneWrapper {
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
+    excludeDescriptor?: PlaneDescriptor,
   ): { handler: number; descriptor: PlaneDescriptor } | null {
     for (const [handler, descriptor] of this.descriptors) {
+      if (descriptor === excludeDescriptor) {
+        continue;
+      }
+      if (descriptor.forceSingleInstance) {
+        continue;
+      }
+
       if (
         descriptor.plane instanceof UIGenericPlane &&
         descriptor.plane.isCompatible(source, properties, transparency)
@@ -403,31 +500,31 @@ export class UISceneWrapper {
     return null;
   }
 
+  /**
+   * Promotes a single plane to instanced, transferring its data.
+   */
   private promoteToInstanced(
-    promotable: { handler: number; descriptor: PlaneDescriptor },
-    newProperties: Record<string, UIPropertyType>,
+    promotableDescriptor: PlaneDescriptor,
+    templateProperties: Record<string, UIPropertyType>,
   ): UIGenericInstancedPlane {
-    const oldPlane = promotable.descriptor.plane as UIGenericPlane;
+    const oldPlane = promotableDescriptor.plane as UIGenericPlane;
+    const oldData = oldPlane.extractData();
 
     const instancedPlane = new UIGenericInstancedPlane(
-      oldPlane.source,
-      newProperties,
-      oldPlane.transparency,
+      oldData.source,
+      templateProperties,
+      oldData.transparency,
     );
 
     // Transfer old plane as first instance
     const oldInstanceHandler = instancedPlane.createInstances(1);
-    instancedPlane.setProperties(oldInstanceHandler, 0, [oldPlane.properties]);
+    instancedPlane.setProperties(oldInstanceHandler, 0, [oldData.properties]);
+    instancedPlane.setTransforms(oldInstanceHandler, 0, [oldData.transform]);
+    instancedPlane.setVisibility(oldInstanceHandler, 0, [oldData.visibility]);
 
-    // Transfer transform
-    instancedPlane.setTransforms(oldInstanceHandler, 0, [oldPlane.transform]);
-
-    // Transfer visibility
-    instancedPlane.setVisibility(oldInstanceHandler, 0, [oldPlane.visibility]);
-
-    // Update descriptor for old plane
-    promotable.descriptor.plane = instancedPlane;
-    promotable.descriptor.instanceHandler = oldInstanceHandler;
+    // Update promotable descriptor
+    promotableDescriptor.plane = instancedPlane;
+    promotableDescriptor.instanceHandler = oldInstanceHandler;
 
     // Replace in scene
     this.scene.remove(oldPlane);
@@ -437,57 +534,52 @@ export class UISceneWrapper {
     return instancedPlane;
   }
 
+  /**
+   * Demotes an instanced plane with one remaining instance back to single.
+   */
   private demoteToSingle(
     instancedPlane: UIGenericInstancedPlane,
-    ignoredHandler: number,
+    removedDescriptor: PlaneDescriptor,
   ): void {
     // Find descriptor with remaining instance
-    let remainingHandler: number | undefined;
     let remainingDescriptor: PlaneDescriptor | undefined;
 
-    for (const [handler, descriptor] of this.descriptors) {
+    for (const descriptor of this.descriptors.values()) {
       if (
+        descriptor !== removedDescriptor &&
         descriptor.plane === instancedPlane &&
-        descriptor.instanceHandler !== undefined &&
-        descriptor.instanceHandler !== ignoredHandler
+        descriptor.instanceHandler !== undefined
       ) {
-        remainingHandler = handler;
         remainingDescriptor = descriptor;
         break;
       }
     }
 
-    if (remainingHandler === undefined || remainingDescriptor === undefined) {
+    if (!remainingDescriptor) {
       return;
     }
 
-    // Extract data from remaining instance
-    const properties = instancedPlane.extractInstanceProperties(
-      remainingDescriptor.instanceHandler as number,
-    );
-    const transform = instancedPlane.extractInstanceTransform(
-      remainingDescriptor.instanceHandler as number,
-    );
-    const visibility = instancedPlane.extractInstanceVisibility(
+    // Extract data using the unified method
+    const data = instancedPlane.extractInstanceData(
       remainingDescriptor.instanceHandler as number,
     );
 
-    // Create UIGenericPlane
+    // Create single plane
     const singlePlane = new UIGenericPlane(
-      instancedPlane.source,
-      properties,
-      instancedPlane.transparency,
+      data.source,
+      data.properties,
+      data.transparency,
     );
-    singlePlane.setProperties(properties);
-    singlePlane.setTransform(transform);
-    singlePlane.setVisibility(visibility);
+    singlePlane.setProperties(data.properties);
+    singlePlane.setTransform(data.transform);
+    singlePlane.setVisibility(data.visibility);
 
     // Replace in scene
     this.scene.remove(instancedPlane);
     instancedPlane.destroy();
     this.scene.add(singlePlane);
 
-    // Update descriptor
+    // Update remaining descriptor
     remainingDescriptor.plane = singlePlane;
     delete remainingDescriptor.instanceHandler;
   }

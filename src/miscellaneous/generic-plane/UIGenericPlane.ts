@@ -3,9 +3,10 @@ import { Matrix4, Mesh } from "three";
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
+  arePropertiesCompatible,
   DEFAULT_ALPHA_TEST,
-  resolveTypeInfo,
   resolveUniform,
+  type PlaneData,
   type UIPropertyType,
 } from "./shared";
 import { buildMaterial, PLANE_GEOMETRY } from "./UIGenericPlane.Internal";
@@ -24,7 +25,7 @@ import { buildMaterial, PLANE_GEOMETRY } from "./UIGenericPlane.Internal";
 export class UIGenericPlane extends Mesh {
   private readonly shaderMaterial: ShaderMaterial;
   private readonly propertiesInternal: Record<string, UIPropertyType>;
-  private transformInternal = new Matrix4().identity();
+  private readonly transformInternal = new Matrix4().identity();
   private transparencyInternal: UITransparencyMode;
 
   /**
@@ -59,7 +60,7 @@ export class UIGenericPlane extends Mesh {
   }
 
   /**
-   * Returns stored transform matrix or undefined if not set.
+   * Returns stored transform matrix.
    */
   public get transform(): Matrix4 {
     return this.transformInternal;
@@ -107,7 +108,7 @@ export class UIGenericPlane extends Mesh {
     const uniform = resolveUniform("transform", this.shaderMaterial);
     (uniform.value as Matrix4).copy(transform);
     this.shaderMaterial.uniformsNeedUpdate = true;
-    this.transformInternal = transform;
+    this.transformInternal.copy(transform);
   }
 
   /**
@@ -125,7 +126,7 @@ export class UIGenericPlane extends Mesh {
    * @param transparency - New transparency mode
    */
   public setTransparency(transparency: UITransparencyMode): void {
-    if (this.transparency !== transparency) {
+    if (this.transparencyInternal !== transparency) {
       this.shaderMaterial.transparent =
         transparency === UITransparencyMode.BLEND;
       this.shaderMaterial.alphaTest =
@@ -137,6 +138,19 @@ export class UIGenericPlane extends Mesh {
 
       this.transparencyInternal = transparency;
     }
+  }
+
+  /**
+   * Extracts complete plane data for relocation/promotion.
+   */
+  public extractData(): PlaneData {
+    return {
+      source: this.source,
+      properties: this.properties,
+      transparency: this.transparencyInternal,
+      transform: this.transformInternal.clone(),
+      visibility: this.visible,
+    };
   }
 
   /**
@@ -152,39 +166,24 @@ export class UIGenericPlane extends Mesh {
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
   ): boolean {
-    if (this.source !== source || this.transparency !== transparency) {
+    if (this.source !== source || this.transparencyInternal !== transparency) {
       return false;
     }
 
-    const keys = Object.keys(properties);
-    const internalKeys = Object.keys(this.propertiesInternal);
+    return arePropertiesCompatible(this.propertiesInternal, properties);
+  }
 
-    if (keys.length !== internalKeys.length) {
-      return false;
-    }
-
-    for (const key of keys) {
-      if (!(key in this.propertiesInternal)) {
-        return false;
-      }
-
-      const newInfo = resolveTypeInfo(properties[key]);
-      const internalInfo = resolveTypeInfo(this.propertiesInternal[key]);
-
-      if (newInfo.glslType !== internalInfo.glslType) {
-        return false;
-      }
-
-      // Non-instantiable (textures) must match by reference
-      if (
-        !newInfo.instantiable &&
-        properties[key] !== this.propertiesInternal[key]
-      ) {
-        return false;
-      }
-    }
-
-    return true;
+  /**
+   * Checks if the provided properties are compatible (ignoring source/transparency).
+   * Useful for checking if property updates would break compatibility.
+   *
+   * @param properties - Map of property names to values
+   * @returns true if properties are compatible
+   */
+  public arePropertiesCompatible(
+    properties: Record<string, UIPropertyType>,
+  ): boolean {
+    return arePropertiesCompatible(this.propertiesInternal, properties);
   }
 
   /**

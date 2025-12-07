@@ -2,8 +2,12 @@ import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
 import { assertValidNonNegativeNumber } from "../asserts";
 import { UITransparencyMode } from "../UITransparencyMode";
-import type { UIPropertyType } from "./shared";
-import { resolveTypeInfo, resolveUniform } from "./shared";
+import type { PlaneData, UIPropertyType } from "./shared";
+import {
+  arePropertiesCompatible,
+  resolveTypeInfo,
+  resolveUniform,
+} from "./shared";
 import type { InstancedRangeDescriptor } from "./UIGenericInstancedPlane.Internal";
 import {
   buildEmptyInstancedBufferAttribute,
@@ -186,7 +190,7 @@ export class UIGenericInstancedPlane extends Mesh {
     offset: number,
     instancesProperties: Record<string, UIPropertyType>[],
   ): void {
-    assertValidNonNegativeNumber(offset, "updateProperties offset");
+    assertValidNonNegativeNumber(offset, "setProperties offset");
 
     const descriptor = this.resolveDescriptor(handler);
     validateRange(descriptor, offset, instancesProperties.length);
@@ -228,7 +232,7 @@ export class UIGenericInstancedPlane extends Mesh {
     offset: number,
     transforms: Matrix4[],
   ): void {
-    assertValidNonNegativeNumber(offset, "updateTransforms offset");
+    assertValidNonNegativeNumber(offset, "setTransforms offset");
 
     const descriptor = this.resolveDescriptor(handler);
     validateRange(descriptor, offset, transforms.length);
@@ -261,7 +265,7 @@ export class UIGenericInstancedPlane extends Mesh {
     offset: number,
     visibility: boolean[],
   ): void {
-    assertValidNonNegativeNumber(offset, "updateVisibility offset");
+    assertValidNonNegativeNumber(offset, "setVisibility offset");
 
     const descriptor = this.resolveDescriptor(handler);
     validateRange(descriptor, offset, visibility.length);
@@ -295,32 +299,37 @@ export class UIGenericInstancedPlane extends Mesh {
     }
 
     const allProperties = this.properties;
-    const keys = Object.keys(properties);
-    const currentKeys = Object.keys(allProperties);
+    return arePropertiesCompatible(allProperties, properties);
+  }
 
-    if (keys.length !== currentKeys.length) {
-      return false;
-    }
+  /**
+   * Checks if the provided properties are compatible (ignoring source/transparency).
+   * Useful for checking if property updates would break compatibility.
+   *
+   * @param properties - Map of property names to values
+   * @returns true if properties are compatible
+   */
+  public arePropertiesCompatible(
+    properties: Record<string, UIPropertyType>,
+  ): boolean {
+    const allProperties = this.properties;
+    return arePropertiesCompatible(allProperties, properties);
+  }
 
-    for (const key of keys) {
-      if (!(key in allProperties)) {
-        return false;
-      }
-
-      const newInfo = resolveTypeInfo(properties[key]);
-      const currentInfo = resolveTypeInfo(allProperties[key]);
-
-      if (newInfo.glslType !== currentInfo.glslType) {
-        return false;
-      }
-
-      // Non-instantiable (textures) must match by reference
-      if (!newInfo.instantiable && properties[key] !== allProperties[key]) {
-        return false;
-      }
-    }
-
-    return true;
+  /**
+   * Extracts complete instance data for a specific handler.
+   *
+   * @param handler - Handler returned from createInstances
+   * @returns Complete instance data for relocation
+   */
+  public extractInstanceData(handler: number): PlaneData {
+    return {
+      source: this.source,
+      properties: this.extractInstanceProperties(handler),
+      transparency: this.transparency,
+      transform: this.extractInstanceTransform(handler),
+      visibility: this.extractInstanceVisibility(handler),
+    };
   }
 
   /**

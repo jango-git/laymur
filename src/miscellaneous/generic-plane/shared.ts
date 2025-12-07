@@ -1,6 +1,7 @@
 import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 import { UIColor } from "../UIColor";
+import type { UITransparencyMode } from "../UITransparencyMode";
 
 export type UIPropertyType =
   | Texture
@@ -12,7 +13,7 @@ export type UIPropertyType =
   | Matrix4
   | number;
 
-interface GLSLTypeInfo {
+export interface GLSLTypeInfo {
   instantiable: boolean;
   glslType: string;
   itemSize: number;
@@ -59,4 +60,47 @@ export function resolveUniform(
     throw new Error(`Unknown uniform: ${name}`);
   }
   return uniform;
+}
+
+export interface PlaneData {
+  source: string;
+  properties: Record<string, UIPropertyType>;
+  transparency: UITransparencyMode;
+  transform: Matrix4;
+  visibility: boolean;
+}
+
+export function arePropertiesCompatible(
+  currentProperties: Record<string, UIPropertyType>,
+  newProperties: Record<string, UIPropertyType>,
+): boolean {
+  const currentKeys = Object.keys(currentProperties);
+  const newKeys = Object.keys(newProperties);
+
+  if (currentKeys.length !== newKeys.length) {
+    return false;
+  }
+
+  for (const key of newKeys) {
+    if (!(key in currentProperties)) {
+      return false;
+    }
+
+    const newInfo = resolveTypeInfo(newProperties[key]);
+    const currentInfo = resolveTypeInfo(currentProperties[key]);
+
+    if (newInfo.glslType !== currentInfo.glslType) {
+      return false;
+    }
+
+    // Non-instantiable (textures) must match by reference
+    if (
+      !newInfo.instantiable &&
+      newProperties[key] !== currentProperties[key]
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
