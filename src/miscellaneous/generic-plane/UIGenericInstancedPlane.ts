@@ -157,10 +157,7 @@ export class UIGenericInstancedPlane extends Mesh {
    * reference different internal indices after compaction.
    */
   public destroyInstances(handler: number): void {
-    const descriptor = this.handlerToDescriptor.get(handler);
-    if (descriptor === undefined) {
-      throw new Error(`Invalid handler: ${handler}`);
-    }
+    const descriptor = this.resolveDescriptor(handler);
 
     this.handlerToDescriptor.delete(handler);
 

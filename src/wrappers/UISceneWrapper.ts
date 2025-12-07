@@ -115,7 +115,7 @@ export class UISceneWrapper {
         instancedPlane.destroy();
       } else if (instancedPlane.instanceCount === 1) {
         // One instance left — demote to UIGenericPlane
-        this.demoteToSingle(instancedPlane);
+        this.demoteToSingle(instancedPlane, descriptor.instanceHandler);
       }
     } else {
       this.scene.remove(descriptor.plane);
@@ -162,7 +162,6 @@ export class UISceneWrapper {
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
     ) {
-      // Проверяем, есть ли non-instantiable свойства которые изменились
       const currentProperties = descriptor.plane.properties;
       let compatibilityBroken = false;
 
@@ -179,10 +178,8 @@ export class UISceneWrapper {
       }
 
       if (compatibilityBroken) {
-        // Нужно извлечь instance и переместить
         this.relocateInstance(descriptor, properties);
       } else {
-        // Просто обновляем свойства
         descriptor.plane.setProperties(descriptor.instanceHandler, 0, [
           properties,
         ]);
@@ -228,10 +225,8 @@ export class UISceneWrapper {
       descriptor.instanceHandler !== undefined
     ) {
       if (descriptor.plane.transparency !== transparency) {
-        // Transparency изменился — нужно извлечь instance
         this.relocateInstance(descriptor, undefined, transparency);
       }
-      // Если transparency тот же — ничего не делаем
     } else if (descriptor.plane instanceof UIGenericPlane) {
       descriptor.plane.setTransparency(transparency);
     }
@@ -309,33 +304,28 @@ export class UISceneWrapper {
     const oldInstancedPlane = descriptor.plane as UIGenericInstancedPlane;
     const oldInstanceHandler = descriptor.instanceHandler as number;
 
-    // Извлекаем текущие данные
     const currentProperties =
       oldInstancedPlane.extractInstanceProperties(oldInstanceHandler);
     const transform =
       oldInstancedPlane.extractInstanceTransform(oldInstanceHandler);
     const visibility =
       oldInstancedPlane.extractInstanceVisibility(oldInstanceHandler);
-    const source = oldInstancedPlane.source;
 
-    // Применяем новые значения
+    const source = oldInstancedPlane.source;
     const properties = newProperties
       ? { ...currentProperties, ...newProperties }
       : currentProperties;
     const transparency = newTransparency ?? oldInstancedPlane.transparency;
 
-    // Удаляем из старого instanced plane
     oldInstancedPlane.destroyInstances(oldInstanceHandler);
 
-    // Проверяем состояние старого plane после удаления
     if (oldInstancedPlane.instanceCount === 0) {
       this.scene.remove(oldInstancedPlane);
       oldInstancedPlane.destroy();
     } else if (oldInstancedPlane.instanceCount === 1) {
-      this.demoteToSingle(oldInstancedPlane);
+      this.demoteToSingle(oldInstancedPlane, oldInstanceHandler);
     }
 
-    // Ищем совместимый instanced plane
     const compatibleInstanced = this.findCompatibleInstancedPlane(
       source,
       properties,
@@ -353,7 +343,6 @@ export class UISceneWrapper {
       return;
     }
 
-    // Ищем совместимый single plane для промоушена
     const promotable = this.findCompatibleSinglePlane(
       source,
       properties,
@@ -372,7 +361,6 @@ export class UISceneWrapper {
       return;
     }
 
-    // Создаём новый single plane
     const singlePlane = new UIGenericPlane(source, properties, transparency);
     singlePlane.setProperties(properties);
     singlePlane.setTransform(transform);
@@ -449,15 +437,19 @@ export class UISceneWrapper {
     return instancedPlane;
   }
 
-  private demoteToSingle(instancedPlane: UIGenericInstancedPlane): void {
+  private demoteToSingle(
+    instancedPlane: UIGenericInstancedPlane,
+    ignoredHandler: number,
+  ): void {
     // Find descriptor with remaining instance
-    let remainingHandler: number | null = null;
-    let remainingDescriptor: PlaneDescriptor | null = null;
+    let remainingHandler: number | undefined;
+    let remainingDescriptor: PlaneDescriptor | undefined;
 
     for (const [handler, descriptor] of this.descriptors) {
       if (
         descriptor.plane === instancedPlane &&
-        descriptor.instanceHandler !== undefined
+        descriptor.instanceHandler !== undefined &&
+        descriptor.instanceHandler !== ignoredHandler
       ) {
         remainingHandler = handler;
         remainingDescriptor = descriptor;
@@ -465,7 +457,7 @@ export class UISceneWrapper {
       }
     }
 
-    if (remainingHandler === null || remainingDescriptor === null) {
+    if (remainingHandler === undefined || remainingDescriptor === undefined) {
       return;
     }
 
