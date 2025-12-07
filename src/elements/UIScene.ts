@@ -168,8 +168,8 @@ export class UIScene extends UIElement {
     const color = options.color ?? new UIColor();
 
     super(layer, 0, 0, w, h, source, {
-      map: renderTarget.texture,
-      uvTransform: new Matrix3(),
+      texture: renderTarget.texture,
+      textureTransform: new Matrix3(),
       color,
     });
 

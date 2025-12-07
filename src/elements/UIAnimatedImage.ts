@@ -47,10 +47,7 @@ export interface UIAnimatedImageOptions {
  */
 export class UIAnimatedImage extends UIElement {
   /** Internal storage for the current texture */
-  private readonly sequenceInternal: {
-    texture: Texture;
-    uvTransform: Matrix3;
-  }[];
+  private readonly sequenceInternal: { texture: Texture; transform: Matrix3 }[];
 
   /** Internal storage for the color tint */
   private readonly colorInternal: UIColor;
@@ -82,7 +79,7 @@ export class UIAnimatedImage extends UIElement {
 
     let tempSequence: {
       texture: Texture;
-      uvTransform: Matrix3;
+      transform: Matrix3;
     }[];
 
     if (Array.isArray(sequence)) {
@@ -90,21 +87,21 @@ export class UIAnimatedImage extends UIElement {
         texture.updateMatrix();
         return {
           texture,
-          uvTransform: texture.matrix,
+          transform: texture.matrix,
         };
       });
     } else {
       tempSequence = sequence.transforms.map((transform) => {
         return {
           texture: sequence.texture,
-          uvTransform: transform,
+          transform: transform,
         };
       });
     }
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      map: tempSequence[0].texture,
-      uvTransform: tempSequence[0].uvTransform,
+      texture: tempSequence[0].texture,
+      textureTransform: tempSequence[0].transform,
       color,
     });
 
@@ -253,8 +250,8 @@ export class UIAnimatedImage extends UIElement {
   private updateFrame(): void {
     const frame = this.sequenceInternal[this.currentFrameIndex];
     this.sceneWrapper.setProperties(this.planeHandler, {
-      map: frame.texture,
-      uvTransform: frame.uvTransform,
+      texture: frame.texture,
+      textureTransform: frame.transform,
     });
   }
 }

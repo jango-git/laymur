@@ -109,8 +109,8 @@ export class UIText extends UIElement {
     const color = options.color ?? new UIColor();
 
     super(layer, options.x ?? 0, options.y ?? 0, 2, 2, source, {
-      map: texture,
-      uvTransform: new Matrix3(),
+      texture: texture,
+      textureTransform: new Matrix3(),
       color,
     });
 
@@ -280,7 +280,9 @@ export class UIText extends UIElement {
     this.texture.dispose();
     this.texture = new CanvasTexture(this.canvas);
     this.texture.needsUpdate = true;
-    this.sceneWrapper.setProperties(this.planeHandler, { map: this.texture });
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      texture: this.texture,
+    });
   }
 
   /** Event handler for when the color changes */

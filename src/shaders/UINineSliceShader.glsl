@@ -40,5 +40,5 @@ vec4 draw() {
         localUV.y = regionT * yT + regionC * yC + regionB * yB;
     }
 
-    return texture2D(p_map, localUV) * p_color;
+    return texture2D(p_texture, localUV) * p_color;
 }

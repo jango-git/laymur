@@ -75,7 +75,7 @@ export class UINineSlice extends UIElement {
     const dimensions = new Vector4(width, height, width, height);
 
     super(layer, options.x ?? 0, options.y ?? 0, width, height, source, {
-      map: texture,
+      texture: texture,
       color,
       sliceBorders,
       dimensions,
@@ -165,7 +165,7 @@ export class UINineSlice extends UIElement {
     this.dimensions.y = h;
     this.sceneWrapper.setProperties(this.planeHandler, {
       dimensions: this.dimensions,
-      map: value,
+      texture: value,
     });
   }
 

@@ -59,12 +59,11 @@ export class UIImage extends UIElement {
   ) {
     const w = options.width ?? texture.image.width;
     const h = options.height ?? texture.image.height;
-
     const color = options.color ?? new UIColor();
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      map: texture,
-      uvTransform: texture.matrix,
+      texture: texture,
+      textureTransform: texture.matrix,
       color,
     });
 
@@ -115,8 +114,8 @@ export class UIImage extends UIElement {
 
     this.textureInternal = value;
     this.sceneWrapper.setProperties(this.planeHandler, {
-      map: value,
-      uvTransform: value.matrix,
+      texture: value,
+      textureTransform: value.matrix,
     });
   }
 

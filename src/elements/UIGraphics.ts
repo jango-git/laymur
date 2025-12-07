@@ -66,8 +66,8 @@ export class UIGraphics extends UIElement {
     canvasTexture.magFilter = LinearFilter;
 
     super(layer, options.x ?? 0, options.y ?? 0, width, height, source, {
-      map: canvasTexture,
-      uvTransform: canvasTexture.matrix,
+      texture: canvasTexture,
+      textureTransform: canvasTexture.matrix,
       color,
     });
 
