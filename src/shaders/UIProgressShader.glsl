@@ -1,13 +1,10 @@
-void main() {
-    vec4 foregroundDiffuseColor = texture(foregroundTexture, io_UV) * foregroundColor * color;
-    vec4 backgroundDiffuseColor = texture(backgroundTexture, io_UV) * backgroundColor * color;
+vec4 draw() {
+    vec4 foregroundDiffuseColor = texture(p_foregroundTexture, p_uv) * p_foregroundColor * p_color;
+    vec4 backgroundDiffuseColor = texture(p_backgroundTexture, p_uv) * p_backgroundColor * p_color;
 
     float mask = calculateMask();
     vec4 diffuseColor = foregroundDiffuseColor * mask
             + backgroundDiffuseColor * (1.0 - foregroundDiffuseColor.a * mask);
 
-    #include <alphatest_fragment>
-    #include <alphahash_fragment>
-    gl_FragColor = diffuseColor;
-    #include <colorspace_fragment>
+    return diffuseColor;
 }

@@ -52,7 +52,7 @@ export function resolveUniform(
   name: string,
   material: ShaderMaterial,
 ): IUniform<unknown> {
-  const uniform = material.uniforms[`u_${name}`] as
+  const uniform = material.uniforms[`p_${name}`] as
     | IUniform<unknown>
     | undefined;
   if (uniform === undefined) {

@@ -99,15 +99,15 @@ export function buildMaterial(
 
   for (const [name, value] of Object.entries(uniformProperties)) {
     const info = resolveTypeInfo(value);
-    uniforms[`u_${name}`] = { value: null };
-    uniformDeclarations.push(`uniform ${info.glslType} u_${name};`);
+    uniforms[`p_${name}`] = { value: null };
+    uniformDeclarations.push(`uniform ${info.glslType} p_${name};`);
   }
 
   for (const [name, value] of Object.entries(varyingProperties)) {
     const info = resolveTypeInfo(value);
     attributeDeclarations.push(`attribute ${info.glslType} a_${name};`);
-    varyingDeclarations.push(`varying ${info.glslType} v_${name};`);
-    vertexAssignments.push(`v_${name} = a_${name};`);
+    varyingDeclarations.push(`varying ${info.glslType} p_${name};`);
+    vertexAssignments.push(`p_${name} = a_${name};`);
   }
 
   const vertexShader = `
@@ -122,8 +122,8 @@ export function buildMaterial(
     ${uniformDeclarations.join("\n")}
 
     // Default varying declarations
-    varying vec3 v_position;
-    varying vec2 v_uv;
+    varying vec3 p_position;
+    varying vec2 p_uv;
 
     // Custom varying declarations
     ${varyingDeclarations.join("\n")}
@@ -136,8 +136,8 @@ export function buildMaterial(
 
       ${vertexAssignments.join("\n")}
 
-      v_position = position;
-      v_uv = uv;
+      p_position = position;
+      p_uv = uv;
 
       gl_Position = projectionMatrix * a_instanceTransform * vec4(position, 1.0);
     }
@@ -148,8 +148,8 @@ export function buildMaterial(
     ${uniformDeclarations.join("\n")}
 
     // Default varying declarations
-    varying vec3 v_position;
-    varying vec2 v_uv;
+    varying vec3 p_position;
+    varying vec2 p_uv;
 
     // Custom varying declarations
     ${varyingDeclarations.join("\n")}
@@ -169,7 +169,7 @@ export function buildMaterial(
       #endif
 
       #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
+        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
           discard;
         }
       #endif

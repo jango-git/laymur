@@ -95,6 +95,8 @@ export class UIGenericInstancedPlane extends Mesh {
     );
 
     this.frustumCulled = false;
+    this.matrixAutoUpdate = false;
+    this.matrixWorldAutoUpdate = false;
 
     this.initializeBuiltinAttributes();
     this.initializeUserAttributes();

@@ -15,33 +15,33 @@ export function buildMaterial(
 ): ShaderMaterial {
   const uniforms: Record<string, { value: null }> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    u_transform: { value: null },
+    p_transform: { value: null },
   };
 
   const uniformDeclarations: string[] = [];
 
   for (const [name, value] of Object.entries(properties)) {
     const info = resolveTypeInfo(value);
-    uniforms[`u_${name}`] = { value: null };
-    uniformDeclarations.push(`uniform ${info.glslType} u_${name};`);
+    uniforms[`p_${name}`] = { value: null };
+    uniformDeclarations.push(`uniform ${info.glslType} p_${name};`);
   }
 
   const vertexShader = `
     // Default uniform declarations
-    uniform mat4 u_transform;
+    uniform mat4 p_transform;
 
     // Custom uniform declarations
     ${uniformDeclarations.join("\n")}
 
     // Default varying declarations
-    varying vec3 v_position;
-    varying vec2 v_uv;
+    varying vec3 p_position;
+    varying vec2 p_uv;
 
     void main() {
-      v_position = position;
-      v_uv = uv;
+      p_position = position;
+      p_uv = uv;
 
-      gl_Position = projectionMatrix * u_transform * vec4(position, 1.0);
+      gl_Position = projectionMatrix * p_transform * vec4(position, 1.0);
     }
   `;
 
@@ -50,8 +50,8 @@ export function buildMaterial(
     ${uniformDeclarations.join("\n")}
 
     // Default varying declarations
-    varying vec3 v_position;
-    varying vec2 v_uv;
+    varying vec3 p_position;
+    varying vec2 p_uv;
 
     #include <alphahash_pars_fragment>
 
@@ -68,7 +68,7 @@ export function buildMaterial(
       #endif
 
       #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
+        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
           discard;
         }
       #endif

@@ -1,5 +1,5 @@
-import type { Matrix4, ShaderMaterial, Vector4 } from "three";
-import { Mesh } from "three";
+import type { Matrix4, ShaderMaterial } from "three";
+import { Mesh, Vector4 } from "three";
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
@@ -45,7 +45,6 @@ export class UIGenericPlane extends Mesh {
     this.shaderMaterial = shaderMaterial;
     this.storedProperties = { ...properties };
     this.frustumCulled = false;
-
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
   }
@@ -103,7 +102,7 @@ export class UIGenericPlane extends Mesh {
     for (const [name, value] of Object.entries(properties)) {
       const uniform = resolveUniform(name, this.shaderMaterial);
       if (value instanceof UIColor) {
-        value.toGLSLColor(uniform.value as Vector4);
+        uniform.value = value.toGLSLColor(new Vector4());
       } else {
         uniform.value = value;
       }

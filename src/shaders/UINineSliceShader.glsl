@@ -1,52 +1,44 @@
-vec2 calculateNineSliceUV() {
-    vec2 localUV = io_UV;
+vec2 draw() {
+    vec2 localUV = p_uv;
 
-    float left = sliceBorders.x;
-    float right = sliceBorders.y;
-    float top = sliceBorders.z;
-    float bottom = sliceBorders.w;
+    float left = p_sliceBorders.x;
+    float right = p_sliceBorders.y;
+    float top = p_sliceBorders.z;
+    float bottom = p_sliceBorders.w;
 
-    float leftPx = left * dimensions.x;
-    float rightPx = right * dimensions.x;
-    float topPx = top * dimensions.y;
-    float bottomPx = bottom * dimensions.y;
+    float leftPx = left * p_dimensions.x;
+    float rightPx = right * p_dimensions.x;
+    float topPx = top * p_dimensions.y;
+    float bottomPx = bottom * p_dimensions.y;
 
-    float lB = leftPx / dimensions.z;
-    float rB = 1.0 - (rightPx / dimensions.z);
-    float tB = topPx / dimensions.w;
-    float bB = 1.0 - (bottomPx / dimensions.w);
+    float lB = leftPx / p_dimensions.z;
+    float rB = 1.0 - (rightPx / p_dimensions.z);
+    float tB = topPx / p_dimensions.w;
+    float bB = 1.0 - (bottomPx / p_dimensions.w);
 
     {
-        float regionL = step(io_UV.x, lB);
-        float regionR = step(rB, io_UV.x);
+        float regionL = step(p_uv.x, lB);
+        float regionR = step(rB, p_uv.x);
         float regionM = 1.0 - regionL - regionR;
 
-        float xL = io_UV.x * (left / lB);
-        float xR = 1.0 - right + ((io_UV.x - rB) / (1.0 - rB)) * right;
-        float xM = left + ((io_UV.x - lB) / (rB - lB)) * (1.0 - left - right);
+        float xL = p_uv.x * (left / lB);
+        float xR = 1.0 - right + ((p_uv.x - rB) / (1.0 - rB)) * right;
+        float xM = left + ((p_uv.x - lB) / (rB - lB)) * (1.0 - left - right);
 
         localUV.x = regionL * xL + regionM * xM + regionR * xR;
     }
 
     {
-        float regionT = step(io_UV.y, tB);
-        float regionB = step(bB, io_UV.y);
+        float regionT = step(p_uv.y, tB);
+        float regionB = step(bB, p_uv.y);
         float regionC = 1.0 - regionT - regionB;
 
-        float yT = io_UV.y * (top / tB);
-        float yB = 1.0 - bottom + ((io_UV.y - bB) / (1.0 - bB)) * bottom;
-        float yC = top + ((io_UV.y - tB) / (bB - tB)) * (1.0 - top - bottom);
+        float yT = p_uv.y * (top / tB);
+        float yB = 1.0 - bottom + ((p_uv.y - bB) / (1.0 - bB)) * bottom;
+        float yC = top + ((p_uv.y - tB) / (bB - tB)) * (1.0 - top - bottom);
 
         localUV.y = regionT * yT + regionC * yC + regionB * yB;
     }
 
-    return localUV;
-}
-
-void main() {
-    vec4 diffuseColor = texture(map, calculateNineSliceUV()) * color;
-    #include <alphatest_fragment>
-    #include <alphahash_fragment>
-    gl_FragColor = diffuseColor;
-    #include <colorspace_fragment>
+    return texture(p_map, localUV) * p_color;
 }
