@@ -1,278 +1,18 @@
-import type { IUniform } from "three";
+import type { InstancedBufferGeometry, Matrix4, ShaderMaterial } from "three";
+import { InstancedBufferAttribute, Mesh } from "three";
+import { assertValidNonNegativeNumber } from "../asserts";
+import { UITransparencyMode } from "../UITransparencyMode";
+import type { UIPropertyType, UIPropertyTypeName } from "./shared";
+import { DEFAULT_VISIBILITY, resolveTypeInfo, resolveUniform } from "./shared";
+import type { InstancedRangeDescriptor } from "./UIGenericInstancedPlane.Internal";
 import {
-  InstancedBufferAttribute,
-  InstancedBufferGeometry,
-  Matrix3,
-  Matrix4,
-  Mesh,
-  PlaneGeometry,
-  ShaderMaterial,
-  Texture,
-  Vector2,
-  Vector3,
-  Vector4,
-} from "three";
-import { UIColor } from "../miscellaneous/UIColor";
-import { UITransparencyMode } from "./UITransparencyMode";
-import { assertValidNonNegativeNumber } from "./asserts";
-
-export type UIPropertyType =
-  | Texture
-  | UIColor
-  | Vector2
-  | Vector3
-  | Vector4
-  | Matrix3
-  | Matrix4
-  | number;
-
-export type UIPropertyTypeName =
-  | "Texture"
-  | "UIColor"
-  | "Vector2"
-  | "Vector3"
-  | "Vector4"
-  | "Matrix3"
-  | "Matrix4"
-  | "number";
-
-interface Descriptor {
-  firstIndex: number;
-  count: number;
-}
-
-interface TypeInfo {
-  instantiable: boolean;
-  glslType: string;
-  itemSize: number;
-}
-
-const INSTANCED_GEOMETRY = ((): InstancedBufferGeometry => {
-  const planeGeometry = new PlaneGeometry(1, 1);
-  planeGeometry.translate(0.5, 0.5, 0);
-  const geometry = new InstancedBufferGeometry();
-  geometry.index = planeGeometry.index;
-  geometry.setAttribute("position", planeGeometry.attributes["position"]);
-  geometry.setAttribute("uv", planeGeometry.attributes["uv"]);
-  planeGeometry.dispose();
-  return geometry;
-})();
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Constructor type needs to accept any arguments for generic type mapping
-const TYPE_INFO_MAP = new Map<string | (new (...args: any[]) => any), TypeInfo>(
-  [
-    ["Texture", { glslType: "sampler2D", instantiable: false, itemSize: -1 }],
-    [Texture, { glslType: "sampler2D", instantiable: false, itemSize: -1 }],
-    ["UIColor", { glslType: "vec4", instantiable: true, itemSize: 4 }],
-    [UIColor, { glslType: "vec4", instantiable: true, itemSize: 4 }],
-    ["Vector2", { glslType: "vec2", instantiable: true, itemSize: 2 }],
-    [Vector2, { glslType: "vec2", instantiable: true, itemSize: 2 }],
-    ["Vector3", { glslType: "vec3", instantiable: true, itemSize: 3 }],
-    [Vector3, { glslType: "vec3", instantiable: true, itemSize: 3 }],
-    ["Vector4", { glslType: "vec4", instantiable: true, itemSize: 4 }],
-    [Vector4, { glslType: "vec4", instantiable: true, itemSize: 4 }],
-    ["Matrix3", { glslType: "mat3", instantiable: true, itemSize: 9 }],
-    [Matrix3, { glslType: "mat3", instantiable: true, itemSize: 9 }],
-    ["Matrix4", { glslType: "mat4", instantiable: true, itemSize: 16 }],
-    [Matrix4, { glslType: "mat4", instantiable: true, itemSize: 16 }],
-    ["number", { glslType: "float", instantiable: true, itemSize: 1 }],
-  ],
-);
-
-const CAPACITY_STEP = 4;
-const DEFAULT_ALPHA_TEST = 0.5;
-const DEFAULT_VISIBILITY = 1;
-
-function resolveTypeInfo(
-  property: UIPropertyType | UIPropertyTypeName,
-): TypeInfo {
-  if (typeof property === "string") {
-    const info = TYPE_INFO_MAP.get(property);
-    if (info) {
-      return info;
-    }
-  } else if (typeof property === "number") {
-    const info = TYPE_INFO_MAP.get("number");
-    if (info) {
-      return info;
-    }
-  } else {
-    for (const [key, info] of TYPE_INFO_MAP) {
-      if (typeof key === "function" && property instanceof key) {
-        return info;
-      }
-    }
-  }
-  throw new Error(`Unsupported property type: ${property}`);
-}
-
-function writePropertyToArray(
-  value: UIPropertyType,
-  array: Float32Array,
-  itemOffset: number,
-): void {
-  if (value instanceof UIColor) {
-    const glsl = value.toGLSLColor();
-    array[itemOffset] = glsl.x;
-    array[itemOffset + 1] = glsl.y;
-    array[itemOffset + 2] = glsl.z;
-    array[itemOffset + 3] = glsl.w;
-  } else if (value instanceof Vector2) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
-  } else if (value instanceof Vector3) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
-    array[itemOffset + 2] = value.z;
-  } else if (value instanceof Vector4) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
-    array[itemOffset + 2] = value.z;
-    array[itemOffset + 3] = value.w;
-  } else if (value instanceof Matrix3 || value instanceof Matrix4) {
-    const elements = value.elements;
-    for (let j = 0; j < elements.length; j++) {
-      array[itemOffset + j] = elements[j];
-    }
-  } else if (typeof value === "number") {
-    array[itemOffset] = value;
-  }
-}
-
-function buildEmptyInstancedBufferAttribute(
-  typeName: UIPropertyTypeName,
-  capacity: number,
-): InstancedBufferAttribute {
-  const info = resolveTypeInfo(typeName);
-  if (!info.instantiable) {
-    throw new Error(
-      `Cannot create instanced attribute for non-instantiable type: ${typeName}`,
-    );
-  }
-  return new InstancedBufferAttribute(
-    new Float32Array(capacity * info.itemSize),
-    info.itemSize,
-  );
-}
-
-function buildMaterial(
-  source: string,
-  uniformLayout: Record<string, UIPropertyTypeName>,
-  varyingLayout: Record<string, UIPropertyTypeName>,
-  transparency: UITransparencyMode,
-): ShaderMaterial {
-  const uniforms: Record<string, { value: null }> = {};
-
-  const uniformDeclarations: string[] = [];
-  const attributeDeclarations: string[] = [];
-  const varyingDeclarations: string[] = [];
-  const vertexAssignments: string[] = [];
-
-  for (const [name, propertyTypeName] of Object.entries(uniformLayout)) {
-    const info = resolveTypeInfo(propertyTypeName);
-    uniforms[`u_${name}`] = { value: null };
-    uniformDeclarations.push(`uniform ${info.glslType} u_${name};`);
-  }
-
-  for (const [name, propertyTypeName] of Object.entries(varyingLayout)) {
-    const info = resolveTypeInfo(propertyTypeName);
-    attributeDeclarations.push(`attribute ${info.glslType} a_${name};`);
-    varyingDeclarations.push(`varying ${info.glslType} v_${name};`);
-    vertexAssignments.push(`v_${name} = a_${name};`);
-  }
-
-  const vertexShader = `
-    // Default attribute declaractions
-    attribute float a_instanceVisibility;
-    attribute mat4 a_instanceTransform;
-
-    // Custom attribute declaractions
-    ${attributeDeclarations.join("\n")}
-
-    // Uniform declaractions
-    ${uniformDeclarations.join("\n")}
-
-    // Default varying declaractions
-    varying vec3 v_position;
-    varying vec2 v_uv;
-
-    // Varying declaractions
-    ${varyingDeclarations.join("\n")}
-
-    void main() {
-      if (a_instanceVisibility < 0.5) {
-        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-        return;
-      }
-
-      ${vertexAssignments.join("\n")}
-
-      v_position = position;
-      v_uv = uv;
-
-      gl_Position = projectionMatrix * modelViewMatrix * a_instanceTransform * vec4(position, 1.0);
-    }
-  `;
-
-  const fragmentShader = `
-    // Uniform declaractions
-    ${uniformDeclarations.join("\n")}
-
-    // Default varying declaractions
-    varying vec3 v_position;
-    varying vec2 v_uv;
-
-    // Custom varying declaractions
-    ${varyingDeclarations.join("\n")}
-
-    #include <alphahash_pars_fragment>
-
-    // Source have to define 'draw' function
-    ${source}
-
-    void main() {
-      vec4 diffuseColor = draw();
-
-      #ifdef USE_ALPHATEST
-        if (diffuseColor.a < v_alphaTest) {
-          discard;
-        }
-      #endif
-
-      #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(v_position)) {
-          discard;
-        }
-      #endif
-
-      gl_FragColor = linearToOutputTexel(diffuseColor);
-    }
-  `;
-
-  return new ShaderMaterial({
-    uniforms,
-    vertexShader,
-    fragmentShader,
-    transparent: transparency === UITransparencyMode.BLEND,
-    alphaTest:
-      transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0,
-    alphaHash: transparency === UITransparencyMode.HASH,
-    depthWrite: transparency !== UITransparencyMode.BLEND,
-    depthTest: true,
-  });
-}
-
-function validateRange(
-  descriptor: Descriptor,
-  offset: number,
-  count: number,
-): void {
-  if (offset + count > descriptor.count) {
-    throw new Error(
-      `Range [${offset}, ${offset + count}) exceeds descriptor range [0, ${descriptor.count})`,
-    );
-  }
-}
+  buildEmptyInstancedBufferAttribute,
+  buildMaterial,
+  CAPACITY_STEP,
+  INSTANCED_PLANE_GEOMETRY,
+  validateRange,
+  writePropertyToArray,
+} from "./UIGenericInstancedPlane.Internal";
 
 /**
  * Instanced plane renderer for batching multiple planes with shared shader.
@@ -288,7 +28,10 @@ function validateRange(
  * Textures in uniforms are not disposed on destroy — caller retains ownership.
  */
 export class UIGenericInstancedPlane extends Mesh {
-  private readonly handlerToDescriptor = new Map<number, Descriptor>();
+  private readonly handlerToDescriptor = new Map<
+    number,
+    InstancedRangeDescriptor
+  >();
   private readonly propertyBuffers = new Map<
     string,
     InstancedBufferAttribute
@@ -311,7 +54,7 @@ export class UIGenericInstancedPlane extends Mesh {
   constructor(
     source: string,
     layout: Record<string, UIPropertyTypeName>,
-    transparency: UITransparencyMode = UITransparencyMode.CLIP,
+    transparency: UITransparencyMode = UITransparencyMode.BLEND,
     initialCapacity: number = CAPACITY_STEP,
   ) {
     const uniformLayout: Record<string, UIPropertyTypeName> = {};
@@ -326,7 +69,7 @@ export class UIGenericInstancedPlane extends Mesh {
       }
     }
 
-    const instancedGeometry = INSTANCED_GEOMETRY.clone();
+    const instancedGeometry = INSTANCED_PLANE_GEOMETRY;
     const shaderMaterial = buildMaterial(
       source,
       uniformLayout,
@@ -453,7 +196,7 @@ export class UIGenericInstancedPlane extends Mesh {
           );
           attribute.needsUpdate = true;
         } else {
-          const uniform = this.resolveUniform(name);
+          const uniform = resolveUniform(name, this.shaderMaterial);
           uniform.value = value;
           this.shaderMaterial.uniformsNeedUpdate = true;
         }
@@ -637,7 +380,7 @@ export class UIGenericInstancedPlane extends Mesh {
     }
   }
 
-  private resolveDescriptor(handler: number): Descriptor {
+  private resolveDescriptor(handler: number): InstancedRangeDescriptor {
     const descriptor = this.handlerToDescriptor.get(handler);
     if (descriptor === undefined) {
       throw new Error(`Invalid handler: ${handler}`);
@@ -651,15 +394,5 @@ export class UIGenericInstancedPlane extends Mesh {
       throw new Error(`Unknown attribute: ${name}`);
     }
     return attribute;
-  }
-
-  private resolveUniform(name: string): IUniform<unknown> {
-    const uniform = this.shaderMaterial.uniforms[`u_${name}`] as
-      | IUniform<unknown>
-      | undefined;
-    if (uniform === undefined) {
-      throw new Error(`Unknown uniform: ${name}`);
-    }
-    return uniform;
   }
 }
