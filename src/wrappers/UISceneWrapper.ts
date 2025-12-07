@@ -58,7 +58,7 @@ export class UISceneWrapper {
       if (promotable) {
         const instancedPlane = this.promoteToInstanced(promotable, properties);
         const instanceHandler = instancedPlane.createInstances(1);
-        instancedPlane.updateProperties(instanceHandler, 0, [properties]);
+        instancedPlane.setProperties(instanceHandler, 0, [properties]);
 
         this.descriptors.set(handler, {
           plane: instancedPlane,
@@ -75,7 +75,7 @@ export class UISceneWrapper {
       );
       if (compatibleInstanced) {
         const instanceHandler = compatibleInstanced.createInstances(1);
-        compatibleInstanced.updateProperties(instanceHandler, 0, [properties]);
+        compatibleInstanced.setProperties(instanceHandler, 0, [properties]);
 
         this.descriptors.set(handler, {
           plane: compatibleInstanced,
@@ -87,7 +87,7 @@ export class UISceneWrapper {
 
     // Create single UIGenericPlane
     const plane = new UIGenericPlane(source, properties, transparency);
-    plane.updateProperties(properties);
+    plane.setProperties(properties);
     this.scene.add(plane);
     this.descriptors.set(handler, { plane });
 
@@ -138,11 +138,11 @@ export class UISceneWrapper {
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
     ) {
-      descriptor.plane.updateTransforms(descriptor.instanceHandler, 0, [
+      descriptor.plane.setTransforms(descriptor.instanceHandler, 0, [
         transform,
       ]);
     } else if (descriptor.plane instanceof UIGenericPlane) {
-      descriptor.plane.updateTransform(transform);
+      descriptor.plane.setTransform(transform);
     }
   }
 
@@ -183,12 +183,12 @@ export class UISceneWrapper {
         this.relocateInstance(descriptor, properties);
       } else {
         // Просто обновляем свойства
-        descriptor.plane.updateProperties(descriptor.instanceHandler, 0, [
+        descriptor.plane.setProperties(descriptor.instanceHandler, 0, [
           properties,
         ]);
       }
     } else if (descriptor.plane instanceof UIGenericPlane) {
-      descriptor.plane.updateProperties(properties);
+      descriptor.plane.setProperties(properties);
     }
   }
 
@@ -205,11 +205,9 @@ export class UISceneWrapper {
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
     ) {
-      descriptor.plane.updateVisibility(descriptor.instanceHandler, 0, [
-        visible,
-      ]);
+      descriptor.plane.setVisibility(descriptor.instanceHandler, 0, [visible]);
     } else if (descriptor.plane instanceof UIGenericPlane) {
-      descriptor.plane.updateVisibility(visible);
+      descriptor.plane.setVisibility(visible);
     }
   }
 
@@ -346,9 +344,9 @@ export class UISceneWrapper {
 
     if (compatibleInstanced) {
       const newInstanceHandler = compatibleInstanced.createInstances(1);
-      compatibleInstanced.updateProperties(newInstanceHandler, 0, [properties]);
-      compatibleInstanced.updateTransforms(newInstanceHandler, 0, [transform]);
-      compatibleInstanced.updateVisibility(newInstanceHandler, 0, [visibility]);
+      compatibleInstanced.setProperties(newInstanceHandler, 0, [properties]);
+      compatibleInstanced.setTransforms(newInstanceHandler, 0, [transform]);
+      compatibleInstanced.setVisibility(newInstanceHandler, 0, [visibility]);
 
       descriptor.plane = compatibleInstanced;
       descriptor.instanceHandler = newInstanceHandler;
@@ -365,9 +363,9 @@ export class UISceneWrapper {
     if (promotable) {
       const instancedPlane = this.promoteToInstanced(promotable, properties);
       const newInstanceHandler = instancedPlane.createInstances(1);
-      instancedPlane.updateProperties(newInstanceHandler, 0, [properties]);
-      instancedPlane.updateTransforms(newInstanceHandler, 0, [transform]);
-      instancedPlane.updateVisibility(newInstanceHandler, 0, [visibility]);
+      instancedPlane.setProperties(newInstanceHandler, 0, [properties]);
+      instancedPlane.setTransforms(newInstanceHandler, 0, [transform]);
+      instancedPlane.setVisibility(newInstanceHandler, 0, [visibility]);
 
       descriptor.plane = instancedPlane;
       descriptor.instanceHandler = newInstanceHandler;
@@ -376,9 +374,9 @@ export class UISceneWrapper {
 
     // Создаём новый single plane
     const singlePlane = new UIGenericPlane(source, properties, transparency);
-    singlePlane.updateProperties(properties);
-    singlePlane.updateTransform(transform);
-    singlePlane.updateVisibility(visibility);
+    singlePlane.setProperties(properties);
+    singlePlane.setTransform(transform);
+    singlePlane.setVisibility(visibility);
     this.scene.add(singlePlane);
 
     descriptor.plane = singlePlane;
@@ -431,21 +429,15 @@ export class UISceneWrapper {
 
     // Transfer old plane as first instance
     const oldInstanceHandler = instancedPlane.createInstances(1);
-    instancedPlane.updateProperties(oldInstanceHandler, 0, [
-      oldPlane.properties,
-    ]);
+    instancedPlane.setProperties(oldInstanceHandler, 0, [oldPlane.properties]);
 
     // Transfer transform if set
     if (oldPlane.transform) {
-      instancedPlane.updateTransforms(oldInstanceHandler, 0, [
-        oldPlane.transform,
-      ]);
+      instancedPlane.setTransforms(oldInstanceHandler, 0, [oldPlane.transform]);
     }
 
     // Transfer visibility
-    instancedPlane.updateVisibility(oldInstanceHandler, 0, [
-      oldPlane.visibility,
-    ]);
+    instancedPlane.setVisibility(oldInstanceHandler, 0, [oldPlane.visibility]);
 
     // Update descriptor for old plane
     promotable.descriptor.plane = instancedPlane;
@@ -496,9 +488,9 @@ export class UISceneWrapper {
       properties,
       instancedPlane.transparency,
     );
-    singlePlane.updateProperties(properties);
-    singlePlane.updateTransform(transform);
-    singlePlane.updateVisibility(visibility);
+    singlePlane.setProperties(properties);
+    singlePlane.setTransform(transform);
+    singlePlane.setVisibility(visibility);
 
     // Replace in scene
     this.scene.remove(instancedPlane);

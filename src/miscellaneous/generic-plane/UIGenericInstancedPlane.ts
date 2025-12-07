@@ -182,7 +182,7 @@ export class UIGenericInstancedPlane extends Mesh {
    * @param instancesProperties - Array of property objects to apply
    * @throws Error if handler is invalid or offset+count exceeds range
    */
-  public updateProperties(
+  public setProperties(
     handler: number,
     offset: number,
     instancesProperties: Record<string, UIPropertyType>[],
@@ -224,7 +224,7 @@ export class UIGenericInstancedPlane extends Mesh {
    * @param offset - Offset within the handler's instance range
    * @param transforms - Array of Matrix4 transforms to apply
    */
-  public updateTransforms(
+  public setTransforms(
     handler: number,
     offset: number,
     transforms: Matrix4[],
@@ -257,7 +257,7 @@ export class UIGenericInstancedPlane extends Mesh {
    * @param offset - Offset within the handler's instance range
    * @param visibility - Array of boolean visibility values
    */
-  public updateVisibility(
+  public setVisibility(
     handler: number,
     offset: number,
     visibility: boolean[],

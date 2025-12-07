@@ -76,7 +76,7 @@ export class UIGenericPlane extends Mesh {
    *
    * @param visibility - Whether the plane should be visible
    */
-  public updateVisibility(visibility: boolean): void {
+  public setVisibility(visibility: boolean): void {
     this.visible = visibility;
     this.storedVisibility = visibility;
   }
@@ -86,7 +86,7 @@ export class UIGenericPlane extends Mesh {
    *
    * @param transform - Matrix4 transform to apply
    */
-  public updateTransform(transform: Matrix4): void {
+  public setTransform(transform: Matrix4): void {
     const uniform = resolveUniform("transform", this.shaderMaterial);
     uniform.value = transform;
     this.shaderMaterial.uniformsNeedUpdate = true;
@@ -99,7 +99,7 @@ export class UIGenericPlane extends Mesh {
    * @param properties - Properties to update
    * @throws Error if property name is not in layout
    */
-  public updateProperties(properties: Record<string, UIPropertyType>): void {
+  public setProperties(properties: Record<string, UIPropertyType>): void {
     for (const [name, value] of Object.entries(properties)) {
       const uniform = resolveUniform(name, this.shaderMaterial);
       if (value instanceof UIColor) {
