@@ -11,13 +11,15 @@ import {
 } from "three";
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
-import type { UIPropertyType, UIPropertyTypeName } from "./shared";
+import type { UIPropertyType } from "./shared";
 import { DEFAULT_ALPHA_TEST, resolveTypeInfo } from "./shared";
 
 export interface InstancedRangeDescriptor {
   firstIndex: number;
   count: number;
 }
+
+export const DEFAULT_VISIBILITY = 1;
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const planeGeometry = new PlaneGeometry(1, 1);
@@ -67,13 +69,13 @@ export function writePropertyToArray(
 }
 
 export function buildEmptyInstancedBufferAttribute(
-  typeName: UIPropertyTypeName,
+  value: UIPropertyType,
   capacity: number,
 ): InstancedBufferAttribute {
-  const info = resolveTypeInfo(typeName);
+  const info = resolveTypeInfo(value);
   if (!info.instantiable) {
     throw new Error(
-      `Cannot create instanced attribute for non-instantiable type: ${typeName}`,
+      `Cannot create instanced attribute for non-instantiable type`,
     );
   }
   return new InstancedBufferAttribute(
@@ -84,8 +86,8 @@ export function buildEmptyInstancedBufferAttribute(
 
 export function buildMaterial(
   source: string,
-  uniformLayout: Record<string, UIPropertyTypeName>,
-  varyingLayout: Record<string, UIPropertyTypeName>,
+  uniformProperties: Record<string, UIPropertyType>,
+  varyingProperties: Record<string, UIPropertyType>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
   const uniforms: Record<string, { value: null }> = {};
@@ -95,35 +97,35 @@ export function buildMaterial(
   const varyingDeclarations: string[] = [];
   const vertexAssignments: string[] = [];
 
-  for (const [name, propertyTypeName] of Object.entries(uniformLayout)) {
-    const info = resolveTypeInfo(propertyTypeName);
+  for (const [name, value] of Object.entries(uniformProperties)) {
+    const info = resolveTypeInfo(value);
     uniforms[`u_${name}`] = { value: null };
     uniformDeclarations.push(`uniform ${info.glslType} u_${name};`);
   }
 
-  for (const [name, propertyTypeName] of Object.entries(varyingLayout)) {
-    const info = resolveTypeInfo(propertyTypeName);
+  for (const [name, value] of Object.entries(varyingProperties)) {
+    const info = resolveTypeInfo(value);
     attributeDeclarations.push(`attribute ${info.glslType} a_${name};`);
     varyingDeclarations.push(`varying ${info.glslType} v_${name};`);
     vertexAssignments.push(`v_${name} = a_${name};`);
   }
 
   const vertexShader = `
-    // Default attribute declaractions
+    // Default attribute declarations
     attribute float a_instanceVisibility;
     attribute mat4 a_instanceTransform;
 
-    // Custom attribute declaractions
+    // Custom attribute declarations
     ${attributeDeclarations.join("\n")}
 
-    // Uniform declaractions
+    // Uniform declarations
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declaractions
+    // Default varying declarations
     varying vec3 v_position;
     varying vec2 v_uv;
 
-    // Custom varying declaractions
+    // Custom varying declarations
     ${varyingDeclarations.join("\n")}
 
     void main() {
@@ -142,19 +144,19 @@ export function buildMaterial(
   `;
 
   const fragmentShader = `
-    // Uniform declaractions
+    // Uniform declarations
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declaractions
+    // Default varying declarations
     varying vec3 v_position;
     varying vec2 v_uv;
 
-    // Custom varying declaractions
+    // Custom varying declarations
     ${varyingDeclarations.join("\n")}
 
     #include <alphahash_pars_fragment>
 
-    // Source have to define 'draw' function
+    // Source must define 'draw' function
     ${source}
 
     void main() {
@@ -201,4 +203,47 @@ export function validateRange(
       `Range [${offset}, ${offset + count}) exceeds descriptor range [0, ${descriptor.count})`,
     );
   }
+}
+
+export function reconstructValue(
+  referenceValue: UIPropertyType,
+  array: Float32Array,
+  offset: number,
+): UIPropertyType {
+  if (typeof referenceValue === "number") {
+    return array[offset];
+  }
+  if (referenceValue instanceof Vector2) {
+    return new Vector2(array[offset], array[offset + 1]);
+  }
+  if (referenceValue instanceof Vector3) {
+    return new Vector3(array[offset], array[offset + 1], array[offset + 2]);
+  }
+  if (referenceValue instanceof Vector4) {
+    return new Vector4(
+      array[offset],
+      array[offset + 1],
+      array[offset + 2],
+      array[offset + 3],
+    );
+  }
+  if (referenceValue instanceof UIColor) {
+    return new UIColor(
+      array[offset],
+      array[offset + 1],
+      array[offset + 2],
+      array[offset + 3],
+    );
+  }
+  if (referenceValue instanceof Matrix3) {
+    const m3 = new Matrix3();
+    m3.fromArray(array, offset);
+    return m3;
+  }
+  if (referenceValue instanceof Matrix4) {
+    const m4 = new Matrix4();
+    m4.fromArray(array, offset);
+    return m4;
+  }
+  throw new Error(`Cannot reconstruct value for type`);
 }

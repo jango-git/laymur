@@ -114,12 +114,10 @@ export class UIImage extends UIElement {
     this.solverWrapper.suggestVariableValue(this.hVariable, h);
 
     this.textureInternal = value;
-    this.sceneWrapper.setUniform(this.planeHandler, "map", value);
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "uvTransform",
-      value.matrix,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      map: value,
+      uvTransform: value.matrix,
+    });
   }
 
   /**
@@ -140,6 +138,6 @@ export class UIImage extends UIElement {
 
   /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
   };
 }

@@ -256,7 +256,9 @@ export class UIProgress extends UIElement {
     this.solverWrapper.suggestVariableValue(this.hVariable, h);
 
     this.foregroundTextureInternal = value;
-    this.sceneWrapper.setUniform(this.planeHandler, "foregroundTexture", value);
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      foregroundTexture: value,
+    });
   }
 
   /**
@@ -276,7 +278,9 @@ export class UIProgress extends UIElement {
     }
 
     this.backgroundTextureInternal = value;
-    this.sceneWrapper.setUniform(this.planeHandler, "backgroundTexture", value);
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      backgroundTexture: value ?? DEFAULT_TEXTURE,
+    });
   }
 
   /**
@@ -309,11 +313,9 @@ export class UIProgress extends UIElement {
    */
   public set inverseDirection(value: boolean) {
     this.inverseDirectionInternal = value;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "direction",
-      value ? -1 : 1,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      direction: value ? -1 : 1,
+    });
   }
 
   /**
@@ -322,7 +324,7 @@ export class UIProgress extends UIElement {
    */
   public set progress(value: number) {
     this.progressInternal = value;
-    this.sceneWrapper.setUniform(this.planeHandler, "progress", value);
+    this.sceneWrapper.setProperties(this.planeHandler, { progress: value });
   }
 
   public override destroy(): void {
@@ -340,16 +342,20 @@ export class UIProgress extends UIElement {
 
   /** Event handler for when the overall color changes */
   private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
   };
 
   /** Event handler for when the foreground color changes */
   private readonly onForegroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "foregroundColor", color);
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      foregroundColor: color,
+    });
   };
 
   /** Event handler for when the background color changes */
   private readonly onBackgroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "backgroundColor", color);
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      backgroundColor: color,
+    });
   };
 }

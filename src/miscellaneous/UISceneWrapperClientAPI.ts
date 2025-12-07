@@ -1,20 +1,24 @@
 import type { Matrix4, Object3D } from "three";
-import type { UIPropertyType } from "./UIGenericInstancedPlane";
 import type { UITransparencyMode } from "./UITransparencyMode";
+import type { UIPropertyType } from "./generic-plane/shared";
 
 export interface UISceneWrapperClientAPI {
-  createPlane(source: string, uniforms: Record<string, UIPropertyType>): number;
-  destroyPlane(handler: number): this;
+  createPlane(
+    source: string,
+    properties: Record<string, UIPropertyType>,
+    transparency: UITransparencyMode,
+    forceSingleInstance: boolean,
+  ): number;
+  destroyPlane(handler: number): void;
 
-  setTransform(handler: number, value: Matrix4): this;
-  setUniform(
+  setTransform(handler: number, transform: Matrix4): void;
+  setProperties(
     handler: number,
-    uniform: string,
-    value: UIPropertyType | undefined,
-  ): this;
-  setTransparency(handler: number, mode: UITransparencyMode): this;
-  setVisibility(handler: number, visible: boolean): this;
+    properties: Record<string, UIPropertyType>,
+  ): void;
+  setVisibility(handler: number, visible: boolean): void;
+  setTransparency(handler: number, transparency: UITransparencyMode): void;
 
-  insertCustomObject(object: Object3D): this;
-  removeCustomObject(object: Object3D): this;
+  insertCustomObject(object: Object3D): void;
+  removeCustomObject(object: Object3D): void;
 }

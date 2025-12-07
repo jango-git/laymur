@@ -7,9 +7,9 @@ import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../miscellaneous/asserts";
+import type { UIPropertyType } from "../miscellaneous/generic-plane/shared";
 import { UIMicro } from "../miscellaneous/micro/UIMicro";
 import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicroAnchorMode";
-import type { UIPropertyType } from "../miscellaneous/UIGenericInstancedPlane";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
@@ -106,10 +106,11 @@ export abstract class UIElement
     this.hVariable = this.solverWrapper.createVariable(height, UIPriority.P6);
 
     this.sceneWrapper = layer["getSceneWrapperClientAPI"]();
-    this.planeHandler = this.sceneWrapper.createPlane(source, uniforms);
-    this.sceneWrapper.setTransparency(
-      this.planeHandler,
+    this.planeHandler = this.sceneWrapper.createPlane(
+      source,
+      uniforms,
       this.transparencyInternal,
+      false,
     );
   }
 

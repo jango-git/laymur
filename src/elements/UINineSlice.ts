@@ -163,12 +163,10 @@ export class UINineSlice extends UIElement {
 
     this.dimensions.x = w;
     this.dimensions.y = h;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "dimensions",
-      this.dimensions,
-    );
-    this.sceneWrapper.setUniform(this.planeHandler, "map", value);
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      dimensions: this.dimensions,
+      map: value,
+    });
   }
 
   /**
@@ -185,11 +183,9 @@ export class UINineSlice extends UIElement {
    */
   public set sliceBorderLeft(value: number) {
     this.sliceBordersInternal.x = value;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "sliceBorders",
-      this.sliceBordersInternal,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      sliceBorders: this.sliceBordersInternal,
+    });
   }
 
   /**
@@ -198,11 +194,9 @@ export class UINineSlice extends UIElement {
    */
   public set sliceBorderRight(value: number) {
     this.sliceBordersInternal.y = value;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "sliceBorders",
-      this.sliceBordersInternal,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      sliceBorders: this.sliceBordersInternal,
+    });
   }
 
   /**
@@ -211,11 +205,9 @@ export class UINineSlice extends UIElement {
    */
   public set sliceBorderTop(value: number) {
     this.sliceBordersInternal.z = value;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "sliceBorders",
-      this.sliceBordersInternal,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      sliceBorders: this.sliceBordersInternal,
+    });
   }
 
   /**
@@ -224,11 +216,9 @@ export class UINineSlice extends UIElement {
    */
   public set sliceBorderBottom(value: number) {
     this.sliceBordersInternal.w = value;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "sliceBorders",
-      this.sliceBordersInternal,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      sliceBorders: this.sliceBordersInternal,
+    });
   }
 
   /**
@@ -246,11 +236,9 @@ export class UINineSlice extends UIElement {
     bottom: number,
   ): void {
     this.sliceBordersInternal.set(left, right, top, bottom);
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "sliceBorders",
-      this.sliceBordersInternal,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      sliceBorders: this.sliceBordersInternal,
+    });
   }
 
   /**
@@ -275,15 +263,13 @@ export class UINineSlice extends UIElement {
 
     this.dimensions.z = this.width * this.micro.scaleX;
     this.dimensions.w = this.height * this.micro.scaleY;
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "dimensions",
-      this.dimensions,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      dimensions: this.dimensions,
+    });
   }
 
   /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
   };
 }

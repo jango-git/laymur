@@ -247,16 +247,14 @@ export class UIAnimatedImage extends UIElement {
 
   /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
   };
 
   private updateFrame(): void {
     const frame = this.sequenceInternal[this.currentFrameIndex];
-    this.sceneWrapper.setUniform(this.planeHandler, "map", frame.texture);
-    this.sceneWrapper.setUniform(
-      this.planeHandler,
-      "uvTransform",
-      frame.uvTransform,
-    );
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      map: frame.texture,
+      uvTransform: frame.uvTransform,
+    });
   }
 }

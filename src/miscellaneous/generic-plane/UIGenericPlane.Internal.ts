@@ -3,14 +3,14 @@ import { UITransparencyMode } from "../UITransparencyMode";
 import {
   DEFAULT_ALPHA_TEST,
   resolveTypeInfo,
-  type UIPropertyTypeName,
+  type UIPropertyType,
 } from "./shared";
 
 export const PLANE_GEOMETRY = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);
 
 export function buildMaterial(
   source: string,
-  uniformLayout: Record<string, UIPropertyTypeName>,
+  properties: Record<string, UIPropertyType>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
   const uniforms: Record<string, { value: null }> = {
@@ -19,32 +19,25 @@ export function buildMaterial(
   };
 
   const uniformDeclarations: string[] = [];
-  const varyingDeclarations: string[] = [];
-  const vertexAssignments: string[] = [];
 
-  for (const [name, propertyTypeName] of Object.entries(uniformLayout)) {
-    const info = resolveTypeInfo(propertyTypeName);
+  for (const [name, value] of Object.entries(properties)) {
+    const info = resolveTypeInfo(value);
     uniforms[`u_${name}`] = { value: null };
     uniformDeclarations.push(`uniform ${info.glslType} u_${name};`);
   }
 
   const vertexShader = `
-    // Default uniform declaractions
+    // Default uniform declarations
     uniform mat4 u_transform;
 
-    // Custom uniform declaractions
+    // Custom uniform declarations
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declaractions
+    // Default varying declarations
     varying vec3 v_position;
     varying vec2 v_uv;
 
-    // Custom varying declaractions
-    ${varyingDeclarations.join("\n")}
-
     void main() {
-      ${vertexAssignments.join("\n")}
-
       v_position = position;
       v_uv = uv;
 
@@ -53,19 +46,16 @@ export function buildMaterial(
   `;
 
   const fragmentShader = `
-    // Uniform declaractions
+    // Uniform declarations
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declaractions
+    // Default varying declarations
     varying vec3 v_position;
     varying vec2 v_uv;
 
-    // Custom varying declaractions
-    ${varyingDeclarations.join("\n")}
-
     #include <alphahash_pars_fragment>
 
-    // Source have to define 'draw' function
+    // Source must define 'draw' function
     ${source}
 
     void main() {

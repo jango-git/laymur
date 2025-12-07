@@ -1,15 +1,17 @@
-import type { InstancedBufferGeometry, Matrix4, ShaderMaterial } from "three";
-import { InstancedBufferAttribute, Mesh } from "three";
+import type { InstancedBufferGeometry, ShaderMaterial } from "three";
+import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
 import { assertValidNonNegativeNumber } from "../asserts";
 import { UITransparencyMode } from "../UITransparencyMode";
-import type { UIPropertyType, UIPropertyTypeName } from "./shared";
-import { DEFAULT_VISIBILITY, resolveTypeInfo, resolveUniform } from "./shared";
+import type { UIPropertyType } from "./shared";
+import { resolveTypeInfo, resolveUniform } from "./shared";
 import type { InstancedRangeDescriptor } from "./UIGenericInstancedPlane.Internal";
 import {
   buildEmptyInstancedBufferAttribute,
   buildMaterial,
   CAPACITY_STEP,
+  DEFAULT_VISIBILITY,
   INSTANCED_PLANE_GEOMETRY,
+  reconstructValue,
   validateRange,
   writePropertyToArray,
 } from "./UIGenericInstancedPlane.Internal";
@@ -22,7 +24,7 @@ import {
  * removed, and updated without recreating the underlying geometry.
  *
  * @remarks
- * Memory is pre-allocated in chunks of 16 instances. Removing instances
+ * Memory is pre-allocated in chunks of 4 instances. Removing instances
  * triggers data compaction to maintain contiguous memory layout.
  *
  * Textures in uniforms are not disposed on destroy — caller retains ownership.
@@ -38,7 +40,10 @@ export class UIGenericInstancedPlane extends Mesh {
   >();
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
-  private readonly userVaryingLayout: Record<string, UIPropertyTypeName>;
+
+  // Properties split by instantiable/non-instantiable
+  private readonly uniformProperties: Record<string, UIPropertyType>;
+  private readonly varyingProperties: Record<string, UIPropertyType>;
 
   private lastHandler = 0;
   private capacity: number;
@@ -46,34 +51,34 @@ export class UIGenericInstancedPlane extends Mesh {
   /**
    * Creates a new instanced plane renderer.
    *
-   * @param source - GLSL fragment shader source (must define main() using io_UV)
-   * @param layout - Map of property names to types for per-instance data
+   * @param source - GLSL fragment shader source (must define vec4 draw() function)
+   * @param properties - Map of property names to values
    * @param transparency - Transparency rendering mode
    * @param initialCapacity - Initial instance pool size (rounded up to multiple of 4)
    */
   constructor(
-    private readonly source: string,
-    private readonly layout: Record<string, UIPropertyTypeName>,
-    private readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    public readonly source: string,
+    properties: Record<string, UIPropertyType>,
+    public readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
     initialCapacity: number = CAPACITY_STEP,
   ) {
-    const uniformLayout: Record<string, UIPropertyTypeName> = {};
-    const userVaryingLayout: Record<string, UIPropertyTypeName> = {};
+    const uniformProperties: Record<string, UIPropertyType> = {};
+    const varyingProperties: Record<string, UIPropertyType> = {};
 
-    for (const [name, propertyTypeName] of Object.entries(layout)) {
-      const info = resolveTypeInfo(propertyTypeName);
+    for (const [name, value] of Object.entries(properties)) {
+      const info = resolveTypeInfo(value);
       if (info.instantiable) {
-        userVaryingLayout[name] = propertyTypeName;
+        varyingProperties[name] = value;
       } else {
-        uniformLayout[name] = propertyTypeName;
+        uniformProperties[name] = value;
       }
     }
 
     const instancedGeometry = INSTANCED_PLANE_GEOMETRY.clone();
     const shaderMaterial = buildMaterial(
       source,
-      uniformLayout,
-      userVaryingLayout,
+      uniformProperties,
+      varyingProperties,
       transparency,
     );
 
@@ -82,7 +87,8 @@ export class UIGenericInstancedPlane extends Mesh {
     this.instancedGeometry = instancedGeometry;
     this.instancedGeometry.instanceCount = 0;
     this.shaderMaterial = shaderMaterial;
-    this.userVaryingLayout = userVaryingLayout;
+    this.uniformProperties = uniformProperties;
+    this.varyingProperties = varyingProperties;
     this.capacity = Math.max(
       Math.ceil(initialCapacity / CAPACITY_STEP) * CAPACITY_STEP,
       CAPACITY_STEP,
@@ -92,6 +98,7 @@ export class UIGenericInstancedPlane extends Mesh {
 
     this.initializeBuiltinAttributes();
     this.initializeUserAttributes();
+    this.initializeUniforms();
   }
 
   /**
@@ -99,6 +106,13 @@ export class UIGenericInstancedPlane extends Mesh {
    */
   public get instanceCount(): number {
     return this.instancedGeometry.instanceCount;
+  }
+
+  /**
+   * Returns a copy of all properties (uniform + varying).
+   */
+  public get properties(): Record<string, UIPropertyType> {
+    return { ...this.uniformProperties, ...this.varyingProperties };
   }
 
   /**
@@ -111,7 +125,6 @@ export class UIGenericInstancedPlane extends Mesh {
    * New instances are initialized with:
    * - visibility = 1 (visible)
    * - identity transform matrix
-   * - identity UV transform
    */
   public createInstances(count: number): number {
     if (count <= 0) {
@@ -269,33 +282,113 @@ export class UIGenericInstancedPlane extends Mesh {
    * Checks if the provided configuration is compatible with this instance.
    *
    * @param source - GLSL fragment shader source
-   * @param layout - Map of property names to types for per-instance data
+   * @param properties - Map of property names to values
    * @param transparency - Transparency rendering mode
    * @returns true if the configuration matches the current instance, false otherwise
    */
   public isCompatible(
     source: string,
-    layout: Record<string, UIPropertyTypeName>,
+    properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode = UITransparencyMode.BLEND,
   ): boolean {
     if (this.source !== source || this.transparency !== transparency) {
       return false;
     }
 
-    const layoutKeys = Object.keys(layout);
-    const currentLayoutKeys = Object.keys(this.layout);
+    const allProperties = this.properties;
+    const keys = Object.keys(properties);
+    const currentKeys = Object.keys(allProperties);
 
-    if (layoutKeys.length !== currentLayoutKeys.length) {
+    if (keys.length !== currentKeys.length) {
       return false;
     }
 
-    for (const key of layoutKeys) {
-      if (this.layout[key] !== layout[key]) {
+    for (const key of keys) {
+      if (!(key in allProperties)) {
+        return false;
+      }
+
+      const newInfo = resolveTypeInfo(properties[key]);
+      const currentInfo = resolveTypeInfo(allProperties[key]);
+
+      if (newInfo.glslType !== currentInfo.glslType) {
+        return false;
+      }
+
+      // Non-instantiable (textures) must match by reference
+      if (!newInfo.instantiable && properties[key] !== allProperties[key]) {
         return false;
       }
     }
 
     return true;
+  }
+
+  /**
+   * Extracts properties for a specific instance.
+   *
+   * @param handler - Handler returned from createInstances
+   * @returns Properties object reconstructed from instance data
+   */
+  public extractInstanceProperties(
+    handler: number,
+  ): Record<string, UIPropertyType> {
+    const descriptor = this.resolveDescriptor(handler);
+    const instanceIndex = descriptor.firstIndex;
+    const result: Record<string, UIPropertyType> = {};
+
+    // Copy non-instantiable from uniforms
+    for (const [name, value] of Object.entries(this.uniformProperties)) {
+      result[name] = value;
+    }
+
+    // Extract instantiable from attributes
+    for (const [name, referenceValue] of Object.entries(
+      this.varyingProperties,
+    )) {
+      const attribute = this.propertyBuffers.get(
+        name,
+      ) as InstancedBufferAttribute;
+      const array = attribute.array as Float32Array;
+      const offset = instanceIndex * attribute.itemSize;
+      result[name] = reconstructValue(referenceValue, array, offset);
+    }
+
+    return result;
+  }
+
+  /**
+   * Extracts transform matrix for a specific instance.
+   *
+   * @param handler - Handler returned from createInstances
+   * @returns Matrix4 transform
+   */
+  public extractInstanceTransform(handler: number): Matrix4 {
+    const descriptor = this.resolveDescriptor(handler);
+    const attribute = this.propertyBuffers.get(
+      "instanceTransform",
+    ) as InstancedBufferAttribute;
+    const array = attribute.array as Float32Array;
+    const offset = descriptor.firstIndex * 16;
+
+    const matrix = new Matrix4();
+    matrix.fromArray(array, offset);
+    return matrix;
+  }
+
+  /**
+   * Extracts visibility flag for a specific instance.
+   *
+   * @param handler - Handler returned from createInstances
+   * @returns boolean visibility
+   */
+  public extractInstanceVisibility(handler: number): boolean {
+    const descriptor = this.resolveDescriptor(handler);
+    const attribute = this.propertyBuffers.get(
+      "instanceVisibility",
+    ) as InstancedBufferAttribute;
+    const array = attribute.array as Float32Array;
+    return array[descriptor.firstIndex] >= 0.5;
   }
 
   /**
@@ -328,14 +421,22 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   private initializeUserAttributes(): void {
-    for (const [name, typeName] of Object.entries(this.userVaryingLayout)) {
+    for (const [name, value] of Object.entries(this.varyingProperties)) {
       const attribute = buildEmptyInstancedBufferAttribute(
-        typeName,
+        value,
         this.capacity,
       );
       this.instancedGeometry.setAttribute(`a_${name}`, attribute);
       this.propertyBuffers.set(name, attribute);
     }
+  }
+
+  private initializeUniforms(): void {
+    for (const [name, value] of Object.entries(this.uniformProperties)) {
+      const uniform = resolveUniform(name, this.shaderMaterial);
+      uniform.value = value;
+    }
+    this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
   private initializeInstanceDefaults(firstIndex: number, count: number): void {

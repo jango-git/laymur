@@ -393,6 +393,6 @@ export class UIScene extends UIElement {
 
   /** Event handler for when the color changes */
   private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setUniform(this.planeHandler, "color", color);
+    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
   };
 }
