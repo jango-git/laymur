@@ -1,65 +1,21 @@
-import type { Object3D, WebGLRenderer } from "three";
+import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import {
   Color,
-  Matrix2,
-  Matrix3,
-  Matrix4,
   Mesh,
   OrthographicCamera,
   PlaneGeometry,
   Scene,
   ShaderMaterial,
-  Texture,
-  Vector2,
-  Vector3,
-  Vector4,
 } from "three";
+import { buildUniformDeclaraction } from "../miscellaneous/buildUniformDeclaraction";
 import { UIColor } from "../miscellaneous/UIColor";
+import type { UIPropertyType } from "../miscellaneous/UIGenericInstancedPlane";
 import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
 import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 import fragmentShader from "../shaders/UIPlane.fs";
 import vertexShader from "../shaders/UIPlane.vs";
 
 const DEFAULT_ALPHA_TEST = 0.25;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Constructor type needs to accept any arguments for generic type mapping
-type Constructor = new (...args: any[]) => any;
-
-const UNIFROM_TYPE_MAP = new Map<Constructor, string>([
-  [UIColor, "vec4"],
-  [Color, "vec3"],
-  [Texture, "sampler2D"],
-  [Vector2, "vec2"],
-  [Vector3, "vec3"],
-  [Vector4, "vec4"],
-  [Matrix2, "mat2"],
-  [Matrix3, "mat3"],
-  [Matrix4, "mat4"],
-]);
-
-type UIPropertyType =
-  | UIColor
-  | Color
-  | Texture
-  | Vector2
-  | Vector3
-  | Vector4
-  | Matrix2
-  | Matrix3
-  | Matrix4;
-
-function buildUniformDeclaraction(name: string, value: unknown): string {
-  if (typeof value === "number") {
-    return `uniform float ${name};`;
-  }
-  for (const [objectType, glslType] of UNIFROM_TYPE_MAP) {
-    if (value instanceof objectType) {
-      return `uniform ${glslType} ${name};`;
-    }
-  }
-  throw new Error(`Unsupported uniform type for key "${name}"`);
-}
-
 const Z_LIMIT = 1024;
 const GEOMETRY_SIZE = 1;
 const GEOMETRY_OFFSET = GEOMETRY_SIZE / 2;
@@ -76,7 +32,7 @@ let originalAutoClearColor = false;
 let originalAutoClearDepth = false;
 let originalAutoClearStencil = false;
 
-interface Descriptor {
+interface PlaneDescriptor {
   plane: Mesh;
   material: ShaderMaterial;
 }
@@ -85,7 +41,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
   private readonly scene = new Scene();
   private readonly camera: OrthographicCamera;
 
-  private readonly descriptors = new Map<number, Descriptor>();
+  private readonly descriptors = new Map<number, PlaneDescriptor>();
   private lastPlaneIndex = 0;
 
   constructor(w: number, h: number) {
@@ -103,9 +59,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
         ...Object.fromEntries(
           entries.map(([k, v]) => [
             k,
-            {
-              value: v instanceof UIColor ? v.toGLSLColor() : v,
-            },
+            { value: v instanceof UIColor ? v.toGLSLColor() : v },
           ]),
         ),
       },
@@ -151,12 +105,9 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
   public setUniform(
     handler: number,
     uniform: string,
-    value: UIPropertyType,
+    value: UIPropertyType | undefined,
   ): this {
     const descriptor = this.resolveDescriptor(handler);
-    if (!(uniform in descriptor.material.uniforms)) {
-      throw new Error(`Uniform ${uniform} not found in material`);
-    }
     if (value instanceof UIColor) {
       value.toGLSLColor(descriptor.material.uniforms[uniform].value);
     } else {
@@ -237,7 +188,7 @@ export class UISceneWrapper implements UISceneWrapperClientAPI {
     return this;
   }
 
-  private resolveDescriptor(handler: number): Descriptor {
+  private resolveDescriptor(handler: number): PlaneDescriptor {
     const descriptor = this.descriptors.get(handler);
     if (!descriptor) {
       throw new Error(`No descriptor found for handler ${handler}`);

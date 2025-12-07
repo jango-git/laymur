@@ -7,9 +7,10 @@ import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../miscellaneous/asserts";
+import { UIMicro } from "../miscellaneous/micro/UIMicro";
+import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicroAnchorMode";
+import type { UIPropertyType } from "../miscellaneous/UIGenericInstancedPlane";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
-import { UIMicro } from "../miscellaneous/UIMicro";
-import { UIMicroAnchorMode } from "../miscellaneous/UIMicroAnchorMode";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
@@ -93,7 +94,7 @@ export abstract class UIElement
     width: number,
     height: number,
     source: string,
-    uniforms: Record<string, unknown>,
+    uniforms: Record<string, UIPropertyType>,
   ) {
     assertValidPositiveNumber(width, "UIElement width");
     assertValidPositiveNumber(height, "UIElement height");

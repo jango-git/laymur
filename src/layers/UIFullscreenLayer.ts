@@ -1,11 +1,11 @@
 import type { Vector2 } from "three";
 import { MathUtils, Vector3, type Camera, type WebGLRenderer } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
+import type { UIResizePolicy } from "../miscellaneous/resizepolicy/UIResizePolicy";
+import { UIResizePolicyEvent } from "../miscellaneous/resizepolicy/UIResizePolicy";
+import { UIResizePolicyNone } from "../miscellaneous/resizepolicy/UIResizePolicyNone";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
-import type { UIResizePolicy } from "../miscellaneous/UIResizePolicy";
-import { UIResizePolicyEvent } from "../miscellaneous/UIResizePolicy";
-import { UIResizePolicyNone } from "../miscellaneous/UIResizePolicyNone";
 import { UILayer } from "./UILayer";
 
 /**

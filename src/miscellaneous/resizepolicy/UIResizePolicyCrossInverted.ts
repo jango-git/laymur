@@ -1,4 +1,4 @@
-import { assertValidPositiveNumber } from "./asserts";
+import { assertValidPositiveNumber } from "../asserts";
 import { UIResizePolicy, UIResizePolicyEvent } from "./UIResizePolicy";
 
 /**

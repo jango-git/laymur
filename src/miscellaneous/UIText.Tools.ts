@@ -4,7 +4,7 @@ import type {
   UITextContent,
   UITextLine,
   UITextSize,
-} from "./textInterfaces";
+} from "./UIText.Interfaces";
 import {
   DEFAULT_TEXT_STYLE,
   resolveTextStyle,

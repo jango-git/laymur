@@ -1,13 +1,13 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
 import { type UILayer } from "../layers/UILayer";
-import type { UITextContent } from "../miscellaneous/textInterfaces";
+import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import type { UIMode } from "../miscellaneous/UIMode";
+import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
 import {
   calculateTextContentParameters,
   renderTextLines,
-} from "../miscellaneous/textTools";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
+} from "../miscellaneous/UIText.Tools";
 import {
   resolveTextPadding,
   type UIPadding,
