@@ -3,15 +3,12 @@ import { CanvasTexture, Matrix3 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
 import type { UIMode } from "../miscellaneous/UIMode";
+import { resolvePadding, type UIPadding } from "../miscellaneous/UIPadding";
 import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
 import {
   calculateTextContentParameters,
   renderTextLines,
 } from "../miscellaneous/UIText.Tools";
-import {
-  resolveTextPadding,
-  type UIPadding,
-} from "../miscellaneous/UITextPadding";
 import { type UITextStyle } from "../miscellaneous/UITextStyle";
 import source from "../shaders/UIDefaultShader.glsl";
 import { UIElement } from "./UIElement";
@@ -120,7 +117,7 @@ export class UIText extends UIElement {
 
     this.contentInternal = content;
     this.maxWidthInternal = options.maxWidth ?? DEFAULT_MAX_WIDTH;
-    this.paddingInternal = resolveTextPadding(options.padding);
+    this.paddingInternal = resolvePadding(options.padding);
     this.commonStyleInternal = options.commonStyle ?? {};
 
     this.colorInternal = color;

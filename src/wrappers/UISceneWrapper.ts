@@ -6,7 +6,7 @@ import {
 } from "../miscellaneous/generic-plane/shared";
 import { UIGenericInstancedPlane } from "../miscellaneous/generic-plane/UIGenericInstancedPlane";
 import { UIGenericPlane } from "../miscellaneous/generic-plane/UIGenericPlane";
-import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
+import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 
 let originalClearColor: Color = new Color();
 let originalClearAlpha = 0;
@@ -43,8 +43,8 @@ export class UISceneWrapper {
   public createPlane(
     source: string,
     properties: Record<string, UIPropertyType>,
-    transparency: UITransparencyMode = UITransparencyMode.BLEND,
-    forceSingleInstance = false,
+    transparency: UITransparencyMode,
+    forceSingleInstance: boolean,
   ): number {
     const handler = this.lastHandler++;
 
@@ -431,10 +431,8 @@ export class UISceneWrapper {
     const oldInstanceHandler = instancedPlane.createInstances(1);
     instancedPlane.setProperties(oldInstanceHandler, 0, [oldPlane.properties]);
 
-    // Transfer transform if set
-    if (oldPlane.transform) {
-      instancedPlane.setTransforms(oldInstanceHandler, 0, [oldPlane.transform]);
-    }
+    // Transfer transform
+    instancedPlane.setTransforms(oldInstanceHandler, 0, [oldPlane.transform]);
 
     // Transfer visibility
     instancedPlane.setVisibility(oldInstanceHandler, 0, [oldPlane.visibility]);

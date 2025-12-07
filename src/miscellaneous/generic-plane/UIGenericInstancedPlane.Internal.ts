@@ -90,7 +90,7 @@ export function buildMaterial(
   varyingProperties: Record<string, UIPropertyType>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
-  const uniforms: Record<string, { value: null }> = {};
+  const uniforms: Record<string, { value: unknown }> = {};
 
   const uniformDeclarations: string[] = [];
   const attributeDeclarations: string[] = [];
@@ -99,7 +99,9 @@ export function buildMaterial(
 
   for (const [name, value] of Object.entries(uniformProperties)) {
     const info = resolveTypeInfo(value);
-    uniforms[`p_${name}`] = { value: null };
+    uniforms[`p_${name}`] = {
+      value: value instanceof UIColor ? value.toGLSLColor() : value,
+    };
     uniformDeclarations.push(`uniform ${info.glslType} p_${name};`);
   }
 

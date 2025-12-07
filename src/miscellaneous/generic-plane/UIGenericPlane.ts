@@ -1,5 +1,5 @@
-import type { Matrix4, ShaderMaterial } from "three";
-import { Mesh, Vector4 } from "three";
+import type { ShaderMaterial, Vector4 } from "three";
+import { Matrix4, Mesh } from "three";
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
@@ -23,9 +23,9 @@ import { buildMaterial, PLANE_GEOMETRY } from "./UIGenericPlane.Internal";
  */
 export class UIGenericPlane extends Mesh {
   private readonly shaderMaterial: ShaderMaterial;
-  private readonly storedProperties: Record<string, UIPropertyType>;
-  private storedTransform: Matrix4 | null = null;
-  private storedVisibility = true;
+  private readonly propertiesInternal: Record<string, UIPropertyType>;
+  private transformInternal = new Matrix4().identity();
+  private transparencyInternal: UITransparencyMode;
 
   /**
    * Creates a new single plane renderer.
@@ -37,13 +37,15 @@ export class UIGenericPlane extends Mesh {
   constructor(
     public readonly source: string,
     properties: Record<string, UIPropertyType>,
-    public readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    transparency: UITransparencyMode,
   ) {
     const shaderMaterial = buildMaterial(source, properties, transparency);
     super(PLANE_GEOMETRY, shaderMaterial);
 
     this.shaderMaterial = shaderMaterial;
-    this.storedProperties = { ...properties };
+    this.propertiesInternal = { ...properties };
+    this.transparencyInternal = transparency;
+
     this.frustumCulled = false;
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
@@ -53,43 +55,28 @@ export class UIGenericPlane extends Mesh {
    * Returns a copy of current properties.
    */
   public get properties(): Record<string, UIPropertyType> {
-    return { ...this.storedProperties };
+    return { ...this.propertiesInternal };
   }
 
   /**
-   * Returns stored transform matrix or null if not set.
+   * Returns stored transform matrix or undefined if not set.
    */
-  public get transform(): Matrix4 | null {
-    return this.storedTransform;
+  public get transform(): Matrix4 {
+    return this.transformInternal;
   }
 
   /**
    * Returns current visibility state.
    */
   public get visibility(): boolean {
-    return this.storedVisibility;
+    return this.visible;
   }
 
   /**
-   * Updates visibility state.
-   *
-   * @param visibility - Whether the plane should be visible
+   * Returns current transparency state.
    */
-  public setVisibility(visibility: boolean): void {
-    this.visible = visibility;
-    this.storedVisibility = visibility;
-  }
-
-  /**
-   * Updates the transform matrix.
-   *
-   * @param transform - Matrix4 transform to apply
-   */
-  public setTransform(transform: Matrix4): void {
-    const uniform = resolveUniform("transform", this.shaderMaterial);
-    uniform.value = transform;
-    this.shaderMaterial.uniformsNeedUpdate = true;
-    this.storedTransform = transform;
+  public get transparency(): UITransparencyMode {
+    return this.transparencyInternal;
   }
 
   /**
@@ -102,13 +89,34 @@ export class UIGenericPlane extends Mesh {
     for (const [name, value] of Object.entries(properties)) {
       const uniform = resolveUniform(name, this.shaderMaterial);
       if (value instanceof UIColor) {
-        uniform.value = value.toGLSLColor(new Vector4());
+        value.toGLSLColor(uniform.value as Vector4);
       } else {
         uniform.value = value;
       }
-      this.storedProperties[name] = value;
+      this.propertiesInternal[name] = value;
     }
     this.shaderMaterial.uniformsNeedUpdate = true;
+  }
+
+  /**
+   * Updates the transform matrix.
+   *
+   * @param transform - Matrix4 transform to apply
+   */
+  public setTransform(transform: Matrix4): void {
+    const uniform = resolveUniform("transform", this.shaderMaterial);
+    (uniform.value as Matrix4).copy(transform);
+    this.shaderMaterial.uniformsNeedUpdate = true;
+    this.transformInternal = transform;
+  }
+
+  /**
+   * Updates visibility state.
+   *
+   * @param visibility - Whether the plane should be visible
+   */
+  public setVisibility(visibility: boolean): void {
+    this.visible = visibility;
   }
 
   /**
@@ -117,22 +125,18 @@ export class UIGenericPlane extends Mesh {
    * @param transparency - New transparency mode
    */
   public setTransparency(transparency: UITransparencyMode): void {
-    if (this.transparency === transparency) {
-      return;
+    if (this.transparency !== transparency) {
+      this.shaderMaterial.transparent =
+        transparency === UITransparencyMode.BLEND;
+      this.shaderMaterial.alphaTest =
+        transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0;
+      this.shaderMaterial.alphaHash = transparency === UITransparencyMode.HASH;
+      this.shaderMaterial.depthWrite =
+        transparency !== UITransparencyMode.BLEND;
+      this.shaderMaterial.needsUpdate = true;
+
+      this.transparencyInternal = transparency;
     }
-
-    // Обновляем material настройки
-    const material = this.shaderMaterial;
-
-    material.transparent = transparency === UITransparencyMode.BLEND;
-    material.alphaTest =
-      transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0;
-    material.alphaHash = transparency === UITransparencyMode.HASH;
-    material.depthWrite = transparency !== UITransparencyMode.BLEND;
-    material.needsUpdate = true;
-
-    // Нужно обновить readonly поле - через приватное поле или type assertion
-    (this as { transparency: UITransparencyMode }).transparency = transparency;
   }
 
   /**
@@ -146,35 +150,35 @@ export class UIGenericPlane extends Mesh {
   public isCompatible(
     source: string,
     properties: Record<string, UIPropertyType>,
-    transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    transparency: UITransparencyMode,
   ): boolean {
     if (this.source !== source || this.transparency !== transparency) {
       return false;
     }
 
     const keys = Object.keys(properties);
-    const currentKeys = Object.keys(this.storedProperties);
+    const internalKeys = Object.keys(this.propertiesInternal);
 
-    if (keys.length !== currentKeys.length) {
+    if (keys.length !== internalKeys.length) {
       return false;
     }
 
     for (const key of keys) {
-      if (!(key in this.storedProperties)) {
+      if (!(key in this.propertiesInternal)) {
         return false;
       }
 
       const newInfo = resolveTypeInfo(properties[key]);
-      const currentInfo = resolveTypeInfo(this.storedProperties[key]);
+      const internalInfo = resolveTypeInfo(this.propertiesInternal[key]);
 
-      if (newInfo.glslType !== currentInfo.glslType) {
+      if (newInfo.glslType !== internalInfo.glslType) {
         return false;
       }
 
       // Non-instantiable (textures) must match by reference
       if (
         !newInfo.instantiable &&
-        properties[key] !== this.storedProperties[key]
+        properties[key] !== this.propertiesInternal[key]
       ) {
         return false;
       }

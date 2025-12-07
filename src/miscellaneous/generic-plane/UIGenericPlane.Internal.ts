@@ -1,4 +1,5 @@
-import { PlaneGeometry, ShaderMaterial } from "three";
+import { Matrix4, PlaneGeometry, ShaderMaterial } from "three";
+import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
   DEFAULT_ALPHA_TEST,
@@ -13,16 +14,18 @@ export function buildMaterial(
   properties: Record<string, UIPropertyType>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
-  const uniforms: Record<string, { value: null }> = {
+  const uniforms: Record<string, { value: unknown }> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    p_transform: { value: null },
+    p_transform: { value: new Matrix4() },
   };
 
   const uniformDeclarations: string[] = [];
 
   for (const [name, value] of Object.entries(properties)) {
     const info = resolveTypeInfo(value);
-    uniforms[`p_${name}`] = { value: null };
+    uniforms[`p_${name}`] = {
+      value: value instanceof UIColor ? value.toGLSLColor() : value,
+    };
     uniformDeclarations.push(`uniform ${info.glslType} p_${name};`);
   }
 

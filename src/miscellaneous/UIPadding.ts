@@ -7,7 +7,7 @@ export interface UIPadding {
   bottom: number;
 }
 
-export function resolveTextPadding(value: unknown): UIPadding {
+export function resolvePadding(value: unknown): UIPadding {
   if (typeof value === "number") {
     return { left: value, right: value, top: value, bottom: value };
   }
