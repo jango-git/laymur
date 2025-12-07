@@ -8,8 +8,8 @@ import {
   ShaderMaterial,
 } from "three";
 import { buildUniformDeclaraction } from "../miscellaneous/buildUniformDeclaraction";
+import type { UIPropertyType } from "../miscellaneous/generic-plane/shared";
 import { UIColor } from "../miscellaneous/UIColor";
-import type { UIPropertyType } from "../miscellaneous/UIGenericInstancedPlane";
 import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
 import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 import fragmentShader from "../shaders/UIPlane.fs";

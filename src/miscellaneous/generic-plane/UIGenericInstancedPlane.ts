@@ -52,9 +52,9 @@ export class UIGenericInstancedPlane extends Mesh {
    * @param initialCapacity - Initial instance pool size (rounded up to multiple of 4)
    */
   constructor(
-    source: string,
-    layout: Record<string, UIPropertyTypeName>,
-    transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    private readonly source: string,
+    private readonly layout: Record<string, UIPropertyTypeName>,
+    private readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
     initialCapacity: number = CAPACITY_STEP,
   ) {
     const uniformLayout: Record<string, UIPropertyTypeName> = {};
@@ -263,6 +263,39 @@ export class UIGenericInstancedPlane extends Mesh {
     }
 
     attribute.needsUpdate = true;
+  }
+
+  /**
+   * Checks if the provided configuration is compatible with this instance.
+   *
+   * @param source - GLSL fragment shader source
+   * @param layout - Map of property names to types for per-instance data
+   * @param transparency - Transparency rendering mode
+   * @returns true if the configuration matches the current instance, false otherwise
+   */
+  public isCompatible(
+    source: string,
+    layout: Record<string, UIPropertyTypeName>,
+    transparency: UITransparencyMode = UITransparencyMode.BLEND,
+  ): boolean {
+    if (this.source !== source || this.transparency !== transparency) {
+      return false;
+    }
+
+    const layoutKeys = Object.keys(layout);
+    const currentLayoutKeys = Object.keys(this.layout);
+
+    if (layoutKeys.length !== currentLayoutKeys.length) {
+      return false;
+    }
+
+    for (const key of layoutKeys) {
+      if (this.layout[key] !== layout[key]) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**

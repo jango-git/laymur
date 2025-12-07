@@ -31,9 +31,9 @@ export class UIGenericPlane extends Mesh {
    * @param transparency - Transparency rendering mode
    */
   constructor(
-    source: string,
-    layout: Record<string, UIPropertyTypeName>,
-    transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    public readonly source: string,
+    public readonly layout: Record<string, UIPropertyTypeName>,
+    public readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
   ) {
     const shaderMaterial = buildMaterial(source, layout, transparency);
     super(PLANE_GEOMETRY, shaderMaterial);
