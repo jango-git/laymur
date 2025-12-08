@@ -1,19 +1,22 @@
-import { UIAspectConstraint } from "../constraints/UIAspectConstraint";
-import { UIHorizontalDistanceConstraint } from "../constraints/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../constraints/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../constraints/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../constraints/UIVerticalProportionConstraint";
-import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
-import { type UIOrientation } from "../miscellaneous/UIOrientation";
-import { UIPriority } from "../miscellaneous/UIPriority";
-import { UIRelation } from "../miscellaneous/UIRelation";
+import { UIHorizontalDistanceConstraint } from "../../constraints/UIHorizontalDistanceConstraint";
+import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontalProportionConstraint";
+import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
+import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
+import type {
+  UILayerElement,
+  UIPlaneElement,
+} from "../../miscellaneous/asserts";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation";
+import { UIPriority } from "../../miscellaneous/UIPriority";
+import { UIRelation } from "../../miscellaneous/UIRelation";
+import { UIAspectConstraint } from "../UIAspectConstraint";
 
 const DEFAULT_ANCHOR = 0.5;
 
 /**
- * Configuration options for the UIFitConstraintBuilder.
+ * Configuration options for the UICoverConstraintBuilder.
  */
-export interface UIFitConstraintBuilderOptions {
+export interface UICoverConstraintBuilderOptions {
   /** Whether to maintain the aspect ratio of the active (content) element */
   keepActiveAspect: boolean;
   /** Horizontal anchor point (0.0 = left, 0.5 = center, 1.0 = right) */
@@ -25,32 +28,32 @@ export interface UIFitConstraintBuilderOptions {
 }
 
 /**
- * Builder for creating "fit" layout constraints that make an element fit within its container.
+ * Builder for creating "cover" layout constraints that make an element cover its container.
  *
- * Fit layout ensures the active element is sized to completely fit within the passive
- * element while maintaining proportions. This is similar to CSS `background-size: contain`
- * or `object-fit: contain` behavior.
+ * Cover layout ensures the active element is large enough to completely cover the passive
+ * element while maintaining proportions. This is similar to CSS `background-size: cover`
+ * or `object-fit: cover` behavior.
  *
  * The active element will be:
  * - Positioned at the specified anchor point within the passive element
- * - Sized to fit entirely within the passive element in both dimensions
+ * - Sized to be at least as large as the passive element in both dimensions
  * - Scaled proportionally to maintain aspect ratio (if enabled)
  *
- * The constraints ensure: passive.dimension * 1 ≥ active.dimension (active fits within passive)
+ * The constraints ensure: passive.dimension * 1 ≤ active.dimension (active covers passive)
  */
-export class UIFitConstraintBuilder {
+export class UICoverConstraintBuilder {
   /**
-   * Creates a set of constraints for fit layout behavior.
+   * Creates a set of constraints for cover layout behavior.
    *
-   * @param passive - The container element (what contains the content)
-   * @param active - The content element (what gets fitted within the container)
-   * @param options - Configuration options for the fit layout
+   * @param passive - The container element (what gets covered)
+   * @param active - The content element (what does the covering)
+   * @param options - Configuration options for the cover layout
    * @returns Object containing all created constraints
    */
   public static build(
     passive: UIPlaneElement,
     active: UIPlaneElement & UILayerElement,
-    options: Partial<UIFitConstraintBuilderOptions> = {},
+    options: Partial<UICoverConstraintBuilderOptions> = {},
   ): {
     /** Aspect constraint for the active element (if keepActiveAspect is true) */
     activeAspectConstraint?: UIAspectConstraint;
@@ -58,9 +61,9 @@ export class UIFitConstraintBuilder {
     xConstraint: UIHorizontalDistanceConstraint;
     /** Vertical positioning constraint */
     yConstraint: UIVerticalDistanceConstraint;
-    /** Width proportion constraint (ensures fitting) */
+    /** Width proportion constraint (ensures coverage) */
     widthConstraint: UIHorizontalProportionConstraint;
-    /** Height proportion constraint (ensures fitting) */
+    /** Height proportion constraint (ensures coverage) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
     let activeAspectConstraint: UIAspectConstraint | undefined;
@@ -87,7 +90,7 @@ export class UIFitConstraintBuilder {
       active,
       {
         proportion: 1,
-        relation: UIRelation.LESS_THAN,
+        relation: UIRelation.GREATER_THAN,
         orientation: options.orientation,
       },
     );

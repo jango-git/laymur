@@ -63,6 +63,22 @@ export default {
   ],
   plugins: [
     nodeResolve({ extensions: [".js", ".ts"] }),
+    {
+      name: "minify-shaders",
+      transform(code, id) {
+        if (/\.(glsl|fs|vs|frag|vert)$/.test(id)) {
+          return {
+            code: code
+              .replace(/\/\*[\s\S]*?\*\//g, "")
+              .replace(/\/\/[^\n]*/g, "")
+              .replace(/\s*([{}(),=;+\-*/<>])\s*/g, "$1")
+              .replace(/\s+/g, " ")
+              .trim(),
+            map: null,
+          };
+        }
+      },
+    },
     string({
       include: ["**/*.glsl", "**/*.fs", "**/*.vs", "**/*.frag", "**/*.vert"],
     }),

@@ -84,6 +84,10 @@ export class UIGenericInstancedPlane extends Mesh {
 
     super(instancedGeometry, shaderMaterial);
 
+    this.frustumCulled = false;
+    this.matrixAutoUpdate = false;
+    this.matrixWorldAutoUpdate = false;
+
     this.instancedGeometry = instancedGeometry;
     this.instancedGeometry.instanceCount = 0;
     this.shaderMaterial = shaderMaterial;
@@ -93,10 +97,6 @@ export class UIGenericInstancedPlane extends Mesh {
       Math.ceil(initialCapacity / CAPACITY_STEP) * CAPACITY_STEP,
       CAPACITY_STEP,
     );
-
-    this.frustumCulled = false;
-    this.matrixAutoUpdate = false;
-    this.matrixWorldAutoUpdate = false;
 
     {
       for (const [name, value] of Object.entries(this.varyingProperties)) {

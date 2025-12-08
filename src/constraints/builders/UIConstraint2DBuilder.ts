@@ -1,14 +1,17 @@
-import { UIHeightConstraint } from "../constraints/UIHeightConstraint";
-import { UIHorizontalDistanceConstraint } from "../constraints/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../constraints/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../constraints/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../constraints/UIVerticalProportionConstraint";
-import { UIWidthConstraint } from "../constraints/UIWidthConstraint";
-import type { UIElement } from "../elements/UIElement";
-import type { UIPlaneElement, UIPointElement } from "../miscellaneous/asserts";
-import type { UIOrientation } from "../miscellaneous/UIOrientation";
-import type { UIPriority } from "../miscellaneous/UIPriority";
-import type { UIRelation } from "../miscellaneous/UIRelation";
+import { UIHeightConstraint } from "../../constraints/UIHeightConstraint";
+import { UIHorizontalDistanceConstraint } from "../../constraints/UIHorizontalDistanceConstraint";
+import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontalProportionConstraint";
+import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
+import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
+import { UIWidthConstraint } from "../../constraints/UIWidthConstraint";
+import type { UIElement } from "../../elements/UIElement";
+import type {
+  UIPlaneElement,
+  UIPointElement,
+} from "../../miscellaneous/asserts";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation";
+import type { UIPriority } from "../../miscellaneous/UIPriority";
+import type { UIRelation } from "../../miscellaneous/UIRelation";
 
 /**
  * Generic 2D type for specifying horizontal and vertical values.
