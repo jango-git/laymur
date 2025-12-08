@@ -106,8 +106,8 @@ export class UIImage extends UIElement {
     const w = value.image.width;
     const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UIImage texture width");
-    assertValidPositiveNumber(h, "UIImage texture height");
+    assertValidPositiveNumber(w, "UIImage.texture.width");
+    assertValidPositiveNumber(h, "UIImage.texture.height");
 
     this.solverWrapper.suggestVariableValue(this.wVariable, w);
     this.solverWrapper.suggestVariableValue(this.hVariable, h);

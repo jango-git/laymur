@@ -155,8 +155,8 @@ export class UINineSlice extends UIElement {
     const w = value.image.width;
     const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UINineSlice texture width");
-    assertValidPositiveNumber(h, "UINineSlice texture height");
+    assertValidPositiveNumber(w, "UINineSlice.texture.width");
+    assertValidPositiveNumber(h, "UINineSlice.texture.height");
 
     this.solverWrapper.suggestVariableValue(this.wVariable, w);
     this.solverWrapper.suggestVariableValue(this.hVariable, h);

@@ -21,10 +21,10 @@ export function resolvePadding(value: unknown): UIPadding {
     const bottom =
       "bottom" in value && typeof value.bottom === "number" ? value.bottom : 0;
 
-    assertValidNonNegativeNumber(left, "Padding left");
-    assertValidNonNegativeNumber(right, "Padding right");
-    assertValidNonNegativeNumber(top, "Padding top");
-    assertValidNonNegativeNumber(bottom, "Padding bottom");
+    assertValidNonNegativeNumber(left, "resolvePadding.left");
+    assertValidNonNegativeNumber(right, "resolvePadding.right");
+    assertValidNonNegativeNumber(top, "resolvePadding.top");
+    assertValidNonNegativeNumber(bottom, "resolvePadding.bottom");
 
     return { left, right, top, bottom };
   }

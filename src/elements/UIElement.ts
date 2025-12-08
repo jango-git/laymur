@@ -96,8 +96,8 @@ export abstract class UIElement
     source: string,
     uniforms: Record<string, UIPropertyType>,
   ) {
-    assertValidPositiveNumber(width, "UIElement width");
-    assertValidPositiveNumber(height, "UIElement height");
+    assertValidPositiveNumber(width, "UIElement.constructor.width");
+    assertValidPositiveNumber(height, "UIElement.constructor.height");
 
     super(layer, x, y);
     this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRender, this);
@@ -191,7 +191,7 @@ export abstract class UIElement
    * @see {@link assertValidPositiveNumber}
    */
   public set width(value: number) {
-    assertValidPositiveNumber(value, "UIElement width");
+    assertValidPositiveNumber(value, "UIElement.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
@@ -202,7 +202,7 @@ export abstract class UIElement
    * @see {@link assertValidPositiveNumber}
    */
   public set height(value: number) {
-    assertValidPositiveNumber(value, "UIElement height");
+    assertValidPositiveNumber(value, "UIElement.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
@@ -213,7 +213,7 @@ export abstract class UIElement
    * @see {@link assertValidNumber}
    */
   public set zIndex(value: number) {
-    assertValidNumber(value, "UIElement zIndex");
+    assertValidNumber(value, "UIElement.zIndex");
     this.zIndexInternal = value;
     if (this.listener) {
       this.listener.zIndex = this.zIndexInternal;

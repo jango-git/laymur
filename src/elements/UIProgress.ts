@@ -117,17 +117,23 @@ export class UIProgress extends UIElement {
     const w = foregroundTexture.image?.width;
     const h = foregroundTexture.image?.height;
 
-    assertValidPositiveNumber(w, "UIProgress foreground texture width");
-    assertValidPositiveNumber(h, "UIProgress foreground texture height");
+    assertValidPositiveNumber(
+      w,
+      "UIProgress.constructor.foregroundTexture.width",
+    );
+    assertValidPositiveNumber(
+      h,
+      "UIProgress.constructor.foregroundTexture.height",
+    );
 
     if (options.backgroundTexture) {
       assertValidPositiveNumber(
         options.backgroundTexture.image.width,
-        "UIProgress background texture width",
+        "UIProgress.constructor.backgroundTexture.width",
       );
       assertValidPositiveNumber(
         options.backgroundTexture.image.height,
-        "UIProgress background texture height",
+        "UIProgress.constructor.backgroundTexture.height",
       );
     }
 
@@ -249,8 +255,8 @@ export class UIProgress extends UIElement {
     const w = value.image.width;
     const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UIProgress foreground texture width");
-    assertValidPositiveNumber(h, "UIProgress foreground texture height");
+    assertValidPositiveNumber(w, "UIProgress.foregroundTexture.width");
+    assertValidPositiveNumber(h, "UIProgress.foregroundTexture.height");
 
     this.solverWrapper.suggestVariableValue(this.wVariable, w);
     this.solverWrapper.suggestVariableValue(this.hVariable, h);
@@ -269,11 +275,11 @@ export class UIProgress extends UIElement {
     if (value !== undefined) {
       assertValidPositiveNumber(
         value.image.width,
-        "UIProgress background texture width",
+        "UIProgress.backgroundTexture.width",
       );
       assertValidPositiveNumber(
         value.image.height,
-        "UIProgress background texture height",
+        "UIProgress.backgroundTexture.height",
       );
     }
 

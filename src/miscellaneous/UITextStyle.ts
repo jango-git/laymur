@@ -86,42 +86,42 @@ export function resolveTextStyle(
 ): UITextStyle {
   const fontSize =
     style?.fontSize ?? commonStyle?.fontSize ?? DEFAULT_TEXT_STYLE.fontSize;
-  assertValidPositiveNumber(fontSize, "Font size");
+  assertValidPositiveNumber(fontSize, "resolveTextStyle.fontSize");
 
   const fontWeight = style?.fontWeight ?? commonStyle?.fontWeight ?? "normal";
   if (typeof fontWeight === "number") {
-    assertValidPositiveNumber(fontWeight, "Font weight");
+    assertValidPositiveNumber(fontWeight, "resolveTextStyle.fontWeight");
   }
 
   const lineHeight =
     style?.lineHeight ??
     commonStyle?.lineHeight ??
     fontSize * DEFAULT_TEXT_STYLE.lineHeight;
-  assertValidNumber(lineHeight, "Line height");
+  assertValidNumber(lineHeight, "resolveTextStyle.lineHeight");
 
   const shadowOffsetX =
     style?.shadowOffsetX ??
     commonStyle?.shadowOffsetX ??
     DEFAULT_TEXT_STYLE.shadowOffsetX;
-  assertValidNonNegativeNumber(shadowOffsetX, "Shadow offset X");
+  assertValidNonNegativeNumber(shadowOffsetX, "resolveTextStyle.shadowOffsetX");
 
   const shadowOffsetY =
     style?.shadowOffsetY ??
     commonStyle?.shadowOffsetY ??
     DEFAULT_TEXT_STYLE.shadowOffsetY;
-  assertValidNonNegativeNumber(shadowOffsetY, "Shadow offset Y");
+  assertValidNonNegativeNumber(shadowOffsetY, "resolveTextStyle.shadowOffsetY");
 
   const shadowBlur =
     style?.shadowBlur ??
     commonStyle?.shadowBlur ??
     DEFAULT_TEXT_STYLE.shadowBlur;
-  assertValidNonNegativeNumber(shadowBlur, "Shadow blur");
+  assertValidNonNegativeNumber(shadowBlur, "resolveTextStyle.shadowBlur");
 
   const strokeWidth =
     style?.strokeWidth ??
     commonStyle?.strokeWidth ??
     DEFAULT_TEXT_STYLE.strokeWidth;
-  assertValidNonNegativeNumber(strokeWidth, "Stroke width");
+  assertValidNonNegativeNumber(strokeWidth, "resolveTextStyle.strokeWidth");
 
   return {
     color: style?.color ?? commonStyle?.color ?? DEFAULT_TEXT_STYLE.color,

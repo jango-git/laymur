@@ -32,7 +32,10 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
       fixedHeightSquare,
       "UIResizePolicyFixedHeight.fixedHeightSquare",
     );
-    assertValidPositiveNumber(squareEpsilon, "UIResizePolicy.squareEpsilon");
+    assertValidPositiveNumber(
+      squareEpsilon,
+      "UIResizePolicyFixedHeight.constructor.squareEpsilon",
+    );
 
     this.fixedHeightLandscapeInternal = fixedHeightLandscape;
     this.fixedHeightPortraitInternal = fixedHeightPortrait;
@@ -87,7 +90,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
   }
 
   public set squareEpsilon(value: number) {
-    assertValidPositiveNumber(value, "UIResizePolicy.squareEpsilon");
+    assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.squareEpsilon");
     if (value !== this.squareEpsilonInternal) {
       this.squareEpsilonInternal = value;
       this.emit(UIResizePolicyEvent.CHANGE);

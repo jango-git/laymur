@@ -75,7 +75,7 @@ export class UIFullscreenLayer extends UILayer {
    * @param deltaTime - Time since last frame in seconds
    */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
-    assertValidNumber(deltaTime, "UIFullscreenLayer.deltaTime");
+    assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
     super.renderInternal(renderer, deltaTime);
   }
 

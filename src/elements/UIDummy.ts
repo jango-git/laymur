@@ -58,8 +58,8 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     const w = options.width ?? DEFAULT_SIZE;
     const h = options.height ?? DEFAULT_SIZE;
 
-    assertValidPositiveNumber(w, "UIDummy width");
-    assertValidPositiveNumber(h, "UIDummy height");
+    assertValidPositiveNumber(w, "UIDummy.constructor.width");
+    assertValidPositiveNumber(h, "UIDummy.constructor.height");
 
     super(layer, x, y);
     this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P6);
@@ -89,7 +89,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
    * @see {@link assertValidPositiveNumber}
    */
   public set width(value: number) {
-    assertValidPositiveNumber(value, "UIDummy width");
+    assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
@@ -100,7 +100,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
    * @see {@link assertValidPositiveNumber}
    */
   public set height(value: number) {
-    assertValidPositiveNumber(value, "UIDummy height");
+    assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 

@@ -53,8 +53,8 @@ export class UIAnchor extends Eventail implements UIPointElement {
     x: number,
     y: number,
   ) {
-    assertValidNumber(x, "UIAnchor x");
-    assertValidNumber(y, "UIAnchor y");
+    assertValidNumber(x, "UIAnchor.constructor.x");
+    assertValidNumber(y, "UIAnchor.constructor.y");
 
     super();
     this.solverWrapper = this.layer["getSolverWrapperInternal"]();
@@ -85,7 +85,7 @@ export class UIAnchor extends Eventail implements UIPointElement {
    * @see {@link assertValidNumber}
    */
   public set x(value: number) {
-    assertValidNumber(value, "UIAnchor x");
+    assertValidNumber(value, "UIAnchor.x");
     this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
@@ -96,7 +96,7 @@ export class UIAnchor extends Eventail implements UIPointElement {
    * @see {@link assertValidNumber}
    */
   public set y(value: number) {
-    assertValidNumber(value, "UIAnchor y");
+    assertValidNumber(value, "UIAnchor.y");
     this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
 
