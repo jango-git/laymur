@@ -14,13 +14,6 @@ import { UITransparencyMode } from "../UITransparencyMode";
 import type { UIPropertyType } from "./shared";
 import { DEFAULT_ALPHA_TEST, resolveTypeInfo } from "./shared";
 
-export interface InstancedRangeDescriptor {
-  firstIndex: number;
-  count: number;
-}
-
-export const DEFAULT_VISIBILITY = 1;
-
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const planeGeometry = new PlaneGeometry(1, 1);
   planeGeometry.translate(0.5, 0.5, 0);
@@ -33,38 +26,55 @@ export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
 })();
 
 export const CAPACITY_STEP = 4;
+
 const TEMP_COLOR_VECTOR = new Vector4();
+const IDENTITY_MATRIX_ELEMENTS = [
+  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+];
 
 export function writePropertyToArray(
   value: UIPropertyType,
   array: Float32Array,
-  itemOffset: number,
+  offset: number,
 ): void {
   if (value instanceof UIColor) {
     value.toGLSLColor(TEMP_COLOR_VECTOR);
-    array[itemOffset] = TEMP_COLOR_VECTOR.x;
-    array[itemOffset + 1] = TEMP_COLOR_VECTOR.y;
-    array[itemOffset + 2] = TEMP_COLOR_VECTOR.z;
-    array[itemOffset + 3] = TEMP_COLOR_VECTOR.w;
+    array[offset] = TEMP_COLOR_VECTOR.x;
+    array[offset + 1] = TEMP_COLOR_VECTOR.y;
+    array[offset + 2] = TEMP_COLOR_VECTOR.z;
+    array[offset + 3] = TEMP_COLOR_VECTOR.w;
   } else if (value instanceof Vector2) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
+    array[offset] = value.x;
+    array[offset + 1] = value.y;
   } else if (value instanceof Vector3) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
-    array[itemOffset + 2] = value.z;
+    array[offset] = value.x;
+    array[offset + 1] = value.y;
+    array[offset + 2] = value.z;
   } else if (value instanceof Vector4) {
-    array[itemOffset] = value.x;
-    array[itemOffset + 1] = value.y;
-    array[itemOffset + 2] = value.z;
-    array[itemOffset + 3] = value.w;
+    array[offset] = value.x;
+    array[offset + 1] = value.y;
+    array[offset + 2] = value.z;
+    array[offset + 3] = value.w;
   } else if (value instanceof Matrix3 || value instanceof Matrix4) {
     const elements = value.elements;
     for (let j = 0; j < elements.length; j++) {
-      array[itemOffset + j] = elements[j];
+      array[offset + j] = elements[j];
     }
   } else if (typeof value === "number") {
-    array[itemOffset] = value;
+    array[offset] = value;
+  }
+}
+
+export function writeInstanceDefaults(
+  visibilityArray: Float32Array,
+  transformArray: Float32Array,
+  index: number,
+): void {
+  visibilityArray[index] = 1;
+
+  const transformOffset = index * 16;
+  for (let j = 0; j < 16; j++) {
+    transformArray[transformOffset + j] = IDENTITY_MATRIX_ELEMENTS[j];
   }
 }
 
@@ -113,21 +123,17 @@ export function buildMaterial(
   }
 
   const vertexShader = `
-    // Default attribute declarations
-    attribute float a_instanceVisibility;
-    attribute mat4 a_instanceTransform;
-
-    // Custom attribute declarations
+    // User attributes
     ${attributeDeclarations.join("\n")}
 
-    // Uniform declarations
+    // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declarations
+    // Builtin varyings
     varying vec3 p_position;
     varying vec2 p_uv;
 
-    // Custom varying declarations
+    // User varyings
     ${varyingDeclarations.join("\n")}
 
     void main() {
@@ -146,19 +152,19 @@ export function buildMaterial(
   `;
 
   const fragmentShader = `
-    // Uniform declarations
+    // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Default varying declarations
+    // Builtin varyings
     varying vec3 p_position;
     varying vec2 p_uv;
 
-    // Custom varying declarations
+    // User varyings
     ${varyingDeclarations.join("\n")}
 
     #include <alphahash_pars_fragment>
 
-    // Source must define 'draw' function
+    // Source must define vec4 draw() function
     ${source}
 
     void main() {
@@ -180,7 +186,7 @@ export function buildMaterial(
     }
   `;
 
-  const material = new ShaderMaterial({
+  return new ShaderMaterial({
     uniforms,
     vertexShader,
     fragmentShader,
@@ -191,20 +197,6 @@ export function buildMaterial(
     depthWrite: transparency !== UITransparencyMode.BLEND,
     depthTest: true,
   });
-
-  return material;
-}
-
-export function validateRange(
-  descriptor: InstancedRangeDescriptor,
-  offset: number,
-  count: number,
-): void {
-  if (offset + count > descriptor.count) {
-    throw new Error(
-      `Range [${offset}, ${offset + count}) exceeds descriptor range [0, ${descriptor.count})`,
-    );
-  }
 }
 
 export function reconstructValue(
@@ -230,7 +222,7 @@ export function reconstructValue(
     );
   }
   if (referenceValue instanceof UIColor) {
-    return new UIColor(
+    return new UIColor().setGLSLColor(
       array[offset],
       array[offset + 1],
       array[offset + 2],
@@ -238,14 +230,14 @@ export function reconstructValue(
     );
   }
   if (referenceValue instanceof Matrix3) {
-    const m3 = new Matrix3();
-    m3.fromArray(array, offset);
-    return m3;
+    const matrix = new Matrix3();
+    matrix.fromArray(array, offset);
+    return matrix;
   }
   if (referenceValue instanceof Matrix4) {
-    const m4 = new Matrix4();
-    m4.fromArray(array, offset);
-    return m4;
+    const matrix = new Matrix4();
+    matrix.fromArray(array, offset);
+    return matrix;
   }
   throw new Error(`Cannot reconstruct value for type`);
 }

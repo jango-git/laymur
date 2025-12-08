@@ -6,10 +6,13 @@ import {
   arePropertiesCompatible,
   DEFAULT_ALPHA_TEST,
   resolveUniform,
-  type PlaneData,
+  type PlaneInstanceData,
   type UIPropertyType,
 } from "./shared";
-import { buildMaterial, PLANE_GEOMETRY } from "./UIGenericPlane.Internal";
+import {
+  buildGenericPlaneMaterial,
+  PLANE_GEOMETRY,
+} from "./UIGenericPlane.Internal";
 
 /**
  * Single plane renderer for cases where instancing is not applicable.
@@ -40,23 +43,27 @@ export class UIGenericPlane extends Mesh {
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
   ) {
-    const shaderMaterial = buildMaterial(source, properties, transparency);
+    const shaderMaterial = buildGenericPlaneMaterial(
+      source,
+      properties,
+      transparency,
+    );
     super(PLANE_GEOMETRY, shaderMaterial);
-
-    this.shaderMaterial = shaderMaterial;
-    this.propertiesInternal = { ...properties };
-    this.transparencyInternal = transparency;
 
     this.frustumCulled = false;
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
+
+    this.shaderMaterial = shaderMaterial;
+    this.propertiesInternal = { ...properties }; // TODO: Consider it possible not to copy
+    this.transparencyInternal = transparency;
   }
 
   /**
    * Returns a copy of current properties.
    */
   public get properties(): Record<string, UIPropertyType> {
-    return { ...this.propertiesInternal };
+    return { ...this.propertiesInternal }; // TODO: Consider it possible not to copy
   }
 
   /**
@@ -143,7 +150,7 @@ export class UIGenericPlane extends Mesh {
   /**
    * Extracts complete plane data for relocation/promotion.
    */
-  public extractData(): PlaneData {
+  public extractInstanceData(): PlaneInstanceData {
     return {
       source: this.source,
       properties: this.properties,
@@ -166,7 +173,7 @@ export class UIGenericPlane extends Mesh {
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
   ): boolean {
-    if (this.source !== source || this.transparencyInternal !== transparency) {
+    if (this.transparencyInternal !== transparency || this.source !== source) {
       return false;
     }
 

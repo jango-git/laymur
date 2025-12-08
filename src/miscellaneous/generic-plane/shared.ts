@@ -19,6 +19,14 @@ export interface GLSLTypeInfo {
   itemSize: number;
 }
 
+export interface PlaneInstanceData {
+  source: string;
+  properties: Record<string, UIPropertyType>;
+  transparency: UITransparencyMode;
+  transform: Matrix4;
+  visibility: boolean;
+}
+
 export const DEFAULT_ALPHA_TEST = 0.5;
 
 export function resolveTypeInfo(value: UIPropertyType): GLSLTypeInfo {
@@ -62,14 +70,6 @@ export function resolveUniform(
   return uniform;
 }
 
-export interface PlaneData {
-  source: string;
-  properties: Record<string, UIPropertyType>;
-  transparency: UITransparencyMode;
-  transform: Matrix4;
-  visibility: boolean;
-}
-
 export function arePropertiesCompatible(
   currentProperties: Record<string, UIPropertyType>,
   newProperties: Record<string, UIPropertyType>,
@@ -81,22 +81,22 @@ export function arePropertiesCompatible(
     return false;
   }
 
-  for (const key of newKeys) {
-    if (!(key in currentProperties)) {
+  for (const newKey of newKeys) {
+    if (!(newKey in currentProperties)) {
       return false;
     }
 
-    const newInfo = resolveTypeInfo(newProperties[key]);
-    const currentInfo = resolveTypeInfo(currentProperties[key]);
+    const currentInfo = resolveTypeInfo(currentProperties[newKey]);
+    const newInfo = resolveTypeInfo(newProperties[newKey]);
 
-    if (newInfo.glslType !== currentInfo.glslType) {
+    if (currentInfo.glslType !== newInfo.glslType) {
       return false;
     }
 
     // Non-instantiable (textures) must match by reference
     if (
       !newInfo.instantiable &&
-      newProperties[key] !== currentProperties[key]
+      newProperties[newKey] !== currentProperties[newKey]
     ) {
       return false;
     }

@@ -1,22 +1,19 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
-import { assertValidNonNegativeNumber } from "../asserts";
 import { UITransparencyMode } from "../UITransparencyMode";
-import type { PlaneData, UIPropertyType } from "./shared";
+import type { PlaneInstanceData, UIPropertyType } from "./shared";
 import {
   arePropertiesCompatible,
   resolveTypeInfo,
   resolveUniform,
 } from "./shared";
-import type { InstancedRangeDescriptor } from "./UIGenericInstancedPlane.Internal";
 import {
   buildEmptyInstancedBufferAttribute,
   buildMaterial,
   CAPACITY_STEP,
-  DEFAULT_VISIBILITY,
   INSTANCED_PLANE_GEOMETRY,
   reconstructValue,
-  validateRange,
+  writeInstanceDefaults,
   writePropertyToArray,
 } from "./UIGenericInstancedPlane.Internal";
 
@@ -24,8 +21,8 @@ import {
  * Instanced plane renderer for batching multiple planes with shared shader.
  *
  * Manages a pool of plane instances that share the same material/shader,
- * enabling efficient batched rendering. Instances can be dynamically added,
- * removed, and updated without recreating the underlying geometry.
+ * enabling efficient batched rendering. Each handler corresponds to exactly
+ * one instance.
  *
  * @remarks
  * Memory is pre-allocated in chunks of 4 instances. Removing instances
@@ -34,10 +31,7 @@ import {
  * Textures in uniforms are not disposed on destroy — caller retains ownership.
  */
 export class UIGenericInstancedPlane extends Mesh {
-  private readonly handlerToDescriptor = new Map<
-    number,
-    InstancedRangeDescriptor
-  >();
+  private readonly handlerToIndex = new Map<number, number>();
   private readonly propertyBuffers = new Map<
     string,
     InstancedBufferAttribute
@@ -45,7 +39,6 @@ export class UIGenericInstancedPlane extends Mesh {
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
 
-  // Properties split by instantiable/non-instantiable
   private readonly uniformProperties: Record<string, UIPropertyType>;
   private readonly varyingProperties: Record<string, UIPropertyType>;
 
@@ -67,7 +60,10 @@ export class UIGenericInstancedPlane extends Mesh {
     initialCapacity: number = CAPACITY_STEP,
   ) {
     const uniformProperties: Record<string, UIPropertyType> = {};
-    const varyingProperties: Record<string, UIPropertyType> = {};
+    const varyingProperties: Record<string, UIPropertyType> = {
+      instanceVisibility: 1,
+      instanceTransform: new Matrix4().identity(),
+    };
 
     for (const [name, value] of Object.entries(properties)) {
       const info = resolveTypeInfo(value);
@@ -102,9 +98,24 @@ export class UIGenericInstancedPlane extends Mesh {
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
 
-    this.initializeBuiltinAttributes();
-    this.initializeUserAttributes();
-    this.initializeUniforms();
+    {
+      for (const [name, value] of Object.entries(this.varyingProperties)) {
+        const attribute = buildEmptyInstancedBufferAttribute(
+          value,
+          this.capacity,
+        );
+        this.instancedGeometry.setAttribute(`a_${name}`, attribute);
+        this.propertyBuffers.set(name, attribute);
+      }
+    }
+
+    {
+      for (const [name, value] of Object.entries(this.uniformProperties)) {
+        const uniform = resolveUniform(name, this.shaderMaterial);
+        uniform.value = value;
+      }
+      this.shaderMaterial.uniformsNeedUpdate = true;
+    }
   }
 
   /**
@@ -122,172 +133,126 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   /**
-   * Allocates new instances and returns a handler for managing them.
+   * Allocates a new instance and returns a handler for managing it.
    *
-   * @param count - Number of instances to allocate
-   * @returns Handler for accessing the allocated instances
+   * @returns Handler for accessing the allocated instance
    *
    * @remarks
-   * New instances are initialized with:
+   * New instance is initialized with:
    * - visibility = 1 (visible)
    * - identity transform matrix
    */
-  public createInstances(count: number): number {
-    if (count <= 0) {
-      throw new Error("Instance count must be positive");
-    }
-
+  public createInstance(): number {
     const handler = this.lastHandler++;
-    const firstIndex = this.instancedGeometry.instanceCount;
+    const index = this.instancedGeometry.instanceCount;
 
-    this.ensureCapacity(firstIndex + count);
+    this.ensureCapacity(index + 1);
 
-    this.handlerToDescriptor.set(handler, { firstIndex, count });
-    this.instancedGeometry.instanceCount += count;
+    this.handlerToIndex.set(handler, index);
+    this.instancedGeometry.instanceCount++;
 
-    this.initializeInstanceDefaults(firstIndex, count);
+    this.initializeInstanceDefaults(index);
 
     return handler;
   }
 
   /**
-   * Releases instances associated with a handler.
+   * Releases an instance associated with a handler.
    *
-   * @param handler - Handler returned from createInstances
+   * @param handler - Handler returned from createInstance
    * @throws Error if handler is invalid
    *
    * @remarks
    * Triggers data compaction. Other handlers remain valid but may
    * reference different internal indices after compaction.
    */
-  public destroyInstances(handler: number): void {
-    const descriptor = this.resolveDescriptor(handler);
+  public destroyInstance(handler: number): void {
+    const index = this.resolveIndex(handler);
 
-    this.handlerToDescriptor.delete(handler);
+    this.handlerToIndex.delete(handler);
 
-    const gapStart = descriptor.firstIndex;
-    const gapEnd = gapStart + descriptor.count;
-    const totalInstances = this.instancedGeometry.instanceCount;
+    const lastIndex = this.instancedGeometry.instanceCount - 1;
 
-    if (gapEnd < totalInstances) {
-      this.shiftInstanceData(gapEnd, gapStart, totalInstances - gapEnd);
-      this.updateDescriptorIndices(gapEnd, -descriptor.count);
+    if (index < lastIndex) {
+      this.moveInstanceData(lastIndex, index);
+      this.updateIndicesAfterMove(lastIndex, index);
     }
 
-    this.instancedGeometry.instanceCount -= descriptor.count;
+    this.instancedGeometry.instanceCount--;
   }
 
   /**
-   * Updates per-instance properties.
+   * Updates instance properties.
    *
-   * @param handler - Handler returned from createInstances
-   * @param offset - Offset within the handler's instance range
-   * @param instancesProperties - Array of property objects to apply
-   * @throws Error if handler is invalid or offset+count exceeds range
+   * @param handler - Handler returned from createInstance
+   * @param properties - Properties to apply
    */
   public setProperties(
     handler: number,
-    offset: number,
-    instancesProperties: Record<string, UIPropertyType>[],
+    properties: Record<string, UIPropertyType>,
   ): void {
-    assertValidNonNegativeNumber(offset, "setProperties offset");
+    const index = this.resolveIndex(handler);
 
-    const descriptor = this.resolveDescriptor(handler);
-    validateRange(descriptor, offset, instancesProperties.length);
+    for (const [name, value] of Object.entries(properties)) {
+      const typeInfo = resolveTypeInfo(value);
 
-    for (let i = 0; i < instancesProperties.length; i++) {
-      const properties = instancesProperties[i];
-      const instanceIndex = descriptor.firstIndex + offset + i;
-
-      for (const [name, value] of Object.entries(properties)) {
-        const typeInfo = resolveTypeInfo(value);
-
-        if (typeInfo.instantiable) {
-          const attribute = this.resolveAttribute(name);
-          const itemOffset = instanceIndex * attribute.itemSize;
-          writePropertyToArray(
-            value,
-            attribute.array as Float32Array,
-            itemOffset,
-          );
-          attribute.needsUpdate = true;
-        } else {
-          const uniform = resolveUniform(name, this.shaderMaterial);
-          uniform.value = value;
-          this.shaderMaterial.uniformsNeedUpdate = true;
-        }
+      if (typeInfo.instantiable) {
+        const attribute = this.resolveAttribute(name);
+        const offset = index * attribute.itemSize;
+        writePropertyToArray(value, attribute.array as Float32Array, offset);
+        attribute.needsUpdate = true;
+      } else {
+        const uniform = resolveUniform(name, this.shaderMaterial);
+        uniform.value = value;
+        this.shaderMaterial.uniformsNeedUpdate = true;
       }
     }
   }
 
   /**
-   * Updates instance transform matrices.
+   * Updates instance transform matrix.
    *
-   * @param handler - Handler returned from createInstances
-   * @param offset - Offset within the handler's instance range
-   * @param transforms - Array of Matrix4 transforms to apply
+   * @param handler - Handler returned from createInstance
+   * @param transform - Matrix4 transform to apply
    */
-  public setTransforms(
-    handler: number,
-    offset: number,
-    transforms: Matrix4[],
-  ): void {
-    assertValidNonNegativeNumber(offset, "setTransforms offset");
-
-    const descriptor = this.resolveDescriptor(handler);
-    validateRange(descriptor, offset, transforms.length);
+  public setTransform(handler: number, transform: Matrix4): void {
+    const index = this.resolveIndex(handler);
 
     const attribute = this.resolveAttribute("instanceTransform");
     const array = attribute.array as Float32Array;
+    const offset = index * 16;
 
-    for (let i = 0; i < transforms.length; i++) {
-      const instanceIndex = descriptor.firstIndex + offset + i;
-      const itemOffset = instanceIndex * attribute.itemSize;
-      const elements = transforms[i].elements;
-
-      for (let j = 0; j < elements.length; j++) {
-        array[itemOffset + j] = elements[j];
-      }
+    const elements = transform.elements;
+    for (let j = 0; j < 16; j++) {
+      array[offset + j] = elements[j];
     }
 
     attribute.needsUpdate = true;
   }
 
   /**
-   * Updates instance visibility flags.
+   * Updates instance visibility.
    *
-   * @param handler - Handler returned from createInstances
-   * @param offset - Offset within the handler's instance range
-   * @param visibility - Array of boolean visibility values
+   * @param handler - Handler returned from createInstance
+   * @param visible - Whether the instance should be visible
    */
-  public setVisibility(
-    handler: number,
-    offset: number,
-    visibility: boolean[],
-  ): void {
-    assertValidNonNegativeNumber(offset, "setVisibility offset");
-
-    const descriptor = this.resolveDescriptor(handler);
-    validateRange(descriptor, offset, visibility.length);
+  public setVisibility(handler: number, visible: boolean): void {
+    const index = this.resolveIndex(handler);
 
     const attribute = this.resolveAttribute("instanceVisibility");
     const array = attribute.array as Float32Array;
-
-    for (let i = 0; i < visibility.length; i++) {
-      const instanceIndex = descriptor.firstIndex + offset + i;
-      array[instanceIndex] = visibility[i] ? 1 : 0;
-    }
+    array[index] = visible ? 1 : 0;
 
     attribute.needsUpdate = true;
   }
 
   /**
-   * Checks if the provided configuration is compatible with this instance.
+   * Checks if the provided configuration is compatible with this plane.
    *
    * @param source - GLSL fragment shader source
    * @param properties - Map of property names to values
    * @param transparency - Transparency rendering mode
-   * @returns true if the configuration matches the current instance, false otherwise
+   * @returns true if the configuration matches, false otherwise
    */
   public isCompatible(
     source: string,
@@ -298,13 +263,11 @@ export class UIGenericInstancedPlane extends Mesh {
       return false;
     }
 
-    const allProperties = this.properties;
-    return arePropertiesCompatible(allProperties, properties);
+    return arePropertiesCompatible(this.properties, properties);
   }
 
   /**
    * Checks if the provided properties are compatible (ignoring source/transparency).
-   * Useful for checking if property updates would break compatibility.
    *
    * @param properties - Map of property names to values
    * @returns true if properties are compatible
@@ -312,45 +275,39 @@ export class UIGenericInstancedPlane extends Mesh {
   public arePropertiesCompatible(
     properties: Record<string, UIPropertyType>,
   ): boolean {
-    const allProperties = this.properties;
-    return arePropertiesCompatible(allProperties, properties);
+    return arePropertiesCompatible(this.properties, properties);
   }
 
   /**
-   * Extracts complete instance data for a specific handler.
+   * Extracts complete instance data.
    *
-   * @param handler - Handler returned from createInstances
+   * @param handler - Handler returned from createInstance
    * @returns Complete instance data for relocation
    */
-  public extractInstanceData(handler: number): PlaneData {
+  public extractInstanceData(handler: number): PlaneInstanceData {
     return {
       source: this.source,
-      properties: this.extractInstanceProperties(handler),
+      properties: this.extractProperties(handler),
       transparency: this.transparency,
-      transform: this.extractInstanceTransform(handler),
-      visibility: this.extractInstanceVisibility(handler),
+      transform: this.extractTransform(handler),
+      visibility: this.extractVisibility(handler),
     };
   }
 
   /**
    * Extracts properties for a specific instance.
    *
-   * @param handler - Handler returned from createInstances
+   * @param handler - Handler returned from createInstance
    * @returns Properties object reconstructed from instance data
    */
-  public extractInstanceProperties(
-    handler: number,
-  ): Record<string, UIPropertyType> {
-    const descriptor = this.resolveDescriptor(handler);
-    const instanceIndex = descriptor.firstIndex;
+  public extractProperties(handler: number): Record<string, UIPropertyType> {
+    const index = this.resolveIndex(handler);
     const result: Record<string, UIPropertyType> = {};
 
-    // Copy non-instantiable from uniforms
     for (const [name, value] of Object.entries(this.uniformProperties)) {
       result[name] = value;
     }
 
-    // Extract instantiable from attributes
     for (const [name, referenceValue] of Object.entries(
       this.varyingProperties,
     )) {
@@ -358,7 +315,7 @@ export class UIGenericInstancedPlane extends Mesh {
         name,
       ) as InstancedBufferAttribute;
       const array = attribute.array as Float32Array;
-      const offset = instanceIndex * attribute.itemSize;
+      const offset = index * attribute.itemSize;
       result[name] = reconstructValue(referenceValue, array, offset);
     }
 
@@ -368,35 +325,34 @@ export class UIGenericInstancedPlane extends Mesh {
   /**
    * Extracts transform matrix for a specific instance.
    *
-   * @param handler - Handler returned from createInstances
+   * @param handler - Handler returned from createInstance
    * @returns Matrix4 transform
    */
-  public extractInstanceTransform(handler: number): Matrix4 {
-    const descriptor = this.resolveDescriptor(handler);
+  public extractTransform(handler: number): Matrix4 {
+    const index = this.resolveIndex(handler);
     const attribute = this.propertyBuffers.get(
       "instanceTransform",
     ) as InstancedBufferAttribute;
     const array = attribute.array as Float32Array;
-    const offset = descriptor.firstIndex * 16;
 
     const matrix = new Matrix4();
-    matrix.fromArray(array, offset);
+    matrix.fromArray(array, index * 16);
     return matrix;
   }
 
   /**
    * Extracts visibility flag for a specific instance.
    *
-   * @param handler - Handler returned from createInstances
+   * @param handler - Handler returned from createInstance
    * @returns boolean visibility
    */
-  public extractInstanceVisibility(handler: number): boolean {
-    const descriptor = this.resolveDescriptor(handler);
+  public extractVisibility(handler: number): boolean {
+    const index = this.resolveIndex(handler);
     const attribute = this.propertyBuffers.get(
       "instanceVisibility",
     ) as InstancedBufferAttribute;
     const array = attribute.array as Float32Array;
-    return array[descriptor.firstIndex] >= 0.5;
+    return array[index] >= 0.5;
   }
 
   /**
@@ -409,70 +365,25 @@ export class UIGenericInstancedPlane extends Mesh {
     this.instancedGeometry.dispose();
     this.shaderMaterial.dispose();
     this.propertyBuffers.clear();
-    this.handlerToDescriptor.clear();
+    this.handlerToIndex.clear();
   }
 
-  private initializeBuiltinAttributes(): void {
-    const builtins: [string, number][] = [
-      ["instanceVisibility", 1],
-      ["instanceTransform", 16],
-    ];
-
-    for (const [name, itemSize] of builtins) {
-      const attribute = new InstancedBufferAttribute(
-        new Float32Array(this.capacity * itemSize),
-        itemSize,
-      );
-      this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-      this.propertyBuffers.set(name, attribute);
-    }
-  }
-
-  private initializeUserAttributes(): void {
-    for (const [name, value] of Object.entries(this.varyingProperties)) {
-      const attribute = buildEmptyInstancedBufferAttribute(
-        value,
-        this.capacity,
-      );
-      this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-      this.propertyBuffers.set(name, attribute);
-    }
-  }
-
-  private initializeUniforms(): void {
-    for (const [name, value] of Object.entries(this.uniformProperties)) {
-      const uniform = resolveUniform(name, this.shaderMaterial);
-      uniform.value = value;
-    }
-    this.shaderMaterial.uniformsNeedUpdate = true;
-  }
-
-  private initializeInstanceDefaults(firstIndex: number, count: number): void {
-    const visibilityAttribute = this.propertyBuffers.get(
+  private initializeInstanceDefaults(index: number): void {
+    const visibilityAttr = this.propertyBuffers.get(
       "instanceVisibility",
     ) as InstancedBufferAttribute;
-    const transformAttribute = this.propertyBuffers.get(
+    const transformAttr = this.propertyBuffers.get(
       "instanceTransform",
     ) as InstancedBufferAttribute;
 
-    const visibilityArray = visibilityAttribute.array as Float32Array;
-    const transformArray = transformAttribute.array as Float32Array;
+    writeInstanceDefaults(
+      visibilityAttr.array as Float32Array,
+      transformAttr.array as Float32Array,
+      index,
+    );
 
-    const identityMatrix4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-
-    for (let i = 0; i < count; i++) {
-      const idx = firstIndex + i;
-
-      visibilityArray[idx] = DEFAULT_VISIBILITY;
-
-      const transformOffset = idx * 16;
-      for (let j = 0; j < 16; j++) {
-        transformArray[transformOffset + j] = identityMatrix4[j];
-      }
-    }
-
-    visibilityAttribute.needsUpdate = true;
-    transformAttribute.needsUpdate = true;
+    visibilityAttr.needsUpdate = true;
+    transformAttr.needsUpdate = true;
   }
 
   private ensureCapacity(requiredCapacity: number): void {
@@ -496,38 +407,44 @@ export class UIGenericInstancedPlane extends Mesh {
     this.capacity = newCapacity;
   }
 
-  private shiftInstanceData(
-    sourceStart: number,
-    targetStart: number,
-    count: number,
-  ): void {
+  /**
+   * Moves instance data from source index to target index.
+   * Used for compaction when removing instances.
+   */
+  private moveInstanceData(sourceIndex: number, targetIndex: number): void {
     for (const attribute of this.propertyBuffers.values()) {
       const array = attribute.array as Float32Array;
       const itemSize = attribute.itemSize;
 
-      const srcOffset = sourceStart * itemSize;
-      const dstOffset = targetStart * itemSize;
-      const length = count * itemSize;
+      const srcOffset = sourceIndex * itemSize;
+      const dstOffset = targetIndex * itemSize;
 
-      array.copyWithin(dstOffset, srcOffset, srcOffset + length);
+      for (let i = 0; i < itemSize; i++) {
+        array[dstOffset + i] = array[srcOffset + i];
+      }
+
       attribute.needsUpdate = true;
     }
   }
 
-  private updateDescriptorIndices(threshold: number, delta: number): void {
-    for (const descriptor of this.handlerToDescriptor.values()) {
-      if (descriptor.firstIndex >= threshold) {
-        descriptor.firstIndex += delta;
+  /**
+   * Updates handler-to-index mapping after moving an instance.
+   */
+  private updateIndicesAfterMove(oldIndex: number, newIndex: number): void {
+    for (const [handler, index] of this.handlerToIndex) {
+      if (index === oldIndex) {
+        this.handlerToIndex.set(handler, newIndex);
+        break;
       }
     }
   }
 
-  private resolveDescriptor(handler: number): InstancedRangeDescriptor {
-    const descriptor = this.handlerToDescriptor.get(handler);
-    if (descriptor === undefined) {
+  private resolveIndex(handler: number): number {
+    const index = this.handlerToIndex.get(handler);
+    if (index === undefined) {
       throw new Error(`Invalid handler: ${handler}`);
     }
-    return descriptor;
+    return index;
   }
 
   private resolveAttribute(name: string): InstancedBufferAttribute {

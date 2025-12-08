@@ -9,7 +9,7 @@ import {
 
 export const PLANE_GEOMETRY = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);
 
-export function buildMaterial(
+export function buildGenericPlaneMaterial(
   source: string,
   properties: Record<string, UIPropertyType>,
   transparency: UITransparencyMode,

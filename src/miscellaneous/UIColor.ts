@@ -10,6 +10,15 @@ function sRGBToLinear(c: number): number {
   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
+/**
+ * Converts linear component to sRGB color space.
+ * @param c - Linear component value (0-1)
+ * @returns sRGB component value (0-1)
+ */
+function linearToSRGB(c: number): number {
+  return c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+}
+
 const COLORS: Record<string, number | undefined> = {
   black: 0x000000,
   white: 0xffffff,
@@ -621,6 +630,44 @@ export class UIColor extends Eventail {
     }
 
     return this.setHexRGB(hex, a);
+  }
+
+  /**
+   * Sets color from linear (GLSL) color space values.
+   *
+   * @param r - Red in linear space (0-1)
+   * @param g - Green in linear space (0-1)
+   * @param b - Blue in linear space (0-1)
+   * @param a - Alpha (0-1)
+   * @returns This instance
+   */
+  public setGLSLColor(
+    r: number,
+    g: number,
+    b: number,
+    a = this.aInternal,
+  ): this {
+    this.ensureRGBUpdatedFromHSL();
+
+    const sRGBR = linearToSRGB(r);
+    const sRGBG = linearToSRGB(g);
+    const sRGBB = linearToSRGB(b);
+
+    if (
+      sRGBR !== this.rInternal ||
+      sRGBG !== this.gInternal ||
+      sRGBB !== this.bInternal ||
+      a !== this.aInternal
+    ) {
+      this.rInternal = sRGBR;
+      this.gInternal = sRGBG;
+      this.bInternal = sRGBB;
+      this.aInternal = a;
+      this.hslDirty = true;
+      this.emit(UIColorEvent.CHANGE, this);
+    }
+
+    return this;
   }
 
   /**
