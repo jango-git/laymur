@@ -19,7 +19,7 @@ export interface GLSLTypeInfo {
   itemSize: number;
 }
 
-export interface PlaneInstanceData {
+export interface GenericPlaneData {
   source: string;
   properties: Record<string, UIPropertyType>;
   transparency: UITransparencyMode;
@@ -29,7 +29,7 @@ export interface PlaneInstanceData {
 
 export const DEFAULT_ALPHA_TEST = 0.5;
 
-export function resolveTypeInfo(value: UIPropertyType): GLSLTypeInfo {
+export function resolveGLSLTypeInfo(value: UIPropertyType): GLSLTypeInfo {
   if (typeof value === "number") {
     return { glslType: "float", instantiable: true, itemSize: 1 };
   }
@@ -86,8 +86,8 @@ export function arePropertiesCompatible(
       return false;
     }
 
-    const currentInfo = resolveTypeInfo(currentProperties[newKey]);
-    const newInfo = resolveTypeInfo(newProperties[newKey]);
+    const currentInfo = resolveGLSLTypeInfo(currentProperties[newKey]);
+    const newInfo = resolveGLSLTypeInfo(newProperties[newKey]);
 
     if (currentInfo.glslType !== newInfo.glslType) {
       return false;
@@ -103,4 +103,48 @@ export function arePropertiesCompatible(
   }
 
   return true;
+}
+
+export function buildGenericPlaneFragmentShader(
+  uniformDeclarations: string[],
+  varyingDeclarations: string[],
+  source: string,
+): string {
+  return `
+    // Defines
+    #define PI 3.14159265359
+
+    // Uniforms
+    ${uniformDeclarations.join("\n")}
+
+    // Builtin varyings
+    varying vec3 p_position;
+    varying vec2 p_uv;
+
+    // User varyings
+    ${varyingDeclarations.join("\n")}
+
+    #include <alphahash_pars_fragment>
+
+    // Source must define vec4 draw() function
+    ${source}
+
+    void main() {
+      vec4 diffuseColor = draw();
+
+      #ifdef USE_ALPHATEST
+        if (diffuseColor.a < ${DEFAULT_ALPHA_TEST.toFixed(2)}) {
+          discard;
+        }
+      #endif
+
+      #ifdef USE_ALPHAHASH
+        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
+          discard;
+        }
+      #endif
+
+      gl_FragColor = linearToOutputTexel(diffuseColor);
+    }
+  `;
 }

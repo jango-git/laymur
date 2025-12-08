@@ -1,28 +1,10 @@
-import type { Texture } from "three";
+import type { Texture, WebGLRenderer } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import source from "../shaders/UIDefaultShader.glsl";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
-
-/**
- * Configuration options for creating a UIImage element.
- */
-export interface UIImageOptions {
-  /** X position of the element */
-  x: number;
-  /** Y position of the element */
-  y: number;
-  /** Width of the element */
-  width: number;
-  /** Height of the element */
-  height: number;
-  /** Color tint applied to the image */
-  color: UIColor;
-  /** Default UIMode */
-  mode: UIMode;
-}
 
 /**
  * UI element for displaying textured images.
@@ -36,10 +18,10 @@ export interface UIImageOptions {
  * @see {@link Texture} - Three.js texture for image data
  */
 export class UIImage extends UIElement {
-  /** Internal storage for the current texture */
+  public readonly color: UIColor;
+
   private textureInternal: Texture;
-  /** Internal storage for the color tint */
-  private readonly colorInternal: UIColor;
+  private textureInternalDirty = false;
 
   /**
    * Creates a new UIImage instance.
@@ -55,25 +37,21 @@ export class UIImage extends UIElement {
   constructor(
     layer: UILayer,
     texture: Texture,
-    options: Partial<UIImageOptions> = {},
+    options: Partial<UIElementCommonOptions> = {},
   ) {
     const w = options.width ?? texture.image.width;
     const h = options.height ?? texture.image.height;
-    const color = options.color ?? new UIColor();
+    const color = new UIColor(options.color);
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      texture: texture,
-      textureTransform: texture.matrix,
       color,
+      texture,
+      textureTransform: texture.matrix,
     });
 
+    this.color = color;
+    this.mode = options.mode ?? this.mode;
     this.textureInternal = texture;
-    this.colorInternal = color;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
-
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
   }
 
   /**
@@ -82,14 +60,6 @@ export class UIImage extends UIElement {
    */
   public get texture(): Texture {
     return this.textureInternal;
-  }
-
-  /**
-   * Gets the current color tint applied to the image.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
   }
 
   /**
@@ -103,40 +73,35 @@ export class UIImage extends UIElement {
    * @see {@link assertValidPositiveNumber}
    */
   public set texture(value: Texture) {
-    const w = value.image.width;
-    const h = value.image.height;
+    if (this.textureInternal !== value) {
+      const w = value.image.width;
+      const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UIImage.texture.width");
-    assertValidPositiveNumber(h, "UIImage.texture.height");
+      assertValidPositiveNumber(w, "UIImage.texture.width");
+      assertValidPositiveNumber(h, "UIImage.texture.height");
 
-    this.solverWrapper.suggestVariableValue(this.wVariable, w);
-    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+      this.solverWrapper.suggestVariableValue(this.wVariable, w);
+      this.solverWrapper.suggestVariableValue(this.hVariable, h);
 
-    this.textureInternal = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      texture: value,
-      textureTransform: value.matrix,
-    });
+      this.textureInternal = value;
+      this.textureInternalDirty = true;
+    }
   }
 
-  /**
-   * Sets the color tint applied to the image.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
-  }
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    if (this.color.dirty || this.textureInternalDirty) {
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        texture: this.textureInternal,
+        textureTransform: this.textureInternal.matrix,
+        color: this.color,
+      });
 
-  /**
-   * Destroys the UI image by cleaning up color event listeners and all associated resources.
-   */
-  public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
-    super.destroy();
+      this.color.dirty = false;
+      this.textureInternalDirty = false;
+    }
+    super.onWillRender(renderer, deltaTime);
   }
-
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
 }

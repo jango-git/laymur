@@ -1,10 +1,10 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
 import { UITransparencyMode } from "../UITransparencyMode";
-import type { PlaneInstanceData, UIPropertyType } from "./shared";
+import type { GenericPlaneData, UIPropertyType } from "./shared";
 import {
   arePropertiesCompatible,
-  resolveTypeInfo,
+  resolveGLSLTypeInfo,
   resolveUniform,
 } from "./shared";
 import {
@@ -66,7 +66,7 @@ export class UIGenericInstancedPlane extends Mesh {
     };
 
     for (const [name, value] of Object.entries(properties)) {
-      const info = resolveTypeInfo(value);
+      const info = resolveGLSLTypeInfo(value);
       if (info.instantiable) {
         varyingProperties[name] = value;
       } else {
@@ -194,7 +194,7 @@ export class UIGenericInstancedPlane extends Mesh {
     const index = this.resolveIndex(handler);
 
     for (const [name, value] of Object.entries(properties)) {
-      const typeInfo = resolveTypeInfo(value);
+      const typeInfo = resolveGLSLTypeInfo(value);
 
       if (typeInfo.instantiable) {
         const attribute = this.resolveAttribute(name);
@@ -284,7 +284,7 @@ export class UIGenericInstancedPlane extends Mesh {
    * @param handler - Handler returned from createInstance
    * @returns Complete instance data for relocation
    */
-  public extractInstanceData(handler: number): PlaneInstanceData {
+  public extractInstanceData(handler: number): GenericPlaneData {
     return {
       source: this.source,
       properties: this.extractProperties(handler),

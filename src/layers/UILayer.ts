@@ -4,7 +4,8 @@ import type { UIPlaneElement } from "../miscellaneous/asserts";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
-import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
+import type { UISceneWrapperInterface } from "../miscellaneous/UISceneWrapperInterface";
+import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
 import { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
 
@@ -78,13 +79,13 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * Constraint solver wrapper for managing layout calculations.
    * @see {@link UISolverWrapper}
    */
-  protected readonly solverWrapper = new UISolverWrapper();
+  protected readonly solverWrapperInternal = new UISolverWrapper();
 
   /**
    * 3D scene wrapper for managing rendering and element hierarchy.
    * @see {@link UISceneWrapper}
    */
-  protected readonly sceneWrapper: UISceneWrapper;
+  protected readonly sceneWrapperInternal: UISceneWrapper;
 
   /** Internal storage for the current visibility/interaction mode. */
   protected modeInternal: UIMode = UIMode.VISIBLE;
@@ -108,13 +109,33 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    */
   constructor(w: number, h: number) {
     super();
-    this.sceneWrapper = new UISceneWrapper(w, h);
-    this.xVariable = this.solverWrapper.createVariable(0, UIPriority.P0);
-    this.yVariable = this.solverWrapper.createVariable(0, UIPriority.P0);
-    this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P0);
-    this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P0);
+    this.sceneWrapperInternal = new UISceneWrapper(w, h);
+    this.xVariable = this.solverWrapperInternal.createVariable(
+      0,
+      UIPriority.P0,
+    );
+    this.yVariable = this.solverWrapperInternal.createVariable(
+      0,
+      UIPriority.P0,
+    );
+    this.wVariable = this.solverWrapperInternal.createVariable(
+      w,
+      UIPriority.P0,
+    );
+    this.hVariable = this.solverWrapperInternal.createVariable(
+      h,
+      UIPriority.P0,
+    );
     this.orientationInternal =
       w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+  }
+
+  public get sceneWrapper(): UISceneWrapperInterface {
+    return this.sceneWrapperInternal;
+  }
+
+  public get solverWrapper(): UISolverWrapperInterface {
+    return this.solverWrapperInternal;
   }
 
   /**
@@ -122,7 +143,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current x position in pixels
    */
   public get x(): number {
-    return this.solverWrapper.readVariableValue(this.xVariable);
+    return this.solverWrapperInternal.readVariableValue(this.xVariable);
   }
 
   /**
@@ -130,7 +151,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current y position in pixels
    */
   public get y(): number {
-    return this.solverWrapper.readVariableValue(this.yVariable);
+    return this.solverWrapperInternal.readVariableValue(this.yVariable);
   }
 
   /**
@@ -138,7 +159,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current layer width in pixels
    */
   public get width(): number {
-    return this.solverWrapper.readVariableValue(this.wVariable);
+    return this.solverWrapperInternal.readVariableValue(this.wVariable);
   }
 
   /**
@@ -146,7 +167,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current layer height in pixels
    */
   public get height(): number {
-    return this.solverWrapper.readVariableValue(this.hVariable);
+    return this.solverWrapperInternal.readVariableValue(this.hVariable);
   }
 
   /**
@@ -191,9 +212,9 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @protected
    */
   protected resizeInternal(width: number, height: number): void {
-    this.solverWrapper.suggestVariableValue(this.wVariable, width);
-    this.solverWrapper.suggestVariableValue(this.hVariable, height);
-    this.sceneWrapper.resize(width, height);
+    this.solverWrapperInternal.suggestVariableValue(this.wVariable, width);
+    this.solverWrapperInternal.suggestVariableValue(this.hVariable, height);
+    this.sceneWrapperInternal.resize(width, height);
 
     const orientation =
       width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
@@ -222,7 +243,8 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.mode !== UIMode.HIDDEN) {
       this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
-      this.sceneWrapper.render(renderer);
+      this.solverWrapperInternal.dirty = false;
+      this.sceneWrapperInternal.render(renderer);
     }
   }
 
@@ -251,30 +273,6 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   }
 
   /**
-   * Internal method for accessing the constraint solver wrapper.
-   *
-   * Provides access to the layer's constraint solver for elements and
-   * constraints that need to create variables or constraints.
-   *
-   * @returns The constraint solver wrapper instance
-   */
-  protected ["getSolverWrapperInternal"](): UISolverWrapper {
-    return this.solverWrapper;
-  }
-
-  /**
-   * Internal method for accessing the 3D scene wrapper.
-   *
-   * Provides access to the layer's scene management system for elements
-   * that need to be added to or removed from the 3D scene.
-   *
-   * @returns The scene wrapper instance
-   */
-  protected ["getSceneWrapperClientAPI"](): UISceneWrapperClientAPI {
-    return this.sceneWrapper;
-  }
-
-  /**
    * Internal method for registering an input listener for pointer events.
    *
    * Adds a listener to handle click events with the specified z-index priority.
@@ -285,7 +283,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @throws Will throw an error if the listener is already registered
    */
 
-  protected ["subscribePointerInput"](listener: UILayerInputListener): void {
+  protected ["subscribeInputCatcher"](listener: UILayerInputListener): void {
     if (this.inputListeners.find((l) => l === listener)) {
       throw new Error("Listener already exists");
     }
@@ -302,7 +300,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @throws Will throw an error if the listener is not found
    */
 
-  protected ["unsubscribePointerInput"](listener: UILayerInputListener): void {
+  protected ["unsubscribeInputCatcher"](listener: UILayerInputListener): void {
     const index = this.inputListeners.findIndex((l) => l === listener);
     if (index === -1) {
       throw new Error("Listener not found");

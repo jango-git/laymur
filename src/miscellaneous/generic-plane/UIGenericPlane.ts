@@ -6,7 +6,7 @@ import {
   arePropertiesCompatible,
   DEFAULT_ALPHA_TEST,
   resolveUniform,
-  type PlaneInstanceData,
+  type GenericPlaneData,
   type UIPropertyType,
 } from "./shared";
 import {
@@ -150,7 +150,7 @@ export class UIGenericPlane extends Mesh {
   /**
    * Extracts complete plane data for relocation/promotion.
    */
-  public extractInstanceData(): PlaneInstanceData {
+  public extractInstanceData(): GenericPlaneData {
     return {
       source: this.source,
       properties: this.properties,

@@ -2,7 +2,7 @@ import type { Matrix4, Object3D } from "three";
 import type { UITransparencyMode } from "./UITransparencyMode";
 import type { UIPropertyType } from "./generic-plane/shared";
 
-export interface UISceneWrapperClientAPI {
+export interface UISceneWrapperInterface {
   createPlane(
     source: string,
     properties: Record<string, UIPropertyType>,

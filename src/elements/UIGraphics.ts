@@ -1,27 +1,12 @@
+import type { WebGLRenderer } from "three";
 import { CanvasTexture, LinearFilter } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import source from "../shaders/UIDefaultShader.glsl";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 
-/**
- * Configuration options for creating a UIGraphics element.
- */
-export interface UIGraphicsOptions {
-  /** X position of the element */
-  x: number;
-  /** Y position of the element */
-  y: number;
-  /** Width of the canvas (default: 512) */
-  width: number;
-  /** Height of the canvas (default: 512) */
-  height: number;
-  /** Color tint applied to the graphics */
-  color: UIColor;
-  /** Default UIMode */
-  mode: UIMode;
-}
+const DEFAULT_CANVAS_RESOLUTION = 512;
 
 /**
  * UI element for drawing graphics using 2D canvas API.
@@ -31,14 +16,14 @@ export interface UIGraphicsOptions {
  * for custom drawing operations.
  */
 export class UIGraphics extends UIElement {
+  public readonly color: UIColor;
+
   /** OffscreenCanvas for rendering graphics */
   private readonly canvas: OffscreenCanvas;
   /** 2D rendering context */
   private readonly ctx: OffscreenCanvasRenderingContext2D;
   /** Three.js texture created from the canvas */
-  private readonly canvasTexture: CanvasTexture;
-  /** Internal storage for the color tint */
-  private readonly colorInternal: UIColor;
+  private readonly texture: CanvasTexture;
 
   /**
    * Creates a new UIGraphics instance.
@@ -46,54 +31,34 @@ export class UIGraphics extends UIElement {
    * @param layer - The UI layer that contains this graphics element
    * @param options - Configuration options for the graphics element
    */
-  constructor(layer: UILayer, options: Partial<UIGraphicsOptions> = {}) {
-    const defaultCanvasSize = 512;
-    const width = options.width ?? defaultCanvasSize;
-    const height = options.height ?? defaultCanvasSize;
-    const color = options.color ?? new UIColor();
+  constructor(layer: UILayer, options: Partial<UIElementCommonOptions> = {}) {
+    const w = options.width ?? DEFAULT_CANVAS_RESOLUTION;
+    const h = options.height ?? DEFAULT_CANVAS_RESOLUTION;
+    const color = new UIColor(options.color);
 
-    // Create OffscreenCanvas
-    const canvas = new OffscreenCanvas(width, height);
+    const canvas = new OffscreenCanvas(w, h);
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
       throw new Error("Failed to get 2D context from OffscreenCanvas");
     }
 
-    // Create texture from canvas
-    const canvasTexture = new CanvasTexture(canvas);
-    canvasTexture.minFilter = LinearFilter;
-    canvasTexture.magFilter = LinearFilter;
+    const texture = new CanvasTexture(canvas);
+    texture.minFilter = LinearFilter;
+    texture.magFilter = LinearFilter;
 
-    super(layer, options.x ?? 0, options.y ?? 0, width, height, source, {
-      texture: canvasTexture,
-      textureTransform: canvasTexture.matrix,
+    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
+      texture: texture,
+      textureTransform: texture.matrix,
       color,
     });
 
+    this.color = color;
+    this.mode = options.mode ?? this.mode;
+
     this.canvas = canvas;
     this.ctx = ctx;
-    this.canvasTexture = canvasTexture;
-    this.colorInternal = color;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
-
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
-  }
-
-  /**
-   * Gets the current color tint applied to the graphics.
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
-  }
-
-  /**
-   * Sets the color tint applied to the graphics.
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
+    this.texture = texture;
   }
 
   /**
@@ -107,7 +72,7 @@ export class UIGraphics extends UIElement {
       this.ctx.fillStyle = fillColor.toCSSColor();
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -116,7 +81,7 @@ export class UIGraphics extends UIElement {
    */
   public rect(x: number, y: number, width: number, height: number): this {
     this.ctx.rect(x, y, width, height);
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -125,7 +90,7 @@ export class UIGraphics extends UIElement {
    */
   public fillRect(x: number, y: number, width: number, height: number): this {
     this.ctx.fillRect(x, y, width, height);
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -134,7 +99,7 @@ export class UIGraphics extends UIElement {
    */
   public strokeRect(x: number, y: number, width: number, height: number): this {
     this.ctx.strokeRect(x, y, width, height);
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -145,7 +110,7 @@ export class UIGraphics extends UIElement {
     this.ctx.beginPath();
     this.ctx.arc(x, y, radius, 0, Math.PI * 2);
     this.ctx.closePath();
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -154,7 +119,7 @@ export class UIGraphics extends UIElement {
    */
   public beginPath(): this {
     this.ctx.beginPath();
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -163,7 +128,7 @@ export class UIGraphics extends UIElement {
    */
   public closePath(): this {
     this.ctx.closePath();
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -172,7 +137,7 @@ export class UIGraphics extends UIElement {
    */
   public fill(): this {
     this.ctx.fill();
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -181,7 +146,7 @@ export class UIGraphics extends UIElement {
    */
   public stroke(): this {
     this.ctx.stroke();
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -198,7 +163,7 @@ export class UIGraphics extends UIElement {
    */
   public lineTo(x: number, y: number): this {
     this.ctx.lineTo(x, y);
-    this.canvasTexture.needsUpdate = true;
+    this.texture.needsUpdate = true;
     return this;
   }
 
@@ -231,13 +196,20 @@ export class UIGraphics extends UIElement {
    * Destroys the graphics element by cleaning up resources.
    */
   public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
-    this.canvasTexture.dispose();
+    this.texture.dispose();
     super.destroy();
   }
 
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    if (this.color.dirty) {
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        color: this.color,
+      });
+      this.color.dirty = false;
+    }
+    super.onWillRender(renderer, deltaTime);
+  }
 }

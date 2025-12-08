@@ -9,9 +9,9 @@ import {
   WebGLRenderTarget,
 } from "three";
 import { type UILayer } from "../layers/UILayer";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import source from "../shaders/UIDefaultShader.glsl";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 
 /**
@@ -56,17 +56,7 @@ const DEFAULT_USE_DEPTH = true;
 /**
  * Configuration options for UIScene element creation.
  */
-export interface UISceneOptions {
-  /** Initial x-coordinate position. */
-  x: number;
-  /** Initial y-coordinate position. */
-  y: number;
-  /** Width of the scene render target in pixels. */
-  width: number;
-  /** Height of the scene render target in pixels. */
-  height: number;
-  /** Color tint applied to the scene texture. */
-  color: UIColor;
+export interface UISceneOptions extends UIElementCommonOptions {
   /** Three.js scene to render. */
   scene: Scene;
   /** Camera to use for rendering the scene. */
@@ -76,13 +66,9 @@ export interface UISceneOptions {
   /** Resolution factor for render target sizing (0.1 to 2.0). */
   resolutionFactor: number;
   /** Clear color for the render target background. */
-  clearColor: number;
-  /** Clear alpha for the render target background. */
-  clearAlpha: number;
+  clearColor: UIColor;
   /** Whether to enable depth buffer for the render target. */
   enableDepthBuffer: boolean;
-  /** Default UIMode */
-  mode: UIMode;
 }
 
 /**
@@ -115,8 +101,6 @@ export class UIScene extends UIElement {
   private resolutionFactorInternal: number;
   /** Internal storage for the current clear color. */
   private clearColorInternal: number;
-  /** Internal storage for the current clear alpha. */
-  private clearAlphaInternal: number;
 
   /** Frame alternation boolean for EACH_SECOND_FRAME update mode. */
   private frameBoolean = true;
@@ -189,7 +173,6 @@ export class UIScene extends UIElement {
     this.updateModeInternal = options.updateMode ?? DEFAULT_UPDATE_MODE;
 
     this.clearColorInternal = options.clearColor ?? DEFAULT_CLEAR_COLOR;
-    this.clearAlphaInternal = options.clearAlpha ?? DEFAULT_CLEAR_ALPHA;
 
     if (options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED) {
       this.renderRequired = true;
@@ -366,7 +349,10 @@ export class UIScene extends UIElement {
    * based on the current update mode and property change state.
    * @param renderer - The WebGL renderer used for scene rendering
    */
-  protected override onWillRender(renderer: WebGLRenderer): void {
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
     if (
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
@@ -389,6 +375,7 @@ export class UIScene extends UIElement {
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
+    super.onWillRender(renderer, deltaTime);
   }
 
   /** Event handler for when the color changes */

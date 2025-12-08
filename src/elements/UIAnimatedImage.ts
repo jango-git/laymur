@@ -1,7 +1,9 @@
-import type { Matrix3, Texture } from "three";
+import type { Matrix3, Texture, WebGLRenderer } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import source from "../shaders/UIDefaultShader.glsl";
+import { assertValidPositiveNumber } from "../miscellaneous/asserts";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 
 export enum UIAnimatedImageEvent {
@@ -17,17 +19,7 @@ export type UIAnimatedImageSequence =
 /**
  * Configuration options for creating a UIAnimatedImage element.
  */
-export interface UIAnimatedImageOptions {
-  /** X position of the element */
-  x: number;
-  /** Y position of the element */
-  y: number;
-  /** Width of the element */
-  width: number;
-  /** Height of the element */
-  height: number;
-  /** Color tint applied to the image */
-  color: UIColor;
+export interface UIAnimatedImageOptions extends UIElementCommonOptions {
   /** Frame rate for animation */
   frameRate: number;
   /** Whether animation should loop */
@@ -46,16 +38,18 @@ export interface UIAnimatedImageOptions {
  * @see {@link Texture} - Three.js texture for image data
  */
 export class UIAnimatedImage extends UIElement {
-  /** Internal storage for the current texture */
-  private readonly sequenceInternal: { texture: Texture; transform: Matrix3 }[];
+  public readonly color: UIColor;
 
-  /** Internal storage for the color tint */
-  private readonly colorInternal: UIColor;
+  /** Internal storage for the current texture */
+  private readonly sequence: { texture: Texture; transform: Matrix3 }[];
+
   private frameRateInternal: number;
   private loopInternal: boolean;
 
-  private intervalHandler?: ReturnType<typeof setInterval> = undefined;
-  private currentFrameIndex = 0;
+  private isPlaying = false;
+  private sequenceFrameIndex = 0;
+  private currentFrameIndexDirty = false;
+  private accumulatedTime = 0;
 
   /**
    * Creates a new UIAnimatedImage instance.
@@ -73,52 +67,32 @@ export class UIAnimatedImage extends UIElement {
     sequence: UIAnimatedImageSequence,
     options: Partial<UIAnimatedImageOptions> = {},
   ) {
-    const w = options.width ?? 100;
-    const h = options.height ?? 100;
-    const color = options.color ?? new UIColor();
+    const w = options.width ?? 256;
+    const h = options.height ?? 256;
+    const color = new UIColor(options.color);
 
-    let tempSequence: {
-      texture: Texture;
-      transform: Matrix3;
-    }[];
-
-    if (Array.isArray(sequence)) {
-      tempSequence = sequence.map((texture) => {
-        texture.updateMatrix();
-        return {
+    const mappedSequence = Array.isArray(sequence)
+      ? sequence.map((texture) => ({
           texture,
           transform: texture.matrix,
-        };
-      });
-    } else {
-      tempSequence = sequence.transforms.map((transform) => {
-        return {
+        }))
+      : sequence.transforms.map((transform) => ({
           texture: sequence.texture,
           transform: transform,
-        };
-      });
-    }
+        }));
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      texture: tempSequence[0].texture,
-      textureTransform: tempSequence[0].transform,
+      texture: mappedSequence[0].texture,
+      textureTransform: mappedSequence[0].transform,
       color,
     });
 
-    this.sequenceInternal = tempSequence;
-    this.colorInternal = color;
-    const defaultFrameRate = 24;
-    this.frameRateInternal = options.frameRate ?? defaultFrameRate;
-    this.loopInternal = options.loop ?? true;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
-  }
+    this.color = color;
+    this.mode = options.mode ?? this.mode;
 
-  /**
-   * Gets the current color tint applied to the image.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
+    this.sequence = mappedSequence;
+    this.frameRateInternal = options.frameRate ?? 24;
+    this.loopInternal = options.loop ?? true;
   }
 
   /**
@@ -142,15 +116,7 @@ export class UIAnimatedImage extends UIElement {
    * @returns The duration in seconds
    */
   public get duration(): number {
-    return this.sequenceInternal.length / this.frameRateInternal;
-  }
-
-  /**
-   * Sets the color tint applied to the image.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
+    return this.sequence.length / this.frameRateInternal;
   }
 
   /**
@@ -158,20 +124,8 @@ export class UIAnimatedImage extends UIElement {
    * @param value - The frame rate in frames per second
    */
   public set frameRate(value: number) {
-    if (value <= 0) {
-      throw new Error("Frame rate must be greater than zero");
-    }
-
-    const wasPlaying = this.intervalHandler !== undefined;
-    if (wasPlaying) {
-      this.pause();
-    }
-
+    assertValidPositiveNumber(value, "UIAnimatedImage.frameRate");
     this.frameRateInternal = value;
-
-    if (wasPlaying) {
-      this.play();
-    }
   }
 
   /**
@@ -186,72 +140,75 @@ export class UIAnimatedImage extends UIElement {
    * Starts or resumes playback of the animation.
    */
   public play(): void {
-    if (this.intervalHandler !== undefined) {
-      return;
+    if (!this.isPlaying) {
+      this.isPlaying = true;
+      this.emit(UIAnimatedImageEvent.PLAY);
     }
-
-    this.intervalHandler = setInterval(() => {
-      this.currentFrameIndex++;
-
-      if (this.loopInternal) {
-        this.currentFrameIndex %= this.sequenceInternal.length;
-      } else if (this.currentFrameIndex >= this.sequenceInternal.length) {
-        this.currentFrameIndex = this.sequenceInternal.length - 1;
-        this.pause();
-        return;
-      }
-
-      this.updateFrame();
-    }, 1000 / this.frameRateInternal);
-    this.emit(UIAnimatedImageEvent.PLAY);
   }
 
   /**
    * Pauses the animation at the current frame.
    */
   public pause(): void {
-    if (this.intervalHandler === undefined) {
-      return;
+    if (this.isPlaying) {
+      this.isPlaying = false;
+      this.emit(UIAnimatedImageEvent.PAUSE);
     }
-
-    clearInterval(this.intervalHandler);
-    this.intervalHandler = undefined;
-    this.emit(UIAnimatedImageEvent.PAUSE);
   }
 
   /**
    * Stops the animation and resets to the first frame.
    */
   public stop(): void {
-    if (this.intervalHandler !== undefined) {
-      clearInterval(this.intervalHandler);
-      this.intervalHandler = undefined;
+    if (
+      this.isPlaying ||
+      this.accumulatedTime > 0 ||
+      this.sequenceFrameIndex > 0
+    ) {
+      this.isPlaying = false;
+      this.accumulatedTime = 0;
+      this.sequenceFrameIndex = 0;
+      this.currentFrameIndexDirty = true;
+      this.emit(UIAnimatedImageEvent.STOP);
+    }
+  }
+
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    if (this.isPlaying) {
+      this.accumulatedTime += deltaTime;
+      const frameDuration = 1 / this.frameRateInternal;
+
+      while (this.accumulatedTime >= frameDuration) {
+        this.accumulatedTime -= frameDuration;
+        this.sequenceFrameIndex += 1;
+
+        if (this.loopInternal) {
+          this.sequenceFrameIndex %= this.sequence.length;
+        } else if (this.sequenceFrameIndex >= this.sequence.length) {
+          this.sequenceFrameIndex = this.sequence.length - 1;
+          this.isPlaying = false;
+          this.emit(UIAnimatedImageEvent.PAUSE);
+          break;
+        }
+
+        this.currentFrameIndexDirty = true;
+      }
     }
 
-    this.currentFrameIndex = 0;
-    this.updateFrame();
-    this.emit(UIAnimatedImageEvent.STOP);
-  }
+    if (this.color.dirty || this.currentFrameIndexDirty) {
+      const frame = this.sequence[this.sequenceFrameIndex];
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        texture: frame.texture,
+        textureTransform: frame.transform,
+        color: this.color,
+      });
 
-  /**
-   * Destroys the UI image by cleaning up color event listeners and all associated resources.
-   */
-  public override destroy(): void {
-    this.stop();
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
-    super.destroy();
-  }
-
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
-
-  private updateFrame(): void {
-    const frame = this.sequenceInternal[this.currentFrameIndex];
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      texture: frame.texture,
-      textureTransform: frame.transform,
-    });
+      this.color.dirty = false;
+      this.currentFrameIndexDirty = false;
+    }
+    super.onWillRender(renderer, deltaTime);
   }
 }

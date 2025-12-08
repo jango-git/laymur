@@ -1,123 +1,17 @@
 import { Eventail } from "eventail";
 import { Color, Vector4 } from "three";
-
-/**
- * Converts sRGB component to linear color space.
- * @param c - sRGB component value (0-1)
- * @returns Linear component value (0-1)
- */
-function sRGBToLinear(c: number): number {
-  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-}
-
-/**
- * Converts linear component to sRGB color space.
- * @param c - Linear component value (0-1)
- * @returns sRGB component value (0-1)
- */
-function linearToSRGB(c: number): number {
-  return c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
-}
-
-const COLORS: Record<string, number | undefined> = {
-  black: 0x000000,
-  white: 0xffffff,
-  red: 0xff0000,
-  green: 0x008000,
-  blue: 0x0000ff,
-  yellow: 0xffff00,
-  cyan: 0x00ffff,
-  magenta: 0xff00ff,
-
-  gray: 0x808080,
-  grey: 0x808080,
-  silver: 0xc0c0c0,
-  maroon: 0x800000,
-  olive: 0x808000,
-  lime: 0x00ff00,
-  aqua: 0x00ffff,
-  teal: 0x008080,
-  navy: 0x000080,
-  fuchsia: 0xff00ff,
-  purple: 0x800080,
-
-  orange: 0xffa500,
-  pink: 0xffc0cb,
-  brown: 0xa52a2a,
-  gold: 0xffd700,
-  violet: 0xee82ee,
-  indigo: 0x4b0082,
-  coral: 0xff7f50,
-  salmon: 0xfa8072,
-  khaki: 0xf0e68c,
-  plum: 0xdda0dd,
-  orchid: 0xda70d6,
-  tan: 0xd2b48c,
-  beige: 0xf5f5dc,
-  mint: 0x98fb98,
-  lavender: 0xe6e6fa,
-  crimson: 0xdc143c,
-  azure: 0xf0ffff,
-  ivory: 0xfffff0,
-  snow: 0xfffafa,
-};
-
-/**
- * Predefined color names supported by UIColor.
- */
-export type UIColorName =
-  | "black"
-  | "white"
-  | "red"
-  | "green"
-  | "blue"
-  | "yellow"
-  | "cyan"
-  | "magenta"
-  | "gray"
-  | "grey"
-  | "silver"
-  | "maroon"
-  | "olive"
-  | "lime"
-  | "aqua"
-  | "teal"
-  | "navy"
-  | "fuchsia"
-  | "purple"
-  | "orange"
-  | "pink"
-  | "brown"
-  | "gold"
-  | "violet"
-  | "indigo"
-  | "coral"
-  | "salmon"
-  | "khaki"
-  | "plum"
-  | "orchid"
-  | "tan"
-  | "beige"
-  | "mint"
-  | "lavender"
-  | "crimson"
-  | "azure"
-  | "ivory"
-  | "snow";
-
-/**
- * Events emitted by UIColor.
- */
-export enum UIColorEvent {
-  /** Emitted when color components change. */
-  CHANGE = "change",
-}
+import { LinearToSRGB, SRGBToLinear } from "three/src/math/ColorManagement.js";
+import type { UIColorName } from "./UIColor.Internal";
+import { COLORS } from "./UIColor.Internal";
 
 /**
  * Event-based RGBA color with support for RGB, HSL, hex, and named colors.
  * Color components are stored as normalized values (0-1).
  */
 export class UIColor extends Eventail {
+  /** @internal */
+  public dirty = false;
+
   private rInternal = 1;
   private gInternal = 1;
   private bInternal = 1;
@@ -146,6 +40,11 @@ export class UIColor extends Eventail {
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(colorName: UIColorName, a?: number);
   /**
+   * @param uiColor - UIColor object to copy from
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(uiColor?: UIColor);
+  /**
    * @param threeColor - Three.js Color object
    * @param a - Alpha (0-1)
    */
@@ -170,6 +69,12 @@ export class UIColor extends Eventail {
       const [firstArgument, a = 1] = args;
       if (typeof firstArgument === "string") {
         this.setColorName(firstArgument as UIColorName, a as number);
+      } else if (firstArgument instanceof UIColor) {
+        firstArgument.ensureRGBUpdatedFromHSL();
+        this.rInternal = firstArgument.rInternal;
+        this.gInternal = firstArgument.gInternal;
+        this.bInternal = firstArgument.bInternal;
+        this.aInternal = firstArgument.aInternal;
       } else if (firstArgument instanceof Color) {
         this.rInternal = firstArgument.r;
         this.gInternal = firstArgument.g;
@@ -417,7 +322,7 @@ export class UIColor extends Eventail {
     if (value !== this.rInternal) {
       this.rInternal = value;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -426,7 +331,7 @@ export class UIColor extends Eventail {
     if (value !== this.gInternal) {
       this.gInternal = value;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -435,14 +340,14 @@ export class UIColor extends Eventail {
     if (value !== this.bInternal) {
       this.bInternal = value;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
   public set a(value: number) {
     if (value !== this.aInternal) {
       this.aInternal = value;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -451,7 +356,7 @@ export class UIColor extends Eventail {
     if (value !== this.hInternal) {
       this.hInternal = value;
       this.rgbDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -460,7 +365,7 @@ export class UIColor extends Eventail {
     if (value !== this.sInternal) {
       this.sInternal = value;
       this.rgbDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -469,7 +374,7 @@ export class UIColor extends Eventail {
     if (value !== this.lInternal) {
       this.lInternal = value;
       this.rgbDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -500,7 +405,7 @@ export class UIColor extends Eventail {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
     return this;
   }
@@ -553,7 +458,7 @@ export class UIColor extends Eventail {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
     return this;
   }
@@ -581,7 +486,7 @@ export class UIColor extends Eventail {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
     return this;
   }
@@ -608,7 +513,7 @@ export class UIColor extends Eventail {
       this.lInternal = l;
       this.aInternal = a;
       this.rgbDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
     return this;
   }
@@ -649,9 +554,9 @@ export class UIColor extends Eventail {
   ): this {
     this.ensureRGBUpdatedFromHSL();
 
-    const sRGBR = linearToSRGB(r);
-    const sRGBG = linearToSRGB(g);
-    const sRGBB = linearToSRGB(b);
+    const sRGBR = LinearToSRGB(r);
+    const sRGBG = LinearToSRGB(g);
+    const sRGBB = LinearToSRGB(b);
 
     if (
       sRGBR !== this.rInternal ||
@@ -664,7 +569,7 @@ export class UIColor extends Eventail {
       this.bInternal = sRGBB;
       this.aInternal = a;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
 
     return this;
@@ -690,7 +595,7 @@ export class UIColor extends Eventail {
       this.bInternal = threeColor.b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.emit(UIColorEvent.CHANGE, this);
+      this.dirty = true;
     }
     return this;
   }
@@ -715,9 +620,9 @@ export class UIColor extends Eventail {
   public toGLSLColor(result: Vector4 = new Vector4()): Vector4 {
     this.ensureRGBUpdatedFromHSL();
 
-    result.x = sRGBToLinear(this.rInternal);
-    result.y = sRGBToLinear(this.gInternal);
-    result.z = sRGBToLinear(this.bInternal);
+    result.x = SRGBToLinear(this.rInternal);
+    result.y = SRGBToLinear(this.gInternal);
+    result.z = SRGBToLinear(this.bInternal);
     result.w = this.aInternal;
 
     return result;
@@ -761,7 +666,7 @@ export class UIColor extends Eventail {
         this.bInternal = color.bInternal;
         this.aInternal = color.aInternal;
         this.hslDirty = true;
-        this.emit(UIColorEvent.CHANGE, this);
+        this.dirty = true;
       }
     } else {
       this.ensureRGBUpdatedFromHSL();
@@ -776,7 +681,7 @@ export class UIColor extends Eventail {
         this.bInternal = color.b;
         this.aInternal = 1;
         this.hslDirty = true;
-        this.emit(UIColorEvent.CHANGE, this);
+        this.dirty = true;
       }
     }
 

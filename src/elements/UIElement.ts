@@ -13,15 +13,15 @@ import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicroAnchorMode";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
-import type { UISceneWrapperClientAPI } from "../miscellaneous/UISceneWrapperClientAPI";
+import type { UISceneWrapperInterface } from "../miscellaneous/UISceneWrapperInterface";
 import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 import { UIAnchor } from "./UIAnchor";
 
-const position = new Vector3();
-const quaternion = new Quaternion();
-const scale = new Vector3();
-const matrix = new Matrix4();
-const axis = new Vector3(0, 0, 1);
+const TEMP_POSITION = new Vector3();
+const TEMP_QUATERNION = new Quaternion();
+const TEMP_SCALE = new Vector3();
+const TEMP_MATRIX = new Matrix4();
+const Z_AXIS = new Vector3(0, 0, 1);
 
 /**
  * Abstract base class for all renderable UI elements with dimensions.
@@ -70,9 +70,12 @@ export abstract class UIElement
   protected isPointerInside = false;
 
   /** Client API for interacting with the scene wrapper (rendering system). */
-  protected readonly sceneWrapper: UISceneWrapperClientAPI;
+  protected readonly sceneWrapper: UISceneWrapperInterface;
+
   /** Handle to the plane object in the rendering system. */
   protected readonly planeHandler: number;
+
+  protected transparencyDirty = false;
 
   /**
    * Creates a new UIElement instance with rendering capabilities.
@@ -105,7 +108,7 @@ export abstract class UIElement
     this.wVariable = this.solverWrapper.createVariable(width, UIPriority.P6);
     this.hVariable = this.solverWrapper.createVariable(height, UIPriority.P6);
 
-    this.sceneWrapper = layer["getSceneWrapperClientAPI"]();
+    this.sceneWrapper = this.layer.sceneWrapper;
     this.planeHandler = this.sceneWrapper.createPlane(
       source,
       uniforms,
@@ -262,9 +265,9 @@ export abstract class UIElement
           catchPointerUp: this.catchPointerUp,
           zIndex: this.zIndexInternal,
         };
-        this.layer["subscribePointerInput"](this.listener);
+        this.layer["subscribeInputCatcher"](this.listener);
       } else if (this.modeInternal === UIMode.INTERACTIVE && this.listener) {
-        this.layer["unsubscribePointerInput"](this.listener);
+        this.layer["unsubscribeInputCatcher"](this.listener);
         this.listener = undefined;
       }
 
@@ -282,8 +285,11 @@ export abstract class UIElement
    * @see {@link UITransparencyMode}
    */
   public set transparency(value: UITransparencyMode) {
-    this.transparencyInternal = value;
-    this.sceneWrapper.setTransparency(this.planeHandler, value);
+    if (this.transparencyInternal !== value) {
+      this.transparencyInternal = value;
+      this.transparencyDirty = true;
+      // this.sceneWrapper.setTransparency(this.planeHandler, value);
+    }
   }
 
   /**
@@ -297,7 +303,7 @@ export abstract class UIElement
   public override destroy(): void {
     this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRender, this);
     if (this.listener) {
-      this.layer["unsubscribePointerInput"](this.listener);
+      this.layer["unsubscribeInputCatcher"](this.listener);
     }
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);
@@ -365,36 +371,40 @@ export abstract class UIElement
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
     deltaTime: number,
   ): void {
-    const micro = this.micro;
+    if (this.solverWrapper.dirty || this.micro.dirty) {
+      this.micro.dirty = false;
 
-    const width = this.width * micro.scaleX;
-    const height = this.height * micro.scaleY;
+      const micro = this.micro;
 
-    const anchorOffsetX = micro.anchorX * width;
-    const anchorOffsetY = micro.anchorY * height;
+      const width = this.width * micro.scaleX;
+      const height = this.height * micro.scaleY;
 
-    const cos = Math.cos(micro.rotation);
-    const sin = Math.sin(micro.rotation);
+      const anchorOffsetX = micro.anchorX * width;
+      const anchorOffsetY = micro.anchorY * height;
 
-    const rotatedAnchorX = anchorOffsetX * cos - anchorOffsetY * sin;
-    const rotatedAnchorY = anchorOffsetX * sin + anchorOffsetY * cos;
+      const cos = Math.cos(micro.rotation);
+      const sin = Math.sin(micro.rotation);
 
-    if (micro.anchorMode === UIMicroAnchorMode.POSITION_ROTATION_SCALE) {
-      position.x = this.x + micro.x - rotatedAnchorX;
-      position.y = this.y + micro.y - rotatedAnchorY;
-    } else {
-      const rawAnchorOffsetX = micro.anchorX * this.width;
-      const rawAnchorOffsetY = micro.anchorY * this.height;
-      position.x = this.x + rawAnchorOffsetX - rotatedAnchorX + micro.x;
-      position.y = this.y + rawAnchorOffsetY - rotatedAnchorY + micro.y;
+      const rotatedAnchorX = anchorOffsetX * cos - anchorOffsetY * sin;
+      const rotatedAnchorY = anchorOffsetX * sin + anchorOffsetY * cos;
+
+      if (micro.anchorMode === UIMicroAnchorMode.POSITION_ROTATION_SCALE) {
+        TEMP_POSITION.x = this.x + micro.x - rotatedAnchorX;
+        TEMP_POSITION.y = this.y + micro.y - rotatedAnchorY;
+      } else {
+        const rawAnchorOffsetX = micro.anchorX * this.width;
+        const rawAnchorOffsetY = micro.anchorY * this.height;
+        TEMP_POSITION.x = this.x + rawAnchorOffsetX - rotatedAnchorX + micro.x;
+        TEMP_POSITION.y = this.y + rawAnchorOffsetY - rotatedAnchorY + micro.y;
+      }
+
+      TEMP_POSITION.z = this.zIndexInternal;
+      TEMP_SCALE.x = width;
+      TEMP_SCALE.y = height;
+      TEMP_QUATERNION.setFromAxisAngle(Z_AXIS, micro.rotation);
+
+      TEMP_MATRIX.compose(TEMP_POSITION, TEMP_QUATERNION, TEMP_SCALE);
+      this.sceneWrapper.setTransform(this.planeHandler, TEMP_MATRIX);
     }
-
-    position.z = this.zIndexInternal;
-    scale.x = width;
-    scale.y = height;
-    quaternion.setFromAxisAngle(axis, micro.rotation);
-
-    matrix.compose(position, quaternion, scale);
-    this.sceneWrapper.setTransform(this.planeHandler, matrix);
   }
 }

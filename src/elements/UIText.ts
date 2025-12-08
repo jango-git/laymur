@@ -1,7 +1,7 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
 import { type UILayer } from "../layers/UILayer";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
+import { UIColor, UIColorEvent } from "../miscellaneous/color/UIColor";
 import type { UIMode } from "../miscellaneous/UIMode";
 import { resolvePadding, type UIPadding } from "../miscellaneous/UIPadding";
 import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
@@ -10,7 +10,7 @@ import {
   renderTextLines,
 } from "../miscellaneous/UIText.Tools";
 import { type UITextStyle } from "../miscellaneous/UITextStyle";
-import source from "../shaders/UIDefaultShader.glsl";
+import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 
 /** Default maximum width for text elements in pixels. */
@@ -236,10 +236,10 @@ export class UIText extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    super.onWillRender(renderer, deltaTime);
     if (this.targetAspectRatio !== this.width / this.height) {
       this.height = this.width / this.targetAspectRatio;
     }
+    super.onWillRender(renderer, deltaTime);
   }
 
   /**

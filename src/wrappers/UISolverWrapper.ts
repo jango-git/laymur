@@ -2,6 +2,7 @@ import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import { convertPriority, UIPriority } from "../miscellaneous/UIPriority";
 import { convertRelation, UIRelation } from "../miscellaneous/UIRelation";
+import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
 
 /**
  * Internal description of a solver variable with its associated properties.
@@ -55,7 +56,10 @@ interface ConstraintDescription {
  * @see {@link UIPriority} - Priority levels for variables and constraints
  * @see {@link UIRelation} - Relational operators for constraints
  */
-export class UISolverWrapper {
+export class UISolverWrapper implements UISolverWrapperInterface {
+  /** @internal */
+  public dirty = false;
+
   /** The underlying Kiwi solver instance, undefined when solver needs rebuilding. */
   private solver? = new Solver();
   /** Flag indicating whether variable values need recalculation. */
@@ -113,6 +117,7 @@ export class UISolverWrapper {
     }
 
     this.recalculationRequired = true;
+    this.dirty = true;
     return index;
   }
 
@@ -147,6 +152,7 @@ export class UISolverWrapper {
 
     this.variables.delete(index);
     this.recalculationRequired = true;
+    this.dirty = true;
   }
 
   /**
@@ -182,6 +188,7 @@ export class UISolverWrapper {
       }
 
       this.recalculationRequired = true;
+      this.dirty = true;
     }
   }
 
@@ -235,6 +242,7 @@ export class UISolverWrapper {
       }
 
       this.recalculationRequired = true;
+      this.dirty = true;
     }
   }
 
@@ -303,6 +311,7 @@ export class UISolverWrapper {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
+      this.dirty = true;
     }
     return index;
   }
@@ -332,6 +341,7 @@ export class UISolverWrapper {
 
     this.constraints.delete(index);
     this.recalculationRequired = true;
+    this.dirty = true;
   }
 
   /**
@@ -353,6 +363,7 @@ export class UISolverWrapper {
     description.lhs.copy(lhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
+    this.dirty = true;
   }
 
   /**
@@ -374,6 +385,7 @@ export class UISolverWrapper {
     description.rhs.copy(rhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
+    this.dirty = true;
   }
 
   /**
@@ -396,6 +408,7 @@ export class UISolverWrapper {
       description.relation = relation;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
+      this.dirty = true;
     }
   }
 
@@ -419,6 +432,7 @@ export class UISolverWrapper {
       description.priority = priority;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
+      this.dirty = true;
     }
   }
 
@@ -448,6 +462,7 @@ export class UISolverWrapper {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
+      this.dirty = true;
     }
   }
 
@@ -626,5 +641,6 @@ export class UISolverWrapper {
     }
 
     this.recalculationRequired = true;
+    this.dirty = true;
   }
 }

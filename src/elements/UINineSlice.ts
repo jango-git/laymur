@@ -2,29 +2,19 @@ import type { Texture, WebGLRenderer } from "three";
 import { Vector4 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import {
-  resolveNineSliceBorders,
-  type UINineSliceBorders,
-} from "../miscellaneous/UINineSliceBorder";
-import source from "../shaders/UINineSliceShader.glsl";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIBorderConfig } from "../miscellaneous/UIBorder";
+import { UIBorder } from "../miscellaneous/UIBorder";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
 
 /**
  * Configuration options for creating a UINineSlice element.
  */
-export interface UINineSliceOptions {
-  /** X position of the element */
-  x: number;
-  /** Y position of the element */
-  y: number;
-  /** Color tint applied to the nine-slice element */
-  color: UIColor;
-  /** Nine-slice border configuration (can be number, object with horizontal/vertical, or full border object) */
-  sliceBorders: UINineSliceBorders;
-  /** Default UIMode */
-  mode: UIMode;
+export interface UINineSliceOptions extends UIElementCommonOptions {
+  sliceBorders: UIBorderConfig;
+  sliceRegions: UIBorderConfig;
 }
 
 /**
@@ -36,14 +26,15 @@ export interface UINineSliceOptions {
  * panels, buttons, and borders that maintain visual quality at any size.
  */
 export class UINineSlice extends UIElement {
-  /** Internal storage for the current texture */
-  private readonly textureInternal: Texture;
-  /** Internal storage for the color tint */
-  private readonly colorInternal: UIColor;
-  /** Internal storage for the nine-slice border values (left, right, top, bottom) */
-  private readonly sliceBordersInternal: Vector4;
-  /** Internal storage for texture and world dimensions (texture width, texture height, world width, world height) */
-  private readonly dimensions: Vector4;
+  public readonly color: UIColor;
+  public readonly sliceBorders: UIBorder;
+  public readonly sliceRegions: UIBorder;
+
+  private textureInternal: Texture;
+  private textureInternalDirty = false;
+
+  private readonly sliceBordersVector = new Vector4();
+  private readonly sliceRegionsVector = new Vector4();
 
   /**
    * Creates a new nine-slice UI element.
@@ -61,36 +52,34 @@ export class UINineSlice extends UIElement {
     texture: Texture,
     options: Partial<UINineSliceOptions> = {},
   ) {
-    const width = texture.image.width;
-    const height = texture.image.height;
+    const w = options.width ?? texture.image.width;
+    const h = options.height ?? texture.image.height;
 
-    const color = options.color ?? new UIColor();
-    const resolvedSliceBorders = resolveNineSliceBorders(options.sliceBorders);
-    const sliceBorders = new Vector4(
-      resolvedSliceBorders.l,
-      resolvedSliceBorders.r,
-      resolvedSliceBorders.t,
-      resolvedSliceBorders.b,
-    );
-    const dimensions = new Vector4(width, height, width, height);
+    const color = new UIColor(options.color);
 
-    super(layer, options.x ?? 0, options.y ?? 0, width, height, source, {
+    const sliceBorders = new UIBorder(options.sliceBorders ?? 0.1);
+    const sliceRegions = new UIBorder(options.sliceRegions ?? 0.1);
+
+    const sliceBordersVector = sliceBorders.toVector4();
+    const sliceRegionsVector = sliceRegions.toVector4();
+
+    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
       texture: texture,
+      textureTransform: texture.matrix,
       color,
-      sliceBorders,
-      dimensions,
+      sliceBorders: sliceBordersVector,
+      sliceRegions: sliceRegionsVector,
     });
 
     this.textureInternal = texture;
-    this.sliceBordersInternal = sliceBorders;
-    this.dimensions = dimensions;
+    this.color = color;
+    this.mode = options.mode ?? this.mode;
 
-    this.colorInternal = color;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
+    this.sliceBorders = sliceBorders;
+    this.sliceRegions = sliceRegions;
 
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
+    this.sliceBordersVector = sliceBordersVector;
+    this.sliceRegionsVector = sliceRegionsVector;
   }
 
   /**
@@ -99,46 +88,6 @@ export class UINineSlice extends UIElement {
    */
   public get texture(): Texture {
     return this.textureInternal;
-  }
-
-  /**
-   * Gets the current color tint applied to the nine-slice element.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
-  }
-
-  /**
-   * Gets the left border size for nine-slice scaling.
-   * @returns The left border size as a percentage (0-1) of texture width
-   */
-  public get sliceBorderLeft(): number {
-    return this.sliceBordersInternal.x;
-  }
-
-  /**
-   * Gets the right border size for nine-slice scaling.
-   * @returns The right border size as a percentage (0-1) of texture width
-   */
-  public get sliceBorderRight(): number {
-    return this.sliceBordersInternal.y;
-  }
-
-  /**
-   * Gets the top border size for nine-slice scaling.
-   * @returns The top border size as a percentage (0-1) of texture height
-   */
-  public get sliceBorderTop(): number {
-    return this.sliceBordersInternal.z;
-  }
-
-  /**
-   * Gets the bottom border size for nine-slice scaling.
-   * @returns The bottom border size as a percentage (0-1) of texture height
-   */
-  public get sliceBorderBottom(): number {
-    return this.sliceBordersInternal.w;
   }
 
   /**
@@ -152,101 +101,19 @@ export class UINineSlice extends UIElement {
    * @see {@link assertValidPositiveNumber}
    */
   public set texture(value: Texture) {
-    const w = value.image.width;
-    const h = value.image.height;
+    if (this.textureInternal !== value) {
+      const w = value.image.width;
+      const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UINineSlice.texture.width");
-    assertValidPositiveNumber(h, "UINineSlice.texture.height");
+      assertValidPositiveNumber(w, "UIImage.texture.width");
+      assertValidPositiveNumber(h, "UIImage.texture.height");
 
-    this.solverWrapper.suggestVariableValue(this.wVariable, w);
-    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+      this.solverWrapper.suggestVariableValue(this.wVariable, w);
+      this.solverWrapper.suggestVariableValue(this.hVariable, h);
 
-    this.dimensions.x = w;
-    this.dimensions.y = h;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      dimensions: this.dimensions,
-      texture: value,
-    });
-  }
-
-  /**
-   * Sets the color tint applied to the nine-slice element.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
-  }
-
-  /**
-   * Sets the left border size for nine-slice scaling.
-   * @param value - The left border size as a percentage (0-1) of texture width
-   */
-  public set sliceBorderLeft(value: number) {
-    this.sliceBordersInternal.x = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      sliceBorders: this.sliceBordersInternal,
-    });
-  }
-
-  /**
-   * Sets the right border size for nine-slice scaling.
-   * @param value - The right border size as a percentage (0-1) of texture width
-   */
-  public set sliceBorderRight(value: number) {
-    this.sliceBordersInternal.y = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      sliceBorders: this.sliceBordersInternal,
-    });
-  }
-
-  /**
-   * Sets the top border size for nine-slice scaling.
-   * @param value - The top border size as a percentage (0-1) of texture height
-   */
-  public set sliceBorderTop(value: number) {
-    this.sliceBordersInternal.z = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      sliceBorders: this.sliceBordersInternal,
-    });
-  }
-
-  /**
-   * Sets the bottom border size for nine-slice scaling.
-   * @param value - The bottom border size as a percentage (0-1) of texture height
-   */
-  public set sliceBorderBottom(value: number) {
-    this.sliceBordersInternal.w = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      sliceBorders: this.sliceBordersInternal,
-    });
-  }
-
-  /**
-   * Sets all four border sizes for nine-slice scaling at once.
-   *
-   * @param left - The left border size as a percentage (0-1) of texture width
-   * @param right - The right border size as a percentage (0-1) of texture width
-   * @param top - The top border size as a percentage (0-1) of texture height
-   * @param bottom - The bottom border size as a percentage (0-1) of texture height
-   */
-  public setSliceBorders(
-    left: number,
-    right: number,
-    top: number,
-    bottom: number,
-  ): void {
-    this.sliceBordersInternal.set(left, right, top, bottom);
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      sliceBorders: this.sliceBordersInternal,
-    });
-  }
-
-  /**
-   * Destroys the nine-slice UI element by cleaning up color event listeners and all associated resources.
-   */
-  public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
-    super.destroy();
+      this.textureInternal = value;
+      this.textureInternalDirty = true;
+    }
   }
 
   /**
@@ -259,17 +126,29 @@ export class UINineSlice extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
+    if (
+      this.color.dirty ||
+      this.textureInternalDirty ||
+      this.sliceBorders.dirty ||
+      this.sliceRegions.dirty
+    ) {
+      this.color.dirty = false;
+      this.textureInternalDirty = false;
+      this.sliceBorders.dirty = false;
+      this.sliceRegions.dirty = false;
+
+      this.sliceBorders.toVector4(this.sliceBordersVector);
+      this.sliceRegions.toVector4(this.sliceRegionsVector);
+
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        texture: this.textureInternal,
+        textureTransform: this.textureInternal.matrix,
+        color: this.color,
+        sliceBorders: this.sliceRegionsVector,
+        sliceRegions: this.sliceRegionsVector,
+      });
+    }
+
     super.onWillRender(renderer, deltaTime);
-
-    this.dimensions.z = this.width * this.micro.scaleX;
-    this.dimensions.w = this.height * this.micro.scaleY;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      dimensions: this.dimensions,
-    });
   }
-
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
 }

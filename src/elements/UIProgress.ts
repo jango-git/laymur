@@ -1,12 +1,13 @@
+import type { WebGLRenderer } from "three";
 import { Texture } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { UIColor, UIColorEvent } from "../miscellaneous/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import source from "../shaders/UIProgressShader.glsl";
+import { UIColor } from "../miscellaneous/color/UIColor";
+import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import source from "../shaders/UIProgress.glsl";
 import { UIElement } from "./UIElement";
 
-const DEFAULT_TEXTURE = new Texture();
+const EMPTY_TEXTURE = new Texture();
 
 /**
  * Predefined mask functions that control how the progress bar fills.
@@ -33,7 +34,7 @@ export enum UIProgressMaskFunction {
   CIRCLE_LEFT = `float calculateMask() {
     vec2 p = p_uv - 0.5;
     float angle = atan(p.y, p.x);
-    angle = (angle + 3.14159265) / 3.14159265;
+    angle = (angle + 3.14159265) / PI;
     angle *= 0.5;
     return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
   }`,
@@ -42,7 +43,7 @@ export enum UIProgressMaskFunction {
   CIRCLE_TOP = `float calculateMask() {
     vec2 p = p_uv - 0.5;
     float angle = atan(p.y, p.x);
-    angle = (angle + 3.14159265) / (2.0 * 3.14159265);
+    angle = (angle + PI) / (2.0 * PI);
     angle = mod(angle + 0.25, 1.0);
     return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
   }`,
@@ -51,15 +52,9 @@ export enum UIProgressMaskFunction {
 /**
  * Configuration options for creating a UIProgress element.
  */
-export interface UIProgressOptions {
-  /** X position of the element */
-  x: number;
-  /** Y position of the element */
-  y: number;
+export interface UIProgressOptions extends UIElementCommonOptions {
   /** Optional background texture (if not provided, default texture is used) */
   backgroundTexture: Texture;
-  /** Overall color tint applied to the entire progress bar */
-  color: UIColor;
   /** Foreground color tint applied to the filled portion */
   foregroundColor: UIColor;
   /** Background color tint applied to the unfilled portion */
@@ -70,8 +65,6 @@ export interface UIProgressOptions {
   progress: number;
   /** Whether to fill in reverse direction (true for reverse, false for normal) */
   inverseDirection: boolean;
-  /** Default UIMode */
-  mode: UIMode;
 }
 
 /**
@@ -85,22 +78,17 @@ export interface UIProgressOptions {
  * The fill direction can be controlled both by angle and forward/reverse direction.
  */
 export class UIProgress extends UIElement {
-  /** Internal storage for the foreground texture */
+  public readonly color: UIColor;
+  public readonly foregroundColor: UIColor;
+  public readonly backgroundColor: UIColor;
+
   private foregroundTextureInternal: Texture;
-  /** Internal storage for the optional background texture */
   private backgroundTextureInternal?: Texture;
 
-  /** Internal storage for the overall color tint */
-  private readonly colorInternal: UIColor;
-  /** Internal storage for the foreground color tint */
-  private readonly foregroundColorInternal: UIColor;
-  /** Internal storage for the background color tint */
-  private readonly backgroundColorInternal: UIColor;
-
-  /** Internal storage for the current progress value */
   private progressInternal: number;
-  /** Internal storage for the fill direction flag */
   private inverseDirectionInternal: boolean;
+
+  private dirty = false;
 
   /**
    * Creates a new progress bar UI element.
@@ -114,8 +102,8 @@ export class UIProgress extends UIElement {
     foregroundTexture: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
-    const w = foregroundTexture.image?.width;
-    const h = foregroundTexture.image?.height;
+    const w = options.width ?? foregroundTexture.image.width;
+    const h = options.height ?? foregroundTexture.image.height;
 
     assertValidPositiveNumber(
       w,
@@ -137,53 +125,42 @@ export class UIProgress extends UIElement {
       );
     }
 
-    const color = options.color ?? new UIColor();
-    const foregroundColor = options.foregroundColor ?? new UIColor();
-    const backgroundColor = options.backgroundColor ?? new UIColor();
+    const color = new UIColor(options.color);
+    const foregroundColor = new UIColor(options.foregroundColor);
+    const backgroundColor = new UIColor(options.backgroundColor);
     const progress = options.progress ?? 1;
     const inverseDirection = options.inverseDirection ?? false;
 
-    super(
-      layer,
-      options.x ?? 0,
-      options.y ?? 0,
-      w,
-      h,
-      (options.maskFunction ?? UIProgressMaskFunction.HORIZONTAL) + source,
-      {
-        foregroundTexture,
-        backgroundTexture: options.backgroundTexture ?? DEFAULT_TEXTURE,
-        color,
-        foregroundColor,
-        backgroundColor,
-        progress,
-        direction: inverseDirection ? -1 : 1,
-      },
-    );
+    const maskFunction =
+      options.maskFunction ?? UIProgressMaskFunction.HORIZONTAL;
+    const minifiedSource = (maskFunction + source)
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "")
+      .replace(/\s*([{}(),=;+\-*/<>])\s*/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    super(layer, options.x ?? 0, options.y ?? 0, w, h, minifiedSource, {
+      foregroundTexture,
+      backgroundTexture: options.backgroundTexture ?? EMPTY_TEXTURE,
+      color,
+      foregroundColor,
+      backgroundColor,
+      progress,
+      direction: inverseDirection ? -1 : 1,
+    });
 
     this.foregroundTextureInternal = foregroundTexture;
     this.backgroundTextureInternal = options.backgroundTexture;
 
-    this.colorInternal = color;
-    this.foregroundColorInternal = foregroundColor;
-    this.backgroundColorInternal = backgroundColor;
+    this.color = color;
+    this.foregroundColor = foregroundColor;
+    this.backgroundColor = backgroundColor;
 
     this.progressInternal = progress;
     this.inverseDirectionInternal = inverseDirection;
 
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
-    this.foregroundColorInternal.on(
-      UIColorEvent.CHANGE,
-      this.onForegroundColorChange,
-    );
-    this.backgroundColorInternal.on(
-      UIColorEvent.CHANGE,
-      this.onBackgroundColorChange,
-    );
-
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
+    this.mode = options.mode ?? this.mode;
   }
 
   /**
@@ -200,30 +177,6 @@ export class UIProgress extends UIElement {
    */
   public get backgroundTexture(): Texture | undefined {
     return this.backgroundTextureInternal;
-  }
-
-  /**
-   * Gets the color tint.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
-  }
-
-  /**
-   * Gets the foreground color tint.
-   * @returns The foreground color UIColor instance
-   */
-  public get foregroundColor(): UIColor {
-    return this.foregroundColorInternal;
-  }
-
-  /**
-   * Gets the background color tint.
-   * @returns The background color UIColor instance
-   */
-  public get backgroundColor(): UIColor {
-    return this.backgroundColorInternal;
   }
 
   /**
@@ -252,19 +205,19 @@ export class UIProgress extends UIElement {
    * @throws Will throw an error if the texture dimensions are not valid positive numbers
    */
   public set foregroundTexture(value: Texture) {
-    const w = value.image.width;
-    const h = value.image.height;
+    if (this.foregroundTexture !== value) {
+      const w = value.image.width;
+      const h = value.image.height;
 
-    assertValidPositiveNumber(w, "UIProgress.foregroundTexture.width");
-    assertValidPositiveNumber(h, "UIProgress.foregroundTexture.height");
+      assertValidPositiveNumber(w, "UIProgress.foregroundTexture.width");
+      assertValidPositiveNumber(h, "UIProgress.foregroundTexture.height");
 
-    this.solverWrapper.suggestVariableValue(this.wVariable, w);
-    this.solverWrapper.suggestVariableValue(this.hVariable, h);
+      this.solverWrapper.suggestVariableValue(this.wVariable, w);
+      this.solverWrapper.suggestVariableValue(this.hVariable, h);
 
-    this.foregroundTextureInternal = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      foregroundTexture: value,
-    });
+      this.foregroundTextureInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -272,45 +225,21 @@ export class UIProgress extends UIElement {
    * @param value - The background texture, or undefined to remove background
    */
   public set backgroundTexture(value: Texture | undefined) {
-    if (value !== undefined) {
-      assertValidPositiveNumber(
-        value.image.width,
-        "UIProgress.backgroundTexture.width",
-      );
-      assertValidPositiveNumber(
-        value.image.height,
-        "UIProgress.backgroundTexture.height",
-      );
+    if (this.backgroundTexture !== value) {
+      if (value !== undefined) {
+        assertValidPositiveNumber(
+          value.image.width,
+          "UIProgress.backgroundTexture.width",
+        );
+        assertValidPositiveNumber(
+          value.image.height,
+          "UIProgress.backgroundTexture.height",
+        );
+      }
+
+      this.backgroundTextureInternal = value;
+      this.dirty = true;
     }
-
-    this.backgroundTextureInternal = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      backgroundTexture: value ?? DEFAULT_TEXTURE,
-    });
-  }
-
-  /**
-   * Sets the color tint.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
-  }
-
-  /**
-   * Sets the foreground color tint.
-   * @param value - The foreground color UIColor instance
-   */
-  public set foregroundColor(value: UIColor) {
-    this.foregroundColorInternal.copy(value);
-  }
-
-  /**
-   * Sets the background color tint.
-   * @param value - The background color UIColor instance
-   */
-  public set backgroundColor(value: UIColor) {
-    this.backgroundColorInternal.copy(value);
   }
 
   /**
@@ -318,10 +247,10 @@ export class UIProgress extends UIElement {
    * @param value - True for reverse direction, false for forward
    */
   public set inverseDirection(value: boolean) {
-    this.inverseDirectionInternal = value;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      direction: value ? -1 : 1,
-    });
+    if (this.inverseDirectionInternal !== value) {
+      this.inverseDirectionInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -329,39 +258,37 @@ export class UIProgress extends UIElement {
    * @param value - Progress value between 0.0 (empty) and 1.0 (full)
    */
   public set progress(value: number) {
-    this.progressInternal = value;
-    this.sceneWrapper.setProperties(this.planeHandler, { progress: value });
+    if (this.progressInternal !== value) {
+      this.progressInternal = value;
+      this.dirty = true;
+    }
   }
 
-  public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
-    this.foregroundColorInternal.off(
-      UIColorEvent.CHANGE,
-      this.onForegroundColorChange,
-    );
-    this.backgroundColorInternal.off(
-      UIColorEvent.CHANGE,
-      this.onBackgroundColorChange,
-    );
-    super.destroy();
+  protected override onWillRender(
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void {
+    if (
+      this.color.dirty ||
+      this.backgroundColor.dirty ||
+      this.foregroundColor.dirty ||
+      this.dirty
+    ) {
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        foregroundTexture: this.foregroundTextureInternal,
+        backgroundTexture: this.backgroundTextureInternal ?? EMPTY_TEXTURE,
+        color: this.color,
+        foregroundColor: this.foregroundColor,
+        backgroundColor: this.backgroundColor,
+        progress: this.progressInternal,
+        direction: this.inverseDirection ? -1 : 1,
+      });
+
+      this.color.dirty = false;
+      this.backgroundColor.dirty = false;
+      this.foregroundColor.dirty = false;
+      this.dirty = false;
+    }
+    super.onWillRender(renderer, deltaTime);
   }
-
-  /** Event handler for when the overall color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
-
-  /** Event handler for when the foreground color changes */
-  private readonly onForegroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      foregroundColor: color,
-    });
-  };
-
-  /** Event handler for when the background color changes */
-  private readonly onBackgroundColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      backgroundColor: color,
-    });
-  };
 }

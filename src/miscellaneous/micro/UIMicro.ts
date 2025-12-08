@@ -2,10 +2,6 @@ import { Eventail } from "eventail";
 import { MathUtils } from "three";
 import { UIMicroAnchorMode } from "./UIMicroAnchorMode";
 
-export enum UIMicroEvent {
-  CHANGE = 0,
-}
-
 /** Default position value for x and y coordinates. */
 const DEFAULT_POSITION = 0;
 /** Default anchor point value for anchorX and anchorY. */
@@ -30,6 +26,9 @@ const DEFAULT_ROTATION = 0;
  * @see {@link UIElement} - Elements that use micro transformations
  */
 export class UIMicro extends Eventail {
+  /** @internal */
+  public dirty = false;
+
   /** Internal storage for x-coordinate offset. */
   private xInternal: number = DEFAULT_POSITION;
   /** Internal storage for y-coordinate offset. */
@@ -47,8 +46,6 @@ export class UIMicro extends Eventail {
   /** Internal storage for anchor mode determining which transformations are applied around the anchor point. */
   private anchorModeInternal: UIMicroAnchorMode =
     UIMicroAnchorMode.ROTATION_SCALE;
-  /** Flag indicating if any transformation properties have changed. */
-  private recalculationRequired = false;
 
   /**
    * Gets the x-coordinate offset for micro positioning.
@@ -137,8 +134,7 @@ export class UIMicro extends Eventail {
   public set x(value: number) {
     if (value !== this.xInternal) {
       this.xInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -149,8 +145,7 @@ export class UIMicro extends Eventail {
   public set y(value: number) {
     if (value !== this.yInternal) {
       this.yInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -161,8 +156,7 @@ export class UIMicro extends Eventail {
   public set anchorX(value: number) {
     if (value !== this.anchorXInternal) {
       this.anchorXInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -173,8 +167,7 @@ export class UIMicro extends Eventail {
   public set anchorY(value: number) {
     if (value !== this.anchorYInternal) {
       this.anchorYInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -185,8 +178,7 @@ export class UIMicro extends Eventail {
   public set scaleX(value: number) {
     if (value !== this.scaleXInternal) {
       this.scaleXInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -197,8 +189,7 @@ export class UIMicro extends Eventail {
   public set scaleY(value: number) {
     if (value !== this.scaleYInternal) {
       this.scaleYInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -210,8 +201,7 @@ export class UIMicro extends Eventail {
     if (value !== this.scaleXInternal || value !== this.scaleYInternal) {
       this.scaleXInternal = value;
       this.scaleYInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -223,8 +213,7 @@ export class UIMicro extends Eventail {
     const rotation = MathUtils.degToRad(value);
     if (rotation !== this.rotationInternal) {
       this.rotationInternal = rotation;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -235,8 +224,7 @@ export class UIMicro extends Eventail {
   public set rotation(value: number) {
     if (value !== this.rotationInternal) {
       this.rotationInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -247,8 +235,7 @@ export class UIMicro extends Eventail {
   public set anchorMode(value: UIMicroAnchorMode) {
     if (value !== this.anchorModeInternal) {
       this.anchorModeInternal = value;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -276,8 +263,7 @@ export class UIMicro extends Eventail {
       this.scaleXInternal = DEFAULT_SCALE;
       this.scaleYInternal = DEFAULT_SCALE;
       this.rotationInternal = DEFAULT_ROTATION;
-      this.recalculationRequired = true;
-      this.emit(UIMicroEvent.CHANGE, this);
+      this.dirty = true;
     }
   }
 
@@ -300,34 +286,7 @@ export class UIMicro extends Eventail {
       this.scaleYInternal = value.scaleYInternal;
       this.rotationInternal = value.rotationInternal;
       this.anchorModeInternal = value.anchorModeInternal;
-
-      this.emit(UIMicroEvent.CHANGE, this);
-      this.recalculationRequired = true;
+      this.dirty = true;
     }
-  }
-
-  /**
-   * Gets whether any transformation properties have changed since last reset.
-   *
-   * This method is used internally by the rendering system to determine
-   * if transformation matrices need to be recalculated.
-   *
-   * @returns True if recalculation is required, false otherwise
-   * @internal
-   */
-  protected ["getRecalculationRequiredInternal"](): boolean {
-    return this.recalculationRequired;
-  }
-
-  /**
-   * Resets the recalculation flag after transformations have been applied.
-   *
-   * This method is called internally by the rendering system after
-   * transformation matrices have been updated.
-   *
-   * @internal
-   */
-  protected ["resetRecalculationRequiredInternal"](): void {
-    this.recalculationRequired = false;
   }
 }

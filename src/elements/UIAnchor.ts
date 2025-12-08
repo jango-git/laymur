@@ -3,7 +3,7 @@ import type { UILayer } from "../layers/UILayer";
 import type { UIPointElement } from "../miscellaneous/asserts";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import { UIPriority } from "../miscellaneous/UIPriority";
-import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
+import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
 
 /**
  * Base class representing a minimal UI element as a point in 2D space.
@@ -37,7 +37,7 @@ export class UIAnchor extends Eventail implements UIPointElement {
    * Reference to the constraint solver wrapper for variable management.
    * @see {@link UISolverWrapper}
    */
-  protected readonly solverWrapper: UISolverWrapper;
+  protected readonly solverWrapper: UISolverWrapperInterface;
 
   /**
    * Creates a new UIAnchor instance.
@@ -57,7 +57,7 @@ export class UIAnchor extends Eventail implements UIPointElement {
     assertValidNumber(y, "UIAnchor.constructor.y");
 
     super();
-    this.solverWrapper = this.layer["getSolverWrapperInternal"]();
+    this.solverWrapper = this.layer.solverWrapper;
     this.xVariable = this.solverWrapper.createVariable(x, UIPriority.P7);
     this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);
   }

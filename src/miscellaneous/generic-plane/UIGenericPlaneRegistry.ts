@@ -2,7 +2,7 @@ import type { Matrix4, Scene } from "three";
 import type { UITransparencyMode } from "../UITransparencyMode";
 import { UIGenericInstancedPlane } from "./UIGenericInstancedPlane";
 import { UIGenericPlane } from "./UIGenericPlane";
-import type { PlaneInstanceData, UIPropertyType } from "./shared";
+import type { GenericPlaneData, UIPropertyType } from "./shared";
 
 interface PlaneDescriptor {
   plane: UIGenericPlane | UIGenericInstancedPlane;
@@ -195,7 +195,7 @@ export class UIPlaneRegistry {
    */
   private placeInstance(
     descriptor: PlaneDescriptor,
-    data: PlaneInstanceData,
+    data: GenericPlaneData,
   ): void {
     const { source, properties, transparency, transform, visibility } = data;
 
@@ -253,7 +253,7 @@ export class UIPlaneRegistry {
   /**
    * Extracts current instance data from descriptor.
    */
-  private extractInstanceData(descriptor: PlaneDescriptor): PlaneInstanceData {
+  private extractInstanceData(descriptor: PlaneDescriptor): GenericPlaneData {
     if (
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
@@ -313,7 +313,7 @@ export class UIPlaneRegistry {
    */
   private checkNeedsRelocation(
     descriptor: PlaneDescriptor,
-    currentData: PlaneInstanceData,
+    currentData: GenericPlaneData,
     newProperties: Record<string, UIPropertyType>,
     newTransparency: UITransparencyMode,
   ): boolean {

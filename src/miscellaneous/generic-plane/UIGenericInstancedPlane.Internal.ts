@@ -12,7 +12,11 @@ import {
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import type { UIPropertyType } from "./shared";
-import { DEFAULT_ALPHA_TEST, resolveTypeInfo } from "./shared";
+import {
+  buildGenericPlaneFragmentShader,
+  DEFAULT_ALPHA_TEST,
+  resolveGLSLTypeInfo,
+} from "./shared";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const planeGeometry = new PlaneGeometry(1, 1);
@@ -82,7 +86,7 @@ export function buildEmptyInstancedBufferAttribute(
   value: UIPropertyType,
   capacity: number,
 ): InstancedBufferAttribute {
-  const info = resolveTypeInfo(value);
+  const info = resolveGLSLTypeInfo(value);
   if (!info.instantiable) {
     throw new Error(
       `Cannot create instanced attribute for non-instantiable type`,
@@ -108,7 +112,7 @@ export function buildMaterial(
   const vertexAssignments: string[] = [];
 
   for (const [name, value] of Object.entries(uniformProperties)) {
-    const info = resolveTypeInfo(value);
+    const info = resolveGLSLTypeInfo(value);
     uniforms[`p_${name}`] = {
       value: value instanceof UIColor ? value.toGLSLColor() : value,
     };
@@ -116,7 +120,7 @@ export function buildMaterial(
   }
 
   for (const [name, value] of Object.entries(varyingProperties)) {
-    const info = resolveTypeInfo(value);
+    const info = resolveGLSLTypeInfo(value);
     attributeDeclarations.push(`attribute ${info.glslType} a_${name};`);
     varyingDeclarations.push(`varying ${info.glslType} p_${name};`);
     vertexAssignments.push(`p_${name} = a_${name};`);
@@ -151,40 +155,11 @@ export function buildMaterial(
     }
   `;
 
-  const fragmentShader = `
-    // Uniforms
-    ${uniformDeclarations.join("\n")}
-
-    // Builtin varyings
-    varying vec3 p_position;
-    varying vec2 p_uv;
-
-    // User varyings
-    ${varyingDeclarations.join("\n")}
-
-    #include <alphahash_pars_fragment>
-
-    // Source must define vec4 draw() function
-    ${source}
-
-    void main() {
-      vec4 diffuseColor = draw();
-
-      #ifdef USE_ALPHATEST
-        if (diffuseColor.a < ${DEFAULT_ALPHA_TEST.toFixed(2)}) {
-          discard;
-        }
-      #endif
-
-      #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
-          discard;
-        }
-      #endif
-
-      gl_FragColor = linearToOutputTexel(diffuseColor);
-    }
-  `;
+  const fragmentShader = buildGenericPlaneFragmentShader(
+    uniformDeclarations,
+    varyingDeclarations,
+    source,
+  );
 
   return new ShaderMaterial({
     uniforms,

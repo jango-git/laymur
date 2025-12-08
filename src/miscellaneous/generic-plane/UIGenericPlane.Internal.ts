@@ -2,8 +2,9 @@ import { Matrix4, PlaneGeometry, ShaderMaterial } from "three";
 import { UIColor } from "../UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
+  buildGenericPlaneFragmentShader,
   DEFAULT_ALPHA_TEST,
-  resolveTypeInfo,
+  resolveGLSLTypeInfo,
   type UIPropertyType,
 } from "./shared";
 
@@ -22,7 +23,7 @@ export function buildGenericPlaneMaterial(
   const uniformDeclarations: string[] = [];
 
   for (const [name, value] of Object.entries(properties)) {
-    const info = resolveTypeInfo(value);
+    const info = resolveGLSLTypeInfo(value);
     uniforms[`p_${name}`] = {
       value: value instanceof UIColor ? value.toGLSLColor() : value,
     };
@@ -48,37 +49,11 @@ export function buildGenericPlaneMaterial(
     }
   `;
 
-  const fragmentShader = `
-    // Uniform declarations
-    ${uniformDeclarations.join("\n")}
-
-    // Default varying declarations
-    varying vec3 p_position;
-    varying vec2 p_uv;
-
-    #include <alphahash_pars_fragment>
-
-    // Source must define 'draw' function
-    ${source}
-
-    void main() {
-      vec4 diffuseColor = draw();
-
-      #ifdef USE_ALPHATEST
-        if (diffuseColor.a < ${DEFAULT_ALPHA_TEST.toFixed(2)}) {
-          discard;
-        }
-      #endif
-
-      #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
-          discard;
-        }
-      #endif
-
-      gl_FragColor = linearToOutputTexel(diffuseColor);
-    }
-  `;
+  const fragmentShader = buildGenericPlaneFragmentShader(
+    uniformDeclarations,
+    [],
+    source,
+  );
 
   const material = new ShaderMaterial({
     uniforms,
