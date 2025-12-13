@@ -1,3 +1,48 @@
+import type { Color } from "three";
+import type { UIColor } from "./UIColor";
+
+export type UIColorConfig = Color | number | string | UIColor;
+
+export type UIColorName =
+  | "black"
+  | "white"
+  | "red"
+  | "green"
+  | "blue"
+  | "yellow"
+  | "cyan"
+  | "magenta"
+  | "gray"
+  | "grey"
+  | "silver"
+  | "maroon"
+  | "olive"
+  | "lime"
+  | "aqua"
+  | "teal"
+  | "navy"
+  | "fuchsia"
+  | "purple"
+  | "orange"
+  | "pink"
+  | "brown"
+  | "gold"
+  | "violet"
+  | "indigo"
+  | "coral"
+  | "salmon"
+  | "khaki"
+  | "plum"
+  | "orchid"
+  | "tan"
+  | "beige"
+  | "mint"
+  | "lavender"
+  | "crimson"
+  | "azure"
+  | "ivory"
+  | "snow";
+
 export const COLORS: Record<string, number | undefined> = {
   black: 0x000000,
   white: 0xffffff,
@@ -40,43 +85,3 @@ export const COLORS: Record<string, number | undefined> = {
   ivory: 0xfffff0,
   snow: 0xfffafa,
 };
-
-export type UIColorName =
-  | "black"
-  | "white"
-  | "red"
-  | "green"
-  | "blue"
-  | "yellow"
-  | "cyan"
-  | "magenta"
-  | "gray"
-  | "grey"
-  | "silver"
-  | "maroon"
-  | "olive"
-  | "lime"
-  | "aqua"
-  | "teal"
-  | "navy"
-  | "fuchsia"
-  | "purple"
-  | "orange"
-  | "pink"
-  | "brown"
-  | "gold"
-  | "violet"
-  | "indigo"
-  | "coral"
-  | "salmon"
-  | "khaki"
-  | "plum"
-  | "orchid"
-  | "tan"
-  | "beige"
-  | "mint"
-  | "lavender"
-  | "crimson"
-  | "azure"
-  | "ivory"
-  | "snow";

@@ -4,7 +4,7 @@ import type { UIPropertyType } from "../miscellaneous/generic-plane/shared";
 import { UIPlaneRegistry } from "../miscellaneous/generic-plane/UIGenericPlaneRegistry";
 import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 
-let originalClearColor: Color = new Color();
+let originalClearColor = new Color();
 let originalClearAlpha = 0;
 let originalAutoClear = false;
 let originalAutoClearColor = false;

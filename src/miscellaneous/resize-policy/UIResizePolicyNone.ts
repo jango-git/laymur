@@ -1,12 +1,14 @@
+import { assertValidPositiveNumber } from "../asserts";
 import { UIResizePolicy } from "./UIResizePolicy";
 
-/**
- * No scaling applied, always returns 1:1 scale.
- */
+/** No scaling, always returns 1. */
 export class UIResizePolicyNone extends UIResizePolicy {
-  protected calculateScaleInternal(width: number, height: number): number {
-    void width;
-    void height;
+  public calculateScale(width: number, height: number): number {
+    assertValidPositiveNumber(width, "UIResizePolicyNone.calculateScale.width");
+    assertValidPositiveNumber(
+      height,
+      "UIResizePolicyNone.calculateScale.height",
+    );
     return 1;
   }
 }

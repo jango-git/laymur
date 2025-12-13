@@ -4,32 +4,13 @@ import type { UIPlaneElement } from "../miscellaneous/asserts";
 import { UIMode } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
-import type { UISceneWrapperInterface } from "../miscellaneous/UISceneWrapperInterface";
-import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
+import { UIInputWrapper } from "../wrappers/UIInputWrapper";
+import type { UIInputWrapperInterface } from "../wrappers/UIInputWrapper.Internal";
 import { UISceneWrapper } from "../wrappers/UISceneWrapper";
+import type { UISceneWrapperInterface } from "../wrappers/UISceneWrapper.Internal";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
-
-/**
- * Interface for handling input events within UI layers.
- */
-export interface UILayerInputListener {
-  zIndex: number;
-  catchPointerDown(x: number, y: number, identifier: number): boolean;
-  catchPointerMove(x: number, y: number, identifier: number): boolean;
-  catchPointerUp(x: number, y: number, identifier: number): boolean;
-}
-
-/**
- * Events that can be emitted by UI layers.
- */
-export enum UILayerEvent {
-  /** Emitted when the layer's orientation changes between horizontal and vertical. */
-  ORIENTATION_CHANGE = "orientation_change",
-  /** Emitted when the layer's visibility/interaction mode changes. */
-  MODE_CHANGE = "mode_change",
-  /** Emitted before the layer is rendered. */
-  WILL_RENDER = "will_render",
-}
+import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
+import { UILayerEvent } from "./UILayer.Internal";
 
 /**
  * Abstract base class for UI layout containers with constraint solving and rendering.
@@ -81,21 +62,17 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    */
   protected readonly solverWrapperInternal = new UISolverWrapper();
 
-  /**
-   * 3D scene wrapper for managing rendering and element hierarchy.
-   * @see {@link UISceneWrapper}
-   */
   protected readonly sceneWrapperInternal: UISceneWrapper;
 
+  protected readonly inputWrapperInternal = new UIInputWrapper();
+
   /** Internal storage for the current visibility/interaction mode. */
-  protected modeInternal: UIMode = UIMode.VISIBLE;
+  protected modeInternal: UIMode;
 
   /** Internal storage for the current orientation state. */
   protected orientationInternal: UIOrientation;
 
   /** Collection of input listeners for handling user interactions, sorted by z-index. */
-
-  private readonly inputListeners: UILayerInputListener[] = [];
 
   /**
    * Creates a new UILayer instance with specified dimensions.
@@ -107,9 +84,12 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @param w - Initial width of the layer
    * @param h - Initial height of the layer
    */
-  constructor(w: number, h: number) {
+  constructor(w: number, h: number, mode: UIMode) {
     super();
+
     this.sceneWrapperInternal = new UISceneWrapper(w, h);
+
+    this.modeInternal = mode;
     this.xVariable = this.solverWrapperInternal.createVariable(
       0,
       UIPriority.P0,
@@ -130,12 +110,19 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
       w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
   }
 
+  /** @internal */
   public get sceneWrapper(): UISceneWrapperInterface {
     return this.sceneWrapperInternal;
   }
 
+  /** @internal */
   public get solverWrapper(): UISolverWrapperInterface {
     return this.solverWrapperInternal;
+  }
+
+  /** @internal */
+  public get inputWrapper(): UIInputWrapperInterface {
+    return this.inputWrapperInternal;
   }
 
   /**
@@ -241,89 +228,11 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @protected
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
+    this.inputWrapperInternal.dirty = false;
     if (this.mode !== UIMode.HIDDEN) {
       this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
       this.solverWrapperInternal.dirty = false;
       this.sceneWrapperInternal.render(renderer);
-    }
-  }
-
-  protected onPointerDownInternal(
-    x: number,
-    y: number,
-    identifier: number,
-  ): void {
-    this.handleInputEvent(x, y, "catchPointerDown", identifier);
-  }
-
-  protected onPointerMoveInternal(
-    x: number,
-    y: number,
-    identifier: number,
-  ): void {
-    this.handleInputEvent(x, y, "catchPointerMove", identifier);
-  }
-
-  protected onPointerUpInternal(
-    x: number,
-    y: number,
-    identifier: number,
-  ): void {
-    this.handleInputEvent(x, y, "catchPointerUp", identifier);
-  }
-
-  /**
-   * Internal method for registering an input listener for pointer events.
-   *
-   * Adds a listener to handle click events with the specified z-index priority.
-   * Higher z-index listeners are processed first during event handling.
-   *
-   * @param listener - The input listener to register
-   * @param zIndex - The z-index priority for event handling order
-   * @throws Will throw an error if the listener is already registered
-   */
-
-  protected ["subscribeInputCatcher"](listener: UILayerInputListener): void {
-    if (this.inputListeners.find((l) => l === listener)) {
-      throw new Error("Listener already exists");
-    }
-    this.inputListeners.push(listener);
-  }
-
-  /**
-   * Internal method for unregistering an input listener.
-   *
-   * Removes the specified listener from the event handling system.
-   * The listener will no longer receive click events.
-   *
-   * @param listener - The input listener to remove
-   * @throws Will throw an error if the listener is not found
-   */
-
-  protected ["unsubscribeInputCatcher"](listener: UILayerInputListener): void {
-    const index = this.inputListeners.findIndex((l) => l === listener);
-    if (index === -1) {
-      throw new Error("Listener not found");
-    }
-    this.inputListeners.splice(index, 1);
-  }
-
-  private handleInputEvent(
-    x: number,
-    y: number,
-    catchFunctionName:
-      | "catchPointerDown"
-      | "catchPointerMove"
-      | "catchPointerUp",
-    identifier: number,
-  ): void {
-    if (this.mode === UIMode.INTERACTIVE) {
-      this.inputListeners.sort((a, b) => b.zIndex - a.zIndex);
-      for (const listener of this.inputListeners) {
-        if (listener[catchFunctionName](x, y, identifier)) {
-          return;
-        }
-      }
     }
   }
 }

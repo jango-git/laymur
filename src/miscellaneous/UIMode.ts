@@ -24,4 +24,16 @@ export enum UIMode {
    * This is the fully active state for UI elements.
    */
   INTERACTIVE = 2,
+
+  INTERACTIVE_TRANSPARENT = 3,
+}
+
+/** Checks if mode allows receiving input events. */
+export function isUIModeInteractive(mode: UIMode): boolean {
+  return mode === UIMode.INTERACTIVE || mode === UIMode.INTERACTIVE_TRANSPARENT;
+}
+
+/** Checks if mode is rendered. */
+export function isUIModeVisible(mode: UIMode): boolean {
+  return mode !== UIMode.HIDDEN;
 }

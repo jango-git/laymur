@@ -2,7 +2,6 @@ import type { Vector2 } from "three";
 import { MathUtils, Vector3, type Camera, type WebGLRenderer } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import type { UIResizePolicy } from "../miscellaneous/resize-policy/UIResizePolicy";
-import { UIResizePolicyEvent } from "../miscellaneous/resize-policy/UIResizePolicy";
 import { UIResizePolicyNone } from "../miscellaneous/resize-policy/UIResizePolicyNone";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
 import { UIMode } from "../miscellaneous/UIMode";
@@ -18,43 +17,22 @@ import { UILayer } from "./UILayer";
  * @see {@link UIResizePolicy}
  */
 export class UIFullscreenLayer extends UILayer {
-  private resizePolicyInternal: UIResizePolicy;
-
   /**
    * Creates a fullscreen layer and sets up window event listeners.
    */
   constructor(
-    resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
+    public resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
     mode: UIMode = UIMode.VISIBLE,
   ) {
-    super(window.innerWidth, window.innerHeight);
+    const scale = resizePolicy.calculateScale(
+      window.innerWidth,
+      window.innerHeight,
+    );
+    super(window.innerWidth * scale, window.innerHeight * scale, mode);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onDown);
     window.addEventListener("pointermove", this.onMove);
     window.addEventListener("pointerup", this.onUp);
-    this.mode = mode;
-    this.resizePolicyInternal = resizePolicy;
-    this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
-    this.onResize();
-  }
-
-  /**
-   * Gets the current resize policy.
-   */
-  public get resizePolicy(): UIResizePolicy {
-    return this.resizePolicyInternal;
-  }
-
-  /**
-   * Sets a new resize policy. Unsubscribes from old policy and subscribes to new one.
-   */
-  public set resizePolicy(value: UIResizePolicy) {
-    if (this.resizePolicyInternal !== value) {
-      this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
-      this.resizePolicyInternal = value;
-      this.resizePolicyInternal.on(UIResizePolicyEvent.CHANGE, this.onResize);
-      this.onResize();
-    }
   }
 
   /**
@@ -65,7 +43,6 @@ export class UIFullscreenLayer extends UILayer {
     window.removeEventListener("pointerdown", this.onDown);
     window.removeEventListener("pointermove", this.onMove);
     window.removeEventListener("pointerup", this.onUp);
-    this.resizePolicyInternal.off(UIResizePolicyEvent.CHANGE, this.onResize);
   }
 
   /**
@@ -76,6 +53,10 @@ export class UIFullscreenLayer extends UILayer {
    */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
+    if (this.resizePolicy.dirty) {
+      this.resizePolicy.dirty = false;
+      this.onResize();
+    }
     super.renderInternal(renderer, deltaTime);
   }
 
@@ -129,7 +110,7 @@ export class UIFullscreenLayer extends UILayer {
    * Handles window resize. Updates layer dimensions according to resize policy.
    */
   private readonly onResize = (): void => {
-    const scale = this.resizePolicyInternal["calculateScaleInternal"](
+    const scale = this.resizePolicy.calculateScale(
       window.innerWidth,
       window.innerHeight,
     );
@@ -166,7 +147,7 @@ export class UIFullscreenLayer extends UILayer {
       ? rect.bottom - event.clientY
       : window.innerHeight - event.clientY;
 
-    const scale = this.resizePolicyInternal["calculateScaleInternal"](
+    const scale = this.resizePolicy.calculateScale(
       window.innerWidth,
       window.innerHeight,
     );

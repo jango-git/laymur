@@ -1,120 +1,201 @@
+import { MathUtils } from "three";
 import type { UILayer } from "../layers/UILayer";
+import type { UIArea } from "../miscellaneous/area/UIArea";
+import { UIAreaRectangle } from "../miscellaneous/area/UIAreaRectangle";
 import {
+  assertValidNumber,
   assertValidPositiveNumber,
   type UIPlaneElement,
 } from "../miscellaneous/asserts";
+import { UIInputEvent } from "../miscellaneous/UIInputEvent";
+import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
+import type { UIInputWrapperInterface } from "../wrappers/UIInputWrapper.Internal";
 import { UIAnchor } from "./UIAnchor";
-
-/** Default width and height value for UIDummy elements. */
-const DEFAULT_SIZE = 100;
-
-export interface UIDummyOptions {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import {
+  DUMMY_DEFAULT_HEIGHT,
+  DUMMY_DEFAULT_MODE,
+  DUMMY_DEFAULT_WIDTH,
+  DUMMY_DEFAULT_Z_INDEX,
+  type UIDummyOptions,
+} from "./UIDummy.Internal";
 
 /**
- * UI element that extends UIAnchor with dimensions but without rendering.
- *
- * UIDummy represents a rectangular area in the UI layout system that has position
- * and dimensions (width and height) but does not perform any visual rendering.
- * It serves as a placeholder or spacer element in constraint-based layouts,
- * useful for defining layout structure without visual content.
- *
- * @see {@link UIAnchor} - Base class providing position functionality
- * @see {@link UIPlaneElement} - Interface defining dimensional element behavior
- * @see {@link UILayer} - Container layer for UI elements
+ * Rectangular area with position and dimensions but without rendering.
+ * Supports custom interaction areas and input events.
  */
 export class UIDummy extends UIAnchor implements UIPlaneElement {
-  /**
-   * Solver variable descriptor for the width dimension.
-   * This variable is managed by the constraint solver system.
-   */
+  public interactionArea: UIArea;
+
+  /** Solver variable for width. */
   public readonly wVariable: number;
 
-  /**
-   * Solver variable descriptor for the height dimension.
-   * This variable is managed by the constraint solver system.
-   */
+  /** Solver variable for height. */
   public readonly hVariable: number;
 
-  /**
-   * Creates a new UIDummy instance with position and dimensions.
-   *
-   * @param layer - The UI layer that contains this dummy element
-   * @param x - Initial x-coordinate position
-   * @param y - Initial y-coordinate position
-   * @param width - Initial width dimension (defaults to 100)
-   * @param height - Initial height dimension (defaults to 100)
-   * @throws Will throw an error if width or height are not valid positive numbers
-   * @see {@link assertValidPositiveNumber}
-   */
-  constructor(layer: UILayer, options: Partial<UIDummyOptions> = {}) {
-    const x = options.x ?? 0;
-    const y = options.y ?? 0;
-    const w = options.width ?? DEFAULT_SIZE;
-    const h = options.height ?? DEFAULT_SIZE;
+  protected modeInternal: UIMode;
+  private readonly inputWrapper: UIInputWrapperInterface;
+  private readonly catcherHandler: number;
+  private lastPointerInside = false;
+
+  constructor(layer: UILayer, options?: Partial<UIDummyOptions>) {
+    const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
+    const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
 
     assertValidPositiveNumber(w, "UIDummy.constructor.width");
     assertValidPositiveNumber(h, "UIDummy.constructor.height");
 
-    super(layer, x, y);
+    super(layer, options);
+    this.interactionArea =
+      options?.interactionArea ?? new UIAreaRectangle(0, 0, 1, 1);
+    this.modeInternal = options?.mode ?? DUMMY_DEFAULT_MODE;
+    this.inputWrapper = this.layer.inputWrapper;
+
     this.wVariable = this.solverWrapper.createVariable(w, UIPriority.P6);
     this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P6);
+
+    this.catcherHandler = this.inputWrapper.createInputCatcher(
+      this.catchPointerDown,
+      this.catchPointerMove,
+      this.catchPointerUp,
+      DUMMY_DEFAULT_Z_INDEX,
+    );
   }
 
-  /**
-   * Gets the current width value from the solver.
-   * @returns The current width dimension
-   */
   public get width(): number {
     return this.solverWrapper.readVariableValue(this.wVariable);
   }
 
-  /**
-   * Gets the current height value from the solver.
-   * @returns The current height dimension
-   */
   public get height(): number {
     return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
-  /**
-   * Sets the width value through the solver system.
-   * @param value - The new width dimension (must be positive)
-   * @throws Will throw an error if value is not a valid positive number
-   * @see {@link assertValidPositiveNumber}
-   */
+  public get oppositeX(): number {
+    return this.x + this.width;
+  }
+
+  public get oppositeY(): number {
+    return this.y + this.height;
+  }
+
+  public get centerX(): number {
+    return this.x + this.width / 2;
+  }
+
+  public get centerY(): number {
+    return this.y + this.height / 2;
+  }
+
+  public get mode(): UIMode {
+    return this.modeInternal;
+  }
+
+  public get zIndex(): number {
+    return this.inputWrapper.getZIndex(this.catcherHandler);
+  }
+
   public set width(value: number) {
     assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
-  /**
-   * Sets the height value through the solver system.
-   * @param value - The new height dimension (must be positive)
-   * @throws Will throw an error if value is not a valid positive number
-   * @see {@link assertValidPositiveNumber}
-   */
   public set height(value: number) {
     assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
-  /**
-   * Destroys the dummy element by removing its solver variables.
-   *
-   * This method cleans up the dimension solver variables (width and height)
-   * associated with this dummy element, then calls the parent destroy method
-   * to clean up position variables. After calling this method, the dummy
-   * element should not be used anymore.
-   */
+  public set oppositeX(value: number) {
+    assertValidNumber(value, "UIDummy.oppositeX");
+    this.x = value - this.width;
+  }
+
+  public set oppositeY(value: number) {
+    assertValidNumber(value, "UIDummy.oppositeY");
+    this.y = value - this.height;
+  }
+
+  public set centerX(value: number) {
+    assertValidNumber(value, "UIDummy.centerX");
+    this.x = value - this.width / 2;
+  }
+
+  public set centerY(value: number) {
+    assertValidNumber(value, "UIDummy.centerY");
+    this.y = value - this.height / 2;
+  }
+
+  public set mode(value: UIMode) {
+    if (this.modeInternal !== value) {
+      const newInteractivity = isUIModeInteractive(value);
+      this.inputWrapper.setActive(this.catcherHandler, newInteractivity);
+      this.modeInternal = value;
+    }
+  }
+
+  public set zIndex(value: number) {
+    assertValidNumber(value, "UIElement.zIndex");
+    this.inputWrapper.setZIndex(this.catcherHandler, value);
+  }
+
   public override destroy(): void {
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);
+    this.inputWrapper.destroyInputCatcher(this.catcherHandler);
     super.destroy();
+  }
+
+  protected readonly catchPointerDown = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.DOWN);
+  };
+
+  protected readonly catchPointerMove = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.MOVE);
+  };
+
+  protected readonly catchPointerUp = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.UP);
+  };
+
+  protected handleInputEvent(
+    x: number,
+    y: number,
+    identifier: number,
+    inputEvent: UIInputEvent,
+  ): boolean {
+    assertValidNumber(x, "UIDummy.handleInputEvent.x");
+    assertValidNumber(y, "UIDummy.handleInputEvent.y");
+    assertValidNumber(identifier, "UIDummy.handleInputEvent.identifier");
+
+    const isPointerInside = this.interactionArea.contains(
+      MathUtils.lerp(this.x, this.oppositeX, x),
+      MathUtils.lerp(this.y, this.oppositeY, x),
+    );
+
+    if (isPointerInside) {
+      this.emit(inputEvent, x, y, identifier, this);
+    }
+
+    if (this.lastPointerInside && !isPointerInside) {
+      this.emit(UIInputEvent.LEAVE, x, y, identifier, this);
+    } else if (!this.lastPointerInside && isPointerInside) {
+      this.emit(UIInputEvent.ENTER, x, y, identifier, this);
+    }
+
+    this.lastPointerInside = isPointerInside;
+    return this.modeInternal === UIMode.INTERACTIVE_TRANSPARENT
+      ? false
+      : isPointerInside;
   }
 }

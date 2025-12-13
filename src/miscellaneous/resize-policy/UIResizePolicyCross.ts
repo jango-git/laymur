@@ -1,9 +1,7 @@
 import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy, UIResizePolicyEvent } from "./UIResizePolicy";
+import { UIResizePolicy } from "./UIResizePolicy";
 
-/**
- * Scales by width in landscape, by height in portrait.
- */
+/** Scales by width in landscape, by height in portrait. */
 export class UIResizePolicyCross extends UIResizePolicy {
   private fixedWidthLandscapeInternal: number;
   private fixedHeightPortraitInternal: number;
@@ -23,9 +21,12 @@ export class UIResizePolicyCross extends UIResizePolicy {
     this.fixedHeightPortraitInternal = fixedHeightPortrait;
   }
 
+  /** Fixed width for landscape orientation. */
   public get fixedWidthLandscape(): number {
     return this.fixedWidthLandscapeInternal;
   }
+
+  /** Fixed height for portrait orientation. */
   public get fixedHeightPortrait(): number {
     return this.fixedHeightPortraitInternal;
   }
@@ -34,7 +35,7 @@ export class UIResizePolicyCross extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyCross.fixedWidthLandscape");
     if (value !== this.fixedWidthLandscapeInternal) {
       this.fixedWidthLandscapeInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
@@ -42,11 +43,19 @@ export class UIResizePolicyCross extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyCross.fixedHeightPortrait");
     if (value !== this.fixedHeightPortraitInternal) {
       this.fixedHeightPortraitInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
-  public calculateScaleInternal(width: number, height: number): number {
+  public calculateScale(width: number, height: number): number {
+    assertValidPositiveNumber(
+      width,
+      "UIResizePolicyCross.calculateScale.width",
+    );
+    assertValidPositiveNumber(
+      height,
+      "UIResizePolicyCross.calculateScale.height",
+    );
     return width > height
       ? this.fixedWidthLandscapeInternal / width
       : this.fixedHeightPortraitInternal / height;

@@ -55,11 +55,6 @@ export class UIColor {
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(colorName: UIColorName, a?: number);
   /**
-   * @param uiColor - UIColor object to copy from
-   */
-  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
-  constructor(uiColor?: UIColor);
-  /**
    * @param threeColor - Three.js Color object
    * @param a - Alpha (0-1)
    */
@@ -75,7 +70,12 @@ export class UIColor {
    * @param hexString - Hex string (e.g., "#ffffff" or "#ffffffff")
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
-  constructor(hexString: string);
+  constructor(hexString?: string);
+  /**
+   * @param uiColor - UIColor object to copy from
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(uiColor?: UIColor);
   constructor(...args: unknown[]) {
     if (args.length >= 3 && typeof args[0] === "number") {
       const [r, g, b, a = 1] = args as number[];

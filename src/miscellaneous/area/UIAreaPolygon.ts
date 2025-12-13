@@ -1,0 +1,48 @@
+import type { Vector2Like } from "three";
+import { UIArea } from "./UIArea";
+
+/**
+ * Polygonal area defined by vertices.
+ * Uses ray casting algorithm for point containment.
+ */
+export class UIAreaPolygon extends UIArea {
+  constructor(public vertices: Vector2Like[]) {
+    super();
+  }
+
+  /** @internal */
+  public contains(pointX: number, pointY: number): boolean {
+    const vertexCount = this.vertices.length;
+    if (vertexCount < 3) {
+      return false;
+    }
+
+    let inside = false;
+
+    for (
+      let index = 0, previousIndex = vertexCount - 1;
+      index < vertexCount;
+      previousIndex = index++
+    ) {
+      const currentVertex = this.vertices[index];
+      const previousVertex = this.vertices[previousIndex];
+
+      const currentX = currentVertex.x;
+      const currentY = currentVertex.y;
+      const previousX = previousVertex.x;
+      const previousY = previousVertex.y;
+
+      if (
+        currentY > pointY !== previousY > pointY &&
+        pointX <
+          ((previousX - currentX) * (pointY - currentY)) /
+            (previousY - currentY) +
+            currentX
+      ) {
+        inside = !inside;
+      }
+    }
+
+    return inside;
+  }
+}

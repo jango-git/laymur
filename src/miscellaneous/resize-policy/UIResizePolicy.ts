@@ -1,26 +1,18 @@
-import { Eventail } from "eventail";
-
-export enum UIResizePolicyEvent {
-  CHANGE = 0,
-}
-
 /**
- * Base class for UI resize policies.
- *
- * Calculates scale factors based on viewport dimensions. Different policies
- * implement different scaling strategies.
+ * Base class for resize policies.
+ * Calculates scale factors based on viewport dimensions.
  */
-export abstract class UIResizePolicy extends Eventail {
+export abstract class UIResizePolicy {
+  /**
+   * Indicates whether the policy has been modified.
+   * Must be reset to `false` externally by the owner.
+   * @internal
+   */
+  public dirty = false;
+
   /**
    * Calculates scale factor for given dimensions.
-   *
-   * @param width - Viewport width in pixels
-   * @param height - Viewport height in pixels
-   * @returns Scale factor to apply
-   * @protected
+   * @internal
    */
-  protected abstract calculateScaleInternal(
-    width: number,
-    height: number,
-  ): number;
+  public abstract calculateScale(width: number, height: number): number;
 }

@@ -1,7 +1,6 @@
 import { UILayer } from "../layers/UILayer";
 
-/** Small epsilon value for floating-point comparisons and minimum positive number validation. */
-export const EPSILON = 1e-6;
+const EPSILON = 1e-6;
 
 /**
  * Interface for objects that belong to a UI layer.

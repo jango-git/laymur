@@ -1,9 +1,7 @@
 import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy, UIResizePolicyEvent } from "./UIResizePolicy";
+import { UIResizePolicy } from "./UIResizePolicy";
 
-/**
- * Scales by height in landscape, by width in portrait.
- */
+/** Scales by height in landscape, by width in portrait. */
 export class UIResizePolicyCrossInverted extends UIResizePolicy {
   private fixedHeightLandscapeInternal: number;
   private fixedWidthPortraitInternal: number;
@@ -23,9 +21,12 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
     this.fixedWidthPortraitInternal = fixedWidthPortrait;
   }
 
+  /** Fixed height for landscape orientation. */
   public get fixedHeightLandscape(): number {
     return this.fixedHeightLandscapeInternal;
   }
+
+  /** Fixed width for portrait orientation. */
   public get fixedWidthPortrait(): number {
     return this.fixedWidthPortraitInternal;
   }
@@ -37,7 +38,7 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
     );
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
@@ -48,11 +49,19 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
     );
     if (value !== this.fixedWidthPortraitInternal) {
       this.fixedWidthPortraitInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
-  protected calculateScaleInternal(width: number, height: number): number {
+  public calculateScale(width: number, height: number): number {
+    assertValidPositiveNumber(
+      width,
+      "UIResizePolicyCrossInverted.calculateScale.width",
+    );
+    assertValidPositiveNumber(
+      height,
+      "UIResizePolicyCrossInverted.calculateScale.height",
+    );
     return width > height
       ? this.fixedHeightLandscapeInternal / height
       : this.fixedWidthPortraitInternal / width;

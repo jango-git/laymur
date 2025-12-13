@@ -1,215 +1,141 @@
-import { Eventail } from "eventail";
 import { MathUtils } from "three";
-import { UIMicroAnchorMode } from "./UIMicroAnchorMode";
-
-/** Default position value for x and y coordinates. */
-const DEFAULT_POSITION = 0;
-/** Default anchor point value for anchorX and anchorY. */
-const DEFAULT_ANCHOR = 0.5;
-/** Default scale value for scaleX and scaleY. */
-const DEFAULT_SCALE = 1;
-/** Default rotation value in radians. */
-const DEFAULT_ROTATION = 0;
+import { assertValidNumber } from "../asserts";
+import type { UIMicroAnchorMode, UIMicroConfig } from "./UIMicro.Internal";
+import {
+  MICRO_DEFAULT_ANCHOR,
+  MICRO_DEFAULT_ANCHOR_MODE,
+  MICRO_DEFAULT_POSITION,
+  MICRO_DEFAULT_ROTATION,
+  MICRO_DEFAULT_SCALE,
+} from "./UIMicro.Internal";
 
 /**
- * Micro-transformation system for non-constraint based UI element adjustments.
- *
- * UIMicro provides a lightweight transformation system that operates independently
- * of the constraint solver. It manages position offsets, anchor points, scaling,
- * and rotation transformations that can be applied to UI elements for animations,
- * visual effects, or fine-tuned positioning without affecting the constraint-based
- * layout system.
- *
- * All transformations are tracked with change detection to optimize rendering
- * performance by only recalculating when properties have actually changed.
- *
- * @see {@link UIElement} - Elements that use micro transformations
+ * Micro-transformation system for UI elements.
+ * Manages position, anchor, scale, and rotation independently of constraints.
  */
-export class UIMicro extends Eventail {
-  /** @internal */
-  public dirty = false;
-
-  /** Internal storage for x-coordinate offset. */
-  private xInternal: number = DEFAULT_POSITION;
-  /** Internal storage for y-coordinate offset. */
-  private yInternal: number = DEFAULT_POSITION;
-  /** Internal storage for x-axis anchor point. */
-  private anchorXInternal: number = DEFAULT_ANCHOR;
-  /** Internal storage for y-axis anchor point. */
-  private anchorYInternal: number = DEFAULT_ANCHOR;
-  /** Internal storage for x-axis scale factor. */
-  private scaleXInternal: number = DEFAULT_SCALE;
-  /** Internal storage for y-axis scale factor. */
-  private scaleYInternal: number = DEFAULT_SCALE;
-  /** Internal storage for rotation in radians. */
-  private rotationInternal: number = DEFAULT_ROTATION;
-  /** Internal storage for anchor mode determining which transformations are applied around the anchor point. */
-  private anchorModeInternal: UIMicroAnchorMode =
-    UIMicroAnchorMode.ROTATION_SCALE;
-
+export class UIMicro {
   /**
-   * Gets the x-coordinate offset for micro positioning.
-   * @returns The x-offset value
+   * Indicates whether any transformation has been modified.
+   * Must be reset to `false` externally by the owner.
+   * @internal
    */
+  public dirty = true;
+
+  private xInternal: number;
+  private yInternal: number;
+  private anchorXInternal: number;
+  private anchorYInternal: number;
+  private scaleXInternal: number;
+  private scaleYInternal: number;
+  private rotationInternal: number;
+  private anchorModeInternal: UIMicroAnchorMode;
+
+  constructor(config?: Partial<UIMicroConfig>) {
+    this.xInternal = config?.x ?? MICRO_DEFAULT_POSITION;
+    this.yInternal = config?.y ?? MICRO_DEFAULT_POSITION;
+    this.anchorXInternal = config?.anchorX ?? MICRO_DEFAULT_ANCHOR;
+    this.anchorYInternal = config?.anchorY ?? MICRO_DEFAULT_ANCHOR;
+    this.scaleXInternal = config?.scaleX ?? MICRO_DEFAULT_SCALE;
+    this.scaleYInternal = config?.scaleY ?? MICRO_DEFAULT_SCALE;
+    this.rotationInternal = config?.rotation ?? MICRO_DEFAULT_ROTATION;
+    this.anchorModeInternal = config?.anchorMode ?? MICRO_DEFAULT_ANCHOR_MODE;
+  }
+
+  /** X-coordinate offset. */
   public get x(): number {
     return this.xInternal;
   }
 
-  /**
-   * Gets the y-coordinate offset for micro positioning.
-   * @returns The y-offset value
-   */
+  /** Y-coordinate offset. */
   public get y(): number {
     return this.yInternal;
   }
 
-  /**
-   * Gets the x-axis anchor point for transformations.
-   * @returns The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
-   */
+  /** X-axis anchor point (0 = left, 0.5 = center, 1 = right). */
   public get anchorX(): number {
     return this.anchorXInternal;
   }
 
-  /**
-   * Gets the y-axis anchor point for transformations.
-   * @returns The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
-   */
+  /** Y-axis anchor point (0 = top, 0.5 = center, 1 = bottom). */
   public get anchorY(): number {
     return this.anchorYInternal;
   }
 
-  /**
-   * Gets the x-axis scale factor.
-   * @returns The scale factor (1.0 = normal size)
-   */
+  /** X-axis scale factor. */
   public get scaleX(): number {
     return this.scaleXInternal;
   }
 
-  /**
-   * Gets the y-axis scale factor.
-   * @returns The scale factor (1.0 = normal size)
-   */
+  /** Y-axis scale factor. */
   public get scaleY(): number {
     return this.scaleYInternal;
   }
 
-  /**
-   * Gets the uniform scale factor (maximum of scaleX and scaleY).
-   * @returns The larger of the two scale factors
-   */
-  public get size(): number {
-    return Math.max(this.scaleXInternal, this.scaleYInternal);
-  }
-
-  /**
-   * Gets the rotation angle in degrees.
-   * @returns The rotation angle in degrees
-   */
+  /** Rotation in degrees. */
   public get angle(): number {
     return MathUtils.radToDeg(this.rotationInternal);
   }
 
-  /**
-   * Gets the current anchor mode determining which transformations are applied around the anchor point.
-   * @returns The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
-   */
+  /** Anchor mode. */
   public get anchorMode(): UIMicroAnchorMode {
     return this.anchorModeInternal;
   }
 
-  /**
-   * Gets the rotation angle in radians.
-   * @returns The rotation angle in radians
-   */
+  /** Rotation in radians. */
   public get rotation(): number {
     return this.rotationInternal;
   }
 
-  /**
-   * Sets the x-coordinate offset for micro positioning.
-   * @param value - The new x-offset value
-   */
   public set x(value: number) {
+    assertValidNumber(value, "UIMicro.x");
     if (value !== this.xInternal) {
       this.xInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the y-coordinate offset for micro positioning.
-   * @param value - The new y-offset value
-   */
   public set y(value: number) {
+    assertValidNumber(value, "UIMicro.y");
     if (value !== this.yInternal) {
       this.yInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the x-axis anchor point for transformations.
-   * @param value - The anchor point (0.0 = left, 0.5 = center, 1.0 = right)
-   */
   public set anchorX(value: number) {
+    assertValidNumber(value, "UIMicro.anchorX");
     if (value !== this.anchorXInternal) {
       this.anchorXInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the y-axis anchor point for transformations.
-   * @param value - The anchor point (0.0 = top, 0.5 = center, 1.0 = bottom)
-   */
   public set anchorY(value: number) {
+    assertValidNumber(value, "UIMicro.anchorY");
     if (value !== this.anchorYInternal) {
       this.anchorYInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the x-axis scale factor.
-   * @param value - The scale factor (1.0 = normal size)
-   */
   public set scaleX(value: number) {
+    assertValidNumber(value, "UIMicro.scaleX");
     if (value !== this.scaleXInternal) {
       this.scaleXInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the y-axis scale factor.
-   * @param value - The scale factor (1.0 = normal size)
-   */
   public set scaleY(value: number) {
+    assertValidNumber(value, "UIMicro.scaleY");
     if (value !== this.scaleYInternal) {
       this.scaleYInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets both scale factors to the same value for uniform scaling.
-   * @param value - The uniform scale factor (1.0 = normal size)
-   */
-  public set size(value: number) {
-    if (value !== this.scaleXInternal || value !== this.scaleYInternal) {
-      this.scaleXInternal = value;
-      this.scaleYInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
-   * Sets the rotation angle in degrees.
-   * @param value - The rotation angle in degrees
-   */
   public set angle(value: number) {
+    assertValidNumber(value, "UIMicro.angle");
     const rotation = MathUtils.degToRad(value);
     if (rotation !== this.rotationInternal) {
       this.rotationInternal = rotation;
@@ -217,21 +143,14 @@ export class UIMicro extends Eventail {
     }
   }
 
-  /**
-   * Sets the rotation angle in radians.
-   * @param value - The rotation angle in radians
-   */
   public set rotation(value: number) {
+    assertValidNumber(value, "UIMicro.rotation");
     if (value !== this.rotationInternal) {
       this.rotationInternal = value;
       this.dirty = true;
     }
   }
 
-  /**
-   * Sets the anchor mode determining which transformations are applied around the anchor point.
-   * @param value - The anchor mode (ROTATION_SCALE or POSITION_ROTATION_SCALE)
-   */
   public set anchorMode(value: UIMicroAnchorMode) {
     if (value !== this.anchorModeInternal) {
       this.anchorModeInternal = value;
@@ -239,43 +158,38 @@ export class UIMicro extends Eventail {
     }
   }
 
-  /**
-   * Resets all transformation properties to their default values.
-   *
-   * This method restores position (0,0), anchor (0,0), scale (1,1),
-   * and rotation (0) to their initial states. Only triggers recalculation
-   * if any values actually change.
-   */
+  /** Resets all transformations to defaults. */
   public reset(): void {
     if (
-      this.xInternal !== DEFAULT_POSITION ||
-      this.yInternal !== DEFAULT_POSITION ||
-      this.anchorXInternal !== DEFAULT_ANCHOR ||
-      this.anchorYInternal !== DEFAULT_ANCHOR ||
-      this.scaleXInternal !== DEFAULT_SCALE ||
-      this.scaleYInternal !== DEFAULT_SCALE ||
-      this.rotationInternal !== DEFAULT_ROTATION
+      this.xInternal !== MICRO_DEFAULT_POSITION ||
+      this.yInternal !== MICRO_DEFAULT_POSITION ||
+      this.anchorXInternal !== MICRO_DEFAULT_ANCHOR ||
+      this.anchorYInternal !== MICRO_DEFAULT_ANCHOR ||
+      this.scaleXInternal !== MICRO_DEFAULT_SCALE ||
+      this.scaleYInternal !== MICRO_DEFAULT_SCALE ||
+      this.rotationInternal !== MICRO_DEFAULT_ROTATION
     ) {
-      this.xInternal = DEFAULT_POSITION;
-      this.yInternal = DEFAULT_POSITION;
-      this.anchorXInternal = DEFAULT_ANCHOR;
-      this.anchorYInternal = DEFAULT_ANCHOR;
-      this.scaleXInternal = DEFAULT_SCALE;
-      this.scaleYInternal = DEFAULT_SCALE;
-      this.rotationInternal = DEFAULT_ROTATION;
+      this.xInternal = MICRO_DEFAULT_POSITION;
+      this.yInternal = MICRO_DEFAULT_POSITION;
+      this.anchorXInternal = MICRO_DEFAULT_ANCHOR;
+      this.anchorYInternal = MICRO_DEFAULT_ANCHOR;
+      this.scaleXInternal = MICRO_DEFAULT_SCALE;
+      this.scaleYInternal = MICRO_DEFAULT_SCALE;
+      this.rotationInternal = MICRO_DEFAULT_ROTATION;
       this.dirty = true;
     }
   }
 
+  /** Copies transformations from another UIMicro. */
   public copy(value: UIMicro): void {
     if (
-      this.xInternal !== value.xInternal &&
-      this.yInternal !== value.yInternal &&
-      this.anchorXInternal !== value.anchorXInternal &&
-      this.anchorYInternal !== value.anchorYInternal &&
-      this.scaleXInternal !== value.scaleXInternal &&
-      this.scaleYInternal !== value.scaleYInternal &&
-      this.rotationInternal !== value.rotationInternal &&
+      this.xInternal !== value.xInternal ||
+      this.yInternal !== value.yInternal ||
+      this.anchorXInternal !== value.anchorXInternal ||
+      this.anchorYInternal !== value.anchorYInternal ||
+      this.scaleXInternal !== value.scaleXInternal ||
+      this.scaleYInternal !== value.scaleYInternal ||
+      this.rotationInternal !== value.rotationInternal ||
       this.anchorModeInternal !== value.anchorModeInternal
     ) {
       this.xInternal = value.xInternal;

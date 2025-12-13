@@ -2,39 +2,11 @@ import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import { convertPriority, UIPriority } from "../miscellaneous/UIPriority";
 import { convertRelation, UIRelation } from "../miscellaneous/UIRelation";
-import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
-
-/**
- * Internal description of a solver variable with its associated properties.
- */
-interface VariableDescription {
-  /** The underlying Kiwi variable instance. */
-  variable: Variable;
-  /** Priority level for constraint solving. */
-  priority: UIPriority;
-  /** Current suggested value for the variable. */
-  value: number;
-  /** Optional constraint for P0 priority variables (required variables). */
-  constraint?: Constraint;
-}
-
-/**
- * Internal description of a solver constraint with its configuration.
- */
-interface ConstraintDescription {
-  /** The underlying Kiwi constraint instance. */
-  constraint: Constraint;
-  /** Left-hand side expression of the constraint. */
-  lhs: UIExpression;
-  /** Right-hand side expression of the constraint. */
-  rhs: UIExpression;
-  /** Priority level for constraint solving. */
-  priority: UIPriority;
-  /** Relational operator (equal, less than, greater than). */
-  relation: UIRelation;
-  /** Whether the constraint is currently active. */
-  enabled: boolean;
-}
+import type {
+  ConstraintDescription,
+  UISolverWrapperInterface,
+  VariableDescription,
+} from "./UISolverWrapper.Internal";
 
 /**
  * Wrapper around the Kiwi constraint solver providing enhanced UI-specific functionality.

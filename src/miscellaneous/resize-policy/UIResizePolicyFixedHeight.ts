@@ -1,24 +1,12 @@
 import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy, UIResizePolicyEvent } from "./UIResizePolicy";
+import { UIResizePolicy } from "./UIResizePolicy";
 
-/**
- * Maintains fixed height, scales based on window height.
- *
- * Uses different heights for landscape vs portrait orientation,
- * and optionally for near-square aspect ratios.
- */
+/** Scales based on height with different values for landscape and portrait. */
 export class UIResizePolicyFixedHeight extends UIResizePolicy {
   private fixedHeightLandscapeInternal: number;
   private fixedHeightPortraitInternal: number;
-  private fixedHeightSquareInternal: number;
-  private squareEpsilonInternal: number;
 
-  constructor(
-    fixedHeightLandscape: number,
-    fixedHeightPortrait: number,
-    fixedHeightSquare: number = fixedHeightPortrait,
-    squareEpsilon = 0.1,
-  ) {
+  constructor(fixedHeightLandscape: number, fixedHeightPortrait: number) {
     super();
     assertValidPositiveNumber(
       fixedHeightLandscape,
@@ -28,32 +16,19 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
       fixedHeightPortrait,
       "UIResizePolicyFixedHeight.fixedHeightPortrait",
     );
-    assertValidPositiveNumber(
-      fixedHeightSquare,
-      "UIResizePolicyFixedHeight.fixedHeightSquare",
-    );
-    assertValidPositiveNumber(
-      squareEpsilon,
-      "UIResizePolicyFixedHeight.constructor.squareEpsilon",
-    );
 
     this.fixedHeightLandscapeInternal = fixedHeightLandscape;
     this.fixedHeightPortraitInternal = fixedHeightPortrait;
-    this.fixedHeightSquareInternal = fixedHeightSquare;
-    this.squareEpsilonInternal = squareEpsilon;
   }
 
+  /** Fixed height for landscape orientation. */
   public get fixedHeightLandscape(): number {
     return this.fixedHeightLandscapeInternal;
   }
+
+  /** Fixed height for portrait orientation. */
   public get fixedHeightPortrait(): number {
     return this.fixedHeightPortraitInternal;
-  }
-  public get fixedHeightSquare(): number {
-    return this.fixedHeightSquareInternal;
-  }
-  public get squareEpsilon(): number {
-    return this.squareEpsilonInternal;
   }
 
   public set fixedHeightLandscape(value: number) {
@@ -63,7 +38,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
     );
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
@@ -74,40 +49,21 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
     );
     if (value !== this.fixedHeightPortraitInternal) {
       this.fixedHeightPortraitInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
+      this.dirty = true;
     }
   }
 
-  public set fixedHeightSquare(value: number) {
+  public calculateScale(width: number, height: number): number {
     assertValidPositiveNumber(
-      value,
-      "UIResizePolicyFixedHeight.fixedHeightSquare",
+      width,
+      "UIResizePolicyFixedHeight.calculateScale.width",
     );
-    if (value !== this.fixedHeightSquareInternal) {
-      this.fixedHeightSquareInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
-    }
-  }
-
-  public set squareEpsilon(value: number) {
-    assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.squareEpsilon");
-    if (value !== this.squareEpsilonInternal) {
-      this.squareEpsilonInternal = value;
-      this.emit(UIResizePolicyEvent.CHANGE);
-    }
-  }
-
-  protected calculateScaleInternal(width: number, height: number): number {
-    if (this.isSquare(width, height)) {
-      return this.fixedHeightSquareInternal / height;
-    }
+    assertValidPositiveNumber(
+      height,
+      "UIResizePolicyFixedHeight.calculateScale.height",
+    );
     return width > height
       ? this.fixedHeightLandscapeInternal / height
       : this.fixedHeightPortraitInternal / height;
-  }
-
-  private isSquare(width: number, height: number): boolean {
-    const ratio = width / height;
-    return Math.abs(ratio - 1) <= this.squareEpsilonInternal;
   }
 }
