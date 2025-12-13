@@ -9,7 +9,7 @@ import {
   Vector3,
   Vector4,
 } from "three";
-import { UIColor } from "../UIColor";
+import { UIColor } from "../color/UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import type { UIPropertyType } from "./shared";
 import {

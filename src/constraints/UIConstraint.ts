@@ -1,6 +1,5 @@
 import { type UILayer } from "../layers/UILayer";
-
-import type { UISolverWrapper } from "../wrappers/UISolverWrapper";
+import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
 
 /**
  * Abstract base class for all UI layout constraints.
@@ -21,7 +20,7 @@ export abstract class UIConstraint {
    * Reference to the constraint solver wrapper for managing solver operations.
    * @see {@link UISolverWrapper}
    */
-  protected readonly solverWrapper: UISolverWrapper;
+  protected readonly solverWrapper: UISolverWrapperInterface;
 
   /**
    * Creates a new UIConstraint instance.
@@ -32,6 +31,6 @@ export abstract class UIConstraint {
    * @param layer - The UI layer that contains this constraint
    */
   constructor(public readonly layer: UILayer) {
-    this.solverWrapper = this.layer["getSolverWrapperInternal"]();
+    this.solverWrapper = this.layer.solverWrapper;
   }
 }

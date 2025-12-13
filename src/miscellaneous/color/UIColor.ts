@@ -1,15 +1,19 @@
-import { Eventail } from "eventail";
 import { Color, Vector4 } from "three";
 import { LinearToSRGB, SRGBToLinear } from "three/src/math/ColorManagement.js";
 import type { UIColorName } from "./UIColor.Internal";
 import { COLORS } from "./UIColor.Internal";
 
 /**
- * Event-based RGBA color with support for RGB, HSL, hex, and named colors.
- * Color components are stored as normalized values (0-1).
+ * RGBA color with support for RGB, HSL, hex, and named colors.
+ * All components are normalized (0-1).
  */
-export class UIColor extends Eventail {
-  /** @internal */
+export class UIColor {
+  /**
+   * Indicates whether the color has been modified since last check.
+   * Set to `true` when any color component changes.
+   * Must be reset to `false` externally by the color owner.
+   * @internal
+   */
   public dirty = false;
 
   private rInternal = 1;
@@ -21,7 +25,18 @@ export class UIColor extends Eventail {
   private sInternal = 0;
   private lInternal = 1;
 
+  /**
+   * Indicates that RGB values need to be recalculated from HSL.
+   * Set to `true` when HSL components are modified.
+   * Used for lazy RGB computation on next access.
+   */
   private rgbDirty = false;
+
+  /**
+   * Indicates that HSL values need to be recalculated from RGB.
+   * Set to `true` when RGB components are modified.
+   * Used for lazy HSL computation on next access.
+   */
   private hslDirty = false;
 
   constructor();
@@ -51,14 +66,17 @@ export class UIColor extends Eventail {
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(threeColor: Color, a?: number);
   /**
-   * @param hexRGB - Hex RGB value (e.g., 0xFF0000)
+   * @param hexRGB - Hex RGB value (e.g., 0xff0000)
    * @param a - Alpha (0-1)
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(hexRGB: number, a?: number);
+  /**
+   * @param hexString - Hex string (e.g., "#ffffff" or "#ffffffff")
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(hexString: string);
   constructor(...args: unknown[]) {
-    super();
-
     if (args.length >= 3 && typeof args[0] === "number") {
       const [r, g, b, a = 1] = args as number[];
       this.rInternal = r;
@@ -68,7 +86,11 @@ export class UIColor extends Eventail {
     } else if (args.length >= 1) {
       const [firstArgument, a = 1] = args;
       if (typeof firstArgument === "string") {
-        this.setColorName(firstArgument as UIColorName, a as number);
+        if (firstArgument.startsWith("#")) {
+          this.setHexString(firstArgument);
+        } else {
+          this.setColorName(firstArgument as UIColorName, a as number);
+        }
       } else if (firstArgument instanceof UIColor) {
         firstArgument.ensureRGBUpdatedFromHSL();
         this.rInternal = firstArgument.rInternal;
@@ -86,192 +108,192 @@ export class UIColor extends Eventail {
     }
   }
 
-  /** Creates black color (0x000000). */
+  /** Black (0x000000). */
   public static get black(): UIColor {
     return new UIColor("black");
   }
 
-  /** Creates white color (0xFFFFFF). */
+  /** White (0xffffff). */
   public static get white(): UIColor {
     return new UIColor("white");
   }
 
-  /** Creates red color (0xFF0000). */
+  /** Red (0xff0000). */
   public static get red(): UIColor {
     return new UIColor("red");
   }
 
-  /** Creates green color (0x008000). */
+  /** Green (0x008000). */
   public static get green(): UIColor {
     return new UIColor("green");
   }
 
-  /** Creates blue color (0x0000FF). */
+  /** Blue (0x0000ff). */
   public static get blue(): UIColor {
     return new UIColor("blue");
   }
 
-  /** Creates yellow color (0xFFFF00). */
+  /** Yellow (0xffff00). */
   public static get yellow(): UIColor {
     return new UIColor("yellow");
   }
 
-  /** Creates cyan color (0x00FFFF). */
+  /** Cyan (0x00ffff). */
   public static get cyan(): UIColor {
     return new UIColor("cyan");
   }
 
-  /** Creates magenta color (0xFF00FF). */
+  /** Magenta (0xff00ff). */
   public static get magenta(): UIColor {
     return new UIColor("magenta");
   }
 
-  /** Creates gray color (0x808080). */
+  /** Gray (0x808080). */
   public static get gray(): UIColor {
     return new UIColor("gray");
   }
 
-  /** Creates grey color (0x808080). */
+  /** Grey (0x808080). */
   public static get grey(): UIColor {
     return new UIColor("grey");
   }
 
-  /** Creates silver color (0xC0C0C0). */
+  /** Silver (0xc0c0c0). */
   public static get silver(): UIColor {
     return new UIColor("silver");
   }
 
-  /** Creates maroon color (0x800000). */
+  /** Maroon (0x800000). */
   public static get maroon(): UIColor {
     return new UIColor("maroon");
   }
 
-  /** Creates olive color (0x808000). */
+  /** Olive (0x808000). */
   public static get olive(): UIColor {
     return new UIColor("olive");
   }
 
-  /** Creates lime color (0x00FF00). */
+  /** Lime (0x00ff00). */
   public static get lime(): UIColor {
     return new UIColor("lime");
   }
 
-  /** Creates aqua color (0x00FFFF). */
+  /** Aqua (0x00ffff). */
   public static get aqua(): UIColor {
     return new UIColor("aqua");
   }
 
-  /** Creates teal color (0x008080). */
+  /** Teal (0x008080). */
   public static get teal(): UIColor {
     return new UIColor("teal");
   }
 
-  /** Creates navy color (0x000080). */
+  /** Navy (0x000080). */
   public static get navy(): UIColor {
     return new UIColor("navy");
   }
 
-  /** Creates fuchsia color (0xFF00FF). */
+  /** Fuchsia (0xff00ff). */
   public static get fuchsia(): UIColor {
     return new UIColor("fuchsia");
   }
 
-  /** Creates purple color (0x800080). */
+  /** Purple (0x800080). */
   public static get purple(): UIColor {
     return new UIColor("purple");
   }
 
-  /** Creates orange color (0xFFA500). */
+  /** Orange (0xffa500). */
   public static get orange(): UIColor {
     return new UIColor("orange");
   }
 
-  /** Creates pink color (0xFFC0CB). */
+  /** Pink (0xffc0cb). */
   public static get pink(): UIColor {
     return new UIColor("pink");
   }
 
-  /** Creates brown color (0xA52A2A). */
+  /** Brown (0xa52a2a). */
   public static get brown(): UIColor {
     return new UIColor("brown");
   }
 
-  /** Creates gold color (0xFFD700). */
+  /** Gold (0xffd700). */
   public static get gold(): UIColor {
     return new UIColor("gold");
   }
 
-  /** Creates violet color (0xEE82EE). */
+  /** Violet (0xee82ee). */
   public static get violet(): UIColor {
     return new UIColor("violet");
   }
 
-  /** Creates indigo color (0x4B0082). */
+  /** Indigo (0x4b0082). */
   public static get indigo(): UIColor {
     return new UIColor("indigo");
   }
 
-  /** Creates coral color (0xFF7F50). */
+  /** Coral (0xff7f50). */
   public static get coral(): UIColor {
     return new UIColor("coral");
   }
 
-  /** Creates salmon color (0xFA8072). */
+  /** Salmon (0xfa8072). */
   public static get salmon(): UIColor {
     return new UIColor("salmon");
   }
 
-  /** Creates khaki color (0xF0E68C). */
+  /** Khaki (0xf0e68c). */
   public static get khaki(): UIColor {
     return new UIColor("khaki");
   }
 
-  /** Creates plum color (0xDDA0DD). */
+  /** Plum (0xdda0dd). */
   public static get plum(): UIColor {
     return new UIColor("plum");
   }
 
-  /** Creates orchid color (0xDA70D6). */
+  /** Orchid (0xda70d6). */
   public static get orchid(): UIColor {
     return new UIColor("orchid");
   }
 
-  /** Creates tan color (0xD2B48C). */
+  /** Tan (0xd2b48c). */
   public static get tan(): UIColor {
     return new UIColor("tan");
   }
 
-  /** Creates beige color (0xF5F5DC). */
+  /** Beige (0xf5f5dc). */
   public static get beige(): UIColor {
     return new UIColor("beige");
   }
 
-  /** Creates mint color (0x98FB98). */
+  /** Mint (0x98fb98). */
   public static get mint(): UIColor {
     return new UIColor("mint");
   }
 
-  /** Creates lavender color (0xE6E6FA). */
+  /** Lavender (0xe6e6fa). */
   public static get lavender(): UIColor {
     return new UIColor("lavender");
   }
 
-  /** Creates crimson color (0xDC143C). */
+  /** Crimson (0xdc143c). */
   public static get crimson(): UIColor {
     return new UIColor("crimson");
   }
 
-  /** Creates azure color (0xF0FFFF). */
+  /** Azure (0xf0ffff). */
   public static get azure(): UIColor {
     return new UIColor("azure");
   }
 
-  /** Creates ivory color (0xFFFFF0). */
+  /** Ivory (0xfffff0). */
   public static get ivory(): UIColor {
     return new UIColor("ivory");
   }
 
-  /** Creates snow color (0xFFFAFA). */
+  /** Snow (0xfffafa). */
   public static get snow(): UIColor {
     return new UIColor("snow");
   }
@@ -379,13 +401,12 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Sets all color components.
+   * Sets RGB(A) components.
    *
    * @param r - Red (0-1)
    * @param g - Green (0-1)
    * @param b - Blue (0-1)
    * @param a - Alpha (0-1)
-   * @returns This instance
    */
   public set(
     r: number,
@@ -410,9 +431,7 @@ export class UIColor extends Eventail {
     return this;
   }
 
-  /**
-   * Returns 32-bit hex RGBA value (alpha in MSB).
-   */
+  /** Returns RGBA as 32-bit hex (RRGGBBAA). */
   public getHexRGBA(): number {
     this.ensureRGBUpdatedFromHSL();
     return (
@@ -423,9 +442,7 @@ export class UIColor extends Eventail {
     );
   }
 
-  /**
-   * Returns 24-bit hex RGB value.
-   */
+  /** Returns RGB as 24-bit hex (RRGGBB). */
   public getHexRGB(): number {
     this.ensureRGBUpdatedFromHSL();
     return (
@@ -435,12 +452,19 @@ export class UIColor extends Eventail {
     );
   }
 
-  /**
-   * Sets color from 32-bit hex RGBA value.
-   *
-   * @param hex - Hex RGBA (alpha in MSB)
-   * @returns This instance
-   */
+  /** Returns RGB as hex string (e.g., "#ffffff"). */
+  public getHexStringRGB(): string {
+    const hex = this.getHexRGB();
+    return `#${hex.toString(16).padStart(6, "0")}`;
+  }
+
+  /** Returns RGBA as hex string (e.g., "#ffffffff"). */
+  public getHexStringRGBA(): string {
+    const hex = this.getHexRGBA();
+    return `#${hex.toString(16).padStart(8, "0")}`;
+  }
+
+  /** Sets color from 32-bit hex RGBA (RRGGBBAA). */
   public setHexRGBA(hex: number): this {
     this.ensureRGBUpdatedFromHSL();
     const r = ((hex >> 16) & 0xff) / 255;
@@ -464,11 +488,10 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Sets color from 24-bit hex RGB value.
+   * Sets color from 24-bit hex RGB (RRGGBB).
    *
-   * @param hex - Hex RGB (e.g., 0xFF0000)
+   * @param hex - Hex RGB (e.g., 0xff0000)
    * @param a - Alpha (0-1)
-   * @returns This instance
    */
   public setHexRGB(hex: number, a = this.aInternal): this {
     this.ensureRGBUpdatedFromHSL();
@@ -492,13 +515,49 @@ export class UIColor extends Eventail {
   }
 
   /**
+   * Sets color from hex string ("#ffffff" or "#ffffffff").
+   *
+   * @throws Error if format is invalid
+   */
+  public setHexString(hexString: string): this {
+    if (!hexString.startsWith("#")) {
+      throw new Error(
+        `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+      );
+    }
+
+    const hex = hexString.slice(1);
+
+    if (hex.length === 6) {
+      const hexNumber = parseInt(hex, 16);
+      if (isNaN(hexNumber)) {
+        throw new Error(
+          `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+        );
+      }
+      return this.setHexRGB(hexNumber);
+    } else if (hex.length === 8) {
+      const hexNumber = parseInt(hex, 16);
+      if (isNaN(hexNumber)) {
+        throw new Error(
+          `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+        );
+      }
+      return this.setHexRGBA(hexNumber);
+    } else {
+      throw new Error(
+        `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+      );
+    }
+  }
+
+  /**
    * Sets color from HSL values.
    *
    * @param h - Hue (0-360)
    * @param s - Saturation (0-1)
    * @param l - Lightness (0-1)
    * @param a - Alpha (0-1)
-   * @returns This instance
    */
   public setHSL(h: number, s: number, l: number, a = this.aInternal): this {
     this.ensureHSLUpdatedFromRGB();
@@ -521,9 +580,6 @@ export class UIColor extends Eventail {
   /**
    * Sets color from predefined name.
    *
-   * @param colorName - Color name
-   * @param a - Alpha (0-1)
-   * @returns This instance
    * @throws Error if color name is unknown
    */
   public setColorName(colorName: UIColorName, a = this.aInternal): this {
@@ -538,13 +594,12 @@ export class UIColor extends Eventail {
   }
 
   /**
-   * Sets color from linear (GLSL) color space values.
+   * Sets color from linear (GLSL) color space.
    *
    * @param r - Red in linear space (0-1)
    * @param g - Green in linear space (0-1)
    * @param b - Blue in linear space (0-1)
    * @param a - Alpha (0-1)
-   * @returns This instance
    */
   public setGLSLColor(
     r: number,
@@ -575,13 +630,7 @@ export class UIColor extends Eventail {
     return this;
   }
 
-  /**
-   * Sets color from Three.js Color object.
-   *
-   * @param threeColor - Three.js Color object
-   * @param a - Alpha (0-1)
-   * @returns This instance
-   */
+  /** Sets color from Three.js Color. */
   public setThreeColor(threeColor: Color, a = this.aInternal): this {
     this.ensureRGBUpdatedFromHSL();
     if (
@@ -600,9 +649,7 @@ export class UIColor extends Eventail {
     return this;
   }
 
-  /**
-   * Returns CSS rgba() string.
-   */
+  /** Returns CSS color string (e.g., "rgba(255, 0, 0, 1)"). */
   public toCSSColor(): string {
     this.ensureRGBUpdatedFromHSL();
     const r = Math.round(this.rInternal * 255);
@@ -611,12 +658,7 @@ export class UIColor extends Eventail {
     return `rgba(${r}, ${g}, ${b}, ${this.aInternal})`;
   }
 
-  /**
-   * Converts color to linear color space for GLSL.
-   *
-   * @param result - Vector4 to store the result
-   * @returns Vector4 with linear RGB (0-1) and alpha
-   */
+  /** Converts to linear (GLSL) color space. */
   public toGLSLColor(result: Vector4 = new Vector4()): Vector4 {
     this.ensureRGBUpdatedFromHSL();
 
@@ -628,12 +670,7 @@ export class UIColor extends Eventail {
     return result;
   }
 
-  /**
-   * Converts color to Three.js Color object (without alpha).
-   *
-   * @param result - Color object to store the result
-   * @returns Color with RGB values
-   */
+  /** Converts to Three.js Color (without alpha). */
   public toThreeColor(result: Color = new Color()): Color {
     this.ensureRGBUpdatedFromHSL();
 
@@ -644,12 +681,7 @@ export class UIColor extends Eventail {
     return result;
   }
 
-  /**
-   * Copies values from another color.
-   *
-   * @param color - UIColor or Three.js Color
-   * @returns This instance
-   */
+  /** Copies from another color. */
   public copy(color: UIColor | Color): this {
     if (color instanceof UIColor) {
       this.ensureRGBUpdatedFromHSL();
@@ -688,9 +720,7 @@ export class UIColor extends Eventail {
     return this;
   }
 
-  /**
-   * Creates a copy of this color.
-   */
+  /** Returns a copy of this color. */
   public clone(): UIColor {
     this.ensureRGBUpdatedFromHSL();
     return new UIColor(
@@ -701,9 +731,7 @@ export class UIColor extends Eventail {
     );
   }
 
-  /**
-   * Updates RGB values from HSL if needed.
-   */
+  /** @internal */
   private ensureRGBUpdatedFromHSL(): void {
     if (this.rgbDirty) {
       const { hInternal: h, sInternal: s, lInternal: l } = this;
@@ -731,9 +759,7 @@ export class UIColor extends Eventail {
     }
   }
 
-  /**
-   * Updates HSL values from RGB if needed.
-   */
+  /** @internal */
   private ensureHSLUpdatedFromRGB(): void {
     if (this.hslDirty) {
       const { rInternal: r, gInternal: g, bInternal: b } = this;

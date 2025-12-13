@@ -1,7 +1,7 @@
 import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
-import { UIColor } from "../UIColor";
 import type { UITransparencyMode } from "../UITransparencyMode";
+import { UIColor } from "../color/UIColor";
 
 export type UIPropertyType =
   | Texture

@@ -1,6 +1,7 @@
 import type { ShaderMaterial, Vector4 } from "three";
 import { Matrix4, Mesh } from "three";
-import { UIColor } from "../UIColor";
+
+import { UIColor } from "../color/UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
   arePropertiesCompatible,

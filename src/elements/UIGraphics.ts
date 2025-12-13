@@ -6,7 +6,7 @@ import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOpt
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 
-const DEFAULT_CANVAS_RESOLUTION = 512;
+const DEFAULT_CANVAS_RESOLUTION = 32;
 
 /**
  * UI element for drawing graphics using 2D canvas API.

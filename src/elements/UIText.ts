@@ -1,7 +1,7 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
 import { type UILayer } from "../layers/UILayer";
-import { UIColor, UIColorEvent } from "../miscellaneous/color/UIColor";
+import { UIColor } from "../miscellaneous/color/UIColor";
 import type { UIMode } from "../miscellaneous/UIMode";
 import { resolvePadding, type UIPadding } from "../miscellaneous/UIPadding";
 import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
@@ -51,6 +51,8 @@ export interface UITextOptions {
  * @see {@link UIPadding} - Padding configuration
  */
 export class UIText extends UIElement {
+  private readonly color: UIColor;
+
   /** The HTML canvas element used for text rendering. */
   private readonly canvas: OffscreenCanvas;
 
@@ -59,10 +61,6 @@ export class UIText extends UIElement {
 
   /** The canvas texture containing the rendered text. */
   private texture: CanvasTexture;
-
-  /** Internal storage for the color tint. */
-  private readonly colorInternal: UIColor;
-
   /** Internal storage for the current text content. */
   private contentInternal: UITextContent;
 
@@ -77,6 +75,8 @@ export class UIText extends UIElement {
 
   /** Target aspect ratio for the text element based on content. */
   private targetAspectRatio = 1;
+
+  private dirty = false;
 
   /**
    * Creates a new UIText instance with dynamic text rendering.
@@ -103,13 +103,16 @@ export class UIText extends UIElement {
     }
 
     const texture = new CanvasTexture(canvas);
-    const color = options.color ?? new UIColor();
+    const color = new UIColor(options.color);
 
     super(layer, options.x ?? 0, options.y ?? 0, 2, 2, source, {
       texture: texture,
       textureTransform: new Matrix3(),
       color,
     });
+
+    this.color = color;
+    this.mode = options.mode ?? this.mode;
 
     this.canvas = canvas;
     this.context = context;
@@ -120,21 +123,7 @@ export class UIText extends UIElement {
     this.paddingInternal = resolvePadding(options.padding);
     this.commonStyleInternal = options.commonStyle ?? {};
 
-    this.colorInternal = color;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
     this.rebuildText();
-
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
-  }
-
-  /**
-   * Gets the current color tint applied to the text.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
   }
 
   /**
@@ -170,20 +159,14 @@ export class UIText extends UIElement {
   }
 
   /**
-   * Sets the color tint applied to the text.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
-  }
-
-  /**
    * Sets new text content and triggers a rebuild.
    * @param value - The new text content structure
    */
   public set content(value: UITextContent) {
-    this.contentInternal = value;
-    this.rebuildText();
+    if (this.contentInternal !== value) {
+      this.contentInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -191,8 +174,10 @@ export class UIText extends UIElement {
    * @param value - The new maximum width in pixels
    */
   public set maxWidth(value: number) {
-    this.maxWidthInternal = value;
-    this.rebuildText();
+    if (this.maxWidthInternal !== value) {
+      this.maxWidthInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -200,8 +185,10 @@ export class UIText extends UIElement {
    * @param value - The new padding configuration
    */
   public set padding(value: UIPadding) {
-    this.paddingInternal = value;
-    this.rebuildText();
+    if (this.paddingInternal !== value) {
+      this.paddingInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -209,8 +196,10 @@ export class UIText extends UIElement {
    * @param value - The new partial text style configuration
    */
   public set commonStyle(value: Partial<UITextStyle>) {
-    this.commonStyleInternal = value;
-    this.rebuildText();
+    if (this.commonStyleInternal !== value) {
+      this.commonStyleInternal = value;
+      this.dirty = true;
+    }
   }
 
   /**
@@ -221,7 +210,6 @@ export class UIText extends UIElement {
    * the text element should not be used anymore.
    */
   public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     this.texture.dispose();
     super.destroy();
   }
@@ -236,8 +224,12 @@ export class UIText extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    if (this.targetAspectRatio !== this.width / this.height) {
+    if (this.solverWrapper.dirty) {
       this.height = this.width / this.targetAspectRatio;
+    }
+
+    if (this.dirty || this.solverWrapper.dirty) {
+      this.rebuildText();
     }
     super.onWillRender(renderer, deltaTime);
   }
@@ -281,9 +273,4 @@ export class UIText extends UIElement {
       texture: this.texture,
     });
   }
-
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
 }

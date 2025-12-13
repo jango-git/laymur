@@ -22,7 +22,7 @@ export interface UITextStyle {
 
   enableStroke: boolean;
   strokeColor: string;
-  strokeWidth: number;
+  strokeThickness: number;
 }
 
 export function isUITextStyle(obj: unknown): obj is UITextStyle {
@@ -55,7 +55,7 @@ export function isUITextStyle(obj: unknown): obj is UITextStyle {
     typeof candidate.shadowColor === "string" &&
     typeof candidate.enableStroke === "boolean" &&
     typeof candidate.strokeColor === "string" &&
-    typeof candidate.strokeWidth === "number"
+    typeof candidate.strokeThickness === "number"
   );
 }
 
@@ -77,7 +77,7 @@ export const DEFAULT_TEXT_STYLE: UITextStyle = {
 
   enableStroke: false,
   strokeColor: "#000000",
-  strokeWidth: 0,
+  strokeThickness: 0,
 };
 
 export function resolveTextStyle(
@@ -117,11 +117,14 @@ export function resolveTextStyle(
     DEFAULT_TEXT_STYLE.shadowBlur;
   assertValidNonNegativeNumber(shadowBlur, "resolveTextStyle.shadowBlur");
 
-  const strokeWidth =
-    style?.strokeWidth ??
-    commonStyle?.strokeWidth ??
-    DEFAULT_TEXT_STYLE.strokeWidth;
-  assertValidNonNegativeNumber(strokeWidth, "resolveTextStyle.strokeWidth");
+  const strokeThickness =
+    style?.strokeThickness ??
+    commonStyle?.strokeThickness ??
+    DEFAULT_TEXT_STYLE.strokeThickness;
+  assertValidNonNegativeNumber(
+    strokeThickness,
+    "resolveTextStyle.strokeThickness",
+  );
 
   return {
     color: style?.color ?? commonStyle?.color ?? DEFAULT_TEXT_STYLE.color,
@@ -159,6 +162,6 @@ export function resolveTextStyle(
       style?.strokeColor ??
       commonStyle?.strokeColor ??
       DEFAULT_TEXT_STYLE.strokeColor,
-    strokeWidth,
+    strokeThickness,
   };
 }

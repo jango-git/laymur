@@ -147,7 +147,7 @@ export function renderText(
 
   if (style.enableStroke) {
     context.strokeStyle = style.strokeColor;
-    context.lineWidth = style.strokeWidth;
+    context.lineWidth = style.strokeThickness;
     context.strokeText(text, x, y);
   }
 

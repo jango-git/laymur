@@ -1,21 +1,3 @@
-// /**
-//  * Converts sRGB component to linear color space.
-//  * @param c - sRGB component value (0-1)
-//  * @returns Linear component value (0-1)
-//  */
-// export function sRGBToLinear(c: number): number {
-//   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-// }
-
-// /**
-//  * Converts linear component to sRGB color space.
-//  * @param c - Linear component value (0-1)
-//  * @returns sRGB component value (0-1)
-//  */
-// export function linearToSRGB(c: number): number {
-//   return c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
-// }
-
 export const COLORS: Record<string, number | undefined> = {
   black: 0x000000,
   white: 0xffffff,

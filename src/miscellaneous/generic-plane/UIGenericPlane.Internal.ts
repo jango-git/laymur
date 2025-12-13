@@ -1,5 +1,6 @@
 import { Matrix4, PlaneGeometry, ShaderMaterial } from "three";
-import { UIColor } from "../UIColor";
+
+import { UIColor } from "../color/UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
 import {
   buildGenericPlaneFragmentShader,

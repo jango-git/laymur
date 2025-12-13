@@ -22,10 +22,11 @@ export enum UISceneUpdateMode {
   EACH_FRAME = 1,
   /** Re-render the scene every second frame for performance. */
   EACH_SECOND_FRAME = 2,
+  EACH_THIRD_FRAME = 3,
   /** Re-render the scene only when properties change. */
-  PROPERTY_CHANGED = 3,
+  PROPERTY_CHANGED = 4,
   /** Re-render the scene only when manually requested. */
-  MANUAL = 4,
+  MANUAL = 5,
 }
 
 /** Default resolution factor for render target sizing. */
@@ -47,9 +48,7 @@ const DEFAULT_CAMERA_FAR = 100;
 /** Default update mode for scene rendering. */
 const DEFAULT_UPDATE_MODE = UISceneUpdateMode.PROPERTY_CHANGED;
 /** Default clear color for the render target. */
-const DEFAULT_CLEAR_COLOR = 0x000000;
-/** Default clear alpha for the render target. */
-const DEFAULT_CLEAR_ALPHA = 0;
+const DEFAULT_CLEAR_COLOR = new UIColor(0x000000, 1);
 /** Default depth buffer usage setting. */
 const DEFAULT_USE_DEPTH = true;
 
@@ -86,11 +85,11 @@ export interface UISceneOptions extends UIElementCommonOptions {
  * @see {@link Camera} - Three.js camera for scene rendering
  */
 export class UIScene extends UIElement {
+  public readonly color: UIColor;
+  public readonly clearColor: UIColor;
+
   /** The WebGL render target for off-screen scene rendering. */
   private readonly renderTarget: WebGLRenderTarget;
-
-  /** Internal storage for the color tint. */
-  private readonly colorInternal: UIColor;
   /** Internal storage for the current Three.js scene. */
   private sceneInternal: Scene;
   /** Internal storage for the current camera. */
@@ -99,14 +98,10 @@ export class UIScene extends UIElement {
   private updateModeInternal: UISceneUpdateMode;
   /** Internal storage for the current resolution factor. */
   private resolutionFactorInternal: number;
-  /** Internal storage for the current clear color. */
-  private clearColorInternal: number;
-
   /** Frame alternation boolean for EACH_SECOND_FRAME update mode. */
-  private frameBoolean = true;
+  private frameIndex = 0;
   /** Flag indicating if properties have changed requiring a re-render. */
-  private propertyChanged = false;
-  /** Flag indicating if a manual render has been requested. */
+  private dirty = false;
   private renderRequired = false;
 
   /**
@@ -149,7 +144,7 @@ export class UIScene extends UIElement {
       },
     );
 
-    const color = options.color ?? new UIColor();
+    const color = new UIColor(options.color);
 
     super(layer, 0, 0, w, h, source, {
       texture: renderTarget.texture,
@@ -157,8 +152,10 @@ export class UIScene extends UIElement {
       color,
     });
 
-    this.renderTarget = renderTarget;
+    this.color = color;
+    this.clearColor = new UIColor(options.clearColor ?? DEFAULT_CLEAR_COLOR);
 
+    this.renderTarget = renderTarget;
     this.sceneInternal = options.scene ?? new Scene();
     this.cameraInternal =
       options.camera ??
@@ -172,26 +169,8 @@ export class UIScene extends UIElement {
     this.resolutionFactorInternal = resolutionFactor;
     this.updateModeInternal = options.updateMode ?? DEFAULT_UPDATE_MODE;
 
-    this.clearColorInternal = options.clearColor ?? DEFAULT_CLEAR_COLOR;
-
-    if (options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED) {
-      this.renderRequired = true;
-    }
-
-    this.colorInternal = color;
-    this.colorInternal.on(UIColorEvent.CHANGE, this.onColorChange);
-
-    if (options.mode !== undefined) {
-      this.mode = options.mode;
-    }
-  }
-
-  /**
-   * Gets the current color tint applied to the scene texture.
-   * @returns The UIColor instance
-   */
-  public get color(): UIColor {
-    return this.colorInternal;
+    this.dirty = options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED;
+    this.mode = options.mode ?? this.mode;
   }
 
   /**
@@ -227,37 +206,13 @@ export class UIScene extends UIElement {
   }
 
   /**
-   * Gets the clear color used for the render target background.
-   * @returns The clear color as a number
-   */
-  public get clearColor(): number {
-    return this.clearColorInternal;
-  }
-
-  /**
-   * Gets the clear alpha used for the render target background.
-   * @returns The clear alpha value between 0.0 and 1.0
-   */
-  public get clearAlpha(): number {
-    return this.clearAlphaInternal;
-  }
-
-  /**
-   * Sets the color tint applied to the scene texture.
-   * @param value - The UIColor instance
-   */
-  public set color(value: UIColor) {
-    this.colorInternal.copy(value);
-  }
-
-  /**
    * Sets a new Three.js scene to render and marks for re-render.
    * @param value - The new Three.js scene
    */
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
       this.sceneInternal = value;
-      this.propertyChanged = true;
+      this.dirty = true;
     }
   }
 
@@ -268,7 +223,7 @@ export class UIScene extends UIElement {
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
       this.cameraInternal = value;
-      this.propertyChanged = true;
+      this.dirty = true;
     }
   }
 
@@ -279,7 +234,7 @@ export class UIScene extends UIElement {
   public set updateMode(value: UISceneUpdateMode) {
     if (this.updateModeInternal !== value) {
       this.updateModeInternal = value;
-      this.propertyChanged = true;
+      this.dirty = true;
     }
   }
 
@@ -294,29 +249,7 @@ export class UIScene extends UIElement {
         this.width * this.resolutionFactorInternal,
         this.height * this.resolutionFactorInternal,
       );
-      this.propertyChanged = true;
-    }
-  }
-
-  /**
-   * Sets the clear color for the render target background and marks for re-render.
-   * @param value - The new clear color as a number
-   */
-  public set clearColor(value: number) {
-    if (this.clearColorInternal !== value) {
-      this.clearColorInternal = value;
-      this.propertyChanged = true;
-    }
-  }
-
-  /**
-   * Sets the clear alpha for the render target background and marks for re-render.
-   * @param value - The new clear alpha value between 0.0 and 1.0
-   */
-  public set clearAlpha(value: number) {
-    if (this.clearAlphaInternal !== value) {
-      this.clearAlphaInternal = value;
-      this.propertyChanged = true;
+      this.dirty = true;
     }
   }
 
@@ -328,7 +261,6 @@ export class UIScene extends UIElement {
    * After calling this method, the scene element should not be used anymore.
    */
   public override destroy(): void {
-    this.colorInternal.off(UIColorEvent.CHANGE, this.onColorChange);
     this.renderTarget.dispose();
     super.destroy();
   }
@@ -353,33 +285,33 @@ export class UIScene extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
+    this.frameIndex += 1;
+
     if (
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
-        this.frameBoolean) ||
+        this.frameIndex % 2 === 0) ||
+      (this.updateModeInternal === UISceneUpdateMode.EACH_THIRD_FRAME &&
+        this.frameIndex % 3 === 0) ||
       (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED &&
-        this.propertyChanged) ||
+        this.dirty) ||
       (this.updateModeInternal === UISceneUpdateMode.MANUAL &&
         this.renderRequired)
     ) {
+      this.dirty = false;
       this.renderRequired = false;
-      this.propertyChanged = false;
-      this.frameBoolean = !this.frameBoolean;
 
-      this.renderTarget.setSize(
-        this.width * this.resolutionFactorInternal,
-        this.height * this.resolutionFactorInternal,
-      );
-      renderer.setClearColor(this.clearColorInternal, this.clearAlpha);
+      if (this.solverWrapper.dirty) {
+        this.renderTarget.setSize(
+          this.width * this.resolutionFactorInternal,
+          this.height * this.resolutionFactorInternal,
+        );
+      }
+      renderer.setClearColor(this.clearColor.getHexRGB(), this.clearColor.a);
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
     }
     super.onWillRender(renderer, deltaTime);
   }
-
-  /** Event handler for when the color changes */
-  private readonly onColorChange = (color: UIColor): void => {
-    this.sceneWrapper.setProperties(this.planeHandler, { color: color });
-  };
 }

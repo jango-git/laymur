@@ -51,6 +51,7 @@ export class UIImage extends UIElement {
 
     this.color = color;
     this.mode = options.mode ?? this.mode;
+
     this.textureInternal = texture;
   }
 
