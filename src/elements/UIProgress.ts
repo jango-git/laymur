@@ -1,71 +1,11 @@
-import type { WebGLRenderer } from "three";
-import { Texture } from "three";
+import type { Matrix3, Texture, WebGLRenderer } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import type { UITexture } from "../miscellaneous/texture/UITexture";
 import source from "../shaders/UIProgress.glsl";
 import { UIElement } from "./UIElement";
-
-const EMPTY_TEXTURE = new Texture();
-
-/**
- * Predefined mask functions that control how the progress bar fills.
- * Each function defines a different fill pattern using GLSL shader code.
- */
-export enum UIProgressMaskFunction {
-  /** Fill horizontally from left to right (or right to left if inverse) */
-  HORIZONTAL = `float calculateMask() {
-    return step((p_direction * p_uv.x + (1.0 - p_direction) * 0.5), p_progress);
-  }`,
-
-  /** Fill vertically from bottom to top (or top to bottom if inverse) */
-  VERTICAL = `float calculateMask() {
-    return step((p_direction * p_uv.y + (1.0 - p_direction) * 0.5), p_progress);
-  }`,
-
-  /** Fill diagonally from bottom-left to top-right */
-  DIAGONAL = `float calculateMask() {
-    float d = (p_uv.x + p_uv.y) * (0.1);
-    return step((p_direction * d + (1.0 - p_direction) * 0.5), p_progress);
-  }`,
-
-  /** Fill in a circular pattern around the center, starting from the left */
-  CIRCLE_LEFT = `float calculateMask() {
-    vec2 p = p_uv - 0.5;
-    float angle = atan(p.y, p.x);
-    angle = (angle + 3.14159265) / PI;
-    angle *= 0.5;
-    return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
-  }`,
-
-  /** Fill in a circular pattern around the center, starting from the top */
-  CIRCLE_TOP = `float calculateMask() {
-    vec2 p = p_uv - 0.5;
-    float angle = atan(p.y, p.x);
-    angle = (angle + PI) / (2.0 * PI);
-    angle = mod(angle + 0.25, 1.0);
-    return step((p_direction * angle + (1.0 - p_direction) * 0.5), p_progress);
-  }`,
-}
-
-/**
- * Configuration options for creating a UIProgress element.
- */
-export interface UIProgressOptions extends UIElementCommonOptions {
-  /** Optional background texture (if not provided, default texture is used) */
-  backgroundTexture: Texture;
-  /** Foreground color tint applied to the filled portion */
-  foregroundColor: UIColor;
-  /** Background color tint applied to the unfilled portion */
-  backgroundColor: UIColor;
-  /** Mask function that defines how the progress bar fills (predefined enum or custom GLSL code) */
-  maskFunction: UIProgressMaskFunction | string;
-  /** Progress value between 0.0 (empty) and 1.0 (full) */
-  progress: number;
-  /** Whether to fill in reverse direction (true for reverse, false for normal) */
-  inverseDirection: boolean;
-}
+import type { UIProgressOptions } from "./UIProgress.Internal";
 
 /**
  * Progress bar UI element with customizable fill direction and appearance.
@@ -78,12 +18,10 @@ export interface UIProgressOptions extends UIElementCommonOptions {
  * The fill direction can be controlled both by angle and forward/reverse direction.
  */
 export class UIProgress extends UIElement {
+  public readonly texture: UITexture;
   public readonly color: UIColor;
-  public readonly foregroundColor: UIColor;
-  public readonly backgroundColor: UIColor;
 
-  private foregroundTextureInternal: Texture;
-  private backgroundTextureInternal?: Texture;
+  private readonly textureTransform: Matrix3;
 
   private progressInternal: number;
   private inverseDirectionInternal: boolean;
@@ -94,16 +32,16 @@ export class UIProgress extends UIElement {
    * Creates a new progress bar UI element.
    *
    * @param layer - The UI layer to add this element to
-   * @param foregroundTexture - The texture used for the progress fill
+   * @param texture - The texture used for the progress fill
    * @param options - Configuration options for the progress bar
    */
   constructor(
     layer: UILayer,
-    foregroundTexture: Texture,
+    texture: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
-    const w = options.width ?? foregroundTexture.image.width;
-    const h = options.height ?? foregroundTexture.image.height;
+    const w = options.width ?? texture.image.width;
+    const h = options.height ?? texture.image.height;
 
     assertValidPositiveNumber(
       w,
@@ -141,7 +79,7 @@ export class UIProgress extends UIElement {
       .trim();
 
     super(layer, options.x ?? 0, options.y ?? 0, w, h, minifiedSource, {
-      foregroundTexture,
+      foregroundTexture: texture,
       backgroundTexture: options.backgroundTexture ?? EMPTY_TEXTURE,
       color,
       foregroundColor,
@@ -150,7 +88,7 @@ export class UIProgress extends UIElement {
       direction: inverseDirection ? -1 : 1,
     });
 
-    this.foregroundTextureInternal = foregroundTexture;
+    this.foregroundTextureInternal = texture;
     this.backgroundTextureInternal = options.backgroundTexture;
 
     this.color = color;

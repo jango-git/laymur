@@ -1,4 +1,4 @@
-import { Matrix3 } from "three";
+import type { Matrix3 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
@@ -39,18 +39,21 @@ export class UIImage extends UIElement {
   constructor(
     layer: UILayer,
     texture: UITextureConfig,
-    options?: Partial<UIImageOptions>,
+    options: Partial<UIImageOptions> = {},
   ) {
-    const color = new UIColor(options?.color);
+    const color = new UIColor(options.color);
     const uiTexture = new UITexture(texture);
-    const textureTransform = new Matrix3();
+    const textureTransform = uiTexture.calculateTransform();
+
+    options.width = options.width ?? uiTexture.originalWidth;
+    options.height = options.width ?? uiTexture.originalHeight;
 
     super(
       layer,
       source,
       {
         texture: uiTexture.texture,
-        textureTransform: uiTexture.calculateTransform(textureTransform),
+        textureTransform: textureTransform,
         color,
       },
       options,
@@ -62,9 +65,7 @@ export class UIImage extends UIElement {
   }
 
   protected override updatePlaneTransform(): void {
-    let textureDirty = this.texture.dirty;
-
-    if (textureDirty || this.color.dirty) {
+    if (this.texture.dirty || this.color.dirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
         textureTransform: this.texture.calculateTransform(
@@ -74,11 +75,15 @@ export class UIImage extends UIElement {
       });
 
       this.color.setDirtyFalse();
-      this.texture.setDirtyFalse();
+    }
+
+    if (this.texture.dirty) {
+      this.width = this.texture.originalWidth;
+      this.height = this.texture.originalHeight;
     }
 
     if (
-      textureDirty ||
+      this.texture.dirty ||
       this.micro.dirty ||
       this.inputWrapper.dirty ||
       this.solverWrapper.dirty
@@ -105,6 +110,8 @@ export class UIImage extends UIElement {
           this.texture.trimBottom,
         ),
       );
+
+      this.texture.setDirtyFalse();
       this.micro.setDirtyFalse();
     }
   }

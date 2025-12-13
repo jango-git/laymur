@@ -1,21 +1,16 @@
-import type { Texture, WebGLRenderer } from "three";
+import type { Matrix3, WebGLRenderer } from "three";
 import { Vector4 } from "three";
 import { type UILayer } from "../layers/UILayer";
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIBorderConfig } from "../miscellaneous/UIBorder";
-import { UIBorder } from "../miscellaneous/UIBorder";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import { UIPadding } from "../miscellaneous/padding/UIPadding";
+import { UITexture } from "../miscellaneous/texture/UITexture";
+import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
-
-/**
- * Configuration options for creating a UINineSlice element.
- */
-export interface UINineSliceOptions extends UIElementCommonOptions {
-  sliceBorders: UIBorderConfig;
-  sliceRegions: UIBorderConfig;
-}
+import {
+  NINE_DEFAULT_BORDER,
+  type UINineSliceOptions,
+} from "./UINineSlice.Internal";
 
 /**
  * Nine-slice UI element for scalable images with preserved border regions.
@@ -26,12 +21,12 @@ export interface UINineSliceOptions extends UIElementCommonOptions {
  * panels, buttons, and borders that maintain visual quality at any size.
  */
 export class UINineSlice extends UIElement {
+  public readonly texture: UITexture;
   public readonly color: UIColor;
-  public readonly sliceBorders: UIBorder;
-  public readonly sliceRegions: UIBorder;
+  public readonly sliceBorders: UIPadding;
+  public readonly sliceRegions: UIPadding;
 
-  private textureInternal: Texture;
-  private textureInternalDirty = false;
+  private readonly textureTransform: Matrix3;
 
   private readonly sliceBordersVector = new Vector4();
   private readonly sliceRegionsVector = new Vector4();
@@ -49,71 +44,44 @@ export class UINineSlice extends UIElement {
    */
   constructor(
     layer: UILayer,
-    texture: Texture,
+    texture: UITextureConfig,
     options: Partial<UINineSliceOptions> = {},
   ) {
-    const w = options.width ?? texture.image.width;
-    const h = options.height ?? texture.image.height;
-
     const color = new UIColor(options.color);
 
-    const sliceBorders = new UIBorder(options.sliceBorders ?? 0.1);
-    const sliceRegions = new UIBorder(options.sliceRegions ?? 0.1);
+    const uiTexture = new UITexture(texture);
+    const textureTransform = uiTexture.calculateTransform();
+
+    options.width = options.width ?? uiTexture.originalWidth;
+    options.height = options.width ?? uiTexture.originalHeight;
+
+    const sliceBorders = new UIPadding(
+      options.sliceBorders ?? NINE_DEFAULT_BORDER,
+    );
+    const sliceRegions = new UIPadding(
+      options.sliceRegions ?? NINE_DEFAULT_BORDER,
+    );
 
     const sliceBordersVector = sliceBorders.toVector4();
     const sliceRegionsVector = sliceRegions.toVector4();
 
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      texture: texture,
-      textureTransform: texture.matrix,
+    super(layer, source, {
+      texture: uiTexture.texture,
+      textureTransform: textureTransform,
       color,
       sliceBorders: sliceBordersVector,
       sliceRegions: sliceRegionsVector,
     });
 
-    this.textureInternal = texture;
+    this.texture = uiTexture;
+    this.textureTransform = textureTransform;
     this.color = color;
-    this.mode = options.mode ?? this.mode;
 
     this.sliceBorders = sliceBorders;
     this.sliceRegions = sliceRegions;
 
     this.sliceBordersVector = sliceBordersVector;
     this.sliceRegionsVector = sliceRegionsVector;
-  }
-
-  /**
-   * Gets the current texture being displayed.
-   * @returns The current Three.js texture
-   */
-  public get texture(): Texture {
-    return this.textureInternal;
-  }
-
-  /**
-   * Sets a new texture for the nine-slice element.
-   *
-   * When setting a new texture, the element will update its internal dimensions
-   * but maintain the current world size. The nine-slice borders remain unchanged.
-   *
-   * @param value - The new Three.js texture to display
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
-   * @see {@link assertValidPositiveNumber}
-   */
-  public set texture(value: Texture) {
-    if (this.textureInternal !== value) {
-      const w = value.image.width;
-      const h = value.image.height;
-
-      assertValidPositiveNumber(w, "UIImage.texture.width");
-      assertValidPositiveNumber(h, "UIImage.texture.height");
-
-      this.solverWrapper.suggestVariableValue(this.wVariable, w);
-      this.solverWrapper.suggestVariableValue(this.hVariable, h);
-
-      this.textureInternal = value;
-      this.textureInternalDirty = true;
-    }
   }
 
   /**
@@ -128,25 +96,25 @@ export class UINineSlice extends UIElement {
   ): void {
     if (
       this.color.dirty ||
-      this.textureInternalDirty ||
       this.sliceBorders.dirty ||
       this.sliceRegions.dirty
     ) {
-      this.color.dirty = false;
-      this.textureInternalDirty = false;
-      this.sliceBorders.dirty = false;
-      this.sliceRegions.dirty = false;
-
       this.sliceBorders.toVector4(this.sliceBordersVector);
       this.sliceRegions.toVector4(this.sliceRegionsVector);
 
       this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.textureInternal,
-        textureTransform: this.textureInternal.matrix,
+        texture: this.texture.texture,
+        textureTransform: this.texture.calculateTransform(
+          this.textureTransform,
+        ),
         color: this.color,
         sliceBorders: this.sliceRegionsVector,
         sliceRegions: this.sliceRegionsVector,
       });
+
+      this.color.setDirtyFalse();
+      this.sliceBorders.setDirtyFalse();
+      this.sliceRegions.setDirtyFalse();
     }
 
     super.onWillRender(renderer, deltaTime);

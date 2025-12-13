@@ -2,7 +2,6 @@ import type { Vector2Like } from "three";
 import { Texture } from "three";
 
 export const TEXTURE_DEFAULT_TEXTURE = new Texture();
-export const TEXTURE_DEFAULT_RESOLUTION = 256;
 export const TEXTURE_DEFAULT_ROTATED = false;
 export const TEXTURE_DEFAULT_SCALE = 1;
 

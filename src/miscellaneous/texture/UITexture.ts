@@ -1,21 +1,24 @@
 import { Matrix3, Texture, Vector2 } from "three";
+import {
+  DUMMY_DEFAULT_HEIGHT,
+  DUMMY_DEFAULT_WIDTH,
+} from "../../elements/UIDummy.Internal";
 import type { UITextureConfig, UITextureTrim } from "./UITexture.Internal";
 import {
-  TEXTURE_DEFAULT_RESOLUTION,
   TEXTURE_DEFAULT_ROTATED,
   TEXTURE_DEFAULT_SCALE,
   TEXTURE_DEFAULT_TEXTURE,
 } from "./UITexture.Internal";
 
 export class UITexture {
-  private dirtyInternal = true;
   private textureInternal: Texture = TEXTURE_DEFAULT_TEXTURE;
   private readonly min = new Vector2(0, 0);
   private readonly max = new Vector2(1, 1);
   private rotatedInternal = false;
   private scaleInternal = 1;
   private trim: UITextureTrim = { left: 0, right: 0, top: 0, bottom: 0 };
-  private readonly transform = new Matrix3();
+
+  private dirtyInternal = false;
 
   constructor(config?: UITextureConfig) {
     this.set(config);
@@ -63,6 +66,14 @@ export class UITexture {
 
   public get scale(): number {
     return this.scaleInternal;
+  }
+
+  public get originalWidth(): number {
+    return (this.maxX - this.minX) / this.scaleInternal;
+  }
+
+  public get originalHeight(): number {
+    return (this.maxY - this.minY) / this.scaleInternal;
   }
 
   /** @internal */
@@ -154,34 +165,27 @@ export class UITexture {
 
   /** @internal */
   public calculateTransform(result = new Matrix3()): Matrix3 {
-    if (this.dirtyInternal) {
-      const w =
-        this.textureInternal.image?.naturalWidth ?? TEXTURE_DEFAULT_RESOLUTION;
-      const h =
-        this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_RESOLUTION;
+    const w = this.textureInternal.image?.naturalWidth ?? DUMMY_DEFAULT_WIDTH;
+    const h = this.textureInternal.image?.naturalHeight ?? DUMMY_DEFAULT_HEIGHT;
 
-      const minX = this.min.x / w;
-      const minY = this.min.y / h;
-      const maxX = this.max.x / w;
-      const maxY = this.max.y / h;
+    const minX = this.min.x / w;
+    const minY = this.min.y / h;
+    const maxX = this.max.x / w;
+    const maxY = this.max.y / h;
 
-      if (this.rotatedInternal) {
-        // Rotated 90° clockwise in atlas
-        // UV: (u, v) -> (minX + v * (maxX - minX), minY + (1 - u) * (maxY - minY))
-        const scaleX = maxX - minX;
-        const scaleY = maxY - minY;
-        this.transform.set(0, scaleX, minX, -scaleY, 0, minY + scaleY, 0, 0, 1);
-      } else {
-        // Normal case
-        const scaleX = maxX - minX;
-        const scaleY = maxY - minY;
-        this.transform.set(scaleX, 0, minX, 0, scaleY, minY, 0, 0, 1);
-      }
-
-      this.dirtyInternal = false;
+    if (this.rotatedInternal) {
+      // Rotated 90° clockwise in atlas
+      // UV: (u, v) -> (minX + v * (maxX - minX), minY + (1 - u) * (maxY - minY))
+      const scaleX = maxX - minX;
+      const scaleY = maxY - minY;
+      result.set(0, scaleX, minX, -scaleY, 0, minY + scaleY, 0, 0, 1);
+    } else {
+      // Normal case
+      const scaleX = maxX - minX;
+      const scaleY = maxY - minY;
+      result.set(scaleX, 0, minX, 0, scaleY, minY, 0, 0, 1);
     }
 
-    result.copy(this.transform);
     return result;
   }
 
@@ -190,8 +194,8 @@ export class UITexture {
       this.textureInternal = config;
       this.min.set(0, 0);
       this.max.set(
-        config.image?.naturalWidth ?? TEXTURE_DEFAULT_RESOLUTION,
-        config.image?.naturalHeight ?? TEXTURE_DEFAULT_RESOLUTION,
+        config.image?.naturalWidth ?? DUMMY_DEFAULT_WIDTH,
+        config.image?.naturalHeight ?? DUMMY_DEFAULT_HEIGHT,
       );
       this.trim = { left: 0, right: 0, top: 0, bottom: 0 };
     } else if (config !== undefined) {
@@ -204,7 +208,7 @@ export class UITexture {
     } else {
       this.textureInternal = TEXTURE_DEFAULT_TEXTURE;
       this.min.set(0, 0);
-      this.max.set(TEXTURE_DEFAULT_RESOLUTION, TEXTURE_DEFAULT_RESOLUTION);
+      this.max.set(DUMMY_DEFAULT_WIDTH, DUMMY_DEFAULT_HEIGHT);
       this.trim = { left: 0, right: 0, top: 0, bottom: 0 };
     }
 

@@ -1,30 +1,18 @@
-import type { Matrix3, Texture, WebGLRenderer } from "three";
+import type { Matrix3, WebGLRenderer } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { UITexture } from "../miscellaneous/texture/UITexture";
+import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
+import {
+  ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
+  ANIMATED_IMAGE_DEFAULT_LOOP,
+  UIAnimatedImageEvent,
+  type UIAnimatedImageOptions,
+} from "./UIAnimatedImage.Internal";
 import { UIElement } from "./UIElement";
-
-export enum UIAnimatedImageEvent {
-  PLAY = 0,
-  PAUSE = 1,
-  STOP = 2,
-}
-
-export type UIAnimatedImageSequence =
-  | { texture: Texture; transforms: Matrix3[] }
-  | Texture[];
-
-/**
- * Configuration options for creating a UIAnimatedImage element.
- */
-export interface UIAnimatedImageOptions extends UIElementCommonOptions {
-  /** Frame rate for animation */
-  frameRate: number;
-  /** Whether animation should loop */
-  loop: boolean;
-}
 
 /**
  * UI element for displaying textured images.
@@ -40,11 +28,11 @@ export interface UIAnimatedImageOptions extends UIElementCommonOptions {
 export class UIAnimatedImage extends UIElement {
   public readonly color: UIColor;
 
-  /** Internal storage for the current texture */
-  private readonly sequence: { texture: Texture; transform: Matrix3 }[];
+  private readonly sequenceInternal: UITexture[];
 
   private frameRateInternal: number;
   private loopInternal: boolean;
+  private readonly textureTransform: Matrix3;
 
   private isPlaying = false;
   private sequenceFrameIndex = 0;
@@ -64,35 +52,41 @@ export class UIAnimatedImage extends UIElement {
    */
   constructor(
     layer: UILayer,
-    sequence: UIAnimatedImageSequence,
+    sequence: UITextureConfig[],
     options: Partial<UIAnimatedImageOptions> = {},
   ) {
-    const w = options.width ?? 256;
-    const h = options.height ?? 256;
     const color = new UIColor(options.color);
+    const uiTextures = sequence.map(
+      (textureConfig) => new UITexture(textureConfig),
+    );
 
-    const mappedSequence = Array.isArray(sequence)
-      ? sequence.map((texture) => ({
-          texture,
-          transform: texture.matrix,
-        }))
-      : sequence.transforms.map((transform) => ({
-          texture: sequence.texture,
-          transform: transform,
-        }));
+    const frame = uiTextures[0];
+    options.width = options.width ?? frame.originalWidth;
+    options.height = options.width ?? frame.originalHeight;
 
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      texture: mappedSequence[0].texture,
-      textureTransform: mappedSequence[0].transform,
-      color,
-    });
+    const textureTransform = frame.calculateTransform();
 
+    super(
+      layer,
+      source,
+      {
+        texture: frame.texture,
+        textureTransform: textureTransform,
+        color,
+      },
+      options,
+    );
+
+    this.sequenceInternal = uiTextures;
+    this.textureTransform = textureTransform;
+    this.frameRateInternal =
+      options.frameRate ?? ANIMATED_IMAGE_DEFAULT_FRAME_RATE;
+    this.loopInternal = options.loop ?? ANIMATED_IMAGE_DEFAULT_LOOP;
     this.color = color;
-    this.mode = options.mode ?? this.mode;
+  }
 
-    this.sequence = mappedSequence;
-    this.frameRateInternal = options.frameRate ?? 24;
-    this.loopInternal = options.loop ?? true;
+  public get sequence(): readonly UITexture[] {
+    return this.sequenceInternal;
   }
 
   /**
@@ -116,7 +110,26 @@ export class UIAnimatedImage extends UIElement {
    * @returns The duration in seconds
    */
   public get duration(): number {
-    return this.sequence.length / this.frameRateInternal;
+    return this.sequenceInternal.length / this.frameRateInternal;
+  }
+
+  public set sequence(sequence: UITextureConfig[]) {
+    this.stop();
+
+    const newLength = sequence.length;
+    const currentLength = this.sequenceInternal.length;
+
+    for (let i = 0; i < Math.min(newLength, currentLength); i++) {
+      this.sequenceInternal[i].set(sequence[i]);
+    }
+
+    if (newLength < currentLength) {
+      this.sequenceInternal.length = newLength;
+    } else if (newLength > currentLength) {
+      for (let i = currentLength; i < newLength; i++) {
+        this.sequenceInternal.push(new UITexture(sequence[i]));
+      }
+    }
   }
 
   /**
@@ -186,9 +199,9 @@ export class UIAnimatedImage extends UIElement {
         this.sequenceFrameIndex += 1;
 
         if (this.loopInternal) {
-          this.sequenceFrameIndex %= this.sequence.length;
-        } else if (this.sequenceFrameIndex >= this.sequence.length) {
-          this.sequenceFrameIndex = this.sequence.length - 1;
+          this.sequenceFrameIndex %= this.sequenceInternal.length;
+        } else if (this.sequenceFrameIndex >= this.sequenceInternal.length) {
+          this.sequenceFrameIndex = this.sequenceInternal.length - 1;
           this.isPlaying = false;
           this.emit(UIAnimatedImageEvent.PAUSE);
           break;
@@ -198,17 +211,60 @@ export class UIAnimatedImage extends UIElement {
       }
     }
 
+    super.onWillRender(renderer, deltaTime);
+  }
+
+  protected override updatePlaneTransform(): void {
+    const frame = this.sequenceInternal[this.sequenceFrameIndex];
+
     if (this.color.dirty || this.currentFrameIndexDirty) {
-      const frame = this.sequence[this.sequenceFrameIndex];
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: frame.texture,
-        textureTransform: frame.transform,
+        textureTransform: frame.calculateTransform(this.textureTransform),
         color: this.color,
       });
 
-      this.color.dirty = false;
-      this.currentFrameIndexDirty = false;
+      this.color.setDirtyFalse();
     }
-    super.onWillRender(renderer, deltaTime);
+
+    if (frame.dirty) {
+      this.width = frame.originalWidth;
+      this.height = frame.originalHeight;
+    }
+
+    if (
+      frame.dirty ||
+      this.currentFrameIndexDirty ||
+      this.micro.dirty ||
+      this.inputWrapper.dirty ||
+      this.solverWrapper.dirty
+    ) {
+      this.sceneWrapper.setTransform(
+        this.planeHandler,
+        computePaddingTransformMatrix(
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+          this.zIndex,
+          this.micro.x,
+          this.micro.y,
+          this.micro.anchorX,
+          this.micro.anchorY,
+          this.micro.scaleX,
+          this.micro.scaleY,
+          this.micro.rotation,
+          this.micro.anchorMode,
+          frame.trimLeft,
+          frame.trimRight,
+          frame.trimTop,
+          frame.trimBottom,
+        ),
+      );
+
+      frame.setDirtyFalse();
+      this.currentFrameIndexDirty = false;
+      this.micro.setDirtyFalse();
+    }
   }
 }
