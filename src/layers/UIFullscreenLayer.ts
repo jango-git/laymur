@@ -1,11 +1,18 @@
 import type { Vector2 } from "three";
-import { MathUtils, Vector3, type Camera, type WebGLRenderer } from "three";
+import {
+  MathUtils,
+  Ray,
+  Vector3,
+  type Camera,
+  type WebGLRenderer,
+} from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import type { UIResizePolicy } from "../miscellaneous/resize-policy/UIResizePolicy";
 import { UIResizePolicyNone } from "../miscellaneous/resize-policy/UIResizePolicyNone";
 import { UIInputEvent } from "../miscellaneous/UIInputEvent";
-import { UIMode } from "../miscellaneous/UIMode";
+import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
+import type { UILayerMode } from "./UILayer.Internal";
 
 /**
  * UI layer that covers the full browser window.
@@ -17,22 +24,37 @@ import { UILayer } from "./UILayer";
  * @see {@link UIResizePolicy}
  */
 export class UIFullscreenLayer extends UILayer {
+  private resizePolicyInternal: UIResizePolicy;
+  private resizePolicyDirty = false;
+
   /**
    * Creates a fullscreen layer and sets up window event listeners.
    */
   constructor(
-    public resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
-    mode: UIMode = UIMode.VISIBLE,
+    resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
+    mode: UILayerMode = UIMode.VISIBLE,
   ) {
     const scale = resizePolicy.calculateScale(
       window.innerWidth,
       window.innerHeight,
     );
     super(window.innerWidth * scale, window.innerHeight * scale, mode);
+    this.resizePolicyInternal = resizePolicy;
     window.addEventListener("resize", this.onResize);
-    window.addEventListener("pointerdown", this.onDown);
-    window.addEventListener("pointermove", this.onMove);
-    window.addEventListener("pointerup", this.onUp);
+    window.addEventListener("pointerdown", this.onPointerDown);
+    window.addEventListener("pointermove", this.onPointerMove);
+    window.addEventListener("pointerup", this.onPointerUp);
+  }
+
+  public get resizePolicy(): UIResizePolicy {
+    return this.resizePolicyInternal;
+  }
+
+  public set resizePolicy(value: UIResizePolicy) {
+    if (this.resizePolicyInternal !== value) {
+      this.resizePolicyInternal = value;
+      this.resizePolicyDirty = true;
+    }
   }
 
   /**
@@ -40,9 +62,9 @@ export class UIFullscreenLayer extends UILayer {
    */
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
-    window.removeEventListener("pointerdown", this.onDown);
-    window.removeEventListener("pointermove", this.onMove);
-    window.removeEventListener("pointerup", this.onUp);
+    window.removeEventListener("pointerdown", this.onPointerDown);
+    window.removeEventListener("pointermove", this.onPointerMove);
+    window.removeEventListener("pointerup", this.onPointerUp);
   }
 
   /**
@@ -53,8 +75,7 @@ export class UIFullscreenLayer extends UILayer {
    */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
-    if (this.resizePolicy.dirty) {
-      this.resizePolicy.dirty = false;
+    if (this.resizePolicy.dirty || this.resizePolicyDirty) {
       this.onResize();
     }
     super.renderInternal(renderer, deltaTime);
@@ -107,6 +128,30 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   /**
+   * Builds a ray from camera through the given layer position.
+   *
+   * @param position - 2D position in layer space
+   * @param camera - Camera for ray origin and direction
+   * @returns Ray in world space
+   */
+  public buildRay(position: Vector2, camera: Camera): Ray {
+    const near = new Vector3(
+      MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
+      MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
+      -1,
+    ).unproject(camera);
+
+    const far = new Vector3(
+      MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
+      MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
+      1,
+    ).unproject(camera);
+
+    const direction = far.sub(near).normalize();
+    return new Ray(near, direction);
+  }
+
+  /**
    * Handles window resize. Updates layer dimensions according to resize policy.
    */
   private readonly onResize = (): void => {
@@ -114,27 +159,26 @@ export class UIFullscreenLayer extends UILayer {
       window.innerWidth,
       window.innerHeight,
     );
+    this.resizePolicy.dirty = false;
+    this.resizePolicyDirty = false;
     this.resizeInternal(window.innerWidth * scale, window.innerHeight * scale);
   };
 
-  private readonly onDown = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerDownInternal", UIInputEvent.DOWN);
+  private readonly onPointerDown = (event: PointerEvent): void => {
+    this.handleWindowInput(event, "onPointerDown", UIInputEvent.DOWN);
   };
 
-  private readonly onMove = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerMoveInternal", UIInputEvent.MOVE);
+  private readonly onPointerMove = (event: PointerEvent): void => {
+    this.handleWindowInput(event, "onPointerMove", UIInputEvent.MOVE);
   };
 
-  private readonly onUp = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerUpInternal", UIInputEvent.UP);
+  private readonly onPointerUp = (event: PointerEvent): void => {
+    this.handleWindowInput(event, "onPointerUp", UIInputEvent.UP);
   };
 
   private handleWindowInput(
     event: PointerEvent,
-    pointerFunctionName:
-      | "onPointerDownInternal"
-      | "onPointerMoveInternal"
-      | "onPointerUpInternal",
+    pointerFunctionName: "onPointerDown" | "onPointerMove" | "onPointerUp",
     inputEvent: UIInputEvent,
   ): void {
     const rect =
@@ -154,10 +198,13 @@ export class UIFullscreenLayer extends UILayer {
     const scaledX = x * scale;
     const scaledY = y * scale;
 
-    if (this.mode === UIMode.INTERACTIVE) {
+    if (isUIModeInteractive(this.mode)) {
       this.emit(inputEvent, scaledX, scaledY, event.pointerId);
+      this.inputWrapperInternal[pointerFunctionName](
+        scaledX,
+        scaledY,
+        event.pointerId,
+      );
     }
-
-    this[pointerFunctionName](scaledX, scaledY, event.pointerId);
   }
 }

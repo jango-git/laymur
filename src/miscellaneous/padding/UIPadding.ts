@@ -1,30 +1,26 @@
 import { Vector4 } from "three";
 import { assertValidNonNegativeNumber } from "../asserts";
-import { BORDER_DEFAULT_VALUE, type UIBorderConfig } from "./UIBorder.Internal";
+import type { UIPaddingConfig } from "./UIPadding.Internal";
+import { PADDING_DEFAULT_VALU } from "./UIPadding.Internal";
 
 /**
- * Border values for UI elements (left, right, top, bottom).
+ * Padding values for UI elements (left, right, top, bottom).
  * All values must be non-negative.
  */
-export class UIBorder {
-  /**
-   * Indicates whether any border value has been modified.
-   * Must be reset to `false` externally by the owner.
-   * @internal
-   */
-  public dirty = true;
-
+export class UIPadding {
   private lInternal: number;
   private rInternal: number;
   private tInternal: number;
   private bInternal: number;
 
-  constructor(config?: UIBorderConfig) {
+  private dirtyInternal = false;
+
+  constructor(config?: UIPaddingConfig) {
     if (config === undefined) {
-      this.lInternal = BORDER_DEFAULT_VALUE;
-      this.rInternal = BORDER_DEFAULT_VALUE;
-      this.tInternal = BORDER_DEFAULT_VALUE;
-      this.bInternal = BORDER_DEFAULT_VALUE;
+      this.lInternal = PADDING_DEFAULT_VALU;
+      this.rInternal = PADDING_DEFAULT_VALU;
+      this.tInternal = PADDING_DEFAULT_VALU;
+      this.bInternal = PADDING_DEFAULT_VALU;
     } else if (typeof config === "number") {
       assertValidNonNegativeNumber(config, "UIBorder.constructor.config");
       this.lInternal = config;
@@ -85,11 +81,20 @@ export class UIBorder {
     return this.bInternal;
   }
 
+  /**
+   * Indicates whether any border value has been modified.
+   * Must be reset to `false` externally by the owner.
+   * @internal
+   */
+  public get dirty(): boolean {
+    return this.dirtyInternal;
+  }
+
   public set left(value: number) {
     assertValidNonNegativeNumber(value, "UIBorder.left");
     if (this.lInternal !== value) {
       this.lInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -97,7 +102,7 @@ export class UIBorder {
     assertValidNonNegativeNumber(value, "UIBorder.right");
     if (this.rInternal !== value) {
       this.rInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -105,7 +110,7 @@ export class UIBorder {
     assertValidNonNegativeNumber(value, "UIBorder.top");
     if (this.tInternal !== value) {
       this.tInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -113,7 +118,7 @@ export class UIBorder {
     assertValidNonNegativeNumber(value, "UIBorder.bottom");
     if (this.bInternal !== value) {
       this.bInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -123,7 +128,7 @@ export class UIBorder {
     if (this.lInternal !== value || this.rInternal !== value) {
       this.lInternal = value;
       this.rInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -133,7 +138,7 @@ export class UIBorder {
     if (this.tInternal !== value || this.bInternal !== value) {
       this.tInternal = value;
       this.bInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -150,7 +155,7 @@ export class UIBorder {
       this.rInternal = value;
       this.tInternal = value;
       this.bInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -170,7 +175,7 @@ export class UIBorder {
       this.rInternal = vector.y;
       this.tInternal = vector.z;
       this.bInternal = vector.w;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -190,7 +195,7 @@ export class UIBorder {
   }
 
   /** Copies values from another UIBorder. */
-  public copy(other: UIBorder): void {
+  public copy(other: UIPadding): void {
     if (
       this.lInternal !== other.lInternal ||
       this.rInternal !== other.rInternal ||
@@ -201,7 +206,12 @@ export class UIBorder {
       this.rInternal = other.rInternal;
       this.tInternal = other.tInternal;
       this.bInternal = other.bInternal;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
+  }
+
+  /** @internal */
+  public setDirtyFalse(): void {
+    this.dirtyInternal = false;
   }
 }

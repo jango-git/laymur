@@ -1,3 +1,5 @@
+import type { UIMode } from "../miscellaneous/UIMode";
+
 /**
  * Events that can be emitted by UI layers.
  */
@@ -9,3 +11,5 @@ export enum UILayerEvent {
   /** Emitted before the layer is rendered. */
   WILL_RENDER = "will_render",
 }
+
+export type UILayerMode = UIMode.HIDDEN | UIMode.VISIBLE | UIMode.INTERACTIVE;

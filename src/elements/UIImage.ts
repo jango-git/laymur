@@ -1,10 +1,12 @@
-import type { Texture, WebGLRenderer } from "three";
+import { Matrix3 } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
+import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { UITexture } from "../miscellaneous/texture/UITexture";
+import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
+import type { UIImageOptions } from "./UIImage.Internal";
 
 /**
  * UI element for displaying textured images.
@@ -18,10 +20,10 @@ import { UIElement } from "./UIElement";
  * @see {@link Texture} - Three.js texture for image data
  */
 export class UIImage extends UIElement {
+  public readonly texture: UITexture;
   public readonly color: UIColor;
 
-  private textureInternal: Texture;
-  private textureInternalDirty = false;
+  private readonly textureTransform: Matrix3;
 
   /**
    * Creates a new UIImage instance.
@@ -36,73 +38,74 @@ export class UIImage extends UIElement {
    */
   constructor(
     layer: UILayer,
-    texture: Texture,
-    options: Partial<UIElementCommonOptions> = {},
+    texture: UITextureConfig,
+    options?: Partial<UIImageOptions>,
   ) {
-    const w = options.width ?? texture.image.width;
-    const h = options.height ?? texture.image.height;
-    const color = new UIColor(options.color);
+    const color = new UIColor(options?.color);
+    const uiTexture = new UITexture(texture);
+    const textureTransform = new Matrix3();
 
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      color,
-      texture,
-      textureTransform: texture.matrix,
-    });
+    super(
+      layer,
+      source,
+      {
+        texture: uiTexture.texture,
+        textureTransform: uiTexture.calculateTransform(textureTransform),
+        color,
+      },
+      options,
+    );
 
+    this.texture = uiTexture;
+    this.textureTransform = textureTransform;
     this.color = color;
-    this.mode = options.mode ?? this.mode;
-
-    this.textureInternal = texture;
   }
 
-  /**
-   * Gets the current texture being displayed.
-   * @returns The current Three.js texture
-   */
-  public get texture(): Texture {
-    return this.textureInternal;
-  }
+  protected override updatePlaneTransform(): void {
+    let textureDirty = this.texture.dirty;
 
-  /**
-   * Sets a new texture for the image.
-   *
-   * When setting a new texture, the image will automatically resize to match
-   * the new texture's dimensions.
-   *
-   * @param value - The new Three.js texture to display
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
-   * @see {@link assertValidPositiveNumber}
-   */
-  public set texture(value: Texture) {
-    if (this.textureInternal !== value) {
-      const w = value.image.width;
-      const h = value.image.height;
-
-      assertValidPositiveNumber(w, "UIImage.texture.width");
-      assertValidPositiveNumber(h, "UIImage.texture.height");
-
-      this.solverWrapper.suggestVariableValue(this.wVariable, w);
-      this.solverWrapper.suggestVariableValue(this.hVariable, h);
-
-      this.textureInternal = value;
-      this.textureInternalDirty = true;
-    }
-  }
-
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
-    if (this.color.dirty || this.textureInternalDirty) {
+    if (textureDirty || this.color.dirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.textureInternal,
-        textureTransform: this.textureInternal.matrix,
+        texture: this.texture.texture,
+        textureTransform: this.texture.calculateTransform(
+          this.textureTransform,
+        ),
         color: this.color,
       });
 
-      this.color.dirty = false;
-      this.textureInternalDirty = false;
+      this.color.setDirtyFalse();
+      this.texture.setDirtyFalse();
     }
-    super.onWillRender(renderer, deltaTime);
+
+    if (
+      textureDirty ||
+      this.micro.dirty ||
+      this.inputWrapper.dirty ||
+      this.solverWrapper.dirty
+    ) {
+      this.sceneWrapper.setTransform(
+        this.planeHandler,
+        computePaddingTransformMatrix(
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+          this.zIndex,
+          this.micro.x,
+          this.micro.y,
+          this.micro.anchorX,
+          this.micro.anchorY,
+          this.micro.scaleX,
+          this.micro.scaleY,
+          this.micro.rotation,
+          this.micro.anchorMode,
+          this.texture.trimLeft,
+          this.texture.trimRight,
+          this.texture.trimTop,
+          this.texture.trimBottom,
+        ),
+      );
+      this.micro.setDirtyFalse();
+    }
   }
 }

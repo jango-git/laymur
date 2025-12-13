@@ -34,7 +34,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   public readonly hVariable: number;
 
   protected modeInternal: UIMode;
-  private readonly inputWrapper: UIInputWrapperInterface;
+  protected readonly inputWrapper: UIInputWrapperInterface;
   private readonly catcherHandler: number;
   private lastPointerInside = false;
 

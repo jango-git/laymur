@@ -14,13 +14,6 @@ import {
  * Manages position, anchor, scale, and rotation independently of constraints.
  */
 export class UIMicro {
-  /**
-   * Indicates whether any transformation has been modified.
-   * Must be reset to `false` externally by the owner.
-   * @internal
-   */
-  public dirty = true;
-
   private xInternal: number;
   private yInternal: number;
   private anchorXInternal: number;
@@ -29,6 +22,8 @@ export class UIMicro {
   private scaleYInternal: number;
   private rotationInternal: number;
   private anchorModeInternal: UIMicroAnchorMode;
+
+  private dirtyInternal = true;
 
   constructor(config?: Partial<UIMicroConfig>) {
     this.xInternal = config?.x ?? MICRO_DEFAULT_POSITION;
@@ -86,11 +81,20 @@ export class UIMicro {
     return this.rotationInternal;
   }
 
+  /**
+   * Indicates whether any transformation has been modified.
+   * Must be reset to `false` externally by the owner.
+   * @internal
+   */
+  public get dirty(): boolean {
+    return this.dirtyInternal;
+  }
+
   public set x(value: number) {
     assertValidNumber(value, "UIMicro.x");
     if (value !== this.xInternal) {
       this.xInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -98,7 +102,7 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.y");
     if (value !== this.yInternal) {
       this.yInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -106,7 +110,7 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.anchorX");
     if (value !== this.anchorXInternal) {
       this.anchorXInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -114,7 +118,7 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.anchorY");
     if (value !== this.anchorYInternal) {
       this.anchorYInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -122,7 +126,7 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.scaleX");
     if (value !== this.scaleXInternal) {
       this.scaleXInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -130,7 +134,7 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.scaleY");
     if (value !== this.scaleYInternal) {
       this.scaleYInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -139,7 +143,7 @@ export class UIMicro {
     const rotation = MathUtils.degToRad(value);
     if (rotation !== this.rotationInternal) {
       this.rotationInternal = rotation;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -147,15 +151,20 @@ export class UIMicro {
     assertValidNumber(value, "UIMicro.rotation");
     if (value !== this.rotationInternal) {
       this.rotationInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
   public set anchorMode(value: UIMicroAnchorMode) {
     if (value !== this.anchorModeInternal) {
       this.anchorModeInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
+  }
+
+  /** @internal */
+  public setDirtyFalse(): void {
+    this.dirtyInternal = false;
   }
 
   /** Resets all transformations to defaults. */
@@ -176,7 +185,7 @@ export class UIMicro {
       this.scaleXInternal = MICRO_DEFAULT_SCALE;
       this.scaleYInternal = MICRO_DEFAULT_SCALE;
       this.rotationInternal = MICRO_DEFAULT_ROTATION;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -200,7 +209,7 @@ export class UIMicro {
       this.scaleYInternal = value.scaleYInternal;
       this.rotationInternal = value.rotationInternal;
       this.anchorModeInternal = value.anchorModeInternal;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 }

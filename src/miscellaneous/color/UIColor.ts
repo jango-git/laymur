@@ -1,6 +1,6 @@
 import { Color, Vector4 } from "three";
 import { LinearToSRGB, SRGBToLinear } from "three/src/math/ColorManagement.js";
-import type { UIColorName } from "./UIColor.Internal";
+import type { UIColorConfig, UIColorName } from "./UIColor.Internal";
 import { COLORS } from "./UIColor.Internal";
 
 /**
@@ -8,14 +8,6 @@ import { COLORS } from "./UIColor.Internal";
  * All components are normalized (0-1).
  */
 export class UIColor {
-  /**
-   * Indicates whether the color has been modified since last check.
-   * Set to `true` when any color component changes.
-   * Must be reset to `false` externally by the color owner.
-   * @internal
-   */
-  public dirty = false;
-
   private rInternal = 1;
   private gInternal = 1;
   private bInternal = 1;
@@ -24,6 +16,8 @@ export class UIColor {
   private hInternal = 0;
   private sInternal = 0;
   private lInternal = 1;
+
+  private dirtyInternal = false;
 
   /**
    * Indicates that RGB values need to be recalculated from HSL.
@@ -76,6 +70,11 @@ export class UIColor {
    */
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(uiColor?: UIColor);
+  /**
+   * @param uiColorConfig - UIColorConfig object
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  constructor(uiColorConfig?: UIColorConfig);
   constructor(...args: unknown[]) {
     if (args.length >= 3 && typeof args[0] === "number") {
       const [r, g, b, a = 1] = args as number[];
@@ -339,12 +338,22 @@ export class UIColor {
     return this.lInternal;
   }
 
+  /**
+   * Indicates whether the color has been modified since last check.
+   * Set to `true` when any color component changes.
+   * Must be reset to `false` externally by the color owner.
+   * @internal
+   */
+  public get dirty(): boolean {
+    return this.dirtyInternal;
+  }
+
   public set r(value: number) {
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.rInternal) {
       this.rInternal = value;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -353,7 +362,7 @@ export class UIColor {
     if (value !== this.gInternal) {
       this.gInternal = value;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -362,14 +371,14 @@ export class UIColor {
     if (value !== this.bInternal) {
       this.bInternal = value;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
   public set a(value: number) {
     if (value !== this.aInternal) {
       this.aInternal = value;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -378,7 +387,7 @@ export class UIColor {
     if (value !== this.hInternal) {
       this.hInternal = value;
       this.rgbDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -387,7 +396,7 @@ export class UIColor {
     if (value !== this.sInternal) {
       this.sInternal = value;
       this.rgbDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
   }
 
@@ -396,8 +405,13 @@ export class UIColor {
     if (value !== this.lInternal) {
       this.lInternal = value;
       this.rgbDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
+  }
+
+  /** @internal */
+  public setDirtyFalse(): void {
+    this.dirtyInternal = false;
   }
 
   /**
@@ -426,7 +440,7 @@ export class UIColor {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
     return this;
   }
@@ -482,7 +496,7 @@ export class UIColor {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
     return this;
   }
@@ -509,7 +523,7 @@ export class UIColor {
       this.bInternal = b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
     return this;
   }
@@ -572,7 +586,7 @@ export class UIColor {
       this.lInternal = l;
       this.aInternal = a;
       this.rgbDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
     return this;
   }
@@ -624,7 +638,7 @@ export class UIColor {
       this.bInternal = sRGBB;
       this.aInternal = a;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
 
     return this;
@@ -644,7 +658,7 @@ export class UIColor {
       this.bInternal = threeColor.b;
       this.aInternal = a;
       this.hslDirty = true;
-      this.dirty = true;
+      this.dirtyInternal = true;
     }
     return this;
   }
@@ -698,7 +712,7 @@ export class UIColor {
         this.bInternal = color.bInternal;
         this.aInternal = color.aInternal;
         this.hslDirty = true;
-        this.dirty = true;
+        this.dirtyInternal = true;
       }
     } else {
       this.ensureRGBUpdatedFromHSL();
@@ -713,7 +727,7 @@ export class UIColor {
         this.bInternal = color.b;
         this.aInternal = 1;
         this.hslDirty = true;
-        this.dirty = true;
+        this.dirtyInternal = true;
       }
     }
 

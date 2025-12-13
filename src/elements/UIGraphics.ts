@@ -2,11 +2,10 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, LinearFilter } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
 import source from "../shaders/UIImage.glsl";
+import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";
 import { UIElement } from "./UIElement";
-
-const DEFAULT_CANVAS_RESOLUTION = 32;
+import type { UIGraphicsOptions } from "./UIGraphics.Internal";
 
 /**
  * UI element for drawing graphics using 2D canvas API.
@@ -31,45 +30,50 @@ export class UIGraphics extends UIElement {
    * @param layer - The UI layer that contains this graphics element
    * @param options - Configuration options for the graphics element
    */
-  constructor(layer: UILayer, options: Partial<UIElementCommonOptions> = {}) {
-    const w = options.width ?? DEFAULT_CANVAS_RESOLUTION;
-    const h = options.height ?? DEFAULT_CANVAS_RESOLUTION;
-    const color = new UIColor(options.color);
+  constructor(layer: UILayer, options?: Partial<UIGraphicsOptions>) {
+    const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
+    const h = options?.width ?? DUMMY_DEFAULT_HEIGHT;
+    const color = new UIColor(options?.color);
 
     const canvas = new OffscreenCanvas(w, h);
     const ctx = canvas.getContext("2d");
 
     if (!ctx) {
-      throw new Error("Failed to get 2D context from OffscreenCanvas");
+      throw new Error(
+        "UIGraphics.constructor: failed to get 2D context from OffscreenCanvas",
+      );
     }
 
     const texture = new CanvasTexture(canvas);
     texture.minFilter = LinearFilter;
     texture.magFilter = LinearFilter;
 
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, source, {
-      texture: texture,
-      textureTransform: texture.matrix,
-      color,
-    });
-
-    this.color = color;
-    this.mode = options.mode ?? this.mode;
+    super(
+      layer,
+      source,
+      {
+        texture: texture,
+        textureTransform: texture.matrix,
+        color,
+      },
+      options,
+    );
 
     this.canvas = canvas;
     this.ctx = ctx;
     this.texture = texture;
+    this.color = color;
   }
 
   /**
-   * Clears the canvas with optional fill color.
+   * Clears the canvas and optionally fills it with a color.
    *
-   * @param fillColor - Optional color to fill after clearing
+   * @param color - Optional color to fill the canvas after clearing
    */
-  public clear(fillColor?: UIColor): this {
+  public clear(color?: UIColor): this {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    if (fillColor !== undefined) {
-      this.ctx.fillStyle = fillColor.toCSSColor();
+    if (color !== undefined) {
+      this.ctx.fillStyle = color.toCSSColor();
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.texture.needsUpdate = true;
@@ -77,118 +81,102 @@ export class UIGraphics extends UIElement {
   }
 
   /**
-   * Draws a rectangle on the canvas.
+   * Draws a filled rectangle.
+   *
+   * @param x - X coordinate of the rectangle's top-left corner
+   * @param y - Y coordinate of the rectangle's top-left corner
+   * @param width - Width of the rectangle
+   * @param height - Height of the rectangle
+   * @param color - Fill color
    */
-  public rect(x: number, y: number, width: number, height: number): this {
-    this.ctx.rect(x, y, width, height);
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Draws a filled rectangle on the canvas.
-   */
-  public fillRect(x: number, y: number, width: number, height: number): this {
+  public drawRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: UIColor,
+  ): this {
+    this.ctx.fillStyle = color.toCSSColor();
     this.ctx.fillRect(x, y, width, height);
     this.texture.needsUpdate = true;
     return this;
   }
 
   /**
-   * Draws a stroked rectangle on the canvas.
+   * Draws a filled circle.
+   *
+   * @param x - X coordinate of the circle's center
+   * @param y - Y coordinate of the circle's center
+   * @param radius - Radius of the circle
+   * @param color - Fill color
    */
-  public strokeRect(x: number, y: number, width: number, height: number): this {
-    this.ctx.strokeRect(x, y, width, height);
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Draws a circle on the canvas.
-   */
-  public circle(x: number, y: number, radius: number): this {
+  public drawCircle(
+    x: number,
+    y: number,
+    radius: number,
+    color: UIColor,
+  ): this {
+    this.ctx.fillStyle = color.toCSSColor();
     this.ctx.beginPath();
     this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-    this.ctx.closePath();
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Begins a new path.
-   */
-  public beginPath(): this {
-    this.ctx.beginPath();
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Closes the current path.
-   */
-  public closePath(): this {
-    this.ctx.closePath();
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Fills the current path.
-   */
-  public fill(): this {
     this.ctx.fill();
     this.texture.needsUpdate = true;
     return this;
   }
 
   /**
-   * Strokes the current path.
+   * Draws an arc (partial circle).
+   *
+   * @param x - X coordinate of the arc's center
+   * @param y - Y coordinate of the arc's center
+   * @param radius - Radius of the arc
+   * @param startAngle - Start angle in radians
+   * @param endAngle - End angle in radians
+   * @param color - Fill color
    */
-  public stroke(): this {
+  public drawArc(
+    x: number,
+    y: number,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    color: UIColor,
+  ): this {
+    this.ctx.fillStyle = color.toCSSColor();
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, startAngle, endAngle);
+    this.ctx.fill();
+    this.texture.needsUpdate = true;
+    return this;
+  }
+
+  /**
+   * Draws a polyline (connected line segments).
+   *
+   * @param points - Array of points as [x, y] pairs
+   * @param color - Stroke color
+   * @param lineWidth - Width of the line (default: 1)
+   */
+  public drawPolyline(
+    points: [number, number][],
+    color: UIColor,
+    lineWidth = 1,
+  ): this {
+    if (points.length < 2) {
+      return this;
+    }
+
+    this.ctx.strokeStyle = color.toCSSColor();
+    this.ctx.lineWidth = lineWidth;
+    this.ctx.beginPath();
+    this.ctx.moveTo(points[0][0], points[0][1]);
+
+    for (let i = 1; i < points.length; i++) {
+      this.ctx.lineTo(points[i][0], points[i][1]);
+    }
+
     this.ctx.stroke();
     this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Moves the path to a point.
-   */
-  public moveTo(x: number, y: number): this {
-    this.ctx.moveTo(x, y);
-    return this;
-  }
-
-  /**
-   * Draws a line to a point.
-   */
-  public lineTo(x: number, y: number): this {
-    this.ctx.lineTo(x, y);
-    this.texture.needsUpdate = true;
-    return this;
-  }
-
-  /**
-   * Sets the fill style.
-   */
-  public setFillStyle(style: UIColor | CanvasGradient | CanvasPattern): this {
-    this.ctx.fillStyle = style instanceof UIColor ? style.toCSSColor() : style;
-    return this;
-  }
-
-  /**
-   * Sets the stroke style.
-   */
-  public setStrokeStyle(style: UIColor | CanvasGradient | CanvasPattern): this {
-    this.ctx.strokeStyle =
-      style instanceof UIColor ? style.toCSSColor() : style;
-    return this;
-  }
-
-  /**
-   * Sets the line width.
-   */
-  public setLineWidth(width: number): this {
-    this.ctx.lineWidth = width;
     return this;
   }
 
@@ -205,10 +193,8 @@ export class UIGraphics extends UIElement {
     deltaTime: number,
   ): void {
     if (this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        color: this.color,
-      });
-      this.color.dirty = false;
+      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
+      this.color.setDirtyFalse();
     }
     super.onWillRender(renderer, deltaTime);
   }

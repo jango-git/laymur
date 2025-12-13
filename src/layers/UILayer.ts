@@ -1,7 +1,8 @@
 import { Eventail } from "eventail";
 import type { WebGLRenderer } from "three";
 import type { UIPlaneElement } from "../miscellaneous/asserts";
-import { UIMode } from "../miscellaneous/UIMode";
+
+import { isUIModeVisible } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";
 import { UIPriority } from "../miscellaneous/UIPriority";
 import { UIInputWrapper } from "../wrappers/UIInputWrapper";
@@ -10,6 +11,7 @@ import { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import type { UISceneWrapperInterface } from "../wrappers/UISceneWrapper.Internal";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
 import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
+import type { UILayerMode } from "./UILayer.Internal";
 import { UILayerEvent } from "./UILayer.Internal";
 
 /**
@@ -67,7 +69,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   protected readonly inputWrapperInternal = new UIInputWrapper();
 
   /** Internal storage for the current visibility/interaction mode. */
-  protected modeInternal: UIMode;
+  protected modeInternal: UILayerMode;
 
   /** Internal storage for the current orientation state. */
   protected orientationInternal: UIOrientation;
@@ -84,7 +86,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @param w - Initial width of the layer
    * @param h - Initial height of the layer
    */
-  constructor(w: number, h: number, mode: UIMode) {
+  constructor(w: number, h: number, mode: UILayerMode) {
     super();
 
     this.sceneWrapperInternal = new UISceneWrapper(w, h);
@@ -162,7 +164,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current UIMode setting
    * @see {@link UIMode}
    */
-  public get mode(): UIMode {
+  public get mode(): UILayerMode {
     return this.modeInternal;
   }
 
@@ -180,7 +182,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @param value - The new UIMode setting
    * @see {@link UIMode}
    */
-  public set mode(value: UIMode) {
+  public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;
       this.emit(UILayerEvent.MODE_CHANGE, this.modeInternal, this);
@@ -228,10 +230,11 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @protected
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
+    this.solverWrapperInternal.dirty = false;
     this.inputWrapperInternal.dirty = false;
-    if (this.mode !== UIMode.HIDDEN) {
+
+    if (isUIModeVisible(this.mode)) {
       this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
-      this.solverWrapperInternal.dirty = false;
       this.sceneWrapperInternal.render(renderer);
     }
   }
