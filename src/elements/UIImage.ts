@@ -3,7 +3,10 @@ import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
-import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
+import {
+  UITextureEvent,
+  type UITextureConfig,
+} from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 import type { UIImageOptions } from "./UIImage.Internal";
@@ -45,8 +48,8 @@ export class UIImage extends UIElement {
     const uiTexture = new UITexture(texture);
     const textureTransform = uiTexture.calculateTransform();
 
-    options.width = options.width ?? uiTexture.originalWidth;
-    options.height = options.width ?? uiTexture.originalHeight;
+    options.width = options.width ?? uiTexture.width;
+    options.height = options.width ?? uiTexture.height;
 
     super(
       layer,
@@ -62,6 +65,19 @@ export class UIImage extends UIElement {
     this.texture = uiTexture;
     this.textureTransform = textureTransform;
     this.color = color;
+
+    this.texture.on(
+      UITextureEvent.DIMINSIONS_CHANGED,
+      this.onTextureDimensionsChanged,
+    );
+  }
+
+  public override destroy(): void {
+    this.texture.off(
+      UITextureEvent.DIMINSIONS_CHANGED,
+      this.onTextureDimensionsChanged,
+    );
+    super.destroy();
   }
 
   protected override updatePlaneTransform(): void {
@@ -75,11 +91,6 @@ export class UIImage extends UIElement {
       });
 
       this.color.setDirtyFalse();
-    }
-
-    if (this.texture.dirty) {
-      this.width = this.texture.originalWidth;
-      this.height = this.texture.originalHeight;
     }
 
     if (
@@ -104,15 +115,22 @@ export class UIImage extends UIElement {
           this.micro.scaleY,
           this.micro.rotation,
           this.micro.anchorMode,
-          this.texture.trimLeft,
-          this.texture.trimRight,
-          this.texture.trimTop,
-          this.texture.trimBottom,
+          this.texture.trim.left,
+          this.texture.trim.right,
+          this.texture.trim.top,
+          this.texture.trim.bottom,
         ),
       );
-
       this.texture.setDirtyFalse();
       this.micro.setDirtyFalse();
     }
   }
+
+  private readonly onTextureDimensionsChanged = (
+    width: number,
+    height: number,
+  ): void => {
+    this.width = width;
+    this.height = height;
+  };
 }

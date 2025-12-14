@@ -52,8 +52,8 @@ export class UINineSlice extends UIElement {
     const uiTexture = new UITexture(texture);
     const textureTransform = uiTexture.calculateTransform();
 
-    options.width = options.width ?? uiTexture.originalWidth;
-    options.height = options.width ?? uiTexture.originalHeight;
+    options.width = options.width ?? uiTexture.width;
+    options.height = options.width ?? uiTexture.height;
 
     const sliceBorders = new UIPadding(
       options.sliceBorders ?? NINE_DEFAULT_BORDER,
@@ -65,13 +65,18 @@ export class UINineSlice extends UIElement {
     const sliceBordersVector = sliceBorders.toVector4();
     const sliceRegionsVector = sliceRegions.toVector4();
 
-    super(layer, source, {
-      texture: uiTexture.texture,
-      textureTransform: textureTransform,
-      color,
-      sliceBorders: sliceBordersVector,
-      sliceRegions: sliceRegionsVector,
-    });
+    super(
+      layer,
+      source,
+      {
+        texture: uiTexture.texture,
+        textureTransform: textureTransform,
+        color,
+        sliceBorders: sliceBordersVector,
+        sliceRegions: sliceRegionsVector,
+      },
+      options,
+    );
 
     this.texture = uiTexture;
     this.textureTransform = textureTransform;

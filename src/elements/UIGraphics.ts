@@ -20,7 +20,7 @@ export class UIGraphics extends UIElement {
   /** OffscreenCanvas for rendering graphics */
   private readonly canvas: OffscreenCanvas;
   /** 2D rendering context */
-  private readonly ctx: OffscreenCanvasRenderingContext2D;
+  private readonly context: OffscreenCanvasRenderingContext2D;
   /** Three.js texture created from the canvas */
   private readonly texture: CanvasTexture;
 
@@ -36,9 +36,9 @@ export class UIGraphics extends UIElement {
     const color = new UIColor(options?.color);
 
     const canvas = new OffscreenCanvas(w, h);
-    const ctx = canvas.getContext("2d");
+    const context = canvas.getContext("2d");
 
-    if (!ctx) {
+    if (!context) {
       throw new Error(
         "UIGraphics.constructor: failed to get 2D context from OffscreenCanvas",
       );
@@ -60,7 +60,7 @@ export class UIGraphics extends UIElement {
     );
 
     this.canvas = canvas;
-    this.ctx = ctx;
+    this.context = context;
     this.texture = texture;
     this.color = color;
   }
@@ -71,10 +71,10 @@ export class UIGraphics extends UIElement {
    * @param color - Optional color to fill the canvas after clearing
    */
   public clear(color?: UIColor): this {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (color !== undefined) {
-      this.ctx.fillStyle = color.toCSSColor();
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.context.fillStyle = color.toCSSColor();
+      this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.texture.needsUpdate = true;
     return this;
@@ -96,8 +96,8 @@ export class UIGraphics extends UIElement {
     height: number,
     color: UIColor,
   ): this {
-    this.ctx.fillStyle = color.toCSSColor();
-    this.ctx.fillRect(x, y, width, height);
+    this.context.fillStyle = color.toCSSColor();
+    this.context.fillRect(x, y, width, height);
     this.texture.needsUpdate = true;
     return this;
   }
@@ -116,10 +116,10 @@ export class UIGraphics extends UIElement {
     radius: number,
     color: UIColor,
   ): this {
-    this.ctx.fillStyle = color.toCSSColor();
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-    this.ctx.fill();
+    this.context.fillStyle = color.toCSSColor();
+    this.context.beginPath();
+    this.context.arc(x, y, radius, 0, Math.PI * 2);
+    this.context.fill();
     this.texture.needsUpdate = true;
     return this;
   }
@@ -142,10 +142,10 @@ export class UIGraphics extends UIElement {
     endAngle: number,
     color: UIColor,
   ): this {
-    this.ctx.fillStyle = color.toCSSColor();
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, startAngle, endAngle);
-    this.ctx.fill();
+    this.context.fillStyle = color.toCSSColor();
+    this.context.beginPath();
+    this.context.arc(x, y, radius, startAngle, endAngle);
+    this.context.fill();
     this.texture.needsUpdate = true;
     return this;
   }
@@ -166,16 +166,16 @@ export class UIGraphics extends UIElement {
       return this;
     }
 
-    this.ctx.strokeStyle = color.toCSSColor();
-    this.ctx.lineWidth = lineWidth;
-    this.ctx.beginPath();
-    this.ctx.moveTo(points[0][0], points[0][1]);
+    this.context.strokeStyle = color.toCSSColor();
+    this.context.lineWidth = lineWidth;
+    this.context.beginPath();
+    this.context.moveTo(points[0][0], points[0][1]);
 
     for (let i = 1; i < points.length; i++) {
-      this.ctx.lineTo(points[i][0], points[i][1]);
+      this.context.lineTo(points[i][0], points[i][1]);
     }
 
-    this.ctx.stroke();
+    this.context.stroke();
     this.texture.needsUpdate = true;
     return this;
   }

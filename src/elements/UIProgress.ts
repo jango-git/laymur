@@ -1,11 +1,17 @@
-import type { Matrix3, Texture, WebGLRenderer } from "three";
+import type { Matrix3, Texture } from "three";
 import type { UILayer } from "../layers/UILayer";
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UITexture } from "../miscellaneous/texture/UITexture";
+import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { UITexture } from "../miscellaneous/texture/UITexture";
+import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIProgress.glsl";
 import { UIElement } from "./UIElement";
-import type { UIProgressOptions } from "./UIProgress.Internal";
+import {
+  PROGRESS_DEFAULT_VALUE,
+  simplifyGLSLSource,
+  UIProgressMaskFunction,
+  type UIProgressOptions,
+} from "./UIProgress.Internal";
 
 /**
  * Progress bar UI element with customizable fill direction and appearance.
@@ -40,81 +46,41 @@ export class UIProgress extends UIElement {
     texture: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
-    const w = options.width ?? texture.image.width;
-    const h = options.height ?? texture.image.height;
-
-    assertValidPositiveNumber(
-      w,
-      "UIProgress.constructor.foregroundTexture.width",
-    );
-    assertValidPositiveNumber(
-      h,
-      "UIProgress.constructor.foregroundTexture.height",
-    );
-
-    if (options.backgroundTexture) {
-      assertValidPositiveNumber(
-        options.backgroundTexture.image.width,
-        "UIProgress.constructor.backgroundTexture.width",
-      );
-      assertValidPositiveNumber(
-        options.backgroundTexture.image.height,
-        "UIProgress.constructor.backgroundTexture.height",
-      );
-    }
-
     const color = new UIColor(options.color);
-    const foregroundColor = new UIColor(options.foregroundColor);
-    const backgroundColor = new UIColor(options.backgroundColor);
-    const progress = options.progress ?? 1;
+    const uiTexture = new UITexture(texture);
+    const textureTransform = uiTexture.calculateTransform();
+
+    options.width = options.width ?? uiTexture.width;
+    options.height = options.width ?? uiTexture.height;
+    const progress = options.progress ?? PROGRESS_DEFAULT_VALUE;
     const inverseDirection = options.inverseDirection ?? false;
 
     const maskFunction =
       options.maskFunction ?? UIProgressMaskFunction.HORIZONTAL;
-    const minifiedSource = (maskFunction + source)
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\/\/[^\n]*/g, "")
-      .replace(/\s*([{}(),=;+\-*/<>])\s*/g, "$1")
-      .replace(/\s+/g, " ")
-      .trim();
+    const simplifiedSource = simplifyGLSLSource(maskFunction + source);
 
-    super(layer, options.x ?? 0, options.y ?? 0, w, h, minifiedSource, {
-      foregroundTexture: texture,
-      backgroundTexture: options.backgroundTexture ?? EMPTY_TEXTURE,
-      color,
-      foregroundColor,
-      backgroundColor,
-      progress,
-      direction: inverseDirection ? -1 : 1,
-    });
+    super(
+      layer,
+      simplifiedSource,
+      {
+        texture: uiTexture.texture,
+        textureTransform: textureTransform,
+        color,
+      },
+      options,
+    );
 
-    this.foregroundTextureInternal = texture;
-    this.backgroundTextureInternal = options.backgroundTexture;
-
+    this.texture = uiTexture;
+    this.textureTransform = textureTransform;
     this.color = color;
-    this.foregroundColor = foregroundColor;
-    this.backgroundColor = backgroundColor;
 
     this.progressInternal = progress;
     this.inverseDirectionInternal = inverseDirection;
 
-    this.mode = options.mode ?? this.mode;
-  }
-
-  /**
-   * Gets the foreground (fill) texture.
-   * @returns The foreground texture
-   */
-  public get foregroundTexture(): Texture {
-    return this.foregroundTextureInternal;
-  }
-
-  /**
-   * Gets the background texture.
-   * @returns The background texture, or undefined if none is set
-   */
-  public get backgroundTexture(): Texture | undefined {
-    return this.backgroundTextureInternal;
+    this.texture.on(
+      UITextureEvent.DIMINSIONS_CHANGED,
+      this.onTextureDimensionsChanged,
+    );
   }
 
   /**
@@ -131,53 +97,6 @@ export class UIProgress extends UIElement {
    */
   public get inverseDirection(): boolean {
     return this.inverseDirectionInternal;
-  }
-
-  /**
-   * Sets the foreground (fill) texture.
-   *
-   * When setting a new texture, the progress bar will automatically resize
-   * to match the new texture's dimensions.
-   *
-   * @param value - The new foreground texture
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
-   */
-  public set foregroundTexture(value: Texture) {
-    if (this.foregroundTexture !== value) {
-      const w = value.image.width;
-      const h = value.image.height;
-
-      assertValidPositiveNumber(w, "UIProgress.foregroundTexture.width");
-      assertValidPositiveNumber(h, "UIProgress.foregroundTexture.height");
-
-      this.solverWrapper.suggestVariableValue(this.wVariable, w);
-      this.solverWrapper.suggestVariableValue(this.hVariable, h);
-
-      this.foregroundTextureInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
-   * Sets the background texture.
-   * @param value - The background texture, or undefined to remove background
-   */
-  public set backgroundTexture(value: Texture | undefined) {
-    if (this.backgroundTexture !== value) {
-      if (value !== undefined) {
-        assertValidPositiveNumber(
-          value.image.width,
-          "UIProgress.backgroundTexture.width",
-        );
-        assertValidPositiveNumber(
-          value.image.height,
-          "UIProgress.backgroundTexture.height",
-        );
-      }
-
-      this.backgroundTextureInternal = value;
-      this.dirty = true;
-    }
   }
 
   /**
@@ -202,31 +121,61 @@ export class UIProgress extends UIElement {
     }
   }
 
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
-    if (
-      this.color.dirty ||
-      this.backgroundColor.dirty ||
-      this.foregroundColor.dirty ||
-      this.dirty
-    ) {
+  protected override updatePlaneTransform(): void {
+    if (this.texture.dirty || this.color.dirty || this.dirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
-        foregroundTexture: this.foregroundTextureInternal,
-        backgroundTexture: this.backgroundTextureInternal ?? EMPTY_TEXTURE,
+        texture: this.texture.texture,
+        textureTransform: this.texture.calculateTransform(
+          this.textureTransform,
+        ),
         color: this.color,
-        foregroundColor: this.foregroundColor,
-        backgroundColor: this.backgroundColor,
         progress: this.progressInternal,
-        direction: this.inverseDirection ? -1 : 1,
+        direction: this.inverseDirectionInternal ? -1 : 1,
       });
 
-      this.color.dirty = false;
-      this.backgroundColor.dirty = false;
-      this.foregroundColor.dirty = false;
       this.dirty = false;
+      this.color.setDirtyFalse();
     }
-    super.onWillRender(renderer, deltaTime);
+
+    if (
+      this.texture.dirty ||
+      this.micro.dirty ||
+      this.inputWrapper.dirty ||
+      this.solverWrapper.dirty
+    ) {
+      this.sceneWrapper.setTransform(
+        this.planeHandler,
+        computePaddingTransformMatrix(
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+          this.zIndex,
+          this.micro.x,
+          this.micro.y,
+          this.micro.anchorX,
+          this.micro.anchorY,
+          this.micro.scaleX,
+          this.micro.scaleY,
+          this.micro.rotation,
+          this.micro.anchorMode,
+          this.texture.trim.left,
+          this.texture.trim.right,
+          this.texture.trim.top,
+          this.texture.trim.bottom,
+        ),
+      );
+
+      this.texture.setDirtyFalse();
+      this.micro.setDirtyFalse();
+    }
   }
+
+  private readonly onTextureDimensionsChanged = (
+    width: number,
+    height: number,
+  ): void => {
+    this.width = width;
+    this.height = height;
+  };
 }

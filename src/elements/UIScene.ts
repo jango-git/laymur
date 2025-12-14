@@ -10,65 +10,22 @@ import {
 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIElementCommonOptions } from "../miscellaneous/UIElementCommonOptions";
 import source from "../shaders/UIImage.glsl";
+import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";
 import { UIElement } from "./UIElement";
-
-/**
- * Update modes for controlling when the 3D scene should be re-rendered.
- */
-export enum UISceneUpdateMode {
-  /** Re-render the scene every frame. */
-  EACH_FRAME = 1,
-  /** Re-render the scene every second frame for performance. */
-  EACH_SECOND_FRAME = 2,
-  EACH_THIRD_FRAME = 3,
-  /** Re-render the scene only when properties change. */
-  PROPERTY_CHANGED = 4,
-  /** Re-render the scene only when manually requested. */
-  MANUAL = 5,
-}
-
-/** Default resolution factor for render target sizing. */
-const DEFAULT_RESOLUTION_FACTOR = 0.5;
-/** Minimum allowed resolution factor to prevent performance issues. */
-const MIN_RESOLUTION_FACTOR = 0.1;
-/** Maximum allowed resolution factor to prevent memory issues. */
-const MAX_RESOLUTION_FACTOR = 2;
-/** Default width for the scene render target in pixels. */
-const DEFAULT_WIDTH = 512;
-/** Default height for the scene render target in pixels. */
-const DEFAULT_HEIGHT = 512;
-/** Default field of view for the perspective camera in degrees. */
-const DEFAULT_CAMERA_FOV = 75;
-/** Default near clipping plane distance for the camera. */
-const DEFAULT_CAMERA_NEAR = 0.1;
-/** Default far clipping plane distance for the camera. */
-const DEFAULT_CAMERA_FAR = 100;
-/** Default update mode for scene rendering. */
-const DEFAULT_UPDATE_MODE = UISceneUpdateMode.PROPERTY_CHANGED;
-/** Default clear color for the render target. */
-const DEFAULT_CLEAR_COLOR = new UIColor(0x000000, 1);
-/** Default depth buffer usage setting. */
-const DEFAULT_USE_DEPTH = true;
-
-/**
- * Configuration options for UIScene element creation.
- */
-export interface UISceneOptions extends UIElementCommonOptions {
-  /** Three.js scene to render. */
-  scene: Scene;
-  /** Camera to use for rendering the scene. */
-  camera: Camera;
-  /** Update mode controlling when the scene is re-rendered. */
-  updateMode: UISceneUpdateMode;
-  /** Resolution factor for render target sizing (0.1 to 2.0). */
-  resolutionFactor: number;
-  /** Clear color for the render target background. */
-  clearColor: UIColor;
-  /** Whether to enable depth buffer for the render target. */
-  enableDepthBuffer: boolean;
-}
+import type { UISceneOptions } from "./UIScene.Internal";
+import {
+  SCENE_DEFAULT_CAMERA_FAR,
+  SCENE_DEFAULT_CAMERA_FOV,
+  SCENE_DEFAULT_CAMERA_NEAR,
+  SCENE_DEFAULT_CLEAR_COLOR,
+  SCENE_DEFAULT_RESOLUTION_FACTOR,
+  SCENE_DEFAULT_UPDATE_MODE,
+  SCENE_DEFAULT_USE_DEPTH,
+  SCENE_MAX_RESOLUTION_FACTOR,
+  SCENE_MIN_RESOLUTION_FACTOR,
+  UISceneUpdateMode,
+} from "./UIScene.Internal";
 
 /**
  * UI element for rendering 3D scenes to texture within the UI system.
@@ -88,21 +45,16 @@ export class UIScene extends UIElement {
   public readonly color: UIColor;
   public readonly clearColor: UIColor;
 
-  /** The WebGL render target for off-screen scene rendering. */
   private readonly renderTarget: WebGLRenderTarget;
-  /** Internal storage for the current Three.js scene. */
   private sceneInternal: Scene;
-  /** Internal storage for the current camera. */
   private cameraInternal: Camera;
-  /** Internal storage for the current update mode. */
   private updateModeInternal: UISceneUpdateMode;
-  /** Internal storage for the current resolution factor. */
   private resolutionFactorInternal: number;
-  /** Frame alternation boolean for EACH_SECOND_FRAME update mode. */
-  private frameIndex = 0;
-  /** Flag indicating if properties have changed requiring a re-render. */
-  private dirty = false;
-  private renderRequired = false;
+  private evenFrame = true;
+
+  private updateRequired = false;
+  private resolutionFactorDirty = false;
+  private propertyDirty = false;
 
   /**
    * Creates a new UIScene instance with 3D scene rendering capabilities.
@@ -117,19 +69,19 @@ export class UIScene extends UIElement {
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     const resolutionFactor =
-      options.resolutionFactor ?? DEFAULT_RESOLUTION_FACTOR;
+      options.resolutionFactor ?? SCENE_DEFAULT_RESOLUTION_FACTOR;
 
     if (
-      resolutionFactor < MIN_RESOLUTION_FACTOR ||
-      resolutionFactor > MAX_RESOLUTION_FACTOR
+      resolutionFactor < SCENE_MIN_RESOLUTION_FACTOR ||
+      resolutionFactor > SCENE_MAX_RESOLUTION_FACTOR
     ) {
       throw new Error(
-        `Invalid resolution factor: ${resolutionFactor}. Must be between ${MIN_RESOLUTION_FACTOR} and ${MAX_RESOLUTION_FACTOR}.`,
+        `UIScene.constructor.resolutionFactor: must be between ${SCENE_MIN_RESOLUTION_FACTOR} and ${SCENE_MAX_RESOLUTION_FACTOR}.`,
       );
     }
 
-    const w = options.width ?? DEFAULT_WIDTH;
-    const h = options.height ?? DEFAULT_HEIGHT;
+    const w = options.width ?? DUMMY_DEFAULT_WIDTH;
+    const h = options.height ?? DUMMY_DEFAULT_HEIGHT;
 
     const renderTarget = new WebGLRenderTarget(
       w * resolutionFactor,
@@ -139,38 +91,44 @@ export class UIScene extends UIElement {
         minFilter: LinearFilter,
         magFilter: LinearFilter,
         type: UnsignedByteType,
-        depthBuffer: options.enableDepthBuffer ?? DEFAULT_USE_DEPTH,
+        depthBuffer: options.enableDepthBuffer ?? SCENE_DEFAULT_USE_DEPTH,
         stencilBuffer: false,
       },
     );
 
     const color = new UIColor(options.color);
 
-    super(layer, 0, 0, w, h, source, {
-      texture: renderTarget.texture,
-      textureTransform: new Matrix3(),
-      color,
-    });
+    super(
+      layer,
+      source,
+      {
+        texture: renderTarget.texture,
+        textureTransform: new Matrix3(),
+        color,
+      },
+      options,
+    );
 
     this.color = color;
-    this.clearColor = new UIColor(options.clearColor ?? DEFAULT_CLEAR_COLOR);
+    this.clearColor = new UIColor(
+      options.clearColor ?? SCENE_DEFAULT_CLEAR_COLOR,
+    );
 
     this.renderTarget = renderTarget;
     this.sceneInternal = options.scene ?? new Scene();
+
     this.cameraInternal =
       options.camera ??
       new PerspectiveCamera(
-        DEFAULT_CAMERA_FOV,
+        SCENE_DEFAULT_CAMERA_FOV,
         w / h,
-        DEFAULT_CAMERA_NEAR,
-        DEFAULT_CAMERA_FAR,
+        SCENE_DEFAULT_CAMERA_NEAR,
+        SCENE_DEFAULT_CAMERA_FAR,
       );
 
     this.resolutionFactorInternal = resolutionFactor;
-    this.updateModeInternal = options.updateMode ?? DEFAULT_UPDATE_MODE;
-
-    this.dirty = options.updateMode === UISceneUpdateMode.PROPERTY_CHANGED;
-    this.mode = options.mode ?? this.mode;
+    this.updateModeInternal = options.updateMode ?? SCENE_DEFAULT_UPDATE_MODE;
+    this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
   }
 
   /**
@@ -212,7 +170,7 @@ export class UIScene extends UIElement {
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
       this.sceneInternal = value;
-      this.dirty = true;
+      this.propertyDirty = true;
     }
   }
 
@@ -223,7 +181,7 @@ export class UIScene extends UIElement {
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
       this.cameraInternal = value;
-      this.dirty = true;
+      this.propertyDirty = true;
     }
   }
 
@@ -234,7 +192,7 @@ export class UIScene extends UIElement {
   public set updateMode(value: UISceneUpdateMode) {
     if (this.updateModeInternal !== value) {
       this.updateModeInternal = value;
-      this.dirty = true;
+      this.propertyDirty = true;
     }
   }
 
@@ -245,11 +203,7 @@ export class UIScene extends UIElement {
   public set resolutionFactor(value: number) {
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
-      this.renderTarget.setSize(
-        this.width * this.resolutionFactorInternal,
-        this.height * this.resolutionFactorInternal,
-      );
-      this.dirty = true;
+      this.resolutionFactorDirty = true;
     }
   }
 
@@ -271,8 +225,8 @@ export class UIScene extends UIElement {
    * This method is useful when the update mode is set to MANUAL and you
    * want to trigger a scene re-render without changing any properties.
    */
-  public requestRender(): void {
-    this.renderRequired = true;
+  public requestUpdate(): void {
+    this.updateRequired = true;
   }
 
   /**
@@ -285,32 +239,42 @@ export class UIScene extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    this.frameIndex += 1;
+    this.evenFrame = !this.evenFrame;
 
     if (
+      this.updateRequired ||
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
-      (this.updateModeInternal === UISceneUpdateMode.EACH_SECOND_FRAME &&
-        this.frameIndex % 2 === 0) ||
-      (this.updateModeInternal === UISceneUpdateMode.EACH_THIRD_FRAME &&
-        this.frameIndex % 3 === 0) ||
-      (this.updateModeInternal === UISceneUpdateMode.PROPERTY_CHANGED &&
-        this.dirty) ||
-      (this.updateModeInternal === UISceneUpdateMode.MANUAL &&
-        this.renderRequired)
+      (this.updateModeInternal === UISceneUpdateMode.EVERY_SECOND_FRAME &&
+        this.evenFrame) ||
+      (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE &&
+        this.propertyDirty) ||
+      this.color.dirty ||
+      this.clearColor.dirty ||
+      (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
+        (this.resolutionFactorDirty || this.solverWrapper.dirty))
     ) {
-      this.dirty = false;
-      this.renderRequired = false;
-
-      if (this.solverWrapper.dirty) {
+      if (this.resolutionFactorDirty || this.solverWrapper.dirty) {
         this.renderTarget.setSize(
           this.width * this.resolutionFactorInternal,
           this.height * this.resolutionFactorInternal,
         );
+        this.resolutionFactorDirty = false;
       }
+
+      if (this.color.dirty) {
+        this.sceneWrapper.setProperties(this.planeHandler, {
+          color: this.color,
+        });
+        this.color.setDirtyFalse();
+      }
+
       renderer.setClearColor(this.clearColor.getHexRGB(), this.clearColor.a);
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
+
+      this.propertyDirty = false;
+      this.updateRequired = false;
     }
     super.onWillRender(renderer, deltaTime);
   }

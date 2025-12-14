@@ -5,6 +5,10 @@ export const TEXTURE_DEFAULT_TEXTURE = new Texture();
 export const TEXTURE_DEFAULT_ROTATED = false;
 export const TEXTURE_DEFAULT_SCALE = 1;
 
+export enum UITextureEvent {
+  DIMINSIONS_CHANGED = 0,
+}
+
 export interface UITextureTrim {
   left: number;
   right: number;

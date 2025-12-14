@@ -1,95 +1,31 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
-import { type UILayer } from "../layers/UILayer";
+import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import type { UIMode } from "../miscellaneous/UIMode";
-import { resolvePadding, type UIPadding } from "../miscellaneous/UIPadding";
+import { UIPadding } from "../miscellaneous/padding/UIPadding";
+import { UITextSpan } from "../miscellaneous/text-span/UITextSpan";
+import { UITextStyle } from "../miscellaneous/text-style/UITextStyle";
 import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
-import {
-  calculateTextContentParameters,
-  renderTextLines,
-} from "../miscellaneous/UIText.Tools";
-import { type UITextStyle } from "../miscellaneous/UITextStyle";
+
+import { calculateTextContentParameters } from "../miscellaneous/UIText.Measuring";
+import { renderTextLines } from "../miscellaneous/UIText.Rendering";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
+import { TEXT_DEFAULT_WIDTH, type UITextOptions } from "./UIText.Internal";
 
-/** Default maximum width for text elements in pixels. */
-const DEFAULT_MAX_WIDTH = 1024;
-
-/**
- * Configuration options for UIText element creation.
- */
-export interface UITextOptions {
-  /** X-coordinate of the text element. */
-  x: number;
-  /** Y-coordinate of the text element. */
-  y: number;
-  /** Color tint applied to the text. */
-  color: UIColor;
-  /** Maximum width in pixels before text wrapping occurs. */
-  maxWidth: number;
-  /** Padding configuration for text content. */
-  padding: Partial<UIPadding>;
-  /** Common style properties applied to all text content. */
-  commonStyle: Partial<UITextStyle>;
-  /** Default UIMode */
-  mode: UIMode;
-}
-
-/**
- * UI element for rendering dynamic text with canvas-based rendering.
- *
- * UIText is a concrete implementation of UIElement that renders text content
- * using HTML5 Canvas and displays it as a texture. It supports rich text
- * formatting, automatic text wrapping, padding, and dynamic resizing based
- * on content. The text is rendered to a canvas texture which is then applied
- * to a Three.js mesh for display in the 3D scene.
- *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link UITextContent} - Text content structure
- * @see {@link UITextStyle} - Text styling options
- * @see {@link UIPadding} - Padding configuration
- */
 export class UIText extends UIElement {
-  private readonly color: UIColor;
+  public readonly color: UIColor;
+  public readonly padding: UIPadding;
+  public readonly commonStyle: UITextStyle;
 
-  /** The HTML canvas element used for text rendering. */
   private readonly canvas: OffscreenCanvas;
-
-  /** The 2D rendering context for drawing text on the canvas. */
   private readonly context: OffscreenCanvasRenderingContext2D;
-
-  /** The canvas texture containing the rendered text. */
   private texture: CanvasTexture;
-  /** Internal storage for the current text content. */
-  private contentInternal: UITextContent;
+  private contentInternal: UITextSpan[] = [];
 
-  /** Internal storage for the maximum width before text wrapping. */
-  private maxWidthInternal: number;
-
-  /** Internal storage for the current padding configuration. */
-  private paddingInternal: UIPadding;
-
-  /** Internal storage for the common text style properties. */
-  private commonStyleInternal: Partial<UITextStyle>;
-
-  /** Target aspect ratio for the text element based on content. */
   private targetAspectRatio = 1;
-
   private dirty = false;
 
-  /**
-   * Creates a new UIText instance with dynamic text rendering.
-   *
-   * The text element will automatically size itself based on the content
-   * and specified options. A canvas is created for rendering the text,
-   * which is then used as a texture for the 3D mesh.
-   *
-   * @param layer - The UI layer that contains this text element
-   * @param content - The text content to display
-   * @param options - Configuration options for text rendering
-   * @throws Will throw an error if canvas context creation fails
-   */
   constructor(
     layer: UILayer,
     content: UITextContent,
@@ -105,57 +41,30 @@ export class UIText extends UIElement {
     const texture = new CanvasTexture(canvas);
     const color = new UIColor(options.color);
 
-    super(layer, options.x ?? 0, options.y ?? 0, 2, 2, source, {
+    options.width = options.width ?? TEXT_DEFAULT_WIDTH;
+
+    super(layer, source, {
       texture: texture,
       textureTransform: new Matrix3(),
       color,
     });
 
     this.color = color;
-    this.mode = options.mode ?? this.mode;
+    this.padding = new UIPadding(options.padding);
+    this.commonStyle = new UITextStyle(options.commonStyle);
 
     this.canvas = canvas;
     this.context = context;
     this.texture = texture;
-
-    this.contentInternal = content;
-    this.maxWidthInternal = options.maxWidth ?? DEFAULT_MAX_WIDTH;
-    this.paddingInternal = resolvePadding(options.padding);
-    this.commonStyleInternal = options.commonStyle ?? {};
-
-    this.rebuildText();
+    this.content = content;
   }
 
   /**
    * Gets the current text content being displayed.
    * @returns The current text content structure
    */
-  public get content(): UITextContent {
+  public get content(): UITextSpan[] {
     return this.contentInternal;
-  }
-
-  /**
-   * Gets the maximum width before text wrapping occurs.
-   * @returns The maximum width in pixels
-   */
-  public get maxWidth(): number {
-    return this.maxWidthInternal;
-  }
-
-  /**
-   * Gets the current padding configuration.
-   * @returns The padding configuration for all sides
-   */
-  public get padding(): UIPadding {
-    return this.paddingInternal;
-  }
-
-  /**
-   * Gets the common style properties applied to the text.
-   * @returns The partial text style configuration
-   */
-  public get commonStyle(): Partial<UITextStyle> {
-    return this.commonStyleInternal;
   }
 
   /**
@@ -164,40 +73,27 @@ export class UIText extends UIElement {
    */
   public set content(value: UITextContent) {
     if (this.contentInternal !== value) {
-      this.contentInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
-   * Sets the maximum width before text wrapping and triggers a rebuild.
-   * @param value - The new maximum width in pixels
-   */
-  public set maxWidth(value: number) {
-    if (this.maxWidthInternal !== value) {
-      this.maxWidthInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
-   * Sets new padding configuration and triggers a rebuild.
-   * @param value - The new padding configuration
-   */
-  public set padding(value: UIPadding) {
-    if (this.paddingInternal !== value) {
-      this.paddingInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
-   * Sets new common style properties and triggers a rebuild.
-   * @param value - The new partial text style configuration
-   */
-  public set commonStyle(value: Partial<UITextStyle>) {
-    if (this.commonStyleInternal !== value) {
-      this.commonStyleInternal = value;
+      if (typeof value === "string") {
+        this.contentInternal = [
+          new UITextSpan({ text: value, style: new UITextStyle() }),
+        ];
+      } else if (Array.isArray(value)) {
+        this.contentInternal = value.map((span) =>
+          typeof span === "string"
+            ? new UITextSpan({ text: span, style: new UITextStyle() })
+            : new UITextSpan({
+                text: span.text,
+                style: new UITextStyle(span.style),
+              }),
+        );
+      } else {
+        this.contentInternal = [
+          new UITextSpan({
+            text: value.text,
+            style: new UITextStyle(value.style),
+          }),
+        ];
+      }
       this.dirty = true;
     }
   }
@@ -224,53 +120,36 @@ export class UIText extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    if (this.solverWrapper.dirty) {
-      this.height = this.width / this.targetAspectRatio;
+    if (this.color.dirty) {
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        color: this.color,
+      });
+      this.color.setDirtyFalse();
     }
 
-    if (this.dirty || this.solverWrapper.dirty) {
-      this.rebuildText();
+    const aspectRatio = this.width / this.height;
+    if (aspectRatio !== this.targetAspectRatio || this.dirty) {
+      const { lines } = calculateTextContentParameters(
+        this.context,
+        this.content,
+        this.commonStyle,
+        this.width - this.padding.left - this.padding.right,
+      );
+
+      this.canvas.width = Math.max(this.width, 2);
+      this.canvas.height = Math.max(this.height, 2);
+
+      renderTextLines(this.padding.top, this.padding.left, lines, this.context);
+
+      this.texture.dispose();
+      this.texture = new CanvasTexture(this.canvas);
+      this.texture.needsUpdate = true;
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        texture: this.texture,
+      });
+
+      this.targetAspectRatio = aspectRatio;
     }
     super.onWillRender(renderer, deltaTime);
-  }
-
-  /**
-   * Rebuilds the text canvas and texture based on current content and settings.
-   *
-   * This method calculates the text layout, resizes the canvas to fit the content
-   * with padding, renders the text lines to the canvas, and updates the texture.
-   * It also calculates and sets the target aspect ratio for proper display.
-   */
-  private rebuildText(): void {
-    const { lines, size } = calculateTextContentParameters(
-      this.context,
-      this.content,
-      this.maxWidthInternal,
-      this.commonStyleInternal,
-    );
-
-    this.canvas.width =
-      size.width + this.paddingInternal.left + this.paddingInternal.right;
-    this.canvas.height =
-      size.height + this.paddingInternal.top + this.paddingInternal.bottom;
-
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
-
-    this.targetAspectRatio = this.canvas.width / this.canvas.height;
-
-    renderTextLines(
-      this.paddingInternal.top,
-      this.paddingInternal.left,
-      lines,
-      this.context,
-    );
-
-    this.texture.dispose();
-    this.texture = new CanvasTexture(this.canvas);
-    this.texture.needsUpdate = true;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      texture: this.texture,
-    });
   }
 }

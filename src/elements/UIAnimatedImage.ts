@@ -4,7 +4,10 @@ import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
-import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
+import {
+  UITextureEvent,
+  type UITextureConfig,
+} from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
 import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
@@ -61,8 +64,8 @@ export class UIAnimatedImage extends UIElement {
     );
 
     const frame = uiTextures[0];
-    options.width = options.width ?? frame.originalWidth;
-    options.height = options.width ?? frame.originalHeight;
+    options.width = options.width ?? frame.width;
+    options.height = options.width ?? frame.height;
 
     const textureTransform = frame.calculateTransform();
 
@@ -83,6 +86,8 @@ export class UIAnimatedImage extends UIElement {
       options.frameRate ?? ANIMATED_IMAGE_DEFAULT_FRAME_RATE;
     this.loopInternal = options.loop ?? ANIMATED_IMAGE_DEFAULT_LOOP;
     this.color = color;
+
+    this.subscribeSequenceEvents();
   }
 
   public get sequence(): readonly UITexture[] {
@@ -115,6 +120,7 @@ export class UIAnimatedImage extends UIElement {
 
   public set sequence(sequence: UITextureConfig[]) {
     this.stop();
+    this.unsubscribeSequenceEvents();
 
     const newLength = sequence.length;
     const currentLength = this.sequenceInternal.length;
@@ -130,6 +136,8 @@ export class UIAnimatedImage extends UIElement {
         this.sequenceInternal.push(new UITexture(sequence[i]));
       }
     }
+
+    this.subscribeSequenceEvents();
   }
 
   /**
@@ -147,6 +155,11 @@ export class UIAnimatedImage extends UIElement {
    */
   public set loop(value: boolean) {
     this.loopInternal = value;
+  }
+
+  public override destroy(): void {
+    this.unsubscribeSequenceEvents();
+    super.destroy();
   }
 
   /**
@@ -227,11 +240,6 @@ export class UIAnimatedImage extends UIElement {
       this.color.setDirtyFalse();
     }
 
-    if (frame.dirty) {
-      this.width = frame.originalWidth;
-      this.height = frame.originalHeight;
-    }
-
     if (
       frame.dirty ||
       this.currentFrameIndexDirty ||
@@ -255,16 +263,45 @@ export class UIAnimatedImage extends UIElement {
           this.micro.scaleY,
           this.micro.rotation,
           this.micro.anchorMode,
-          frame.trimLeft,
-          frame.trimRight,
-          frame.trimTop,
-          frame.trimBottom,
+          frame.trim.left,
+          frame.trim.right,
+          frame.trim.top,
+          frame.trim.bottom,
         ),
       );
 
       frame.setDirtyFalse();
       this.currentFrameIndexDirty = false;
       this.micro.setDirtyFalse();
+    }
+  }
+
+  private readonly onTextureDimensionsChanged = (
+    width: number,
+    height: number,
+    texture: UITexture,
+  ): void => {
+    if (this.sequenceInternal[this.sequenceFrameIndex] === texture) {
+      this.width = width;
+      this.height = height;
+    }
+  };
+
+  private subscribeSequenceEvents(): void {
+    for (const frame of this.sequenceInternal) {
+      frame.on(
+        UITextureEvent.DIMINSIONS_CHANGED,
+        this.onTextureDimensionsChanged,
+      );
+    }
+  }
+
+  private unsubscribeSequenceEvents(): void {
+    for (const frame of this.sequenceInternal) {
+      frame.off(
+        UITextureEvent.DIMINSIONS_CHANGED,
+        this.onTextureDimensionsChanged,
+      );
     }
   }
 }

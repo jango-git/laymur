@@ -1,6 +1,8 @@
 import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
 import type { UIElementOptions } from "./UIElement.Internal";
 
+export const PROGRESS_DEFAULT_VALUE = 1;
+
 /**
  * Predefined mask functions that control how the progress bar fills.
  * Each function defines a different fill pattern using GLSL shader code.
@@ -53,4 +55,13 @@ export interface UIProgressOptions extends UIElementOptions {
   progress: number;
   /** Whether to fill in reverse direction (true for reverse, false for normal) */
   inverseDirection: boolean;
+}
+
+export function simplifyGLSLSource(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "")
+    .replace(/\s*([{}(),=;+\-*/<>])\s*/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
 }
