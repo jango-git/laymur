@@ -49,7 +49,7 @@ export class UIImage extends UIElement {
     const textureTransform = uiTexture.calculateTransform();
 
     options.width = options.width ?? uiTexture.width;
-    options.height = options.width ?? uiTexture.height;
+    options.height = options.height ?? uiTexture.height;
 
     super(
       layer,

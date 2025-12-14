@@ -82,7 +82,7 @@ export class UIColor {
       this.gInternal = g;
       this.bInternal = b;
       this.aInternal = a;
-    } else if (args.length >= 1) {
+    } else if (args.length >= 1 && args[0] !== undefined) {
       const [firstArgument, a = 1] = args;
       if (typeof firstArgument === "string") {
         if (firstArgument.startsWith("#")) {
@@ -101,8 +101,8 @@ export class UIColor {
         this.gInternal = firstArgument.g;
         this.bInternal = firstArgument.b;
         this.aInternal = a as number;
-      } else {
-        this.setHexRGB(firstArgument as number, a as number);
+      } else if (typeof firstArgument === "number") {
+        this.setHexRGB(firstArgument, a as number);
       }
     }
   }
