@@ -60,6 +60,11 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
       this.catchPointerUp,
       DUMMY_DEFAULT_Z_INDEX,
     );
+
+    this.inputWrapper.setActive(
+      this.catcherHandler,
+      isUIModeInteractive(this.modeInternal),
+    );
   }
 
   public get width(): number {
@@ -179,8 +184,8 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     assertValidNumber(identifier, "UIDummy.handleInputEvent.identifier");
 
     const isPointerInside = this.interactionArea.contains(
-      MathUtils.lerp(this.x, this.oppositeX, x),
-      MathUtils.lerp(this.y, this.oppositeY, x),
+      MathUtils.mapLinear(x, this.x, this.oppositeX, 0, 1),
+      MathUtils.mapLinear(y, this.y, this.oppositeY, 0, 1),
     );
 
     if (isPointerInside) {
