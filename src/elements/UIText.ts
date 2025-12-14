@@ -23,8 +23,10 @@ export class UIText extends UIElement {
   private texture: CanvasTexture;
   private contentInternal: UITextSpan[] = [];
 
-  private targetAspectRatio = 1;
-  private dirty = false;
+  private contentDirty = false;
+
+  private cachedLastWidth: number;
+  private cachedLastHeight: number;
 
   constructor(
     layer: UILayer,
@@ -57,6 +59,9 @@ export class UIText extends UIElement {
     this.context = context;
     this.texture = texture;
     this.content = content;
+
+    this.cachedLastWidth = this.width;
+    this.cachedLastHeight = this.height;
   }
 
   /**
@@ -94,7 +99,7 @@ export class UIText extends UIElement {
           }),
         ];
       }
-      this.dirty = true;
+      this.contentDirty = true;
     }
   }
 
@@ -127,29 +132,89 @@ export class UIText extends UIElement {
       this.color.setDirtyFalse();
     }
 
-    const aspectRatio = this.width / this.height;
-    if (aspectRatio !== this.targetAspectRatio || this.dirty) {
-      const { lines } = calculateTextContentParameters(
+    if (
+      this.padding.dirty ||
+      this.checkDimensionsDirty() ||
+      this.checkContentDirty()
+    ) {
+      // There's some magic going on here. We initially assume that the
+      // text should fit within WIDTH - PADDING. Based on that, we split
+      // the text into lines and compute its final dimensions (without
+      // padding).
+
+      // Since we don't know which constraints the current element
+      // participates in, or whether its width depends on its height, we
+      // need to be careful. Simply setting the height could cause the
+      // element to stretch until all text fits on a single line. This can
+      // happen when the width depends on the height: changing the height
+      // may alter the width, which in turn triggers a text reflow on the
+      // next frame, and so on.
+
+      // To avoid this, we first propose the desired height + padding to
+      // the solver, and then re-propose the current width + padding. If my
+      // reasoning is correct, this should prevent the case described
+      // above - although it's possible (and likely) that I'm still missing
+      // something.
+
+      const { lines, size } = calculateTextContentParameters(
         this.context,
         this.content,
         this.commonStyle,
         this.width - this.padding.left - this.padding.right,
       );
 
-      this.canvas.width = Math.max(this.width, 2);
-      this.canvas.height = Math.max(this.height, 2);
+      this.height = size.height + this.padding.top + this.padding.bottom;
+      this.width = size.width + this.padding.left + this.padding.right;
+
+      const dimensionsChanged =
+        this.cachedLastWidth !== this.width ||
+        this.cachedLastHeight !== this.height;
+
+      if (dimensionsChanged) {
+        this.canvas.width = Math.max(this.width, 2);
+        this.canvas.height = Math.max(this.height, 2);
+      }
 
       renderTextLines(this.padding.top, this.padding.left, lines, this.context);
 
-      this.texture.dispose();
-      this.texture = new CanvasTexture(this.canvas);
-      this.texture.needsUpdate = true;
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.texture,
-      });
+      if (dimensionsChanged) {
+        this.texture.dispose();
+        this.texture = new CanvasTexture(this.canvas);
+        this.texture.needsUpdate = true;
+        this.sceneWrapper.setProperties(this.planeHandler, {
+          texture: this.texture,
+        });
+      }
 
-      this.targetAspectRatio = aspectRatio;
+      this.setDimensionsDirtyFalse();
+      this.setContentDirtyFalse();
     }
     super.onWillRender(renderer, deltaTime);
+  }
+
+  private checkDimensionsDirty(): boolean {
+    return (
+      this.solverWrapper.dirty &&
+      (this.cachedLastWidth !== this.width ||
+        this.cachedLastHeight !== this.height)
+    );
+  }
+
+  private setDimensionsDirtyFalse(): void {
+    this.cachedLastWidth = this.width;
+    this.cachedLastHeight = this.height;
+  }
+
+  private checkContentDirty(): boolean {
+    return (
+      this.contentDirty || this.content.some((span): boolean => span.dirty)
+    );
+  }
+
+  private setContentDirtyFalse(): void {
+    this.contentDirty = false;
+    for (const span of this.content) {
+      span.setDirtyFalse();
+    }
   }
 }

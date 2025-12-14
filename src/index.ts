@@ -39,6 +39,4 @@ export * from "./miscellaneous/UIOrientation";
 export * from "./miscellaneous/UIPadding";
 export * from "./miscellaneous/UIPriority";
 export * from "./miscellaneous/UIRelation";
-export * from "./miscellaneous/UITextSpan";
-export * from "./miscellaneous/UITextStyle";
 export * from "./miscellaneous/UITransparencyMode";

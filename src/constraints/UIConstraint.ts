@@ -1,5 +1,5 @@
 import { type UILayer } from "../layers/UILayer";
-import type { UISolverWrapperInterface } from "../miscellaneous/UISolverWrapperInterface";
+import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
 
 /**
  * Abstract base class for all UI layout constraints.

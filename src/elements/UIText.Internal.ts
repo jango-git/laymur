@@ -3,7 +3,7 @@ import type { UIPaddingConfig } from "../miscellaneous/padding/UIPadding.Interna
 import type { UITextStyleConfig } from "../miscellaneous/text-style/UITextStyle.Internal";
 import type { UIElementOptions } from "./UIElement.Internal";
 
-export const TEXT_DEFAULT_WIDTH = 256;
+export const TEXT_DEFAULT_WIDTH = 512;
 
 /**
  * Configuration options for UIText element creation.
