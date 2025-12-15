@@ -88,9 +88,19 @@ export class UIText extends UIElement {
       this.padding.setUnified(
         this.content.reduce(
           (a, b) => Math.max(a, b.style.calculatePadding()),
-          0,
+          this.commonStyle.calculatePadding(),
         ),
       );
+    }
+
+    switch (this.resizeModeInternal) {
+      case UITextResizeMode.SCALE:
+        this.tryToRenderTextScaleMode();
+        break;
+
+      case UITextResizeMode.BREAK:
+        this.tryToRenderTextBreakMode();
+        break;
     }
   }
 
@@ -196,31 +206,6 @@ export class UIText extends UIElement {
     super.onWillRender(renderer, deltaTime);
   }
 
-  private checkDimensionsDirty(): boolean {
-    return (
-      this.solverWrapper.dirty &&
-      (this.lastWidth !== this.width || this.lastHeight !== this.height)
-    );
-  }
-
-  private setDimensionsDirtyFalse(): void {
-    this.lastWidth = this.width;
-    this.lastHeight = this.height;
-  }
-
-  private checkContentDirty(): boolean {
-    return (
-      this.contentDirty || this.content.some((span): boolean => span.dirty)
-    );
-  }
-
-  private setContentDirtyFalse(): void {
-    this.contentDirty = false;
-    for (const span of this.content) {
-      span.setDirtyFalse();
-    }
-  }
-
   private tryToRenderTextScaleMode(): void {
     if (
       !this.resizeModeDirty &&
@@ -228,7 +213,8 @@ export class UIText extends UIElement {
       !this.padding.dirty &&
       !(
         this.solverWrapper.dirty &&
-        this.lastWidth / this.lastHeight !== this.width / this.height
+        this.lastWidth / this.lastHeight !==
+          Math.round(this.width) / Math.round(this.height)
       ) &&
       !this.checkContentDirty()
     ) {
@@ -253,8 +239,8 @@ export class UIText extends UIElement {
     // or when the height is specified by a constraint and cannot be changed,
     // but the width still has priority, because it is specified first and last.
     this.width = desiredWidth;
-    this.height = (desiredHeight / desiredWidth) * this.width;
-    this.width = (desiredWidth / desiredHeight) * this.height;
+    this.height = (desiredHeight / desiredWidth) * Math.round(this.width);
+    this.width = (desiredWidth / desiredHeight) * Math.round(this.height);
 
     const resolutionDirty =
       this.lastWidth !== desiredHeight || this.lastHeight !== desiredWidth;
@@ -306,13 +292,16 @@ export class UIText extends UIElement {
     this.width = desiredTextSize.width + paddingH; // Width should remain a priority, so it is set last.
 
     const { lines: realTextLines, size: realTextSize } =
-      calculateTextContentParameters(textChunks, this.width - paddingH);
+      calculateTextContentParameters(
+        textChunks,
+        Math.round(this.width) - paddingH,
+      );
 
     this.height = realTextSize.height + paddingV;
     this.width = realTextSize.width + paddingH;
 
-    const safeWidth = Math.max(this.width, 2);
-    const safeHeight = Math.max(this.height, 2);
+    const safeWidth = Math.max(Math.round(this.width), 2);
+    const safeHeight = Math.max(Math.round(this.height), 2);
 
     const resolutionDirty =
       this.lastWidth !== safeWidth || this.lastHeight !== safeHeight;
@@ -360,5 +349,31 @@ export class UIText extends UIElement {
     }
 
     return this.textChunks;
+  }
+
+  private checkDimensionsDirty(): boolean {
+    return (
+      this.solverWrapper.dirty &&
+      (this.lastWidth !== Math.round(this.width) ||
+        this.lastHeight !== Math.round(this.height))
+    );
+  }
+
+  private setDimensionsDirtyFalse(): void {
+    this.lastWidth = Math.round(this.width);
+    this.lastHeight = Math.round(this.height);
+  }
+
+  private checkContentDirty(): boolean {
+    return (
+      this.contentDirty || this.content.some((span): boolean => span.dirty)
+    );
+  }
+
+  private setContentDirtyFalse(): void {
+    this.contentDirty = false;
+    for (const span of this.content) {
+      span.setDirtyFalse();
+    }
   }
 }

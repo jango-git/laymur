@@ -160,28 +160,3 @@ export function calculateTextContentParameters(
   const size = calculateTextSize(lines);
   return { lines, size };
 }
-
-// export function calculateTextContentParameters(
-//   context: OffscreenCanvasRenderingContext2D,
-//   textSpans: UITextSpan[],
-//   commonStyle: UITextStyle,
-//   maxLineWidth: number,
-// ): { lines: UITextLine[]; size: UITextSize } {
-//   const textChunks: UITextChunk[] = [];
-
-//   for (const textSpan of textSpans) {
-//     const textStyle = UITextStyle.resolve(textSpan.style, commonStyle);
-
-//     for (const textChunk of splitTextIntoChunks(textSpan.text)) {
-//       const textChunkMetrics = measureTextChunk(context, textChunk, textStyle);
-//       textChunks.push({
-//         text: textChunk,
-//         style: textStyle,
-//         metrics: textChunkMetrics,
-//       });
-//     }
-//   }
-
-//   const lines = buildTextLines(maxLineWidth, textChunks);
-//   return { lines, size: calculateTextSize(lines) };
-// }
