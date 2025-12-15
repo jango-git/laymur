@@ -92,14 +92,22 @@ export class UITexture extends Eventail {
     const atlasHeight =
       this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
 
-    const u0 = this.frameX / atlasWidth;
-    const v0 = (atlasHeight - this.frameY - this.frameHeight) / atlasHeight;
-    const uSize = this.frameWidth / atlasWidth;
-    const vSize = this.frameHeight / atlasHeight;
-
     if (this.rotatedInternal) {
+      const physicalWidth = this.frameHeight;
+      const physicalHeight = this.frameWidth;
+
+      const u0 = this.frameX / atlasWidth;
+      const v0 = (atlasHeight - this.frameY - physicalHeight) / atlasHeight;
+      const uSize = physicalWidth / atlasWidth;
+      const vSize = physicalHeight / atlasHeight;
+
       result.set(0, uSize, u0, -vSize, 0, v0 + vSize, 0, 0, 1);
     } else {
+      const u0 = this.frameX / atlasWidth;
+      const v0 = (atlasHeight - this.frameY - this.frameHeight) / atlasHeight;
+      const uSize = this.frameWidth / atlasWidth;
+      const vSize = this.frameHeight / atlasHeight;
+
       result.set(uSize, 0, u0, 0, vSize, v0, 0, 0, 1);
     }
 
