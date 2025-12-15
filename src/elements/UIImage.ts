@@ -99,6 +99,8 @@ export class UIImage extends UIElement {
       this.inputWrapper.dirty ||
       this.solverWrapper.dirty
     ) {
+      const trim = this.texture.trim;
+      const micro = this.micro;
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -107,18 +109,18 @@ export class UIImage extends UIElement {
           this.width,
           this.height,
           this.zIndex,
-          this.micro.x,
-          this.micro.y,
-          this.micro.anchorX,
-          this.micro.anchorY,
-          this.micro.scaleX,
-          this.micro.scaleY,
-          this.micro.rotation,
-          this.micro.anchorMode,
-          this.texture.trim.left,
-          this.texture.trim.right,
-          this.texture.trim.top,
-          this.texture.trim.bottom,
+          micro.x,
+          micro.y,
+          micro.anchorX,
+          micro.anchorY,
+          micro.scaleX,
+          micro.scaleY,
+          micro.rotation,
+          micro.anchorMode,
+          trim.left,
+          trim.right,
+          trim.top,
+          trim.bottom,
         ),
       );
       this.texture.setDirtyFalse();

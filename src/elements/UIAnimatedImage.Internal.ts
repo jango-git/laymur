@@ -19,4 +19,5 @@ export interface UIAnimatedImageOptions extends UIElementOptions {
   frameRate: number;
   /** Whether animation should loop */
   loop: boolean;
+  playByDefault: boolean;
 }

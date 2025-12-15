@@ -88,6 +88,10 @@ export class UIAnimatedImage extends UIElement {
     this.color = color;
 
     this.subscribeSequenceEvents();
+
+    if (options.playByDefault === true) {
+      this.play();
+    }
   }
 
   public get sequence(): readonly UITexture[] {
@@ -241,12 +245,14 @@ export class UIAnimatedImage extends UIElement {
     }
 
     if (
-      frame.dirty ||
       this.currentFrameIndexDirty ||
+      frame.dirty ||
       this.micro.dirty ||
       this.inputWrapper.dirty ||
       this.solverWrapper.dirty
     ) {
+      const trim = frame.trim;
+      const micro = this.micro;
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -255,18 +261,18 @@ export class UIAnimatedImage extends UIElement {
           this.width,
           this.height,
           this.zIndex,
-          this.micro.x,
-          this.micro.y,
-          this.micro.anchorX,
-          this.micro.anchorY,
-          this.micro.scaleX,
-          this.micro.scaleY,
-          this.micro.rotation,
-          this.micro.anchorMode,
-          frame.trim.left,
-          frame.trim.right,
-          frame.trim.top,
-          frame.trim.bottom,
+          micro.x,
+          micro.y,
+          micro.anchorX,
+          micro.anchorY,
+          micro.scaleX,
+          micro.scaleY,
+          micro.rotation,
+          micro.anchorMode,
+          trim.left,
+          trim.right,
+          trim.top,
+          trim.bottom,
         ),
       );
 
