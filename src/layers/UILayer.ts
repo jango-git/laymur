@@ -230,12 +230,12 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @protected
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
-    this.solverWrapperInternal.dirty = false;
-    this.inputWrapperInternal.dirty = false;
-
     if (isUIModeVisible(this.mode)) {
       this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
       this.sceneWrapperInternal.render(renderer);
     }
+
+    this.solverWrapperInternal.dirty = false;
+    this.inputWrapperInternal.dirty = false;
   }
 }

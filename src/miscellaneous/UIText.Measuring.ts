@@ -129,12 +129,11 @@ export function calculateTextSize(lines: UITextLine[]): UITextSize {
   return { width: maxLineWidth, height: totalHeight };
 }
 
-export function calculateTextContentParameters(
+export function buildTextChunks(
   context: OffscreenCanvasRenderingContext2D,
   textSpans: UITextSpan[],
   commonStyle: UITextStyle,
-  maxLineWidth: number,
-): { lines: UITextLine[]; size: UITextSize } {
+): UITextChunk[] {
   const textChunks: UITextChunk[] = [];
 
   for (const textSpan of textSpans) {
@@ -150,6 +149,39 @@ export function calculateTextContentParameters(
     }
   }
 
-  const lines = buildTextLines(maxLineWidth, textChunks);
-  return { lines, size: calculateTextSize(lines) };
+  return textChunks;
 }
+
+export function calculateTextContentParameters(
+  textChunks: UITextChunk[],
+  maxLineWidth: number,
+): { lines: UITextLine[]; size: UITextSize } {
+  const lines = buildTextLines(maxLineWidth, textChunks);
+  const size = calculateTextSize(lines);
+  return { lines, size };
+}
+
+// export function calculateTextContentParameters(
+//   context: OffscreenCanvasRenderingContext2D,
+//   textSpans: UITextSpan[],
+//   commonStyle: UITextStyle,
+//   maxLineWidth: number,
+// ): { lines: UITextLine[]; size: UITextSize } {
+//   const textChunks: UITextChunk[] = [];
+
+//   for (const textSpan of textSpans) {
+//     const textStyle = UITextStyle.resolve(textSpan.style, commonStyle);
+
+//     for (const textChunk of splitTextIntoChunks(textSpan.text)) {
+//       const textChunkMetrics = measureTextChunk(context, textChunk, textStyle);
+//       textChunks.push({
+//         text: textChunk,
+//         style: textStyle,
+//         metrics: textChunkMetrics,
+//       });
+//     }
+//   }
+
+//   const lines = buildTextLines(maxLineWidth, textChunks);
+//   return { lines, size: calculateTextSize(lines) };
+// }

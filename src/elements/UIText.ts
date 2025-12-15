@@ -5,13 +5,24 @@ import { UIColor } from "../miscellaneous/color/UIColor";
 import { UIPadding } from "../miscellaneous/padding/UIPadding";
 import { UITextSpan } from "../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../miscellaneous/text-style/UITextStyle";
-import type { UITextContent } from "../miscellaneous/UIText.Interfaces";
+import type {
+  UITextChunk,
+  UITextContent,
+} from "../miscellaneous/UIText.Interfaces";
 
-import { calculateTextContentParameters } from "../miscellaneous/UIText.Measuring";
+import {
+  buildTextChunks,
+  calculateTextContentParameters,
+} from "../miscellaneous/UIText.Measuring";
 import { renderTextLines } from "../miscellaneous/UIText.Rendering";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
-import { TEXT_DEFAULT_WIDTH, type UITextOptions } from "./UIText.Internal";
+import {
+  TEXT_DEFAULT_MAX_LINE_WIDTH,
+  TEXT_DEFAULT_RESIZE_MODE,
+  UITextResizeMode,
+  type UITextOptions,
+} from "./UIText.Internal";
 
 export class UIText extends UIElement {
   public readonly color: UIColor;
@@ -21,12 +32,21 @@ export class UIText extends UIElement {
   private readonly canvas: OffscreenCanvas;
   private readonly context: OffscreenCanvasRenderingContext2D;
   private texture: CanvasTexture;
-  private contentInternal: UITextSpan[] = [];
 
+  private contentInternal: UITextSpan[] = [];
   private contentDirty = false;
 
-  private cachedLastWidth: number;
-  private cachedLastHeight: number;
+  private maxLineWidthInternal: number;
+  private maxLineWidthDirty = false;
+
+  private resizeModeInternal: UITextResizeMode;
+  private resizeModeDirty = false;
+
+  private lastWidth: number;
+  private lastHeight: number;
+
+  private textChunks: UITextChunk[] = [];
+  private textChunksDirty = false;
 
   constructor(
     layer: UILayer,
@@ -43,8 +63,6 @@ export class UIText extends UIElement {
     const texture = new CanvasTexture(canvas);
     const color = new UIColor(options.color);
 
-    options.width = options.width ?? TEXT_DEFAULT_WIDTH;
-
     super(layer, source, {
       texture: texture,
       textureTransform: new Matrix3(),
@@ -54,14 +72,26 @@ export class UIText extends UIElement {
     this.color = color;
     this.padding = new UIPadding(options.padding);
     this.commonStyle = new UITextStyle(options.commonStyle);
+    this.maxLineWidthInternal =
+      options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
+    this.resizeModeInternal = options.resizeMode ?? TEXT_DEFAULT_RESIZE_MODE;
 
     this.canvas = canvas;
     this.context = context;
     this.texture = texture;
     this.content = content;
 
-    this.cachedLastWidth = this.width;
-    this.cachedLastHeight = this.height;
+    this.lastWidth = this.width;
+    this.lastHeight = this.height;
+
+    if (options.padding === undefined) {
+      this.padding.setUnified(
+        this.content.reduce(
+          (a, b) => Math.max(a, b.style.calculatePadding()),
+          0,
+        ),
+      );
+    }
   }
 
   /**
@@ -70,6 +100,14 @@ export class UIText extends UIElement {
    */
   public get content(): UITextSpan[] {
     return this.contentInternal;
+  }
+
+  public get maxLineWidth(): number {
+    return this.maxLineWidthInternal;
+  }
+
+  public get resizeMode(): UITextResizeMode {
+    return this.resizeModeInternal;
   }
 
   /**
@@ -100,6 +138,21 @@ export class UIText extends UIElement {
         ];
       }
       this.contentDirty = true;
+      this.textChunksDirty = true;
+    }
+  }
+
+  public set maxLineWidth(value: number) {
+    if (this.maxLineWidthInternal !== value) {
+      this.maxLineWidthInternal = value;
+      this.maxLineWidthDirty = true;
+    }
+  }
+
+  public set resizeMode(value: UITextResizeMode) {
+    if (this.resizeModeInternal !== value) {
+      this.resizeModeInternal = value;
+      this.resizeModeDirty = true;
     }
   }
 
@@ -126,83 +179,33 @@ export class UIText extends UIElement {
     deltaTime: number,
   ): void {
     if (this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        color: this.color,
-      });
+      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
       this.color.setDirtyFalse();
     }
 
-    if (
-      this.padding.dirty ||
-      this.checkDimensionsDirty() ||
-      this.checkContentDirty()
-    ) {
-      // There's some magic going on here. We initially assume that the
-      // text should fit within WIDTH - PADDING. Based on that, we split
-      // the text into lines and compute its final dimensions (without
-      // padding).
+    switch (this.resizeModeInternal) {
+      case UITextResizeMode.SCALE:
+        this.tryToRenderTextScaleMode();
+        break;
 
-      // Since we don't know which constraints the current element
-      // participates in, or whether its width depends on its height, we
-      // need to be careful. Simply setting the height could cause the
-      // element to stretch until all text fits on a single line. This can
-      // happen when the width depends on the height: changing the height
-      // may alter the width, which in turn triggers a text reflow on the
-      // next frame, and so on.
-
-      // To avoid this, we first propose the desired height + padding to
-      // the solver, and then re-propose the current width + padding. If my
-      // reasoning is correct, this should prevent the case described
-      // above - although it's possible (and likely) that I'm still missing
-      // something.
-
-      const { lines, size } = calculateTextContentParameters(
-        this.context,
-        this.content,
-        this.commonStyle,
-        this.width - this.padding.left - this.padding.right,
-      );
-
-      this.height = size.height + this.padding.top + this.padding.bottom;
-      this.width = size.width + this.padding.left + this.padding.right;
-
-      const dimensionsChanged =
-        this.cachedLastWidth !== this.width ||
-        this.cachedLastHeight !== this.height;
-
-      if (dimensionsChanged) {
-        this.canvas.width = Math.max(this.width, 2);
-        this.canvas.height = Math.max(this.height, 2);
-      }
-
-      renderTextLines(this.padding.top, this.padding.left, lines, this.context);
-
-      if (dimensionsChanged) {
-        this.texture.dispose();
-        this.texture = new CanvasTexture(this.canvas);
-        this.texture.needsUpdate = true;
-        this.sceneWrapper.setProperties(this.planeHandler, {
-          texture: this.texture,
-        });
-      }
-
-      this.setDimensionsDirtyFalse();
-      this.setContentDirtyFalse();
+      case UITextResizeMode.BREAK:
+        this.tryToRenderTextBreakMode();
+        break;
     }
+
     super.onWillRender(renderer, deltaTime);
   }
 
   private checkDimensionsDirty(): boolean {
     return (
       this.solverWrapper.dirty &&
-      (this.cachedLastWidth !== this.width ||
-        this.cachedLastHeight !== this.height)
+      (this.lastWidth !== this.width || this.lastHeight !== this.height)
     );
   }
 
   private setDimensionsDirtyFalse(): void {
-    this.cachedLastWidth = this.width;
-    this.cachedLastHeight = this.height;
+    this.lastWidth = this.width;
+    this.lastHeight = this.height;
   }
 
   private checkContentDirty(): boolean {
@@ -216,5 +219,146 @@ export class UIText extends UIElement {
     for (const span of this.content) {
       span.setDirtyFalse();
     }
+  }
+
+  private tryToRenderTextScaleMode(): void {
+    if (
+      !this.resizeModeDirty &&
+      !this.maxLineWidthDirty &&
+      !this.padding.dirty &&
+      !(
+        this.solverWrapper.dirty &&
+        this.lastWidth / this.lastHeight !== this.width / this.height
+      ) &&
+      !this.checkContentDirty()
+    ) {
+      return;
+    }
+
+    const textChunks = this.buildTextChunks();
+
+    const { lines, size } = calculateTextContentParameters(
+      textChunks,
+      this.maxLineWidthInternal,
+    );
+
+    const paddingV = this.padding.top + this.padding.bottom;
+    const paddingH = this.padding.left + this.padding.right;
+
+    const desiredHeight = size.height + paddingV;
+    const desiredWidth = size.width + paddingH;
+
+    // Two calculation passes are required to cover both cases -
+    // when the width is specified by a constraint and cannot be changed,
+    // or when the height is specified by a constraint and cannot be changed,
+    // but the width still has priority, because it is specified first and last.
+    this.width = desiredWidth;
+    this.height = (desiredHeight / desiredWidth) * this.width;
+    this.width = (desiredWidth / desiredHeight) * this.height;
+
+    const resolutionDirty =
+      this.lastWidth !== desiredHeight || this.lastHeight !== desiredWidth;
+
+    if (resolutionDirty) {
+      this.canvas.height = desiredHeight;
+      this.canvas.width = desiredWidth;
+    }
+
+    renderTextLines(this.padding.top, this.padding.left, lines, this.context);
+
+    if (resolutionDirty) {
+      this.rebuildTexture();
+    }
+
+    this.resizeModeDirty = false;
+    this.maxLineWidthDirty = false;
+    this.padding.setDirtyFalse();
+    this.setDimensionsDirtyFalse();
+    this.setContentDirtyFalse();
+  }
+
+  private tryToRenderTextBreakMode(): void {
+    if (
+      !this.resizeModeDirty &&
+      !this.maxLineWidthDirty &&
+      !this.padding.dirty &&
+      !this.checkDimensionsDirty() &&
+      !this.checkContentDirty()
+    ) {
+      return;
+    }
+
+    const textChunks = this.buildTextChunks();
+
+    // Two passes of text size calculation are needed to first
+    // suggest the desired sizes to the solver, and then
+    // adjust our expectations based on the result obtained.
+
+    const { size: desiredTextSize } = calculateTextContentParameters(
+      textChunks,
+      this.maxLineWidthInternal,
+    );
+
+    const paddingV = this.padding.top + this.padding.bottom;
+    const paddingH = this.padding.left + this.padding.right;
+
+    this.height = desiredTextSize.height + paddingV;
+    this.width = desiredTextSize.width + paddingH; // Width should remain a priority, so it is set last.
+
+    const { lines: realTextLines, size: realTextSize } =
+      calculateTextContentParameters(textChunks, this.width - paddingH);
+
+    this.height = realTextSize.height + paddingV;
+    this.width = realTextSize.width + paddingH;
+
+    const safeWidth = Math.max(this.width, 2);
+    const safeHeight = Math.max(this.height, 2);
+
+    const resolutionDirty =
+      this.lastWidth !== safeWidth || this.lastHeight !== safeHeight;
+
+    if (resolutionDirty) {
+      this.canvas.width = safeWidth;
+      this.canvas.height = safeHeight;
+    }
+
+    renderTextLines(
+      this.padding.top,
+      this.padding.left,
+      realTextLines,
+      this.context,
+    );
+
+    if (resolutionDirty) {
+      this.rebuildTexture();
+    }
+
+    this.resizeModeDirty = false;
+    this.maxLineWidthDirty = false;
+    this.padding.setDirtyFalse();
+    this.setDimensionsDirtyFalse();
+    this.setContentDirtyFalse();
+  }
+
+  private rebuildTexture(): void {
+    this.texture.dispose();
+    this.texture = new CanvasTexture(this.canvas);
+    this.texture.needsUpdate = true;
+    this.sceneWrapper.setProperties(this.planeHandler, {
+      texture: this.texture,
+    });
+  }
+
+  private buildTextChunks(): UITextChunk[] {
+    if (this.textChunksDirty) {
+      this.textChunks = buildTextChunks(
+        this.context,
+        this.contentInternal,
+        this.commonStyle,
+      );
+      this.textChunksDirty = false;
+    }
+
+    return this.textChunks;
   }
 }
