@@ -1,7 +1,7 @@
 import type { Matrix3 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
 import {
   UITextureEvent,
@@ -46,7 +46,7 @@ export class UIImage extends UIElement {
   ) {
     const color = new UIColor(options.color);
     const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateTransform();
+    const textureTransform = uiTexture.calculateUVTransform();
 
     options.width = options.width ?? uiTexture.width;
     options.height = options.height ?? uiTexture.height;
@@ -67,14 +67,14 @@ export class UIImage extends UIElement {
     this.color = color;
 
     this.texture.on(
-      UITextureEvent.DIMINSIONS_CHANGED,
+      UITextureEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
   }
 
   public override destroy(): void {
     this.texture.off(
-      UITextureEvent.DIMINSIONS_CHANGED,
+      UITextureEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
     super.destroy();
@@ -84,7 +84,7 @@ export class UIImage extends UIElement {
     if (this.texture.dirty || this.color.dirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
-        textureTransform: this.texture.calculateTransform(
+        textureTransform: this.texture.calculateUVTransform(
           this.textureTransform,
         ),
         color: this.color,
@@ -101,7 +101,7 @@ export class UIImage extends UIElement {
     ) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
-        computePaddingTransformMatrix(
+        computeTrimmedTransformMatrix(
           this.x,
           this.y,
           this.width,

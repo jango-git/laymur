@@ -1,7 +1,7 @@
 import type { Matrix3, Texture, Vector2 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITexture } from "../miscellaneous/texture/UITexture";
@@ -49,7 +49,7 @@ export class UIProgress extends UIElement {
   ) {
     const color = new UIColor(options.color);
     const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateTransform();
+    const textureTransform = uiTexture.calculateUVTransform();
     const textureResolution = uiTexture.getResolution();
 
     options.width = options.width ?? uiTexture.width;
@@ -83,7 +83,7 @@ export class UIProgress extends UIElement {
     this.maskFunction = maskFunction;
 
     this.texture.on(
-      UITextureEvent.DIMINSIONS_CHANGED,
+      UITextureEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
   }
@@ -116,7 +116,7 @@ export class UIProgress extends UIElement {
     ) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
-        textureTransform: this.texture.calculateTransform(
+        textureTransform: this.texture.calculateUVTransform(
           this.textureTransform,
         ),
         textureResolution: this.texture.getResolution(this.textureResolution),
@@ -137,7 +137,7 @@ export class UIProgress extends UIElement {
     ) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
-        computePaddingTransformMatrix(
+        computeTrimmedTransformMatrix(
           this.x,
           this.y,
           this.width,

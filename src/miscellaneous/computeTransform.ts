@@ -6,11 +6,7 @@ const TEMP_QUATERNION = new Quaternion();
 const TEMP_SCALE = new Vector3();
 const TEMP_MATRIX = new Matrix4();
 const Z_AXIS = new Vector3(0, 0, 1);
-/**
- * Computes transformation matrix for UI element with micro-transformations.
- * Returns a temporary matrix that may be reused on subsequent calls.
- * @internal
- */
+
 export function computeTransformMatrix(
   x: number,
   y: number,
@@ -57,7 +53,17 @@ export function computeTransformMatrix(
   return TEMP_MATRIX;
 }
 
-export function computePaddingTransformMatrix(
+/**
+ * Computes transform for a trimmed sprite.
+ *
+ * @param width - Source width (original sprite size including trimmed areas)
+ * @param height - Source height (original sprite size including trimmed areas)
+ * @param trimLeft - Pixels trimmed from left
+ * @param trimRight - Pixels trimmed from right
+ * @param trimTop - Pixels trimmed from top
+ * @param trimBottom - Pixels trimmed from bottom
+ */
+export function computeTrimmedTransformMatrix(
   x: number,
   y: number,
   width: number,
@@ -71,49 +77,49 @@ export function computePaddingTransformMatrix(
   microScaleY: number,
   microRotation: number,
   microAnchorMode: UIMicroAnchorMode,
-  paddingLeft: number,
-  paddingRight: number,
-  paddingTop: number,
-  paddingBottom: number,
+  trimLeft: number,
+  trimRight: number,
+  trimTop: number,
+  trimBottom: number,
 ): Matrix4 {
-  const virtualWidth = width + paddingLeft + paddingRight;
-  const virtualHeight = height + paddingTop + paddingBottom;
+  const trimmedWidth = width - trimLeft - trimRight;
+  const trimmedHeight = height - trimTop - trimBottom;
 
-  const scaledVirtualWidth = virtualWidth * microScaleX;
-  const scaledVirtualHeight = virtualHeight * microScaleY;
+  const scaledWidth = width * microScaleX;
+  const scaledHeight = height * microScaleY;
 
-  const anchorOffsetX = microAnchorX * scaledVirtualWidth;
-  const anchorOffsetY = microAnchorY * scaledVirtualHeight;
+  const anchorOffsetX = microAnchorX * scaledWidth;
+  const anchorOffsetY = microAnchorY * scaledHeight;
 
   const cos = Math.cos(microRotation);
   const sin = Math.sin(microRotation);
+
   const rotatedAnchorX = anchorOffsetX * cos - anchorOffsetY * sin;
   const rotatedAnchorY = anchorOffsetX * sin + anchorOffsetY * cos;
 
-  const paddingOffsetX = paddingLeft * microScaleX;
-  const paddingOffsetY = paddingBottom * microScaleY;
+  const trimOffsetX = trimLeft * microScaleX;
+  const trimOffsetY = trimBottom * microScaleY;
 
-  const rotatedPaddingX = paddingOffsetX * cos - paddingOffsetY * sin;
-  const rotatedPaddingY = paddingOffsetX * sin + paddingOffsetY * cos;
+  const rotatedTrimX = trimOffsetX * cos - trimOffsetY * sin;
+  const rotatedTrimY = trimOffsetX * sin + trimOffsetY * cos;
 
   if (microAnchorMode === UIMicroAnchorMode.POSITION_ROTATION_SCALE) {
-    TEMP_POSITION.x = x + microX - rotatedAnchorX + rotatedPaddingX;
-    TEMP_POSITION.y = y + microY - rotatedAnchorY + rotatedPaddingY;
+    TEMP_POSITION.x = x + microX - rotatedAnchorX + rotatedTrimX;
+    TEMP_POSITION.y = y + microY - rotatedAnchorY + rotatedTrimY;
   } else {
-    const rawAnchorOffsetX = microAnchorX * virtualWidth;
-    const rawAnchorOffsetY = microAnchorY * virtualHeight;
+    const rawAnchorOffsetX = microAnchorX * width;
+    const rawAnchorOffsetY = microAnchorY * height;
     TEMP_POSITION.x =
-      x + rawAnchorOffsetX - rotatedAnchorX + microX + rotatedPaddingX;
+      x + rawAnchorOffsetX - rotatedAnchorX + microX + rotatedTrimX;
     TEMP_POSITION.y =
-      y + rawAnchorOffsetY - rotatedAnchorY + microY + rotatedPaddingY;
+      y + rawAnchorOffsetY - rotatedAnchorY + microY + rotatedTrimY;
   }
 
   TEMP_POSITION.z = zIndex;
-
-  TEMP_SCALE.x = width * microScaleX;
-  TEMP_SCALE.y = height * microScaleY;
-
+  TEMP_SCALE.x = trimmedWidth * microScaleX;
+  TEMP_SCALE.y = trimmedHeight * microScaleY;
   TEMP_QUATERNION.setFromAxisAngle(Z_AXIS, microRotation);
+
   TEMP_MATRIX.compose(TEMP_POSITION, TEMP_QUATERNION, TEMP_SCALE);
   return TEMP_MATRIX;
 }

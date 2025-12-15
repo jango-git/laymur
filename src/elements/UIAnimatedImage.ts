@@ -2,7 +2,7 @@ import type { Matrix3, WebGLRenderer } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
-import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
 import {
   UITextureEvent,
@@ -67,7 +67,7 @@ export class UIAnimatedImage extends UIElement {
     options.width = options.width ?? frame.width;
     options.height = options.height ?? frame.height;
 
-    const textureTransform = frame.calculateTransform();
+    const textureTransform = frame.calculateUVTransform();
 
     super(
       layer,
@@ -233,7 +233,7 @@ export class UIAnimatedImage extends UIElement {
     if (this.color.dirty || this.currentFrameIndexDirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: frame.texture,
-        textureTransform: frame.calculateTransform(this.textureTransform),
+        textureTransform: frame.calculateUVTransform(this.textureTransform),
         color: this.color,
       });
 
@@ -249,7 +249,7 @@ export class UIAnimatedImage extends UIElement {
     ) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
-        computePaddingTransformMatrix(
+        computeTrimmedTransformMatrix(
           this.x,
           this.y,
           this.width,
@@ -290,7 +290,7 @@ export class UIAnimatedImage extends UIElement {
   private subscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
       frame.on(
-        UITextureEvent.DIMINSIONS_CHANGED,
+        UITextureEvent.DIMENSIONS_CHANGED,
         this.onTextureDimensionsChanged,
       );
     }
@@ -299,7 +299,7 @@ export class UIAnimatedImage extends UIElement {
   private unsubscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
       frame.off(
-        UITextureEvent.DIMINSIONS_CHANGED,
+        UITextureEvent.DIMENSIONS_CHANGED,
         this.onTextureDimensionsChanged,
       );
     }

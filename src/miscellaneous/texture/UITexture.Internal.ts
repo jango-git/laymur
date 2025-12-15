@@ -1,12 +1,22 @@
-import type { Vector2Like } from "three";
 import { Texture } from "three";
 
 export const TEXTURE_DEFAULT_TEXTURE = new Texture();
-export const TEXTURE_DEFAULT_ROTATED = false;
-export const TEXTURE_DEFAULT_SCALE = 1;
+export const TEXTURE_DEFAULT_SIZE = 2;
 
 export enum UITextureEvent {
-  DIMINSIONS_CHANGED = 0,
+  DIMENSIONS_CHANGED = 0,
+}
+
+export interface UITextureRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface UITextureSize {
+  w: number;
+  h: number;
 }
 
 export interface UITextureTrim {
@@ -18,11 +28,11 @@ export interface UITextureTrim {
 
 export interface UITextureAtlasConfig {
   texture: Texture;
-  min: Vector2Like;
-  max: Vector2Like;
+  frame: UITextureRect;
   rotated?: boolean;
+  spriteSourceSize: UITextureRect;
+  sourceSize: UITextureSize;
   scale?: number;
-  padding?: UITextureTrim;
 }
 
-export type UITextureConfig = UITextureAtlasConfig | Texture;
+export type UITextureConfig = Texture | UITextureAtlasConfig;

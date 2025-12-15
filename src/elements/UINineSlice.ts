@@ -12,14 +12,6 @@ import {
   type UINineSliceOptions,
 } from "./UINineSlice.Internal";
 
-/**
- * Nine-slice UI element for scalable images with preserved border regions.
- *
- * Nine-slice scaling divides an image into 9 regions: 4 corners, 4 edges, and 1 center.
- * The corners maintain their original size, edges scale in one dimension, and the center
- * scales in both dimensions. This technique is commonly used for creating scalable UI
- * panels, buttons, and borders that maintain visual quality at any size.
- */
 export class UINineSlice extends UIElement {
   public readonly texture: UITexture;
   public readonly color: UIColor;
@@ -50,7 +42,7 @@ export class UINineSlice extends UIElement {
     const color = new UIColor(options.color);
 
     const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateTransform();
+    const textureTransform = uiTexture.calculateUVTransform();
 
     options.width = options.width ?? uiTexture.width;
     options.height = options.height ?? uiTexture.height;
@@ -109,7 +101,7 @@ export class UINineSlice extends UIElement {
 
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
-        textureTransform: this.texture.calculateTransform(
+        textureTransform: this.texture.calculateUVTransform(
           this.textureTransform,
         ),
         color: this.color,
