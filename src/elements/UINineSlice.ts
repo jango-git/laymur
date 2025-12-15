@@ -1,14 +1,16 @@
-import type { Matrix3, WebGLRenderer } from "three";
+import type { Matrix3 } from "three";
 import { Vector4 } from "three";
 import { type UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
+import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UIPadding } from "../miscellaneous/padding/UIPadding";
 import { UITexture } from "../miscellaneous/texture/UITexture";
 import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
 import {
-  NINE_DEFAULT_BORDER,
+  NINE_SLICE_DEFAULT_BORDER,
+  UINineSliceRegionMode,
   type UINineSliceOptions,
 } from "./UINineSlice.Internal";
 
@@ -18,29 +20,19 @@ export class UINineSlice extends UIElement {
   public readonly sliceBorders: UIPadding;
   public readonly sliceRegions: UIPadding;
 
-  private readonly textureTransform: Matrix3;
+  private regionModeInternal: UINineSliceRegionMode;
+  private regionModeDirty = false;
 
+  private readonly textureTransform: Matrix3;
   private readonly sliceBordersVector = new Vector4();
   private readonly sliceRegionsVector = new Vector4();
 
-  /**
-   * Creates a new nine-slice UI element.
-   *
-   * The element initially sizes itself to match the texture's dimensions.
-   * Border regions are defined by the slice borders configuration.
-   *
-   * @param layer - The UI layer to add this element to
-   * @param texture - The texture to use for nine-slice rendering
-   * @param options - Configuration options for the nine-slice element
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
-   */
   constructor(
     layer: UILayer,
     texture: UITextureConfig,
     options: Partial<UINineSliceOptions> = {},
   ) {
     const color = new UIColor(options.color);
-
     const uiTexture = new UITexture(texture);
     const textureTransform = uiTexture.calculateUVTransform();
 
@@ -48,14 +40,16 @@ export class UINineSlice extends UIElement {
     options.height = options.height ?? uiTexture.height;
 
     const sliceBorders = new UIPadding(
-      options.sliceBorders ?? NINE_DEFAULT_BORDER,
+      options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER,
     );
     const sliceRegions = new UIPadding(
-      options.sliceRegions ?? NINE_DEFAULT_BORDER,
+      options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER,
     );
 
-    const sliceBordersVector = sliceBorders.toVector4();
-    const sliceRegionsVector = sliceRegions.toVector4();
+    const regionMode = options.regionMode ?? UINineSliceRegionMode.NORMALIZED;
+
+    const sliceBordersVector = new Vector4();
+    const sliceRegionsVector = new Vector4();
 
     super(
       layer,
@@ -73,31 +67,35 @@ export class UINineSlice extends UIElement {
     this.texture = uiTexture;
     this.textureTransform = textureTransform;
     this.color = color;
-
     this.sliceBorders = sliceBorders;
     this.sliceRegions = sliceRegions;
+    this.regionModeInternal = regionMode;
 
     this.sliceBordersVector = sliceBordersVector;
     this.sliceRegionsVector = sliceRegionsVector;
   }
 
-  /**
-   * Called before each render frame to update the element's dimensions for nine-slice scaling.
-   * Updates the world dimensions (z, w components) based on current width, height, and micro scaling.
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time since last frame in seconds
-   */
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
+  public get regionMode(): UINineSliceRegionMode {
+    return this.regionModeInternal;
+  }
+
+  public set regionMode(value: UINineSliceRegionMode) {
+    if (this.regionModeInternal !== value) {
+      this.regionModeInternal = value;
+      this.regionModeDirty = true;
+    }
+  }
+
+  protected override updatePlaneTransform(): void {
     if (
+      this.regionModeDirty ||
+      this.texture.dirty ||
       this.color.dirty ||
       this.sliceBorders.dirty ||
       this.sliceRegions.dirty
     ) {
-      this.sliceBorders.toVector4(this.sliceBordersVector);
-      this.sliceRegions.toVector4(this.sliceRegionsVector);
+      this.calculateSliceBordersForShader(this.sliceBordersVector);
+      this.calculateSliceRegionsForShader(this.sliceRegionsVector);
 
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
@@ -105,15 +103,103 @@ export class UINineSlice extends UIElement {
           this.textureTransform,
         ),
         color: this.color,
-        sliceBorders: this.sliceRegionsVector,
+        sliceBorders: this.sliceBordersVector,
         sliceRegions: this.sliceRegionsVector,
       });
 
+      this.regionModeDirty = false;
       this.color.setDirtyFalse();
       this.sliceBorders.setDirtyFalse();
       this.sliceRegions.setDirtyFalse();
     }
 
-    super.onWillRender(renderer, deltaTime);
+    if (
+      this.texture.dirty ||
+      this.micro.dirty ||
+      this.inputWrapper.dirty ||
+      this.solverWrapper.dirty
+    ) {
+      const trim = this.texture.trim;
+      const micro = this.micro;
+      this.sceneWrapper.setTransform(
+        this.planeHandler,
+        computeTrimmedTransformMatrix(
+          this.x,
+          this.y,
+          this.width,
+          this.height,
+          this.zIndex,
+          micro.x,
+          micro.y,
+          micro.anchorX,
+          micro.anchorY,
+          micro.scaleX,
+          micro.scaleY,
+          micro.rotation,
+          micro.anchorMode,
+          trim.left,
+          trim.right,
+          trim.top,
+          trim.bottom,
+        ),
+      );
+      this.texture.setDirtyFalse();
+      this.micro.setDirtyFalse();
+    }
+  }
+
+  private calculateSliceBordersForShader(result: Vector4): Vector4 {
+    const sourceWidth = this.texture.width;
+    const sourceHeight = this.texture.height;
+    const trim = this.texture.trim;
+
+    const trimmedWidth = sourceWidth - trim.left - trim.right;
+    const trimmedHeight = sourceHeight - trim.top - trim.bottom;
+
+    const trimNLeft = trim.left / sourceWidth;
+    const trimNRight = trim.right / sourceWidth;
+    const trimNTop = trim.top / sourceHeight;
+    const trimNBottom = trim.bottom / sourceHeight;
+
+    const trimmedWidthNorm = trimmedWidth / sourceWidth;
+    const trimmedHeightNorm = trimmedHeight / sourceHeight;
+
+    const srcLeft = this.sliceBorders.left;
+    const srcRight = this.sliceBorders.right;
+    const srcTop = this.sliceBorders.top;
+    const srcBottom = this.sliceBorders.bottom;
+
+    const left = Math.max(0, srcLeft - trimNLeft) / trimmedWidthNorm;
+    const right = Math.max(0, srcRight - trimNRight) / trimmedWidthNorm;
+    const top = Math.max(0, srcTop - trimNTop) / trimmedHeightNorm;
+    const bottom = Math.max(0, srcBottom - trimNBottom) / trimmedHeightNorm;
+
+    return result.set(
+      Math.min(1, left),
+      Math.min(1, right),
+      Math.min(1, top),
+      Math.min(1, bottom),
+    );
+  }
+
+  private calculateSliceRegionsForShader(result: Vector4): Vector4 {
+    if (this.regionModeInternal === UINineSliceRegionMode.NORMALIZED) {
+      return result.set(
+        this.sliceRegions.left,
+        this.sliceRegions.right,
+        this.sliceRegions.top,
+        this.sliceRegions.bottom,
+      );
+    }
+
+    const width = this.width;
+    const height = this.height;
+
+    return result.set(
+      this.sliceRegions.left / width,
+      this.sliceRegions.right / width,
+      this.sliceRegions.top / height,
+      this.sliceRegions.bottom / height,
+    );
   }
 }
