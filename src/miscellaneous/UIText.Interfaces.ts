@@ -5,6 +5,7 @@ export type UITextContent =
   | (UITextSpanConfig | string)[]
   | UITextSpanConfig
   | string;
+
 export interface UITextSize {
   width: number;
   height: number;

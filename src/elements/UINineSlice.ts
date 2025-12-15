@@ -10,6 +10,7 @@ import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
 import {
   NINE_SLICE_DEFAULT_BORDER,
+  NINE_SLICE_DEFAULT_REGION_MODE,
   UINineSliceRegionMode,
   type UINineSliceOptions,
 } from "./UINineSlice.Internal";
@@ -26,6 +27,9 @@ export class UINineSlice extends UIElement {
   private readonly textureTransform: Matrix3;
   private readonly sliceBordersVector = new Vector4();
   private readonly sliceRegionsVector = new Vector4();
+
+  private lastWidth: number;
+  private lastHeight: number;
 
   constructor(
     layer: UILayer,
@@ -46,7 +50,7 @@ export class UINineSlice extends UIElement {
       options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER,
     );
 
-    const regionMode = options.regionMode ?? UINineSliceRegionMode.NORMALIZED;
+    const regionMode = options.regionMode ?? NINE_SLICE_DEFAULT_REGION_MODE;
 
     const sliceBordersVector = new Vector4();
     const sliceRegionsVector = new Vector4();
@@ -73,6 +77,9 @@ export class UINineSlice extends UIElement {
 
     this.sliceBordersVector = sliceBordersVector;
     this.sliceRegionsVector = sliceRegionsVector;
+
+    this.lastWidth = this.width;
+    this.lastHeight = this.height;
   }
 
   public get regionMode(): UINineSliceRegionMode {
@@ -92,7 +99,9 @@ export class UINineSlice extends UIElement {
       this.texture.dirty ||
       this.color.dirty ||
       this.sliceBorders.dirty ||
-      this.sliceRegions.dirty
+      this.sliceRegions.dirty ||
+      (this.regionModeInternal === UINineSliceRegionMode.WORLD &&
+        this.checkDimensionsDirty())
     ) {
       this.calculateSliceBordersForShader(this.sliceBordersVector);
       this.calculateSliceRegionsForShader(this.sliceRegionsVector);
@@ -111,6 +120,7 @@ export class UINineSlice extends UIElement {
       this.color.setDirtyFalse();
       this.sliceBorders.setDirtyFalse();
       this.sliceRegions.setDirtyFalse();
+      this.setDimensionsDirtyFalse();
     }
 
     if (
@@ -201,5 +211,18 @@ export class UINineSlice extends UIElement {
       this.sliceRegions.top / height,
       this.sliceRegions.bottom / height,
     );
+  }
+
+  private checkDimensionsDirty(): boolean {
+    return (
+      this.solverWrapper.dirty &&
+      (this.lastWidth !== Math.round(this.width) ||
+        this.lastHeight !== Math.round(this.height))
+    );
+  }
+
+  private setDimensionsDirtyFalse(): void {
+    this.lastWidth = Math.round(this.width);
+    this.lastHeight = Math.round(this.height);
   }
 }
