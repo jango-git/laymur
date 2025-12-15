@@ -11,7 +11,7 @@ import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
 import { UIAspectConstraint } from "../UIAspectConstraint";
 
-const DEFAULT_ANCHOR = 0.5;
+const COVER_CONSTRAINT_DEFAULT_ANCHOR = 0.5;
 
 /**
  * Configuration options for the UICoverConstraintBuilder.
@@ -74,14 +74,14 @@ export class UICoverConstraintBuilder {
     }
 
     const xConstraint = new UIHorizontalDistanceConstraint(passive, active, {
-      anchorA: options.anchorH ?? DEFAULT_ANCHOR,
-      anchorB: options.anchorH ?? DEFAULT_ANCHOR,
+      anchorA: options.anchorH ?? COVER_CONSTRAINT_DEFAULT_ANCHOR,
+      anchorB: options.anchorH ?? COVER_CONSTRAINT_DEFAULT_ANCHOR,
       orientation: options.orientation,
     });
 
     const yConstraint = new UIVerticalDistanceConstraint(passive, active, {
-      anchorA: options.anchorV ?? DEFAULT_ANCHOR,
-      anchorB: options.anchorV ?? DEFAULT_ANCHOR,
+      anchorA: options.anchorV ?? COVER_CONSTRAINT_DEFAULT_ANCHOR,
+      anchorB: options.anchorV ?? COVER_CONSTRAINT_DEFAULT_ANCHOR,
       orientation: options.orientation,
     });
 

@@ -21,8 +21,8 @@ vec4 draw() {
 
     float lB = leftFill;
     float rB = 1.0 - rightFill;
-    float tB = topFill;
-    float bB = 1.0 - bottomFill;
+    float bB = bottomFill;
+    float tB = 1.0 - topFill;
 
     {
         float regionL = step(p_uv.x, lB);
@@ -37,18 +37,18 @@ vec4 draw() {
     }
 
     {
-        float regionT = step(p_uv.y, tB);
-        float regionB = step(bB, p_uv.y);
-        float regionC = 1.0 - regionT - regionB;
+        float regionB = step(p_uv.y, bB);
+        float regionT = step(tB, p_uv.y);
+        float regionC = 1.0 - regionB - regionT;
 
-        float yT = (p_uv.y / tB) * top;
-        float yB = 1.0 - bottom + ((p_uv.y - bB) / bottomFill) * bottom;
-        float yC = top + ((p_uv.y - tB) / (bB - tB)) * (1.0 - top - bottom);
+        float yB = (p_uv.y / bB) * bottom;
+        float yT = 1.0 - top + ((p_uv.y - tB) / topFill) * top;
+        float yC = bottom + ((p_uv.y - bB) / (tB - bB)) * (1.0 - bottom - top);
 
-        localUV.y = regionT * yT + regionC * yC + regionB * yB;
+        localUV.y = regionB * yB + regionC * yC + regionT * yT;
     }
 
-    vec2 transformedUV = (p_textureTransform * vec3(localUV, 1.0)).xy;
+    vec2 atlasUV = (p_textureTransform * vec3(localUV, 1.0)).xy;
 
-    return texture2D(p_texture, transformedUV) * p_color;
+    return texture2D(p_texture, atlasUV) * p_color;
 }

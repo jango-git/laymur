@@ -93,7 +93,7 @@ export class UITexture extends Eventail {
       this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
 
     const u0 = this.frameX / atlasWidth;
-    const v0 = this.frameY / atlasHeight;
+    const v0 = (atlasHeight - this.frameY - this.frameHeight) / atlasHeight;
     const uSize = this.frameWidth / atlasWidth;
     const vSize = this.frameHeight / atlasHeight;
 
