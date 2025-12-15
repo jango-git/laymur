@@ -1,16 +1,17 @@
-import type { Matrix3, Texture } from "three";
+import type { Matrix3, Texture, Vector2 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computePaddingTransformMatrix } from "../miscellaneous/computeTransform";
+import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
+import { UIProgressMaskFunctionDirectional } from "../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITexture } from "../miscellaneous/texture/UITexture";
 import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIProgress.glsl";
 import { UIElement } from "./UIElement";
+import type { UIProgressOptions } from "./UIProgress.Internal";
 import {
   PROGRESS_DEFAULT_VALUE,
   simplifyGLSLSource,
-  UIProgressMaskFunction,
-  type UIProgressOptions,
 } from "./UIProgress.Internal";
 
 /**
@@ -26,12 +27,12 @@ import {
 export class UIProgress extends UIElement {
   public readonly texture: UITexture;
   public readonly color: UIColor;
+  public readonly maskFunction: UIProgressMaskFunction;
 
   private readonly textureTransform: Matrix3;
+  private readonly textureResolution: Vector2;
 
   private progressInternal: number;
-  private inverseDirectionInternal: boolean;
-
   private dirty = false;
 
   /**
@@ -49,33 +50,37 @@ export class UIProgress extends UIElement {
     const color = new UIColor(options.color);
     const uiTexture = new UITexture(texture);
     const textureTransform = uiTexture.calculateTransform();
+    const textureResolution = uiTexture.getResolution();
 
     options.width = options.width ?? uiTexture.width;
-    options.height = options.width ?? uiTexture.height;
+    options.height = options.height ?? uiTexture.height;
+
     const progress = options.progress ?? PROGRESS_DEFAULT_VALUE;
-    const inverseDirection = options.inverseDirection ?? false;
 
     const maskFunction =
-      options.maskFunction ?? UIProgressMaskFunction.HORIZONTAL;
-    const simplifiedSource = simplifyGLSLSource(maskFunction + source);
+      options.maskFunction ?? new UIProgressMaskFunctionDirectional();
+    const simplifiedSource = simplifyGLSLSource(maskFunction.source + source);
 
     super(
       layer,
       simplifiedSource,
       {
         texture: uiTexture.texture,
-        textureTransform: textureTransform,
+        textureTransform,
+        textureResolution,
         color,
+        progress,
+        ...maskFunction.enumerateProperties(),
       },
       options,
     );
 
     this.texture = uiTexture;
     this.textureTransform = textureTransform;
+    this.textureResolution = textureResolution;
     this.color = color;
-
     this.progressInternal = progress;
-    this.inverseDirectionInternal = inverseDirection;
+    this.maskFunction = maskFunction;
 
     this.texture.on(
       UITextureEvent.DIMINSIONS_CHANGED,
@@ -92,25 +97,6 @@ export class UIProgress extends UIElement {
   }
 
   /**
-   * Gets whether the progress fills in reverse direction.
-   * @returns True if filling in reverse, false if filling forward
-   */
-  public get inverseDirection(): boolean {
-    return this.inverseDirectionInternal;
-  }
-
-  /**
-   * Sets the progress fill direction.
-   * @param value - True for reverse direction, false for forward
-   */
-  public set inverseDirection(value: boolean) {
-    if (this.inverseDirectionInternal !== value) {
-      this.inverseDirectionInternal = value;
-      this.dirty = true;
-    }
-  }
-
-  /**
    * Sets the progress value.
    * @param value - Progress value between 0.0 (empty) and 1.0 (full)
    */
@@ -122,26 +108,32 @@ export class UIProgress extends UIElement {
   }
 
   protected override updatePlaneTransform(): void {
-    if (this.texture.dirty || this.color.dirty || this.dirty) {
+    if (
+      this.dirty ||
+      this.texture.dirty ||
+      this.color.dirty ||
+      this.maskFunction.dirty
+    ) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         texture: this.texture.texture,
         textureTransform: this.texture.calculateTransform(
           this.textureTransform,
         ),
+        textureResolution: this.texture.getResolution(this.textureResolution),
         color: this.color,
         progress: this.progressInternal,
-        direction: this.inverseDirectionInternal ? -1 : 1,
       });
 
       this.dirty = false;
       this.color.setDirtyFalse();
+      this.maskFunction.setDirtyFalse();
     }
 
     if (
-      this.texture.dirty ||
-      this.micro.dirty ||
+      this.solverWrapper.dirty ||
       this.inputWrapper.dirty ||
-      this.solverWrapper.dirty
+      this.texture.dirty ||
+      this.micro.dirty
     ) {
       this.sceneWrapper.setTransform(
         this.planeHandler,

@@ -53,7 +53,7 @@ export class UINineSlice extends UIElement {
     const textureTransform = uiTexture.calculateTransform();
 
     options.width = options.width ?? uiTexture.width;
-    options.height = options.width ?? uiTexture.height;
+    options.height = options.height ?? uiTexture.height;
 
     const sliceBorders = new UIPadding(
       options.sliceBorders ?? NINE_DEFAULT_BORDER,

@@ -65,7 +65,7 @@ export class UIAnimatedImage extends UIElement {
 
     const frame = uiTextures[0];
     options.width = options.width ?? frame.width;
-    options.height = options.width ?? frame.height;
+    options.height = options.height ?? frame.height;
 
     const textureTransform = frame.calculateTransform();
 

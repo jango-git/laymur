@@ -1,6 +1,6 @@
 import { Eventail } from "eventail";
 import type { Vector2Like } from "three";
-import { Matrix3, Texture } from "three";
+import { Matrix3, Texture, Vector2 } from "three";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_WIDTH,
@@ -88,6 +88,10 @@ export class UITexture extends Eventail {
     }
 
     return result;
+  }
+
+  public getResolution(result = new Vector2()): Vector2 {
+    return result.set(this.width, this.height);
   }
 
   public set(config?: UITextureConfig): void {
