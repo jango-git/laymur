@@ -54,7 +54,7 @@ export function resolveGLSLTypeInfo(value: UIPropertyType): GLSLTypeInfo {
   if (value instanceof Matrix4) {
     return { glslType: "mat4", instantiable: true, itemSize: 16 };
   }
-  throw new Error(`Unsupported property type: ${value}`);
+  throw new Error(`resolveGLSLTypeInfo.value: unsupported property type`);
 }
 
 export function resolveUniform(
@@ -65,7 +65,7 @@ export function resolveUniform(
     | IUniform<unknown>
     | undefined;
   if (uniform === undefined) {
-    throw new Error(`Unknown uniform: ${name}`);
+    throw new Error(`resolveUniform.name: unknown uniform`);
   }
   return uniform;
 }

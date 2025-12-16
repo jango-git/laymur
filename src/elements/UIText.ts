@@ -57,7 +57,7 @@ export class UIText extends UIElement {
     const context = canvas.getContext("2d");
 
     if (!context) {
-      throw new Error("UIText failed to create canvas context");
+      throw new Error("UIText.constructor: failed to create canvas context");
     }
 
     const texture = new CanvasTexture(canvas);

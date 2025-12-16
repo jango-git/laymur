@@ -54,7 +54,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
     if (options.proportion !== undefined) {
       assertValidPositiveNumber(
         options.proportion,
-        "UIVerticalProportionConstraint.constructor.proportion",
+        "UIVerticalProportionConstraint.constructor.options.proportion",
       );
     }
 

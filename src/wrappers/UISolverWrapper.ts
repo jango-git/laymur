@@ -105,12 +105,16 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public removeVariable(index: number): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(`Variable ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.removeVariable.index: variable does not exist`,
+      );
     }
 
     for (const cDescription of this.constraints.values()) {
       if (cDescription.lhs.hasTerm(index) || cDescription.rhs.hasTerm(index)) {
-        throw new Error(`Variable ${index} is used in constraint`);
+        throw new Error(
+          `UISolverWrapper.removeVariable.index: variable is used in constraint`,
+        );
       }
     }
 
@@ -141,7 +145,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public suggestVariableValue(index: number, value: number): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(`Variable ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.suggestVariableValue.index: variable does not exist`,
+      );
     }
 
     if (description.value !== value) {
@@ -178,7 +184,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setVariablePriority(index: number, priority: UIPriority): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(`Variable ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setVariablePriority.index: variable does not exist`,
+      );
     }
 
     if (priority !== description.priority) {
@@ -231,7 +239,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public readVariableValue(index: number): number {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(`Variable ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.readVariableValue.index: variable does not exist`,
+      );
     }
 
     if (this.solver === undefined) {
@@ -300,7 +310,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public removeConstraint(index: number): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.removeConstraint.index: constraint does not exist`,
+      );
     }
 
     if (description.enabled) {
@@ -329,7 +341,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintLHS(index: number, lhs: UIExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setConstraintLHS.index: constraint does not exist`,
+      );
     }
 
     description.lhs.copy(lhs);
@@ -351,7 +365,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintRHS(index: number, rhs: UIExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setConstraintRHS.index: constraint does not exist`,
+      );
     }
 
     description.rhs.copy(rhs);
@@ -373,7 +389,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintRelation(index: number, relation: UIRelation): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setConstraintRelation.index: constraint does not exist`,
+      );
     }
 
     if (description.relation !== relation) {
@@ -397,7 +415,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintPriority(index: number, priority: UIPriority): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setConstraintPriority.index: constraint does not exist`,
+      );
     }
 
     if (description.priority !== priority) {
@@ -421,7 +441,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintEnabled(index: number, enabled: boolean): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(`Constraint ${index} does not exist`);
+      throw new Error(
+        `UISolverWrapper.setConstraintEnabled.index: constraint does not exist`,
+      );
     }
 
     if (enabled !== description.enabled) {
@@ -572,7 +594,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
         ([variableIndex, coefficient]): [number, Variable] => {
           const description = this.variables.get(variableIndex);
           if (description === undefined) {
-            throw new Error(`Variable ${variableIndex} does not exist`);
+            throw new Error(
+              `UISolverWrapper.convertExpression: variable does not exist`,
+            );
           }
           return [coefficient, description.variable];
         },
@@ -589,7 +613,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
    */
   private rebuildSolver(): void {
     if (this.solver) {
-      throw new Error("Solver already exists");
+      throw new Error("UISolverWrapper.rebuildSolver: solver already exists");
     }
 
     this.solver = new Solver();

@@ -10,11 +10,11 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
     super();
     assertValidPositiveNumber(
       fixedHeightLandscape,
-      "UIResizePolicyFixedHeight.fixedHeightLandscape",
+      "UIResizePolicyFixedHeight.constructor.fixedHeightLandscape",
     );
     assertValidPositiveNumber(
       fixedHeightPortrait,
-      "UIResizePolicyFixedHeight.fixedHeightPortrait",
+      "UIResizePolicyFixedHeight.constructor.fixedHeightPortrait",
     );
 
     this.fixedHeightLandscapeInternal = fixedHeightLandscape;

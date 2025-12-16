@@ -30,8 +30,12 @@ export class UIAnchor
   ) {
     const x = options?.x ?? ANCHOR_DEFAULT_X;
     const y = options?.y ?? ANCHOR_DEFAULT_Y;
-    assertValidNumber(x, "UIAnchor.constructor.x");
-    assertValidNumber(y, "UIAnchor.constructor.y");
+    if (options?.x !== undefined) {
+      assertValidNumber(options.x, "UIAnchor.constructor.options.x");
+    }
+    if (options?.y !== undefined) {
+      assertValidNumber(options.y, "UIAnchor.constructor.options.y");
+    }
 
     super();
     this.solverWrapper = this.layer.solverWrapper;

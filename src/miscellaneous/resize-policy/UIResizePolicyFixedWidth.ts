@@ -10,11 +10,11 @@ export class UIResizePolicyFixedWidth extends UIResizePolicy {
     super();
     assertValidPositiveNumber(
       fixedWidthLandscape,
-      "UIResizePolicyFixedWidth.fixedWidthLandscape",
+      "UIResizePolicyFixedWidth.constructor.fixedWidthLandscape",
     );
     assertValidPositiveNumber(
       fixedWidthPortrait,
-      "UIResizePolicyFixedWidth.fixedWidthPortrait",
+      "UIResizePolicyFixedWidth.constructor.fixedWidthPortrait",
     );
 
     this.fixedWidthLandscapeInternal = fixedWidthLandscape;

@@ -539,7 +539,9 @@ export class UIPlaneRegistry {
   private resolveDescriptor(handler: number): PlaneDescriptor {
     const descriptor = this.descriptors.get(handler);
     if (!descriptor) {
-      throw new Error(`No descriptor found for handler ${handler}`);
+      throw new Error(
+        `UIGenericPlaneRegistry.resolveDescriptor.handler: descriptor not found`,
+      );
     }
     return descriptor;
   }

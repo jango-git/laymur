@@ -89,7 +89,7 @@ export function buildEmptyInstancedBufferAttribute(
   const info = resolveGLSLTypeInfo(value);
   if (!info.instantiable) {
     throw new Error(
-      `Cannot create instanced attribute for non-instantiable type`,
+      `buildEmptyInstancedBufferAttribute.value: cannot create instanced attribute for non-instantiable type`,
     );
   }
   return new InstancedBufferAttribute(
@@ -214,5 +214,7 @@ export function reconstructValue(
     matrix.fromArray(array, offset);
     return matrix;
   }
-  throw new Error(`Cannot reconstruct value for type`);
+  throw new Error(
+    `reconstructValue.referenceValue: cannot reconstruct value for type`,
+  );
 }

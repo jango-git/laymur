@@ -138,7 +138,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   }
 
   public set zIndex(value: number) {
-    assertValidNumber(value, "UIElement.zIndex");
+    assertValidNumber(value, "UIDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 

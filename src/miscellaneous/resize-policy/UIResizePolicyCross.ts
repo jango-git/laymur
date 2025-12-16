@@ -10,11 +10,11 @@ export class UIResizePolicyCross extends UIResizePolicy {
     super();
     assertValidPositiveNumber(
       fixedWidthLandscape,
-      "UIResizePolicyCross.fixedWidthLandscape",
+      "UIResizePolicyCross.constructor.fixedWidthLandscape",
     );
     assertValidPositiveNumber(
       fixedHeightPortrait,
-      "UIResizePolicyCross.fixedHeightPortrait",
+      "UIResizePolicyCross.constructor.fixedHeightPortrait",
     );
 
     this.fixedWidthLandscapeInternal = fixedWidthLandscape;

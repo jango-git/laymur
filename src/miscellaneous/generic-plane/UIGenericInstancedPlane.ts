@@ -442,7 +442,9 @@ export class UIGenericInstancedPlane extends Mesh {
   private resolveIndex(handler: number): number {
     const index = this.handlerToIndex.get(handler);
     if (index === undefined) {
-      throw new Error(`Invalid handler: ${handler}`);
+      throw new Error(
+        `UIGenericInstancedPlane.resolveIndex.handler: invalid handler`,
+      );
     }
     return index;
   }
@@ -450,7 +452,9 @@ export class UIGenericInstancedPlane extends Mesh {
   private resolveAttribute(name: string): InstancedBufferAttribute {
     const attribute = this.propertyBuffers.get(name);
     if (attribute === undefined) {
-      throw new Error(`Unknown attribute: ${name}`);
+      throw new Error(
+        `UIGenericInstancedPlane.resolveAttribute.name: unknown attribute`,
+      );
     }
     return attribute;
   }

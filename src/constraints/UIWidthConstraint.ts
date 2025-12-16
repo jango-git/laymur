@@ -41,7 +41,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     if (options.width !== undefined) {
       assertValidPositiveNumber(
         options.width,
-        "UIWidthConstraint.constructor.width",
+        "UIWidthConstraint.constructor.options.width",
       );
     }
 

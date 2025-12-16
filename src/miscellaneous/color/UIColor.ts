@@ -536,7 +536,7 @@ export class UIColor {
   public setHexString(hexString: string): this {
     if (!hexString.startsWith("#")) {
       throw new Error(
-        `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+        `UIColor.setHexString.hexString: invalid hex string format. expected format: "#ffffff" or "#ffffffff"`,
       );
     }
 
@@ -546,7 +546,7 @@ export class UIColor {
       const hexNumber = parseInt(hex, 16);
       if (isNaN(hexNumber)) {
         throw new Error(
-          `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+          `UIColor.setHexString.hexString: invalid hex string format. expected format: "#ffffff" or "#ffffffff"`,
         );
       }
       return this.setHexRGB(hexNumber);
@@ -554,13 +554,13 @@ export class UIColor {
       const hexNumber = parseInt(hex, 16);
       if (isNaN(hexNumber)) {
         throw new Error(
-          `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+          `UIColor.setHexString.hexString: invalid hex string format. expected format: "#ffffff" or "#ffffffff"`,
         );
       }
       return this.setHexRGBA(hexNumber);
     } else {
       throw new Error(
-        `Invalid hex string format: "${hexString}". Expected format: "#ffffff" or "#ffffffff".`,
+        `UIColor.setHexString.hexString: invalid hex string format. expected format: "#ffffff" or "#ffffffff"`,
       );
     }
   }
@@ -601,7 +601,7 @@ export class UIColor {
     const hex = COLORS[normalizedName];
 
     if (hex === undefined) {
-      throw new Error(`Unknown color name: "${colorName}".`);
+      throw new Error(`UIColor.setColorName.colorName: unknown color name`);
     }
 
     return this.setHexRGB(hex, a);

@@ -60,19 +60,19 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     if (options.anchorA !== undefined) {
       assertValidNumber(
         options.anchorA,
-        "UIVerticalDistanceConstraint.constructor.anchorA",
+        "UIVerticalDistanceConstraint.constructor.options.anchorA",
       );
     }
     if (options.anchorB !== undefined) {
       assertValidNumber(
         options.anchorB,
-        "UIVerticalDistanceConstraint.constructor.anchorB",
+        "UIVerticalDistanceConstraint.constructor.options.anchorB",
       );
     }
     if (options.distance !== undefined) {
       assertValidNumber(
         options.distance,
-        "UIVerticalDistanceConstraint.constructor.distance",
+        "UIVerticalDistanceConstraint.constructor.options.distance",
       );
     }
 
@@ -173,7 +173,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.yVariable, 1);
     } else {
-      throw new Error("A is not a valid element type");
+      throw new Error(
+        "UIVerticalDistanceConstraint.buildLHS.a: invalid element type",
+      );
     }
 
     if (isUIPlaneElement(this.b)) {
@@ -184,7 +186,9 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.yVariable, 1);
     } else {
-      throw new Error("B is not a valid element type");
+      throw new Error(
+        "UIVerticalDistanceConstraint.buildLHS.b: invalid element type",
+      );
     }
 
     return UIExpression.minus(bExpression, aExpression);

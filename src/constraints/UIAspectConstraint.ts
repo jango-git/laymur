@@ -42,7 +42,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
     if (options.aspect !== undefined) {
       assertValidPositiveNumber(
         options.aspect,
-        "UIAspectConstraint.constructor.aspect",
+        "UIAspectConstraint.constructor.options.aspect",
       );
     }
 

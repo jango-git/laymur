@@ -41,7 +41,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
     if (options.height !== undefined) {
       assertValidPositiveNumber(
         options.height,
-        "UIHeightConstraint.constructor.height",
+        "UIHeightConstraint.constructor.options.height",
       );
     }
 
