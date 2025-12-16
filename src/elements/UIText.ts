@@ -17,11 +17,11 @@ import {
 import { renderTextLines } from "../miscellaneous/UIText.Rendering";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
+import type { UITextOptions } from "./UIText.Internal";
 import {
   TEXT_DEFAULT_MAX_LINE_WIDTH,
   TEXT_DEFAULT_RESIZE_MODE,
   UITextResizeMode,
-  type UITextOptions,
 } from "./UIText.Internal";
 
 export class UIText extends UIElement {

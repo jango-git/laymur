@@ -1,11 +1,5 @@
-import type { Vector2 } from "three";
-import {
-  MathUtils,
-  Ray,
-  Vector3,
-  type Camera,
-  type WebGLRenderer,
-} from "three";
+import type { Vector2, Camera, WebGLRenderer } from "three";
+import { MathUtils, Ray, Vector3 } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import type { UIResizePolicy } from "../miscellaneous/resize-policy/UIResizePolicy";
 import { UIResizePolicyNone } from "../miscellaneous/resize-policy/UIResizePolicyNone";

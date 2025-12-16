@@ -6,6 +6,7 @@ import type {
   UILayerElement,
   UIPlaneElement,
 } from "../../miscellaneous/asserts";
+import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
 import { UIAspectConstraint } from "../UIAspectConstraint";
@@ -51,6 +52,19 @@ export class UICoverConstraintBuilder {
     /** Height proportion constraint (ensures coverage) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
+    if (options.anchorH !== undefined) {
+      assertValidNumber(
+        options.anchorH,
+        "UICoverConstraintBuilder.build.anchorH",
+      );
+    }
+    if (options.anchorV !== undefined) {
+      assertValidNumber(
+        options.anchorV,
+        "UICoverConstraintBuilder.build.anchorV",
+      );
+    }
+
     let activeAspectConstraint: UIAspectConstraint | undefined;
     if (options.keepActiveAspect === true) {
       activeAspectConstraint = new UIAspectConstraint(active, {

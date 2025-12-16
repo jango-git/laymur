@@ -1,15 +1,14 @@
 import type { UIPlaneElement, UIPointElement } from "../miscellaneous/asserts";
 import {
   assertValidConstraintSubjects,
+  assertValidNumber,
   isUIPlaneElement,
   isUIPointElement,
 } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-import {
-  DEFAULT_ANCHOR,
-  type UIVerticalDistanceConstraintOptions,
-} from "./UIVerticalDistanceConstraint.Internal";
+import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal";
+import { DEFAULT_ANCHOR } from "./UIVerticalDistanceConstraint.Internal";
 
 /**
  * Constraint that enforces vertical distance between two UI elements.
@@ -55,10 +54,27 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
   ) {
     super(
       assertValidConstraintSubjects(a, b, "UIVerticalDistanceConstraint"),
-      options.priority,
-      options.relation,
-      options.orientation,
+      options,
     );
+
+    if (options.anchorA !== undefined) {
+      assertValidNumber(
+        options.anchorA,
+        "UIVerticalDistanceConstraint.constructor.anchorA",
+      );
+    }
+    if (options.anchorB !== undefined) {
+      assertValidNumber(
+        options.anchorB,
+        "UIVerticalDistanceConstraint.constructor.anchorB",
+      );
+    }
+    if (options.distance !== undefined) {
+      assertValidNumber(
+        options.distance,
+        "UIVerticalDistanceConstraint.constructor.distance",
+      );
+    }
 
     this.anchorAInternal = options.anchorA ?? DEFAULT_ANCHOR;
     this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;
@@ -67,8 +83,8 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     this.constraint = this.solverWrapper.createConstraint(
       this.buildLHS(),
       new UIExpression(this.distanceInternal),
-      this.relationInternal,
-      this.priorityInternal,
+      this.relation,
+      this.priority,
       this.isConstraintEnabled(),
     );
   }
@@ -102,6 +118,7 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
    * @param value - The new vertical distance in pixels
    */
   public set distance(value: number) {
+    assertValidNumber(value, "UIVerticalDistanceConstraint.distance");
     if (this.distanceInternal !== value) {
       this.distanceInternal = value;
       this.solverWrapper.setConstraintRHS(
@@ -116,6 +133,7 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
    * @param value - The new anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
    */
   public set anchorA(value: number) {
+    assertValidNumber(value, "UIVerticalDistanceConstraint.anchorA");
     if (this.anchorAInternal !== value) {
       this.anchorAInternal = value;
       this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
@@ -127,6 +145,7 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
    * @param value - The new anchor value (0.0 = top, 0.5 = center, 1.0 = bottom)
    */
   public set anchorB(value: number) {
+    assertValidNumber(value, "UIVerticalDistanceConstraint.anchorB");
     if (this.anchorBInternal !== value) {
       this.anchorBInternal = value;
       this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());

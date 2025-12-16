@@ -6,13 +6,12 @@ import type {
   UILayerElement,
   UIPlaneElement,
 } from "../../miscellaneous/asserts";
+import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
 import { UIAspectConstraint } from "../UIAspectConstraint";
-import {
-  DEFAULT_ANCHOR,
-  type UIFitConstraintBuilderOptions,
-} from "./UIFitConstraintBuilder.Internal";
+import type { UIFitConstraintBuilderOptions } from "./UIFitConstraintBuilder.Internal";
+import { DEFAULT_ANCHOR } from "./UIFitConstraintBuilder.Internal";
 
 /**
  * Builder for creating "fit" layout constraints that make an element fit within its container.
@@ -53,6 +52,19 @@ export class UIFitConstraintBuilder {
     /** Height proportion constraint (ensures fitting) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
+    if (options.anchorH !== undefined) {
+      assertValidNumber(
+        options.anchorH,
+        "UIFitConstraintBuilder.build.anchorH",
+      );
+    }
+    if (options.anchorV !== undefined) {
+      assertValidNumber(
+        options.anchorV,
+        "UIFitConstraintBuilder.build.anchorV",
+      );
+    }
+
     let activeAspectConstraint: UIAspectConstraint | undefined;
     if (options.keepActiveAspect === true) {
       activeAspectConstraint = new UIAspectConstraint(active, {

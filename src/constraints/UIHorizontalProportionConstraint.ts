@@ -1,5 +1,8 @@
 import type { UIPlaneElement } from "../miscellaneous/asserts";
-import { assertValidConstraintSubjects } from "../miscellaneous/asserts";
+import {
+  assertValidConstraintSubjects,
+  assertValidPositiveNumber,
+} from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
@@ -45,18 +48,22 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
   ) {
     super(
       assertValidConstraintSubjects(a, b, "UIHorizontalProportionConstraint"),
-      options.priority,
-      options.relation,
-      options.orientation,
+      options,
     );
 
-    this.proportionInternal = options.proportion ?? 1;
+    if (options.proportion !== undefined) {
+      assertValidPositiveNumber(
+        options.proportion,
+        "UIHorizontalProportionConstraint.constructor.proportion",
+      );
+    }
 
+    this.proportionInternal = options.proportion ?? 1;
     this.constraint = this.solverWrapper.createConstraint(
       new UIExpression(0),
       this.buildRHS(),
-      this.relationInternal,
-      this.priorityInternal,
+      this.relation,
+      this.priority,
       this.isConstraintEnabled(),
     );
   }
@@ -74,6 +81,10 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
    * @param value - The new proportion ratio
    */
   public set proportion(value: number) {
+    assertValidPositiveNumber(
+      value,
+      "UIHorizontalProportionConstraint.proportion",
+    );
     if (this.proportionInternal !== value) {
       this.proportionInternal = value;
       this.solverWrapper.setConstraintRHS(this.constraint, this.buildRHS());

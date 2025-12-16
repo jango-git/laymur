@@ -9,11 +9,11 @@ import type {
   UIPlaneElement,
   UIPointElement,
 } from "../../miscellaneous/asserts";
-import {
-  type UIConstraint2DResult,
-  type UIConstraintDistance2DOptions,
-  type UIConstraintProportion2DOptions,
-  type UIConstraintSize2DOptions,
+import type {
+  UIConstraint2DResult,
+  UIConstraintDistance2DOptions,
+  UIConstraintProportion2DOptions,
+  UIConstraintSize2DOptions,
 } from "./UIConstraint2DBuilder.Internal";
 
 /**

@@ -2,11 +2,11 @@ import { Matrix4, PlaneGeometry, ShaderMaterial } from "three";
 
 import { UIColor } from "../color/UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
+import type { UIPropertyType } from "./shared";
 import {
   buildGenericPlaneFragmentShader,
   DEFAULT_ALPHA_TEST,
   resolveGLSLTypeInfo,
-  type UIPropertyType,
 } from "./shared";
 
 export const PLANE_GEOMETRY = new PlaneGeometry(1, 1).translate(0.5, 0.5, 0);

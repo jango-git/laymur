@@ -4,16 +4,14 @@ import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
-import {
-  UITextureEvent,
-  type UITextureConfig,
-} from "../miscellaneous/texture/UITexture.Internal";
+import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
+import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
 import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
   ANIMATED_IMAGE_DEFAULT_LOOP,
   UIAnimatedImageEvent,
-  type UIAnimatedImageOptions,
 } from "./UIAnimatedImage.Internal";
 import { UIElement } from "./UIElement";
 

@@ -3,12 +3,11 @@ import { Matrix4, Mesh } from "three";
 
 import { UIColor } from "../color/UIColor";
 import { UITransparencyMode } from "../UITransparencyMode";
+import type { GenericPlaneData, UIPropertyType } from "./shared";
 import {
   arePropertiesCompatible,
   DEFAULT_ALPHA_TEST,
   resolveUniform,
-  type GenericPlaneData,
-  type UIPropertyType,
 } from "./shared";
 import {
   buildGenericPlaneMaterial,

@@ -1,4 +1,5 @@
 import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
+import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIHeightConstraintOptions } from "./UIHeightConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
@@ -35,15 +36,16 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
     private readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIHeightConstraintOptions> = {},
   ) {
-    super(
-      element.layer,
-      options.priority,
-      options.relation,
-      options.orientation,
-    );
+    super(element.layer, options);
+
+    if (options.height !== undefined) {
+      assertValidPositiveNumber(
+        options.height,
+        "UIHeightConstraint.constructor.height",
+      );
+    }
 
     this.heightInternal = options.height ?? element.height;
-
     this.constraint = this.solverWrapper.createConstraint(
       new UIExpression(0, [[this.element.hVariable, 1]]),
       new UIExpression(this.heightInternal),
@@ -66,6 +68,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
    * @param value - The new height value in pixels
    */
   public set height(value: number) {
+    assertValidPositiveNumber(value, "UIHeightConstraint.height");
     if (this.heightInternal !== value) {
       this.heightInternal = value;
       this.solverWrapper.setConstraintRHS(

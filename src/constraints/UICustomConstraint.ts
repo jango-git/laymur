@@ -44,7 +44,7 @@ export class UICustomConstraint extends UISingleParameterConstraint {
     rhs: UIExpression,
     options: Partial<UISingleParameterConstraintOptions> = {},
   ) {
-    super(layer, options.priority, options.relation, options.orientation);
+    super(layer, options);
 
     this.lhsInternal = lhs;
     this.rhsInternal = rhs;

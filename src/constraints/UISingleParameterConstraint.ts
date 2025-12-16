@@ -4,9 +4,12 @@ import {
   resolveOrientation,
   UIOrientation,
 } from "../miscellaneous/UIOrientation";
-import { resolvePriority, type UIPriority } from "../miscellaneous/UIPriority";
-import { resolveRelation, type UIRelation } from "../miscellaneous/UIRelation";
+import type { UIPriority } from "../miscellaneous/UIPriority";
+import { resolvePriority } from "../miscellaneous/UIPriority";
+import type { UIRelation } from "../miscellaneous/UIRelation";
+import { resolveRelation } from "../miscellaneous/UIRelation";
 import { UIConstraint } from "./UIConstraint";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
 /**
  * Abstract base class for constraints that operate with configurable parameters.
@@ -23,11 +26,11 @@ import { UIConstraint } from "./UIConstraint";
  */
 export abstract class UISingleParameterConstraint extends UIConstraint {
   /** Internal storage for the constraint priority level. */
-  protected priorityInternal: UIPriority;
+  private priorityInternal: UIPriority;
   /** Internal storage for the constraint relation type. */
-  protected relationInternal: UIRelation;
+  private relationInternal: UIRelation;
   /** Internal storage for the constraint orientation setting. */
-  protected orientationInternal: UIOrientation;
+  private orientationInternal: UIOrientation;
 
   /** The constraint descriptor managed by the solver system. */
   protected abstract readonly constraint: number;
@@ -45,14 +48,12 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
    */
   constructor(
     layer: UILayer,
-    priority?: UIPriority,
-    relation?: UIRelation,
-    orientation?: UIOrientation,
+    options?: Partial<UISingleParameterConstraintOptions>,
   ) {
     super(layer);
-    this.priorityInternal = resolvePriority(priority);
-    this.relationInternal = resolveRelation(relation);
-    this.orientationInternal = resolveOrientation(orientation);
+    this.priorityInternal = resolvePriority(options?.priority);
+    this.relationInternal = resolveRelation(options?.relation);
+    this.orientationInternal = resolveOrientation(options?.orientation);
     this.layer.on(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
   }
 

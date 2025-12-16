@@ -4,6 +4,19 @@ import typescript from "rollup-plugin-typescript2";
 import minifyPrivatesTransformer from "ts-transformer-minify-privates";
 import { string } from "rollup-plugin-string";
 
+const replaceNodeEnv = (isProduction) => ({
+  name: "replace-node-env",
+  renderChunk(code) {
+    return {
+      code: code.replace(
+        /process\.env\.NODE_ENV/g,
+        JSON.stringify(isProduction ? "production" : "development"),
+      ),
+      map: null,
+    };
+  },
+});
+
 export default {
   input: "src/index.ts",
   output: [
@@ -11,12 +24,14 @@ export default {
       file: "dist/index.js",
       format: "esm",
       sourcemap: true,
+      plugins: [replaceNodeEnv(false)],
     },
     {
       file: "dist/index.min.js",
       format: "esm",
       sourcemap: true,
       plugins: [
+        replaceNodeEnv(true),
         terser({
           compress: {
             ecma: 2020,

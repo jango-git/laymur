@@ -1,4 +1,5 @@
 import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
+import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
@@ -36,15 +37,16 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
     private readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIAspectConstraintOptions> = {},
   ) {
-    super(
-      element.layer,
-      options.priority,
-      options.relation,
-      options.orientation,
-    );
+    super(element.layer, options);
+
+    if (options.aspect !== undefined) {
+      assertValidPositiveNumber(
+        options.aspect,
+        "UIAspectConstraint.constructor.aspect",
+      );
+    }
 
     this.aspectInternal = options.aspect ?? element.width / element.height;
-
     this.constraint = this.solverWrapper.createConstraint(
       this.buildLHS(),
       new UIExpression(0),
@@ -67,6 +69,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
    * @param value - The new aspect ratio (width/height)
    */
   public set aspect(value: number) {
+    assertValidPositiveNumber(value, "UIAspectConstraint.aspect");
     if (this.aspectInternal !== value) {
       this.aspectInternal = value;
       this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());

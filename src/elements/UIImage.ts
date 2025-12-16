@@ -3,10 +3,8 @@ import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UITexture } from "../miscellaneous/texture/UITexture";
-import {
-  UITextureEvent,
-  type UITextureConfig,
-} from "../miscellaneous/texture/UITexture.Internal";
+import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 import type { UIImageOptions } from "./UIImage.Internal";

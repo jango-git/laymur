@@ -1,29 +1,16 @@
 import type { Vector2Like } from "three";
 import { Vector2 } from "three";
+import source from "../../shaders/UIProgressMaskFunctionDirectional.glsl";
+import { EPSILON } from "../asserts";
 import type { UIPropertyType } from "../generic-plane/shared";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
-
-const SOURCE = `float calculateMask() {
-  float aspect = p_textureResolution.x / p_textureResolution.y;
-  vec2 halfExtents = vec2(aspect, 1.0) * 0.5;
-
-  float maxProjection = dot(halfExtents, abs(p_direction));
-
-  vec2 correctedUV = (p_uv - 0.5) * vec2(aspect, 1.0);
-  float projection = dot(correctedUV, p_direction);
-
-  float offset = (projection / maxProjection + 1.0) * 0.5;
-  return step(offset, p_progress);
-}`;
-
-const EPSILON = 0.001;
 
 export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {
   public readonly direction = new Vector2();
   private readonly cachedDirection = new Vector2();
 
   constructor(direction: Vector2Like = { x: 1, y: 0 }) {
-    super(SOURCE);
+    super(source);
     this.direction.copy(direction).normalize();
     this.cachedDirection.copy(this.direction);
   }

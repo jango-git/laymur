@@ -3,6 +3,7 @@ import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../asserts";
+import type { UITextStyleConfig } from "./UITextStyle.Internal";
 import {
   TEXT_STYLE_DEFAULT_ALIGN,
   TEXT_STYLE_DEFAULT_COLOR,
@@ -19,7 +20,6 @@ import {
   TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y,
   TEXT_STYLE_DEFAULT_STROKE_COLOR,
   TEXT_STYLE_DEFAULT_STROKE_THICKNESS,
-  type UITextStyleConfig,
 } from "./UITextStyle.Internal";
 
 /**

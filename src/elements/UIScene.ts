@@ -8,7 +8,7 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import { type UILayer } from "../layers/UILayer";
+import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import source from "../shaders/UIImage.glsl";
 import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";

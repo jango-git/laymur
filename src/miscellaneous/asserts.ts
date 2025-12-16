@@ -1,6 +1,6 @@
 import { UILayer } from "../layers/UILayer";
 
-const EPSILON = 1e-6;
+export const EPSILON = 1e-6;
 
 /**
  * Interface for objects that belong to a UI layer.
@@ -164,12 +164,14 @@ export function assertValidConstraintSubjects(
  * @throws Will throw an error if the value is not finite or exceeds safe range
  */
 export function assertValidNumber(value: number, subject: string): void {
-  if (!Number.isFinite(value)) {
-    throw new Error(`${subject}: value must be a finite number`);
-  }
+  if (process.env.NODE_ENV !== "production") {
+    if (!Number.isFinite(value)) {
+      throw new Error(`${subject}: value must be a finite number`);
+    }
 
-  if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
-    throw new Error(`${subject}: value exceeds maximum safe integer range`);
+    if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
+      throw new Error(`${subject}: value exceeds maximum safe integer range`);
+    }
   }
 }
 
@@ -189,12 +191,13 @@ export function assertValidPositiveNumber(
   value: number,
   subject: string,
 ): void {
-  assertValidNumber(value, subject);
-
-  if (value < EPSILON) {
-    throw new Error(
-      `${subject}: value must be greater than or equal to ${EPSILON}`,
-    );
+  if (process.env.NODE_ENV !== "production") {
+    assertValidNumber(value, subject);
+    if (value < EPSILON) {
+      throw new Error(
+        `${subject}: value must be greater than or equal to ${EPSILON}`,
+      );
+    }
   }
 }
 
@@ -214,8 +217,10 @@ export function assertValidNonNegativeNumber(
   value: number,
   subject: string,
 ): void {
-  assertValidNumber(value, subject);
-  if (value < 0) {
-    throw new Error(`${subject}: value must be greater than or equal to 0`);
+  if (process.env.NODE_ENV !== "production") {
+    assertValidNumber(value, subject);
+    if (value < 0) {
+      throw new Error(`${subject}: value must be greater than or equal to 0`);
+    }
   }
 }

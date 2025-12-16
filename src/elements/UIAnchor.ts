@@ -4,11 +4,8 @@ import type { UILayerElement, UIPointElement } from "../miscellaneous/asserts";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
-import {
-  ANCHOR_DEFAULT_X,
-  ANCHOR_DEFAULT_Y,
-  type UIAnchorOptions,
-} from "./UIAnchor.Internal";
+import type { UIAnchorOptions } from "./UIAnchor.Internal";
+import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 
 /**
  * Point in 2D space with constraint-based positioning.

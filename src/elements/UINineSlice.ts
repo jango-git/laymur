@@ -1,6 +1,6 @@
 import type { Matrix3 } from "three";
 import { Vector4 } from "three";
-import { type UILayer } from "../layers/UILayer";
+import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UIPadding } from "../miscellaneous/padding/UIPadding";
@@ -8,11 +8,11 @@ import { UITexture } from "../miscellaneous/texture/UITexture";
 import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
 import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
+import type { UINineSliceOptions } from "./UINineSlice.Internal";
 import {
   NINE_SLICE_DEFAULT_BORDER,
   NINE_SLICE_DEFAULT_REGION_MODE,
   UINineSliceRegionMode,
-  type UINineSliceOptions,
 } from "./UINineSlice.Internal";
 
 export class UINineSlice extends UIElement {
