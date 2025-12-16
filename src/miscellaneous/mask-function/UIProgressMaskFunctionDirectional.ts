@@ -5,10 +5,17 @@ import { EPSILON } from "../asserts";
 import type { UIPropertyType } from "../generic-plane/shared";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
 
+/** Linear directional progress fill */
 export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {
+  /** Fill direction as normalized vector */
   public readonly direction = new Vector2();
   private readonly cachedDirection = new Vector2();
 
+  /**
+   * Creates directional mask function.
+   *
+   * @param direction - Fill direction vector. Automatically normalized.
+   */
   constructor(direction: Vector2Like = { x: 1, y: 0 }) {
     super(source);
     this.direction.copy(direction).normalize();

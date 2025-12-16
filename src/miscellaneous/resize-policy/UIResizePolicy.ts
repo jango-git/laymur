@@ -1,18 +1,8 @@
-/**
- * Base class for resize policies.
- * Calculates scale factors based on viewport dimensions.
- */
+/** Base class for viewport resize policies */
 export abstract class UIResizePolicy {
-  /**
-   * Indicates whether the policy has been modified.
-   * Must be reset to `false` externally by the owner.
-   * @internal
-   */
+  /** @internal */
   public dirty = false;
 
-  /**
-   * Calculates scale factor for given dimensions.
-   * @internal
-   */
+  /** @internal */
   public abstract calculateScale(width: number, height: number): number;
 }

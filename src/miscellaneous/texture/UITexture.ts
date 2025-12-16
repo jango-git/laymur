@@ -11,6 +11,7 @@ import {
   UITextureEvent,
 } from "./UITexture.Internal";
 
+/** Texture with atlas and trim support */
 export class UITexture extends Eventail {
   private textureInternal: Texture = TEXTURE_DEFAULT_TEXTURE;
   private rotatedInternal = false;
@@ -31,6 +32,7 @@ export class UITexture extends Eventail {
   private scaleInternal = 1;
   private dirtyInternal = false;
 
+  /** @param config Texture or atlas configuration */
   constructor(config?: UITextureConfig) {
     super();
     if (config !== undefined) {
@@ -38,36 +40,44 @@ export class UITexture extends Eventail {
     }
   }
 
+  /** Original width before trimming in world units */
   public get width(): number {
     return this.sourceWidth / this.scaleInternal;
   }
 
+  /** Original height before trimming in world units */
   public get height(): number {
     return this.sourceHeight / this.scaleInternal;
   }
 
+  /** Visible width after trimming in world units */
   public get trimmedWidth(): number {
     const frameSize = this.rotatedInternal ? this.frameHeight : this.frameWidth;
     return frameSize / this.scaleInternal;
   }
 
+  /** Visible height after trimming in world units */
   public get trimmedHeight(): number {
     const frameSize = this.rotatedInternal ? this.frameWidth : this.frameHeight;
     return frameSize / this.scaleInternal;
   }
 
+  /** Underlying Three.js texture */
   public get texture(): Texture {
     return this.textureInternal;
   }
 
+  /** Whether sprite is rotated in atlas */
   public get rotated(): boolean {
     return this.rotatedInternal;
   }
 
+  /** Scale factor for resolution independence */
   public get scale(): number {
     return this.scaleInternal;
   }
 
+  /** Transparent padding around visible content */
   public get trim(): Readonly<UITextureTrim> {
     const s = this.scaleInternal;
     return {
@@ -78,14 +88,21 @@ export class UITexture extends Eventail {
     };
   }
 
+  /** Whether texture has been modified since last check */
   public get dirty(): boolean {
     return this.dirtyInternal;
   }
 
+  /** Marks texture as clean. @internal */
   public setDirtyFalse(): void {
     this.dirtyInternal = false;
   }
 
+  /**
+   * Calculates UV transform matrix for shader sampling.
+   * @param result Matrix to store result in
+   * @returns UV transform matrix
+   */
   public calculateUVTransform(result = new Matrix3()): Matrix3 {
     const atlasWidth =
       this.textureInternal.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
@@ -114,10 +131,19 @@ export class UITexture extends Eventail {
     return result;
   }
 
+  /**
+   * Gets original dimensions before trimming.
+   * @param result Vector to store result in
+   * @returns Width and height in world units
+   */
   public getResolution(result = new Vector2()): Vector2 {
     return result.set(this.width, this.height);
   }
 
+  /**
+   * Replaces texture with new configuration.
+   * @param config Texture or atlas configuration
+   */
   public set(config: UITextureConfig): void {
     const previousWidth = this.width;
     const previousHeight = this.height;
@@ -140,6 +166,7 @@ export class UITexture extends Eventail {
     }
   }
 
+  /** Resets to default empty texture */
   public reset(): void {
     const previousWidth = this.width;
     const previousHeight = this.height;

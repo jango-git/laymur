@@ -3,10 +3,7 @@ import { LinearToSRGB, SRGBToLinear } from "three/src/math/ColorManagement.js";
 import type { UIColorConfig, UIColorName } from "./UIColor.Internal";
 import { COLORS } from "./UIColor.Internal";
 
-/**
- * RGBA color with support for RGB, HSL, hex, and named colors.
- * All components are normalized (0-1).
- */
+/** RGBA color with RGB, HSL, hex, and named color support */
 export class UIColor {
   private rInternal = 1;
   private gInternal = 1;
@@ -18,19 +15,7 @@ export class UIColor {
   private lInternal = 1;
 
   private dirtyInternal = false;
-
-  /**
-   * Indicates that RGB values need to be recalculated from HSL.
-   * Set to `true` when HSL components are modified.
-   * Used for lazy RGB computation on next access.
-   */
   private rgbDirty = false;
-
-  /**
-   * Indicates that HSL values need to be recalculated from RGB.
-   * Set to `true` when RGB components are modified.
-   * Used for lazy HSL computation on next access.
-   */
   private hslDirty = false;
 
   constructor();
@@ -107,247 +92,243 @@ export class UIColor {
     }
   }
 
-  /** Black (0x000000). */
+  /** Black (0x000000) */
   public static get black(): UIColor {
     return new UIColor("black");
   }
 
-  /** White (0xffffff). */
+  /** White (0xffffff) */
   public static get white(): UIColor {
     return new UIColor("white");
   }
 
-  /** Red (0xff0000). */
+  /** Red (0xff0000) */
   public static get red(): UIColor {
     return new UIColor("red");
   }
 
-  /** Green (0x008000). */
+  /** Green (0x008000) */
   public static get green(): UIColor {
     return new UIColor("green");
   }
 
-  /** Blue (0x0000ff). */
+  /** Blue (0x0000ff) */
   public static get blue(): UIColor {
     return new UIColor("blue");
   }
 
-  /** Yellow (0xffff00). */
+  /** Yellow (0xffff00) */
   public static get yellow(): UIColor {
     return new UIColor("yellow");
   }
 
-  /** Cyan (0x00ffff). */
+  /** Cyan (0x00ffff) */
   public static get cyan(): UIColor {
     return new UIColor("cyan");
   }
 
-  /** Magenta (0xff00ff). */
+  /** Magenta (0xff00ff) */
   public static get magenta(): UIColor {
     return new UIColor("magenta");
   }
 
-  /** Gray (0x808080). */
+  /** Gray (0x808080) */
   public static get gray(): UIColor {
     return new UIColor("gray");
   }
 
-  /** Grey (0x808080). */
+  /** Grey (0x808080) */
   public static get grey(): UIColor {
     return new UIColor("grey");
   }
 
-  /** Silver (0xc0c0c0). */
+  /** Silver (0xc0c0c0) */
   public static get silver(): UIColor {
     return new UIColor("silver");
   }
 
-  /** Maroon (0x800000). */
+  /** Maroon (0x800000) */
   public static get maroon(): UIColor {
     return new UIColor("maroon");
   }
 
-  /** Olive (0x808000). */
+  /** Olive (0x808000) */
   public static get olive(): UIColor {
     return new UIColor("olive");
   }
 
-  /** Lime (0x00ff00). */
+  /** Lime (0x00ff00) */
   public static get lime(): UIColor {
     return new UIColor("lime");
   }
 
-  /** Aqua (0x00ffff). */
+  /** Aqua (0x00ffff) */
   public static get aqua(): UIColor {
     return new UIColor("aqua");
   }
 
-  /** Teal (0x008080). */
+  /** Teal (0x008080) */
   public static get teal(): UIColor {
     return new UIColor("teal");
   }
 
-  /** Navy (0x000080). */
+  /** Navy (0x000080) */
   public static get navy(): UIColor {
     return new UIColor("navy");
   }
 
-  /** Fuchsia (0xff00ff). */
+  /** Fuchsia (0xff00ff) */
   public static get fuchsia(): UIColor {
     return new UIColor("fuchsia");
   }
 
-  /** Purple (0x800080). */
+  /** Purple (0x800080) */
   public static get purple(): UIColor {
     return new UIColor("purple");
   }
 
-  /** Orange (0xffa500). */
+  /** Orange (0xffa500) */
   public static get orange(): UIColor {
     return new UIColor("orange");
   }
 
-  /** Pink (0xffc0cb). */
+  /** Pink (0xffc0cb) */
   public static get pink(): UIColor {
     return new UIColor("pink");
   }
 
-  /** Brown (0xa52a2a). */
+  /** Brown (0xa52a2a) */
   public static get brown(): UIColor {
     return new UIColor("brown");
   }
 
-  /** Gold (0xffd700). */
+  /** Gold (0xffd700) */
   public static get gold(): UIColor {
     return new UIColor("gold");
   }
 
-  /** Violet (0xee82ee). */
+  /** Violet (0xee82ee) */
   public static get violet(): UIColor {
     return new UIColor("violet");
   }
 
-  /** Indigo (0x4b0082). */
+  /** Indigo (0x4b0082) */
   public static get indigo(): UIColor {
     return new UIColor("indigo");
   }
 
-  /** Coral (0xff7f50). */
+  /** Coral (0xff7f50) */
   public static get coral(): UIColor {
     return new UIColor("coral");
   }
 
-  /** Salmon (0xfa8072). */
+  /** Salmon (0xfa8072) */
   public static get salmon(): UIColor {
     return new UIColor("salmon");
   }
 
-  /** Khaki (0xf0e68c). */
+  /** Khaki (0xf0e68c) */
   public static get khaki(): UIColor {
     return new UIColor("khaki");
   }
 
-  /** Plum (0xdda0dd). */
+  /** Plum (0xdda0dd) */
   public static get plum(): UIColor {
     return new UIColor("plum");
   }
 
-  /** Orchid (0xda70d6). */
+  /** Orchid (0xda70d6) */
   public static get orchid(): UIColor {
     return new UIColor("orchid");
   }
 
-  /** Tan (0xd2b48c). */
+  /** Tan (0xd2b48c) */
   public static get tan(): UIColor {
     return new UIColor("tan");
   }
 
-  /** Beige (0xf5f5dc). */
+  /** Beige (0xf5f5dc) */
   public static get beige(): UIColor {
     return new UIColor("beige");
   }
 
-  /** Mint (0x98fb98). */
+  /** Mint (0x98fb98) */
   public static get mint(): UIColor {
     return new UIColor("mint");
   }
 
-  /** Lavender (0xe6e6fa). */
+  /** Lavender (0xe6e6fa) */
   public static get lavender(): UIColor {
     return new UIColor("lavender");
   }
 
-  /** Crimson (0xdc143c). */
+  /** Crimson (0xdc143c) */
   public static get crimson(): UIColor {
     return new UIColor("crimson");
   }
 
-  /** Azure (0xf0ffff). */
+  /** Azure (0xf0ffff) */
   public static get azure(): UIColor {
     return new UIColor("azure");
   }
 
-  /** Ivory (0xfffff0). */
+  /** Ivory (0xfffff0) */
   public static get ivory(): UIColor {
     return new UIColor("ivory");
   }
 
-  /** Snow (0xfffafa). */
+  /** Snow (0xfffafa) */
   public static get snow(): UIColor {
     return new UIColor("snow");
   }
 
-  /** Red component (0-1). */
+  /** Red component (0 to 1) */
   public get r(): number {
     this.ensureRGBUpdatedFromHSL();
     return this.rInternal;
   }
 
-  /** Green component (0-1). */
+  /** Green component (0 to 1) */
   public get g(): number {
     this.ensureRGBUpdatedFromHSL();
     return this.gInternal;
   }
 
-  /** Blue component (0-1). */
+  /** Blue component (0 to 1) */
   public get b(): number {
     this.ensureRGBUpdatedFromHSL();
     return this.bInternal;
   }
 
-  /** Alpha component (0-1). */
+  /** Alpha component (0 to 1) */
   public get a(): number {
     return this.aInternal;
   }
 
-  /** Hue component (0-360). */
+  /** Hue component (0 to 360) */
   public get hue(): number {
     this.ensureHSLUpdatedFromRGB();
     return this.hInternal;
   }
 
-  /** Saturation component (0-1). */
+  /** Saturation component (0 to 1) */
   public get saturation(): number {
     this.ensureHSLUpdatedFromRGB();
     return this.sInternal;
   }
 
-  /** Lightness component (0-1). */
+  /** Lightness component (0 to 1) */
   public get lightness(): number {
     this.ensureHSLUpdatedFromRGB();
     return this.lInternal;
   }
 
-  /**
-   * Indicates whether the color has been modified since last check.
-   * Set to `true` when any color component changes.
-   * Must be reset to `false` externally by the color owner.
-   * @internal
-   */
+  /** @internal */
   public get dirty(): boolean {
     return this.dirtyInternal;
   }
 
+  /** Red component (0 to 1) */
   public set r(value: number) {
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.rInternal) {
@@ -357,6 +338,7 @@ export class UIColor {
     }
   }
 
+  /** Green component (0 to 1) */
   public set g(value: number) {
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.gInternal) {
@@ -366,6 +348,7 @@ export class UIColor {
     }
   }
 
+  /** Blue component (0 to 1) */
   public set b(value: number) {
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.bInternal) {
@@ -375,6 +358,7 @@ export class UIColor {
     }
   }
 
+  /** Alpha component (0 to 1) */
   public set a(value: number) {
     if (value !== this.aInternal) {
       this.aInternal = value;
@@ -382,6 +366,7 @@ export class UIColor {
     }
   }
 
+  /** Hue component (0 to 360) */
   public set hue(value: number) {
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.hInternal) {
@@ -391,6 +376,7 @@ export class UIColor {
     }
   }
 
+  /** Saturation component (0 to 1) */
   public set saturation(value: number) {
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.sInternal) {
@@ -400,6 +386,7 @@ export class UIColor {
     }
   }
 
+  /** Lightness component (0 to 1) */
   public set lightness(value: number) {
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.lInternal) {
@@ -414,14 +401,7 @@ export class UIColor {
     this.dirtyInternal = false;
   }
 
-  /**
-   * Sets RGB(A) components.
-   *
-   * @param r - Red (0-1)
-   * @param g - Green (0-1)
-   * @param b - Blue (0-1)
-   * @param a - Alpha (0-1)
-   */
+  /** Sets RGB(A) components */
   public set(
     r: number,
     g: number,
@@ -445,7 +425,7 @@ export class UIColor {
     return this;
   }
 
-  /** Returns RGBA as 32-bit hex (RRGGBBAA). */
+  /** Returns RGBA as 32-bit hex (RRGGBBAA) */
   public getHexRGBA(): number {
     this.ensureRGBUpdatedFromHSL();
     return (
@@ -456,7 +436,7 @@ export class UIColor {
     );
   }
 
-  /** Returns RGB as 24-bit hex (RRGGBB). */
+  /** Returns RGB as 24-bit hex (RRGGBB) */
   public getHexRGB(): number {
     this.ensureRGBUpdatedFromHSL();
     return (
@@ -466,19 +446,19 @@ export class UIColor {
     );
   }
 
-  /** Returns RGB as hex string (e.g., "#ffffff"). */
+  /** Returns RGB as hex string ("#ffffff") */
   public getHexStringRGB(): string {
     const hex = this.getHexRGB();
     return `#${hex.toString(16).padStart(6, "0")}`;
   }
 
-  /** Returns RGBA as hex string (e.g., "#ffffffff"). */
+  /** Returns RGBA as hex string ("#ffffffff") */
   public getHexStringRGBA(): string {
     const hex = this.getHexRGBA();
     return `#${hex.toString(16).padStart(8, "0")}`;
   }
 
-  /** Sets color from 32-bit hex RGBA (RRGGBBAA). */
+  /** Sets from 32-bit hex RGBA (RRGGBBAA) */
   public setHexRGBA(hex: number): this {
     this.ensureRGBUpdatedFromHSL();
     const r = ((hex >> 16) & 0xff) / 255;
@@ -501,12 +481,7 @@ export class UIColor {
     return this;
   }
 
-  /**
-   * Sets color from 24-bit hex RGB (RRGGBB).
-   *
-   * @param hex - Hex RGB (e.g., 0xff0000)
-   * @param a - Alpha (0-1)
-   */
+  /** Sets from 24-bit hex RGB (RRGGBB) */
   public setHexRGB(hex: number, a = this.aInternal): this {
     this.ensureRGBUpdatedFromHSL();
     const r = ((hex >> 16) & 0xff) / 255;
@@ -529,9 +504,10 @@ export class UIColor {
   }
 
   /**
-   * Sets color from hex string ("#ffffff" or "#ffffffff").
+   * Sets from hex string.
    *
-   * @throws Error if format is invalid
+   * @param hexString - Format: "#ffffff" or "#ffffffff"
+   * @throws If format invalid
    */
   public setHexString(hexString: string): this {
     if (!hexString.startsWith("#")) {
@@ -565,14 +541,7 @@ export class UIColor {
     }
   }
 
-  /**
-   * Sets color from HSL values.
-   *
-   * @param h - Hue (0-360)
-   * @param s - Saturation (0-1)
-   * @param l - Lightness (0-1)
-   * @param a - Alpha (0-1)
-   */
+  /** Sets from HSL values */
   public setHSL(h: number, s: number, l: number, a = this.aInternal): this {
     this.ensureHSLUpdatedFromRGB();
     if (
@@ -592,9 +561,9 @@ export class UIColor {
   }
 
   /**
-   * Sets color from predefined name.
+   * Sets from predefined name.
    *
-   * @throws Error if color name is unknown
+   * @throws If color name unknown
    */
   public setColorName(colorName: UIColorName, a = this.aInternal): this {
     const normalizedName = colorName.toLowerCase().trim();
@@ -607,14 +576,7 @@ export class UIColor {
     return this.setHexRGB(hex, a);
   }
 
-  /**
-   * Sets color from linear (GLSL) color space.
-   *
-   * @param r - Red in linear space (0-1)
-   * @param g - Green in linear space (0-1)
-   * @param b - Blue in linear space (0-1)
-   * @param a - Alpha (0-1)
-   */
+  /** Sets from linear (GLSL) color space */
   public setGLSLColor(
     r: number,
     g: number,
@@ -644,7 +606,7 @@ export class UIColor {
     return this;
   }
 
-  /** Sets color from Three.js Color. */
+  /** Sets from Three.js Color */
   public setThreeColor(threeColor: Color, a = this.aInternal): this {
     this.ensureRGBUpdatedFromHSL();
     if (
@@ -663,7 +625,7 @@ export class UIColor {
     return this;
   }
 
-  /** Returns CSS color string (e.g., "rgba(255, 0, 0, 1)"). */
+  /** Returns CSS color string ("rgba(255, 0, 0, 1)") */
   public toCSSColor(): string {
     this.ensureRGBUpdatedFromHSL();
     const r = Math.round(this.rInternal * 255);
@@ -672,7 +634,7 @@ export class UIColor {
     return `rgba(${r}, ${g}, ${b}, ${this.aInternal})`;
   }
 
-  /** Converts to linear (GLSL) color space. */
+  /** Converts to linear (GLSL) color space */
   public toGLSLColor(result: Vector4 = new Vector4()): Vector4 {
     this.ensureRGBUpdatedFromHSL();
 
@@ -684,7 +646,7 @@ export class UIColor {
     return result;
   }
 
-  /** Converts to Three.js Color (without alpha). */
+  /** Converts to Three.js Color (without alpha) */
   public toThreeColor(result: Color = new Color()): Color {
     this.ensureRGBUpdatedFromHSL();
 
@@ -695,7 +657,7 @@ export class UIColor {
     return result;
   }
 
-  /** Copies from another color. */
+  /** Copies from another color */
   public copy(color: UIColor | Color): this {
     if (color instanceof UIColor) {
       this.ensureRGBUpdatedFromHSL();
@@ -734,7 +696,7 @@ export class UIColor {
     return this;
   }
 
-  /** Returns a copy of this color. */
+  /** Returns copy of this color */
   public clone(): UIColor {
     this.ensureRGBUpdatedFromHSL();
     return new UIColor(

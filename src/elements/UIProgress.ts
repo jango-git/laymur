@@ -14,19 +14,13 @@ import {
   simplifyGLSLSource,
 } from "./UIProgress.Internal";
 
-/**
- * Progress bar UI element with customizable fill direction and appearance.
- *
- * UIProgress displays a progress bar that can be filled in various directions
- * (horizontal, vertical, or at custom angles). It supports separate background
- * and foreground textures with independent color tinting and opacity control.
- *
- * The progress value ranges from 0.0 (empty) to 1.0 (completely filled).
- * The fill direction can be controlled both by angle and forward/reverse direction.
- */
+/** Progress bar with customizable fill direction */
 export class UIProgress extends UIElement {
+  /** Texture displayed by this element */
   public readonly texture: UITexture;
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
+  /** Function controlling fill direction and shape */
   public readonly maskFunction: UIProgressMaskFunction;
 
   private readonly textureTransform: Matrix3;
@@ -36,11 +30,13 @@ export class UIProgress extends UIElement {
   private dirty = false;
 
   /**
-   * Creates a new progress bar UI element.
+   * Creates a new UIProgress instance.
    *
-   * @param layer - The UI layer to add this element to
-   * @param texture - The texture used for the progress fill
-   * @param options - Configuration options for the progress bar
+   * Defaults size to texture dimensions if width and height not provided.
+   *
+   * @param layer - Layer containing this element
+   * @param texture - Texture to display
+   * @param options - Configuration options
    */
   constructor(
     layer: UILayer,
@@ -88,18 +84,12 @@ export class UIProgress extends UIElement {
     );
   }
 
-  /**
-   * Gets the current progress value.
-   * @returns Progress value between 0.0 (empty) and 1.0 (full)
-   */
+  /** Progress from 0 (empty) to 1 (full) */
   public get progress(): number {
     return this.progressInternal;
   }
 
-  /**
-   * Sets the progress value.
-   * @param value - Progress value between 0.0 (empty) and 1.0 (full)
-   */
+  /** Progress from 0 (empty) to 1 (full). Clamped by shader. */
   public set progress(value: number) {
     if (this.progressInternal !== value) {
       this.progressInternal = value;

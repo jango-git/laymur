@@ -2,16 +2,17 @@ import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
 import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
 import type { UIElementOptions } from "./UIElement.Internal";
 
-export const PROGRESS_DEFAULT_VALUE = 1;
-
-/**
- * Configuration options for creating a UIProgress element.
- */
+/** Configuration options for UIProgress */
 export interface UIProgressOptions extends UIElementOptions {
+  /** Multiplicative tint */
   color: UIColorConfig;
+  /** Function controlling fill direction and shape */
   maskFunction: UIProgressMaskFunction;
+  /** Progress from 0 (empty) to 1 (full) */
   progress: number;
 }
+
+export const PROGRESS_DEFAULT_VALUE = 1;
 
 export function simplifyGLSLSource(source: string): string {
   return source

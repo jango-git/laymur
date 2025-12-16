@@ -1,19 +1,28 @@
-/** Anchor mode for UIMicro transformations. */
+/** Controls which transforms apply relative to anchor */
 export enum UIMicroAnchorMode {
-  /** Rotation and scale around anchor. */
+  /** Apply rotation and scale around anchor point */
   ROTATION_SCALE = 0,
-  /** Position, rotation, and scale around anchor. */
+  /** Apply position, rotation, and scale around anchor point */
   POSITION_ROTATION_SCALE = 1,
 }
 
+/** Configuration options for UIMicro */
 export interface UIMicroConfig {
+  /** X offset in world units */
   x: number;
+  /** Y offset in world units */
   y: number;
+  /** X anchor in normalized coordinates (0 to 1) */
   anchorX: number;
+  /** Y anchor in normalized coordinates (0 to 1) */
   anchorY: number;
+  /** X scale multiplier */
   scaleX: number;
+  /** Y scale multiplier */
   scaleY: number;
+  /** Rotation in radians */
   rotation: number;
+  /** Which transforms apply relative to anchor */
   anchorMode: UIMicroAnchorMode;
 }
 

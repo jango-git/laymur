@@ -1,8 +1,10 @@
 import type { Color } from "three";
 import type { UIColor } from "./UIColor";
 
+/** Color configuration as Three.js Color, hex number, hex string, or UIColor */
 export type UIColorConfig = Color | number | string | UIColor;
 
+/** Predefined color names */
 export type UIColorName =
   | "black"
   | "white"

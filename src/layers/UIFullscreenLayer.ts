@@ -1,4 +1,4 @@
-import type { Vector2, Camera, WebGLRenderer } from "three";
+import type { Camera, Vector2, WebGLRenderer } from "three";
 import { MathUtils, Ray, Vector3 } from "three";
 import { assertValidNumber } from "../miscellaneous/asserts";
 import type { UIResizePolicy } from "../miscellaneous/resize-policy/UIResizePolicy";
@@ -8,22 +8,10 @@ import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 import type { UILayerMode } from "./UILayer.Internal";
 
-/**
- * UI layer that covers the full browser window.
- *
- * Handles window resize and pointer events automatically. Scaling is controlled
- * by the assigned resize policy.
- *
- * @see {@link UILayer}
- * @see {@link UIResizePolicy}
- */
 export class UIFullscreenLayer extends UILayer {
   private resizePolicyInternal: UIResizePolicy;
   private resizePolicyDirty = false;
 
-  /**
-   * Creates a fullscreen layer and sets up window event listeners.
-   */
   constructor(
     resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
     mode: UILayerMode = UIMode.VISIBLE,
@@ -51,9 +39,6 @@ export class UIFullscreenLayer extends UILayer {
     }
   }
 
-  /**
-   * Removes window event listeners. The layer should not be used after this.
-   */
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onPointerDown);
@@ -61,12 +46,6 @@ export class UIFullscreenLayer extends UILayer {
     window.removeEventListener("pointerup", this.onPointerUp);
   }
 
-  /**
-   * Renders the layer.
-   *
-   * @param renderer - WebGL renderer
-   * @param deltaTime - Time since last frame in seconds
-   */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
     if (this.resizePolicy.dirty || this.resizePolicyDirty) {
@@ -75,13 +54,6 @@ export class UIFullscreenLayer extends UILayer {
     super.renderInternal(renderer, deltaTime);
   }
 
-  /**
-   * Projects 3D world position to 2D layer coordinates.
-   *
-   * @param position - 3D world position
-   * @param camera - Camera for projection
-   * @returns 2D position in layer space
-   */
   public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
     const projectedPosition = position.clone().project(camera);
     projectedPosition.x = MathUtils.mapLinear(
@@ -101,14 +73,6 @@ export class UIFullscreenLayer extends UILayer {
     return projectedPosition;
   }
 
-  /**
-   * Projects 2D layer position to 3D world coordinates.
-   *
-   * @param position - 2D position in layer space
-   * @param camera - Camera for unprojection
-   * @param z - z in NDC space (defaults to -1)
-   * @returns 3D position in world space
-   */
   public projectLayerPosition(
     position: Vector2,
     camera: Camera,
@@ -121,13 +85,6 @@ export class UIFullscreenLayer extends UILayer {
     ).unproject(camera);
   }
 
-  /**
-   * Builds a ray from camera through the given layer position.
-   *
-   * @param position - 2D position in layer space
-   * @param camera - Camera for ray origin and direction
-   * @returns Ray in world space
-   */
   public buildRay(position: Vector2, camera: Camera, result = new Ray()): Ray {
     const near = new Vector3(
       MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
@@ -145,9 +102,6 @@ export class UIFullscreenLayer extends UILayer {
     return result.set(near, direction);
   }
 
-  /**
-   * Handles window resize. Updates layer dimensions according to resize policy.
-   */
   private readonly onResize = (): void => {
     const scale = this.resizePolicy.calculateScale(
       window.innerWidth,

@@ -1,11 +1,13 @@
 import type { Vector2Like } from "three";
 import { UIArea } from "./UIArea";
 
-/**
- * Polygonal area defined by vertices.
- * Uses ray casting algorithm for point containment.
- */
+/** Polygonal interaction area using ray casting */
 export class UIAreaPolygon extends UIArea {
+  /**
+   * Creates polygonal area.
+   *
+   * @param vertices - Vertices in normalized coordinates (0 to 1)
+   */
   constructor(public vertices: Vector2Like[]) {
     super();
   }

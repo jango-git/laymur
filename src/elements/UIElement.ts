@@ -12,10 +12,9 @@ import { UIDummy } from "./UIDummy";
 import type { UIElementOptions } from "./UIElement.Internal";
 import { ELEMENT_DEFAULT_TRANSPARENCY_MODE } from "./UIElement.Internal";
 
-/**
- * Base class for renderable UI elements.
- */
+/** Base class for renderable UI elements */
 export abstract class UIElement extends UIDummy {
+  /** Transforms that don't affect constraints */
   public readonly micro: UIMicro;
 
   protected readonly sceneWrapper: UISceneWrapperInterface;
@@ -26,6 +25,14 @@ export abstract class UIElement extends UIDummy {
 
   private visibilityDirty = false;
 
+  /**
+   * Creates a new UIElement instance.
+   *
+   * @param layer - Layer containing this element
+   * @param source - GLSL shader source code
+   * @param properties - Shader uniform properties
+   * @param options - Configuration options
+   */
   constructor(
     layer: UILayer,
     source: string,
@@ -49,10 +56,12 @@ export abstract class UIElement extends UIDummy {
     this.layer.on(UILayerEvent.RENDERING, this.onWillRender, this);
   }
 
+  /** Alpha blending mode */
   public get transparencyMode(): UITransparencyMode {
     return this.transparencyModeInternal;
   }
 
+  /** Alpha blending mode */
   public set transparencyMode(value: UITransparencyMode) {
     if (this.transparencyModeInternal !== value) {
       this.transparencyModeInternal = value;
@@ -68,6 +77,7 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.layer.off(UILayerEvent.RENDERING, this.onWillRender, this);
     this.sceneWrapper.destroyPlane(this.planeHandler);

@@ -15,18 +15,9 @@ import {
 } from "./UIAnimatedImage.Internal";
 import { UIElement } from "./UIElement";
 
-/**
- * UI element for displaying textured images.
- *
- * UIAnimatedImage is a concrete implementation of UIElement that renders a textured
- * image using shader-based planes. It automatically sizes itself
- * to match the texture dimensions and provides control over visual properties
- * such as color tinting.
- *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link Texture} - Three.js texture for image data
- */
+/** Frame-based texture animation element */
 export class UIAnimatedImage extends UIElement {
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
 
   private readonly sequenceInternal: UITexture[];
@@ -43,13 +34,11 @@ export class UIAnimatedImage extends UIElement {
   /**
    * Creates a new UIAnimatedImage instance.
    *
-   * The image will automatically size itself to match the texture's dimensions.
-   * All options have default values if not specified.
+   * Defaults size to first frame dimensions if width and height not provided.
    *
-   * @param layer - The UI layer that contains this image
-   * @param texture - The Three.js texture to display
-   * @param options - Configuration options for the image
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
+   * @param layer - Layer containing this element
+   * @param sequence - Array of textures forming animation
+   * @param options - Configuration options
    */
   constructor(
     layer: UILayer,
@@ -92,34 +81,27 @@ export class UIAnimatedImage extends UIElement {
     }
   }
 
+  /** Animation frames as readonly array */
   public get sequence(): readonly UITexture[] {
     return this.sequenceInternal;
   }
 
-  /**
-   * Gets the frame rate for animation.
-   * @returns The frame rate in frames per second
-   */
+  /** Animation speed in frames per second */
   public get frameRate(): number {
     return this.frameRateInternal;
   }
 
-  /**
-   * Gets whether the animation loops.
-   * @returns True if animation loops
-   */
+  /** Whether animation repeats after completion */
   public get loop(): boolean {
     return this.loopInternal;
   }
 
-  /**
-   * Gets the total duration of the animation in seconds.
-   * @returns The duration in seconds
-   */
+  /** Total animation duration in seconds */
   public get duration(): number {
     return this.sequenceInternal.length / this.frameRateInternal;
   }
 
+  /** Replaces animation frames. Stops playback. */
   public set sequence(sequence: UITextureConfig[]) {
     this.stop();
     this.unsubscribeSequenceEvents();
@@ -142,31 +124,24 @@ export class UIAnimatedImage extends UIElement {
     this.subscribeSequenceEvents();
   }
 
-  /**
-   * Sets the frame rate for animation.
-   * @param value - The frame rate in frames per second
-   */
+  /** Animation speed in frames per second */
   public set frameRate(value: number) {
     assertValidPositiveNumber(value, "UIAnimatedImage.frameRate");
     this.frameRateInternal = value;
   }
 
-  /**
-   * Sets whether the animation loops.
-   * @param value - True to enable looping
-   */
+  /** Whether animation repeats after completion */
   public set loop(value: boolean) {
     this.loopInternal = value;
   }
 
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.unsubscribeSequenceEvents();
     super.destroy();
   }
 
-  /**
-   * Starts or resumes playback of the animation.
-   */
+  /** Starts or resumes animation playback */
   public play(): void {
     if (!this.isPlaying) {
       this.isPlaying = true;
@@ -174,9 +149,7 @@ export class UIAnimatedImage extends UIElement {
     }
   }
 
-  /**
-   * Pauses the animation at the current frame.
-   */
+  /** Pauses animation at current frame */
   public pause(): void {
     if (this.isPlaying) {
       this.isPlaying = false;
@@ -184,9 +157,7 @@ export class UIAnimatedImage extends UIElement {
     }
   }
 
-  /**
-   * Stops the animation and resets to the first frame.
-   */
+  /** Stops animation and resets to first frame */
   public stop(): void {
     if (
       this.isPlaying ||

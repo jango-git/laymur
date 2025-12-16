@@ -22,10 +22,7 @@ import {
   TEXT_STYLE_DEFAULT_STROKE_THICKNESS,
 } from "./UITextStyle.Internal";
 
-/**
- * Text style configuration for UI text rendering.
- * Manages font properties, colors, shadows, and strokes.
- */
+/** Text style configuration for UI text rendering */
 export class UITextStyle {
   private colorInternal?: string;
   private alignInternal?: "left" | "center" | "right";
@@ -50,6 +47,7 @@ export class UITextStyle {
 
   private dirtyInternal = true;
 
+  /** @param config Partial style configuration. Unspecified properties remain undefined. */
   constructor(config?: Partial<UITextStyleConfig>) {
     this.colorInternal = config?.color;
     this.alignInternal = config?.align;
@@ -68,32 +66,32 @@ export class UITextStyle {
     this.strokeThicknessInternal = config?.strokeThickness;
   }
 
-  /** Text color. */
+  /** Text color */
   public get color(): string | undefined {
     return this.colorInternal;
   }
 
-  /** Text alignment. */
+  /** Text alignment */
   public get align(): "left" | "center" | "right" | undefined {
     return this.alignInternal;
   }
 
-  /** Font family name. */
+  /** Font family name */
   public get fontFamily(): string | undefined {
     return this.fontFamilyInternal;
   }
 
-  /** Font size in pixels. */
+  /** Font size in pixels */
   public get fontSize(): number | undefined {
     return this.fontSizeInternal;
   }
 
-  /** Font style. */
+  /** Font style */
   public get fontStyle(): "normal" | "italic" | "oblique" | undefined {
     return this.fontStyleInternal;
   }
 
-  /** Font weight. */
+  /** Font weight */
   public get fontWeight():
     | "normal"
     | "bold"
@@ -104,47 +102,47 @@ export class UITextStyle {
     return this.fontWeightInternal;
   }
 
-  /** Line height in pixels. */
+  /** Line height in pixels */
   public get lineHeight(): number | undefined {
     return this.lineHeightInternal;
   }
 
-  /** Whether shadow is enabled. */
+  /** Whether shadow is enabled */
   public get enableShadow(): boolean | undefined {
     return this.enableShadowInternal;
   }
 
-  /** Shadow horizontal offset in pixels. */
+  /** Shadow horizontal offset in pixels */
   public get shadowOffsetX(): number | undefined {
     return this.shadowOffsetXInternal;
   }
 
-  /** Shadow vertical offset in pixels. */
+  /** Shadow vertical offset in pixels */
   public get shadowOffsetY(): number | undefined {
     return this.shadowOffsetYInternal;
   }
 
-  /** Shadow blur radius in pixels. */
+  /** Shadow blur radius in pixels */
   public get shadowBlur(): number | undefined {
     return this.shadowBlurInternal;
   }
 
-  /** Shadow color. */
+  /** Shadow color */
   public get shadowColor(): string | undefined {
     return this.shadowColorInternal;
   }
 
-  /** Whether stroke is enabled. */
+  /** Whether stroke is enabled */
   public get enableStroke(): boolean | undefined {
     return this.enableStrokeInternal;
   }
 
-  /** Stroke color. */
+  /** Stroke color */
   public get strokeColor(): string | undefined {
     return this.strokeColorInternal;
   }
 
-  /** Stroke thickness in pixels. */
+  /** Stroke thickness in pixels */
   public get strokeThickness(): number | undefined {
     return this.strokeThicknessInternal;
   }
@@ -286,6 +284,12 @@ export class UITextStyle {
     }
   }
 
+  /**
+   * Resolves complete style from primary and fallback sources.
+   * @param primary First style to check for each property
+   * @param fallback Second style to check if primary is undefined
+   * @returns Complete style configuration with all defaults applied
+   */
   public static resolve(
     primary?: UITextStyle,
     fallback?: UITextStyle,
@@ -361,7 +365,7 @@ export class UITextStyle {
     this.dirtyInternal = false;
   }
 
-  /** Sets all properties to default values. */
+  /** Sets all properties to default values */
   public setDefaults(): void {
     if (
       this.colorInternal !== TEXT_STYLE_DEFAULT_COLOR ||
@@ -401,7 +405,7 @@ export class UITextStyle {
     }
   }
 
-  /** Clears all properties (sets them to undefined). */
+  /** Sets all properties to undefined */
   public clear(): void {
     if (
       this.colorInternal !== undefined ||
@@ -439,7 +443,7 @@ export class UITextStyle {
     }
   }
 
-  /** Copies properties from another UITextStyle. */
+  /** Copies from another style instance */
   public copy(value: UITextStyle): void {
     if (
       this.colorInternal !== value.colorInternal ||
@@ -478,10 +482,8 @@ export class UITextStyle {
   }
 
   /**
-   * Calculates the maximum padding required for rendering this style.
-   * Accounts for stroke and shadow effects without creating a rendering context.
-   *
-   * @returns Maximum padding in pixels needed on all sides
+   * Calculates maximum padding required for stroke and shadow.
+   * @returns Padding in pixels needed on all sides
    */
   public calculatePadding(): number {
     let padding = 0;

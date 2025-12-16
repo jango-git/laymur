@@ -1,9 +1,14 @@
 import { UIArea } from "./UIArea";
 
-/**
- * Circular area defined by center and radius.
- */
+/** Circular interaction area */
 export class UIAreaCircle extends UIArea {
+  /**
+   * Creates circular area.
+   *
+   * @param centerX - Center X in normalized coordinates (0 to 1)
+   * @param centerY - Center Y in normalized coordinates (0 to 1)
+   * @param radius - Radius in normalized coordinates (0 to 1)
+   */
   constructor(
     public centerX: number,
     public centerY: number,

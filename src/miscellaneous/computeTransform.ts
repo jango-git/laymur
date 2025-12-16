@@ -1,12 +1,21 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
 import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicro.Internal";
 
+/** Reusable position vector */
 const TEMP_POSITION = new Vector3();
+/** Reusable rotation quaternion */
 const TEMP_QUATERNION = new Quaternion();
+/** Reusable scale vector */
 const TEMP_SCALE = new Vector3();
+/** Reusable transform matrix */
 const TEMP_MATRIX = new Matrix4();
+/** Z-axis for 2D rotation */
 const Z_AXIS = new Vector3(0, 0, 1);
 
+/**
+ * Computes element transform matrix.
+ * @returns Transform matrix (reused, do not store reference)
+ */
 export function computeTransformMatrix(
   x: number,
   y: number,
@@ -54,14 +63,14 @@ export function computeTransformMatrix(
 }
 
 /**
- * Computes transform for a trimmed sprite.
- *
- * @param width - Source width (original sprite size including trimmed areas)
- * @param height - Source height (original sprite size including trimmed areas)
- * @param trimLeft - Pixels trimmed from left
- * @param trimRight - Pixels trimmed from right
- * @param trimTop - Pixels trimmed from top
- * @param trimBottom - Pixels trimmed from bottom
+ * Computes transform matrix for trimmed sprite.
+ * @param width Source width including trimmed areas
+ * @param height Source height including trimmed areas
+ * @param trimLeft Pixels trimmed from left
+ * @param trimRight Pixels trimmed from right
+ * @param trimTop Pixels trimmed from top
+ * @param trimBottom Pixels trimmed from bottom
+ * @returns Transform matrix (reused, do not store reference)
  */
 export function computeTrimmedTransformMatrix(
   x: number,

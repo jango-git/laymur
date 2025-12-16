@@ -27,22 +27,11 @@ import {
   UISceneUpdateMode,
 } from "./UIScene.Internal";
 
-/**
- * UI element for rendering 3D scenes to texture within the UI system.
- *
- * UIScene is a concrete implementation of UIElement that renders a Three.js
- * scene to a WebGL render target and displays it as a texture. It provides
- * control over rendering frequency, resolution, and visual properties. This
- * allows embedding complex 3D content within the 2D UI layout system with
- * performance optimizations through configurable update modes.
- *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link UISceneUpdateMode} - Update mode configuration
- * @see {@link Scene} - Three.js scene for 3D content
- * @see {@link Camera} - Three.js camera for scene rendering
- */
+/** Renders Three.js scene to texture */
 export class UIScene extends UIElement {
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
+  /** Background color for render target */
   public readonly clearColor: UIColor;
 
   private readonly renderTarget: WebGLRenderTarget;
@@ -57,15 +46,11 @@ export class UIScene extends UIElement {
   private propertyDirty = false;
 
   /**
-   * Creates a new UIScene instance with 3D scene rendering capabilities.
+   * Creates a new UIScene instance.
    *
-   * The scene element creates a WebGL render target for off-screen rendering
-   * and displays the result as a texture. A default perspective camera is
-   * created if none is provided.
-   *
-   * @param layer - The UI layer that contains this scene element
-   * @param options - Configuration options for scene rendering
-   * @throws Will throw an error if resolution factor is outside valid range (0.1-2.0)
+   * @param layer - Layer containing this element
+   * @param options - Configuration options
+   * @throws If resolutionFactor outside range 0.1 to 2.0
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     const resolutionFactor =
@@ -131,42 +116,27 @@ export class UIScene extends UIElement {
     this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
   }
 
-  /**
-   * Gets the Three.js scene being rendered.
-   * @returns The current Three.js scene
-   */
+  /** Three.js scene to render */
   public get scene(): Scene {
     return this.sceneInternal;
   }
 
-  /**
-   * Gets the camera used for rendering the scene.
-   * @returns The current Three.js camera
-   */
+  /** Camera used for rendering */
   public get camera(): Camera {
     return this.cameraInternal;
   }
 
-  /**
-   * Gets the current update mode controlling render frequency.
-   * @returns The current update mode
-   */
+  /** Controls when scene re-renders */
   public get updateMode(): UISceneUpdateMode {
     return this.updateModeInternal;
   }
 
-  /**
-   * Gets the resolution factor for render target sizing.
-   * @returns The resolution factor between 0.1 and 2.0
-   */
+  /** Render target resolution multiplier. Range 0.1 to 2.0. */
   public get resolutionFactor(): number {
     return this.resolutionFactorInternal;
   }
 
-  /**
-   * Sets a new Three.js scene to render and marks for re-render.
-   * @param value - The new Three.js scene
-   */
+  /** Three.js scene to render */
   public set scene(value: Scene) {
     if (this.sceneInternal !== value) {
       this.sceneInternal = value;
@@ -174,10 +144,7 @@ export class UIScene extends UIElement {
     }
   }
 
-  /**
-   * Sets a new camera for rendering and marks for re-render.
-   * @param value - The new Three.js camera
-   */
+  /** Camera used for rendering */
   public set camera(value: Camera) {
     if (this.cameraInternal !== value) {
       this.cameraInternal = value;
@@ -185,10 +152,7 @@ export class UIScene extends UIElement {
     }
   }
 
-  /**
-   * Sets the update mode controlling render frequency and marks for re-render.
-   * @param value - The new update mode
-   */
+  /** Controls when scene re-renders */
   public set updateMode(value: UISceneUpdateMode) {
     if (this.updateModeInternal !== value) {
       this.updateModeInternal = value;
@@ -196,10 +160,7 @@ export class UIScene extends UIElement {
     }
   }
 
-  /**
-   * Sets the resolution factor and resizes the render target accordingly.
-   * @param value - The new resolution factor between 0.1 and 2.0
-   */
+  /** Render target resolution multiplier. Range 0.1 to 2.0. */
   public set resolutionFactor(value: number) {
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
@@ -207,34 +168,17 @@ export class UIScene extends UIElement {
     }
   }
 
-  /**
-   * Destroys the scene element by cleaning up all associated resources.
-   *
-   * This method disposes of the material and render target resources,
-   * and calls the parent destroy method to clean up the underlying UI element.
-   * After calling this method, the scene element should not be used anymore.
-   */
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.renderTarget.dispose();
     super.destroy();
   }
 
-  /**
-   * Manually requests a re-render of the scene.
-   *
-   * This method is useful when the update mode is set to MANUAL and you
-   * want to trigger a scene re-render without changing any properties.
-   */
+  /** Triggers re-render on next frame. Useful in MANUAL mode. */
   public requestUpdate(): void {
     this.updateRequired = true;
   }
 
-  /**
-   * Called before each render frame to update the 3D scene rendering.
-   * Handles different update modes and renders the 3D scene to the render target
-   * based on the current update mode and property change state.
-   * @param renderer - The WebGL renderer used for scene rendering
-   */
   protected override onWillRender(
     renderer: WebGLRenderer,
     deltaTime: number,

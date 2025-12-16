@@ -7,23 +7,28 @@ import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Inter
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
 import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 
-/**
- * Point in 2D space with constraint-based positioning.
- */
+/** Point in 2D space with constraint-based positioning */
 export class UIAnchor
   extends Eventail
   implements UILayerElement, UIPointElement
 {
+  /** Optional identifier for debugging */
   public name = "";
 
-  /** Solver variable for x-coordinate. */
+  /** Solver variable for x coordinate */
   public readonly xVariable: number;
 
-  /** Solver variable for y-coordinate. */
+  /** Solver variable for y coordinate */
   public readonly yVariable: number;
 
   protected readonly solverWrapper: UISolverWrapperInterface;
 
+  /**
+   * Creates a new UIAnchor instance.
+   *
+   * @param layer - Layer containing this anchor
+   * @param options - Configuration options
+   */
   constructor(
     public readonly layer: UILayer,
     options?: Partial<UIAnchorOptions>,
@@ -43,24 +48,29 @@ export class UIAnchor
     this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);
   }
 
+  /** X coordinate relative to layer origin (bottom-left) */
   public get x(): number {
     return this.solverWrapper.readVariableValue(this.xVariable);
   }
 
+  /** Y coordinate relative to layer origin (bottom-left) */
   public get y(): number {
     return this.solverWrapper.readVariableValue(this.yVariable);
   }
 
+  /** X coordinate relative to layer origin (bottom-left) */
   public set x(value: number) {
     assertValidNumber(value, "UIAnchor.x");
     this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
+  /** Y coordinate relative to layer origin (bottom-left) */
   public set y(value: number) {
     assertValidNumber(value, "UIAnchor.y");
     this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
 
+  /** Removes anchor and frees resources */
   public destroy(): void {
     this.solverWrapper.removeVariable(this.yVariable);
     this.solverWrapper.removeVariable(this.xVariable);

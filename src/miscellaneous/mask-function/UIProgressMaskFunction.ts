@@ -1,9 +1,13 @@
 import type { UIPropertyType } from "../generic-plane/shared";
 
+/** Base class for progress bar fill functions */
 export abstract class UIProgressMaskFunction {
   protected dirtyInternal = false;
 
-  protected constructor(public readonly source: string) {}
+  protected constructor(
+    /** GLSL shader source code defining fill behavior */
+    public readonly source: string,
+  ) {}
 
   /** @internal */
   public get dirty(): boolean {

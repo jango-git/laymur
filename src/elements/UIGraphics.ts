@@ -7,28 +7,20 @@ import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";
 import { UIElement } from "./UIElement";
 import type { UIGraphicsOptions } from "./UIGraphics.Internal";
 
-/**
- * UI element for drawing graphics using 2D canvas API.
- *
- * UIGraphics uses an OffscreenCanvas for rendering 2D graphics and converts it
- * to a Three.js texture for display. It provides access to the canvas context
- * for custom drawing operations.
- */
+/** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
 
-  /** OffscreenCanvas for rendering graphics */
   private readonly canvas: OffscreenCanvas;
-  /** 2D rendering context */
   private readonly context: OffscreenCanvasRenderingContext2D;
-  /** Three.js texture created from the canvas */
   private readonly texture: CanvasTexture;
 
   /**
    * Creates a new UIGraphics instance.
    *
-   * @param layer - The UI layer that contains this graphics element
-   * @param options - Configuration options for the graphics element
+   * @param layer - Layer containing this element
+   * @param options - Configuration options
    */
   constructor(layer: UILayer, options?: Partial<UIGraphicsOptions>) {
     const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
@@ -66,9 +58,9 @@ export class UIGraphics extends UIElement {
   }
 
   /**
-   * Clears the canvas and optionally fills it with a color.
+   * Clears canvas. Optionally fills with color.
    *
-   * @param color - Optional color to fill the canvas after clearing
+   * @param color - Fill color after clearing
    */
   public clear(color?: UIColor): this {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -80,15 +72,7 @@ export class UIGraphics extends UIElement {
     return this;
   }
 
-  /**
-   * Draws a filled rectangle.
-   *
-   * @param x - X coordinate of the rectangle's top-left corner
-   * @param y - Y coordinate of the rectangle's top-left corner
-   * @param width - Width of the rectangle
-   * @param height - Height of the rectangle
-   * @param color - Fill color
-   */
+  /** Draws filled rectangle */
   public drawRect(
     x: number,
     y: number,
@@ -102,14 +86,7 @@ export class UIGraphics extends UIElement {
     return this;
   }
 
-  /**
-   * Draws a filled circle.
-   *
-   * @param x - X coordinate of the circle's center
-   * @param y - Y coordinate of the circle's center
-   * @param radius - Radius of the circle
-   * @param color - Fill color
-   */
+  /** Draws filled circle */
   public drawCircle(
     x: number,
     y: number,
@@ -125,14 +102,10 @@ export class UIGraphics extends UIElement {
   }
 
   /**
-   * Draws an arc (partial circle).
+   * Draws filled arc.
    *
-   * @param x - X coordinate of the arc's center
-   * @param y - Y coordinate of the arc's center
-   * @param radius - Radius of the arc
    * @param startAngle - Start angle in radians
    * @param endAngle - End angle in radians
-   * @param color - Fill color
    */
   public drawArc(
     x: number,
@@ -151,11 +124,10 @@ export class UIGraphics extends UIElement {
   }
 
   /**
-   * Draws a polyline (connected line segments).
+   * Draws connected line segments.
    *
-   * @param points - Array of points as [x, y] pairs
-   * @param color - Stroke color
-   * @param lineWidth - Width of the line (default: 1)
+   * @param points - Array of [x, y] pairs
+   * @param lineWidth - Line width in pixels
    */
   public drawPolyline(
     points: [number, number][],
@@ -180,9 +152,7 @@ export class UIGraphics extends UIElement {
     return this;
   }
 
-  /**
-   * Destroys the graphics element by cleaning up resources.
-   */
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.texture.dispose();
     super.destroy();

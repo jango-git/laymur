@@ -15,10 +15,15 @@ import {
   UINineSliceRegionMode,
 } from "./UINineSlice.Internal";
 
+/** Scalable textured image preserving border regions */
 export class UINineSlice extends UIElement {
+  /** Texture displayed by this element */
   public readonly texture: UITexture;
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
+  /** Border size in normalized texture coordinates (0 to 1) */
   public readonly sliceBorders: UIPadding;
+  /** Region size. Interpretation depends on regionMode. */
   public readonly sliceRegions: UIPadding;
 
   private regionModeInternal: UINineSliceRegionMode;
@@ -31,6 +36,15 @@ export class UINineSlice extends UIElement {
   private lastWidth: number;
   private lastHeight: number;
 
+  /**
+   * Creates a new UINineSlice instance.
+   *
+   * Defaults size to texture dimensions if width and height not provided.
+   *
+   * @param layer - Layer containing this element
+   * @param texture - Texture to display
+   * @param options - Configuration options
+   */
   constructor(
     layer: UILayer,
     texture: UITextureConfig,
@@ -82,10 +96,12 @@ export class UINineSlice extends UIElement {
     this.lastHeight = this.height;
   }
 
+  /** Controls how sliceRegions values are interpreted */
   public get regionMode(): UINineSliceRegionMode {
     return this.regionModeInternal;
   }
 
+  /** Controls how sliceRegions values are interpreted */
   public set regionMode(value: UINineSliceRegionMode) {
     if (this.regionModeInternal !== value) {
       this.regionModeInternal = value;

@@ -1,10 +1,18 @@
 import { UIArea } from "./UIArea";
 
-/**
- * Rectangular area with rounded corners.
- * Radius is clamped to half of the smallest dimension.
- */
+/** Rectangular interaction area with rounded corners */
 export class UIAreaRoundedRectangle extends UIArea {
+  /**
+   * Creates rounded rectangular area.
+   *
+   * Radius clamped to half of smallest dimension.
+   *
+   * @param x - X position in normalized coordinates (0 to 1)
+   * @param y - Y position in normalized coordinates (0 to 1)
+   * @param width - Width in normalized coordinates (0 to 1)
+   * @param height - Height in normalized coordinates (0 to 1)
+   * @param radius - Corner radius in normalized coordinates (0 to 1)
+   */
   constructor(
     public x: number,
     public y: number,

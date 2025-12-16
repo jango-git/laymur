@@ -24,9 +24,13 @@ import {
   UITextResizeMode,
 } from "./UIText.Internal";
 
+/** Canvas-based text rendering element */
 export class UIText extends UIElement {
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
+  /** Text padding in world units */
   public readonly padding: UIPadding;
+  /** Default style applied to all text spans */
   public readonly commonStyle: UITextStyle;
 
   private readonly canvas: OffscreenCanvas;
@@ -48,6 +52,13 @@ export class UIText extends UIElement {
   private textChunks: UITextChunk[] = [];
   private textChunksDirty = false;
 
+  /**
+   * Creates a new UIText instance.
+   *
+   * @param layer - Layer containing this element
+   * @param content - Text content as string or styled spans
+   * @param options - Configuration options
+   */
   constructor(
     layer: UILayer,
     content: UITextContent,
@@ -104,26 +115,22 @@ export class UIText extends UIElement {
     }
   }
 
-  /**
-   * Gets the current text content being displayed.
-   * @returns The current text content structure
-   */
+  /** Text content as array of styled spans */
   public get content(): UITextSpan[] {
     return this.contentInternal;
   }
 
+  /** Maximum line width before wrapping in pixels */
   public get maxLineWidth(): number {
     return this.maxLineWidthInternal;
   }
 
+  /** Controls how text adapts to size constraints */
   public get resizeMode(): UITextResizeMode {
     return this.resizeModeInternal;
   }
 
-  /**
-   * Sets new text content and triggers a rebuild.
-   * @param value - The new text content structure
-   */
+  /** Text content as string, span config, or array */
   public set content(value: UITextContent) {
     if (this.contentInternal !== value) {
       if (typeof value === "string") {
@@ -152,6 +159,7 @@ export class UIText extends UIElement {
     }
   }
 
+  /** Maximum line width before wrapping in pixels */
   public set maxLineWidth(value: number) {
     if (this.maxLineWidthInternal !== value) {
       this.maxLineWidthInternal = value;
@@ -159,6 +167,7 @@ export class UIText extends UIElement {
     }
   }
 
+  /** Controls how text adapts to size constraints */
   public set resizeMode(value: UITextResizeMode) {
     if (this.resizeModeInternal !== value) {
       this.resizeModeInternal = value;
@@ -166,24 +175,12 @@ export class UIText extends UIElement {
     }
   }
 
-  /**
-   * Destroys the text element by cleaning up all associated resources.
-   *
-   * This method disposes of the texture resources and calls the parent destroy method
-   * to clean up the underlying UI element. After calling this method,
-   * the text element should not be used anymore.
-   */
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.texture.dispose();
     super.destroy();
   }
 
-  /**
-   * Called before each render frame to maintain proper text aspect ratio.
-   * Adjusts the height based on the target aspect ratio calculated from text content.
-   * @param renderer - The WebGL renderer
-   * @param deltaTime - Time since last frame in seconds
-   */
   protected override onWillRender(
     renderer: WebGLRenderer,
     deltaTime: number,

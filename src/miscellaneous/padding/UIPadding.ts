@@ -3,10 +3,7 @@ import { assertValidNonNegativeNumber } from "../asserts";
 import type { UIPaddingConfig } from "./UIPadding.Internal";
 import { PADDING_DEFAULT_VALUE } from "./UIPadding.Internal";
 
-/**
- * Padding values for UI elements (left, right, top, bottom).
- * All values must be non-negative.
- */
+/** Padding values for four sides */
 export class UIPadding {
   private lInternal: number;
   private rInternal: number;
@@ -15,6 +12,11 @@ export class UIPadding {
 
   private dirtyInternal = false;
 
+  /**
+   * Creates UIPadding instance.
+   *
+   * @param config - Padding configuration
+   */
   constructor(config?: UIPaddingConfig) {
     if (config === undefined) {
       this.lInternal = PADDING_DEFAULT_VALUE;
@@ -61,35 +63,32 @@ export class UIPadding {
     }
   }
 
-  /** Left padding value. */
+  /** Left padding */
   public get left(): number {
     return this.lInternal;
   }
 
-  /** Right padding value. */
+  /** Right padding */
   public get right(): number {
     return this.rInternal;
   }
 
-  /** Top padding value. */
+  /** Top padding */
   public get top(): number {
     return this.tInternal;
   }
 
-  /** Bottom padding value. */
+  /** Bottom padding */
   public get bottom(): number {
     return this.bInternal;
   }
 
-  /**
-   * Indicates whether any padding value has been modified.
-   * Must be reset to `false` externally by the owner.
-   * @internal
-   */
+  /** @internal */
   public get dirty(): boolean {
     return this.dirtyInternal;
   }
 
+  /** Left padding */
   public set left(value: number) {
     assertValidNonNegativeNumber(value, "UIPadding.left");
     if (this.lInternal !== value) {
@@ -98,6 +97,7 @@ export class UIPadding {
     }
   }
 
+  /** Right padding */
   public set right(value: number) {
     assertValidNonNegativeNumber(value, "UIPadding.right");
     if (this.rInternal !== value) {
@@ -106,6 +106,7 @@ export class UIPadding {
     }
   }
 
+  /** Top padding */
   public set top(value: number) {
     assertValidNonNegativeNumber(value, "UIPadding.top");
     if (this.tInternal !== value) {
@@ -114,6 +115,7 @@ export class UIPadding {
     }
   }
 
+  /** Bottom padding */
   public set bottom(value: number) {
     assertValidNonNegativeNumber(value, "UIPadding.bottom");
     if (this.bInternal !== value) {
@@ -122,7 +124,7 @@ export class UIPadding {
     }
   }
 
-  /** Sets left and right to the same value. */
+  /** Sets left and right to same value */
   public setHorizontal(value: number): void {
     assertValidNonNegativeNumber(value, "UIPadding.setHorizontal.value");
     if (this.lInternal !== value || this.rInternal !== value) {
@@ -132,7 +134,7 @@ export class UIPadding {
     }
   }
 
-  /** Sets top and bottom to the same value. */
+  /** Sets top and bottom to same value */
   public setVertical(value: number): void {
     assertValidNonNegativeNumber(value, "UIPadding.setVertical.value");
     if (this.tInternal !== value || this.bInternal !== value) {
@@ -142,7 +144,7 @@ export class UIPadding {
     }
   }
 
-  /** Sets all padding to the same value. */
+  /** Sets all sides to same value */
   public setUnified(value: number): void {
     assertValidNonNegativeNumber(value, "UIPadding.setUnified.value");
     if (
@@ -159,7 +161,7 @@ export class UIPadding {
     }
   }
 
-  /** Sets from Vector4 (x=left, y=right, z=top, w=bottom). */
+  /** Sets from Vector4 (x=left, y=right, z=top, w=bottom) */
   public setVector4(vector: Vector4): void {
     assertValidNonNegativeNumber(vector.x, "UIPadding.setVector4.vector.x");
     assertValidNonNegativeNumber(vector.y, "UIPadding.setVector4.vector.y");
@@ -179,7 +181,7 @@ export class UIPadding {
     }
   }
 
-  /** Converts to Vector4 (left, right, top, bottom). */
+  /** Converts to Vector4 (left, right, top, bottom) */
   public toVector4(result = new Vector4()): Vector4 {
     return result.set(
       this.lInternal,
@@ -189,12 +191,12 @@ export class UIPadding {
     );
   }
 
-  /** Resets all padding to 0. */
+  /** Resets all sides to 0 */
   public reset(): void {
     this.setUnified(0);
   }
 
-  /** Copies values from another UIPadding. */
+  /** Copies from another instance */
   public copy(other: UIPadding): void {
     if (
       this.lInternal !== other.lInternal ||

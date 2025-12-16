@@ -1,3 +1,4 @@
+/** Padding configuration as number, per-side, or per-axis */
 export type UIPaddingConfig =
   | { horizontal: number; vertical: number }
   | { left: number; right: number; top: number; bottom: number }

@@ -1,11 +1,17 @@
 import { assertValidPositiveNumber } from "../asserts";
 import { UIResizePolicy } from "./UIResizePolicy";
 
-/** Scales based on width with different values for landscape and portrait. */
+/** Scales by width with orientation-specific targets */
 export class UIResizePolicyFixedWidth extends UIResizePolicy {
   private fixedWidthLandscapeInternal: number;
   private fixedWidthPortraitInternal: number;
 
+  /**
+   * Creates fixed width resize policy.
+   *
+   * @param fixedWidthLandscape - Target width when landscape
+   * @param fixedWidthPortrait - Target width when portrait
+   */
   constructor(fixedWidthLandscape: number, fixedWidthPortrait: number) {
     super();
     assertValidPositiveNumber(
@@ -21,16 +27,17 @@ export class UIResizePolicyFixedWidth extends UIResizePolicy {
     this.fixedWidthPortraitInternal = fixedWidthPortrait;
   }
 
-  /** Fixed width for landscape orientation. */
+  /** Target width when landscape */
   public get fixedWidthLandscape(): number {
     return this.fixedWidthLandscapeInternal;
   }
 
-  /** Fixed width for portrait orientation. */
+  /** Target width when portrait */
   public get fixedWidthPortrait(): number {
     return this.fixedWidthPortraitInternal;
   }
 
+  /** Target width when landscape */
   public set fixedWidthLandscape(value: number) {
     assertValidPositiveNumber(
       value,
@@ -42,6 +49,7 @@ export class UIResizePolicyFixedWidth extends UIResizePolicy {
     }
   }
 
+  /** Target width when portrait */
   public set fixedWidthPortrait(value: number) {
     assertValidPositiveNumber(
       value,

@@ -9,10 +9,7 @@ import {
   MICRO_DEFAULT_SCALE,
 } from "./UIMicro.Internal";
 
-/**
- * Micro-transformation system for UI elements.
- * Manages position, anchor, scale, and rotation independently of constraints.
- */
+/** Transforms that don't affect constraints */
 export class UIMicro {
   private xInternal: number;
   private yInternal: number;
@@ -25,6 +22,11 @@ export class UIMicro {
 
   private dirtyInternal = true;
 
+  /**
+   * Creates UIMicro instance.
+   *
+   * @param config - Transform configuration
+   */
   constructor(config?: Partial<UIMicroConfig>) {
     this.xInternal = config?.x ?? MICRO_DEFAULT_POSITION;
     this.yInternal = config?.y ?? MICRO_DEFAULT_POSITION;
@@ -36,60 +38,57 @@ export class UIMicro {
     this.anchorModeInternal = config?.anchorMode ?? MICRO_DEFAULT_ANCHOR_MODE;
   }
 
-  /** X-coordinate offset. */
+  /** X offset in world units */
   public get x(): number {
     return this.xInternal;
   }
 
-  /** Y-coordinate offset. */
+  /** Y offset in world units */
   public get y(): number {
     return this.yInternal;
   }
 
-  /** X-axis anchor point (0 = left, 0.5 = center, 1 = right). */
+  /** X anchor in normalized coordinates (0 to 1) */
   public get anchorX(): number {
     return this.anchorXInternal;
   }
 
-  /** Y-axis anchor point (0 = top, 0.5 = center, 1 = bottom). */
+  /** Y anchor in normalized coordinates (0 to 1) */
   public get anchorY(): number {
     return this.anchorYInternal;
   }
 
-  /** X-axis scale factor. */
+  /** X scale multiplier */
   public get scaleX(): number {
     return this.scaleXInternal;
   }
 
-  /** Y-axis scale factor. */
+  /** Y scale multiplier */
   public get scaleY(): number {
     return this.scaleYInternal;
   }
 
-  /** Rotation in degrees. */
+  /** Rotation in degrees */
   public get angle(): number {
     return MathUtils.radToDeg(this.rotationInternal);
   }
 
-  /** Anchor mode. */
+  /** Which transforms apply relative to anchor */
   public get anchorMode(): UIMicroAnchorMode {
     return this.anchorModeInternal;
   }
 
-  /** Rotation in radians. */
+  /** Rotation in radians */
   public get rotation(): number {
     return this.rotationInternal;
   }
 
-  /**
-   * Indicates whether any transformation has been modified.
-   * Must be reset to `false` externally by the owner.
-   * @internal
-   */
+  /** @internal */
   public get dirty(): boolean {
     return this.dirtyInternal;
   }
 
+  /** X offset in world units */
   public set x(value: number) {
     assertValidNumber(value, "UIMicro.x");
     if (value !== this.xInternal) {
@@ -98,6 +97,7 @@ export class UIMicro {
     }
   }
 
+  /** Y offset in world units */
   public set y(value: number) {
     assertValidNumber(value, "UIMicro.y");
     if (value !== this.yInternal) {
@@ -106,6 +106,7 @@ export class UIMicro {
     }
   }
 
+  /** X anchor in normalized coordinates (0 to 1) */
   public set anchorX(value: number) {
     assertValidNumber(value, "UIMicro.anchorX");
     if (value !== this.anchorXInternal) {
@@ -114,6 +115,7 @@ export class UIMicro {
     }
   }
 
+  /** Y anchor in normalized coordinates (0 to 1) */
   public set anchorY(value: number) {
     assertValidNumber(value, "UIMicro.anchorY");
     if (value !== this.anchorYInternal) {
@@ -122,6 +124,7 @@ export class UIMicro {
     }
   }
 
+  /** X scale multiplier */
   public set scaleX(value: number) {
     assertValidNumber(value, "UIMicro.scaleX");
     if (value !== this.scaleXInternal) {
@@ -130,6 +133,7 @@ export class UIMicro {
     }
   }
 
+  /** Y scale multiplier */
   public set scaleY(value: number) {
     assertValidNumber(value, "UIMicro.scaleY");
     if (value !== this.scaleYInternal) {
@@ -138,6 +142,7 @@ export class UIMicro {
     }
   }
 
+  /** Rotation in degrees */
   public set angle(value: number) {
     assertValidNumber(value, "UIMicro.angle");
     const rotation = MathUtils.degToRad(value);
@@ -147,6 +152,7 @@ export class UIMicro {
     }
   }
 
+  /** Rotation in radians */
   public set rotation(value: number) {
     assertValidNumber(value, "UIMicro.rotation");
     if (value !== this.rotationInternal) {
@@ -155,6 +161,7 @@ export class UIMicro {
     }
   }
 
+  /** Which transforms apply relative to anchor */
   public set anchorMode(value: UIMicroAnchorMode) {
     if (value !== this.anchorModeInternal) {
       this.anchorModeInternal = value;
@@ -167,7 +174,7 @@ export class UIMicro {
     this.dirtyInternal = false;
   }
 
-  /** Resets all transformations to defaults. */
+  /** Resets all transforms to defaults */
   public reset(): void {
     if (
       this.xInternal !== MICRO_DEFAULT_POSITION ||
@@ -189,7 +196,7 @@ export class UIMicro {
     }
   }
 
-  /** Copies transformations from another UIMicro. */
+  /** Copies transforms from another instance */
   public copy(value: UIMicro): void {
     if (
       this.xInternal !== value.xInternal ||

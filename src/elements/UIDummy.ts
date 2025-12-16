@@ -20,17 +20,15 @@ import {
   DUMMY_DEFAULT_Z_INDEX,
 } from "./UIDummy.Internal";
 
-/**
- * Rectangular area with position and dimensions but without rendering.
- * Supports custom interaction areas and input events.
- */
+/** Rectangular area with dimensions but no rendering */
 export class UIDummy extends UIAnchor implements UIPlaneElement {
+  /** Shape defining interactive region in normalized coordinates */
   public interactionArea: UIArea;
 
-  /** Solver variable for width. */
+  /** Solver variable for width */
   public readonly wVariable: number;
 
-  /** Solver variable for height. */
+  /** Solver variable for height */
   public readonly hVariable: number;
 
   protected modeInternal: UIMode;
@@ -38,6 +36,12 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   private readonly catcherHandler: number;
   private lastPointerInside = false;
 
+  /**
+   * Creates a new UIDummy instance.
+   *
+   * @param layer - Layer containing this element
+   * @param options - Configuration options
+   */
   constructor(layer: UILayer, options?: Partial<UIDummyOptions>) {
     const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
@@ -67,68 +71,83 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     );
   }
 
+  /** Width in world units */
   public get width(): number {
     return this.solverWrapper.readVariableValue(this.wVariable);
   }
 
+  /** Height in world units */
   public get height(): number {
     return this.solverWrapper.readVariableValue(this.hVariable);
   }
 
+  /** X coordinate of right edge */
   public get oppositeX(): number {
     return this.x + this.width;
   }
 
+  /** Y coordinate of top edge */
   public get oppositeY(): number {
     return this.y + this.height;
   }
 
+  /** X coordinate of horizontal center */
   public get centerX(): number {
     return this.x + this.width / 2;
   }
 
+  /** Y coordinate of vertical center */
   public get centerY(): number {
     return this.y + this.height / 2;
   }
 
+  /** Controls visibility and interactivity */
   public get mode(): UIMode {
     return this.modeInternal;
   }
 
+  /** Rendering and input priority. Higher values on top. */
   public get zIndex(): number {
     return this.inputWrapper.getZIndex(this.catcherHandler);
   }
 
+  /** Width in world units */
   public set width(value: number) {
     assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
+  /** Height in world units */
   public set height(value: number) {
     assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
+  /** X coordinate of right edge */
   public set oppositeX(value: number) {
     assertValidNumber(value, "UIDummy.oppositeX");
     this.x = value - this.width;
   }
 
+  /** Y coordinate of top edge */
   public set oppositeY(value: number) {
     assertValidNumber(value, "UIDummy.oppositeY");
     this.y = value - this.height;
   }
 
+  /** X coordinate of horizontal center */
   public set centerX(value: number) {
     assertValidNumber(value, "UIDummy.centerX");
     this.x = value - this.width / 2;
   }
 
+  /** Y coordinate of vertical center */
   public set centerY(value: number) {
     assertValidNumber(value, "UIDummy.centerY");
     this.y = value - this.height / 2;
   }
 
+  /** Controls visibility and interactivity */
   public set mode(value: UIMode) {
     if (this.modeInternal !== value) {
       const newInteractivity = isUIModeInteractive(value);
@@ -137,11 +156,13 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     }
   }
 
+  /** Rendering and input priority. Higher values on top. */
   public set zIndex(value: number) {
     assertValidNumber(value, "UIDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
+  /** Removes element and frees resources */
   public override destroy(): void {
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);

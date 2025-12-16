@@ -9,19 +9,11 @@ import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 import type { UIImageOptions } from "./UIImage.Internal";
 
-/**
- * UI element for displaying textured images.
- *
- * UIImage is a concrete implementation of UIElement that renders a textured
- * image using shader-based planes. It automatically sizes itself
- * to match the texture dimensions and provides control over visual properties
- * such as color tinting.
- *
- * @see {@link UIElement} - Base class providing UI element functionality
- * @see {@link Texture} - Three.js texture for image data
- */
+/** Textured image element */
 export class UIImage extends UIElement {
+  /** Texture displayed by this image */
   public readonly texture: UITexture;
+  /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
 
   private readonly textureTransform: Matrix3;
@@ -29,13 +21,11 @@ export class UIImage extends UIElement {
   /**
    * Creates a new UIImage instance.
    *
-   * The image will automatically size itself to match the texture's dimensions.
-   * All options have default values if not specified.
+   * Defaults size to texture dimensions if width and height not provided.
    *
-   * @param layer - The UI layer that contains this image
-   * @param texture - The Three.js texture to display
-   * @param options - Configuration options for the image
-   * @throws Will throw an error if the texture dimensions are not valid positive numbers
+   * @param layer - Layer containing this image
+   * @param texture - Texture to display
+   * @param options - Configuration options
    */
   constructor(
     layer: UILayer,
@@ -70,6 +60,7 @@ export class UIImage extends UIElement {
     );
   }
 
+  /** Removes image and frees resources */
   public override destroy(): void {
     this.texture.off(
       UITextureEvent.DIMENSIONS_CHANGED,

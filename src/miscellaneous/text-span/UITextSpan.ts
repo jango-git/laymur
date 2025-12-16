@@ -1,21 +1,20 @@
 import { UITextStyle } from "../text-style/UITextStyle";
 import type { UITextSpanConfig } from "./UITextSpan.Internal";
 
-/**
- * Text span with associated style.
- * Combines text content with styling information for rendering.
- */
+/** Text span with associated style */
 export class UITextSpan {
+  /** Text style */
   public style: UITextStyle;
   private textInternal: string;
   private dirtyInternal = true;
 
+  /** @param config Text span configuration */
   constructor(config: UITextSpanConfig) {
     this.textInternal = config.text;
     this.style = new UITextStyle(config.style);
   }
 
-  /** Text content. */
+  /** Text content */
   public get text(): string {
     return this.textInternal;
   }

@@ -1,59 +1,44 @@
 import { UILayer } from "../layers/UILayer";
 
+/** Epsilon for floating-point comparisons */
 export const EPSILON = 1e-6;
 
-/**
- * Interface for objects that belong to a UI layer.
- *
- * Elements implementing this interface are associated with a specific layer
- * for constraint solving and rendering management.
- */
+/** Objects that belong to a UI layer */
 export interface UILayerElement {
-  /** The UI layer that contains this element. */
+  /** The UI layer containing this element */
   readonly layer: UILayer;
 }
 
-/**
- * Interface for UI elements that have a position in 2D space.
- *
- * Point elements are characterized by x and y coordinates represented
- * as solver variable descriptors for constraint-based positioning.
- */
+/** UI elements with position in 2D space */
 export interface UIPointElement {
-  /** Solver variable descriptor for the x-coordinate. */
+  /** Solver variable for x coordinate */
   readonly xVariable: number;
-  /** Solver variable descriptor for the y-coordinate. */
+  /** Solver variable for y coordinate */
   readonly yVariable: number;
 
-  /** The x-coordinate of the element. */
+  /** X coordinate in world units */
   readonly x: number;
-  /** The y-coordinate of the element. */
+  /** Y coordinate in world units */
   readonly y: number;
 }
 
-/**
- * Interface for UI elements that have both position and dimensions in 2D space.
- *
- * Plane elements extend point elements with width and height properties,
- * enabling rectangular area constraints and positioning.
- */
+/** UI elements with position and dimensions */
 export interface UIPlaneElement extends UIPointElement {
-  /** Solver variable descriptor for the width dimension. */
+  /** Solver variable for width */
   readonly wVariable: number;
-  /** Solver variable descriptor for the height dimension. */
+  /** Solver variable for height */
   readonly hVariable: number;
 
-  /** The width of the element. */
+  /** Width in world units */
   readonly width: number;
-  /** The height of the element. */
+  /** Height in world units */
   readonly height: number;
 }
 
 /**
- * Type guard to check if an object implements the UILayerElement interface.
- *
- * @param obj - The object to check
- * @returns True if the object has a valid layer property, false otherwise
+ * Checks if object implements UILayerElement.
+ * @param obj Object to check
+ * @returns True if object has valid layer property
  */
 export function isUILayerElement(obj: unknown): obj is UILayerElement {
   return (
@@ -65,10 +50,9 @@ export function isUILayerElement(obj: unknown): obj is UILayerElement {
 }
 
 /**
- * Type guard to check if an object implements the UIPointElement interface.
- *
- * @param obj - The object to check
- * @returns True if the object has valid xVariable and yVariable properties, false otherwise
+ * Checks if object implements UIPointElement.
+ * @param obj Object to check
+ * @returns True if object has valid position variables
  */
 export function isUIPointElement(obj: unknown): obj is UIPointElement {
   return (
@@ -86,13 +70,9 @@ export function isUIPointElement(obj: unknown): obj is UIPointElement {
 }
 
 /**
- * Type guard to check if an object implements the UIPlaneElement interface.
- *
- * Note: This function only checks for width and height variables. Objects
- * should also satisfy UIPointElement requirements for complete validation.
- *
- * @param obj - The object to check
- * @returns True if the object has valid wVariable and hVariable properties, false otherwise
+ * Checks if object implements UIPlaneElement.
+ * @param obj Object to check
+ * @returns True if object has valid dimension variables
  */
 export function isUIPlaneElement(obj: unknown): obj is UIPlaneElement {
   return (
@@ -110,17 +90,12 @@ export function isUIPlaneElement(obj: unknown): obj is UIPlaneElement {
 }
 
 /**
- * Validates that two objects are valid constraint subjects from the same layer.
- *
- * Ensures that both objects are either UILayer instances or UILayerElement instances,
- * that they are not both layers (which cannot be constrained to each other),
- * and that they belong to the same layer for constraint solving.
- *
- * @param a - The first constraint subject
- * @param b - The second constraint subject
- * @param subject - The name of the constraint for error messages
- * @returns The common layer that both subjects belong to
- * @throws Will throw an error if subjects are invalid or from different layers
+ * Validates constraint subjects are from same layer.
+ * @param a First constraint subject
+ * @param b Second constraint subject
+ * @param subject Constraint name for error messages
+ * @returns Common layer for both subjects
+ * @throws If subjects are invalid or from different layers
  */
 export function assertValidConstraintSubjects(
   a: unknown,
@@ -154,14 +129,10 @@ export function assertValidConstraintSubjects(
 }
 
 /**
- * Validates that a value is a finite number within safe integer range.
- *
- * Checks that the value is finite (not NaN, Infinity, or -Infinity) and
- * within the safe integer range for reliable mathematical operations.
- *
- * @param value - The number to validate
- * @param subject - The name of the value for error messages
- * @throws Will throw an error if the value is not finite or exceeds safe range
+ * Validates value is finite number within safe range.
+ * @param value Number to validate
+ * @param subject Value name for error messages
+ * @throws If value is not finite or exceeds safe range
  */
 export function assertValidNumber(value: number, subject: string): void {
   if (process.env.NODE_ENV !== "production") {
@@ -176,16 +147,10 @@ export function assertValidNumber(value: number, subject: string): void {
 }
 
 /**
- * Validates that a value is a positive number above the epsilon threshold.
- *
- * First validates that the value is a finite number, then ensures it is
- * greater than or equal to EPSILON to avoid numerical precision issues
- * with very small positive values.
- *
- * @param value - The number to validate
- * @param subject - The name of the value for error messages
- * @throws Will throw an error if the value is invalid or not sufficiently positive
- * @see {@link assertValidNumber}
+ * Validates value is positive (>= EPSILON).
+ * @param value Number to validate
+ * @param subject Value name for error messages
+ * @throws If value is invalid or below EPSILON
  */
 export function assertValidPositiveNumber(
   value: number,
@@ -202,16 +167,10 @@ export function assertValidPositiveNumber(
 }
 
 /**
- * Validates that a value is a non-negative number (including zero).
- *
- * First validates that the value is a finite number, then ensures it is
- * greater than or equal to zero. Unlike assertValidPositiveNumber, this
- * function allows zero as a valid value.
- *
- * @param value - The number to validate
- * @param subject - The name of the value for error messages
- * @throws Will throw an error if the value is invalid or negative
- * @see {@link assertValidNumber}
+ * Validates value is non-negative (>= 0).
+ * @param value Number to validate
+ * @param subject Value name for error messages
+ * @throws If value is invalid or negative
  */
 export function assertValidNonNegativeNumber(
   value: number,

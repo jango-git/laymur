@@ -14,30 +14,12 @@ import {
   PLANE_GEOMETRY,
 } from "./UIGenericPlane.Internal";
 
-/**
- * Single plane renderer for cases where instancing is not applicable.
- *
- * Use this when:
- * - Plane requires unique shader source
- * - Plane has render target as texture (cannot be batched)
- * - Only one instance of this plane type exists
- *
- * @remarks
- * Textures in uniforms are not disposed on destroy — caller retains ownership.
- */
 export class UIGenericPlane extends Mesh {
   private readonly shaderMaterial: ShaderMaterial;
   private readonly propertiesInternal: Record<string, UIPropertyType>;
   private readonly transformInternal = new Matrix4().identity();
   private transparencyInternal: UITransparencyMode;
 
-  /**
-   * Creates a new single plane renderer.
-   *
-   * @param source - GLSL fragment shader source (must define vec4 draw() function)
-   * @param properties - Map of property names to values
-   * @param transparency - Transparency rendering mode
-   */
   constructor(
     public readonly source: string,
     properties: Record<string, UIPropertyType>,
@@ -55,44 +37,26 @@ export class UIGenericPlane extends Mesh {
     this.matrixWorldAutoUpdate = false;
 
     this.shaderMaterial = shaderMaterial;
-    this.propertiesInternal = { ...properties }; // TODO: Consider it possible not to copy
+    this.propertiesInternal = { ...properties };
     this.transparencyInternal = transparency;
   }
 
-  /**
-   * Returns a copy of current properties.
-   */
   public get properties(): Record<string, UIPropertyType> {
-    return { ...this.propertiesInternal }; // TODO: Consider it possible not to copy
+    return { ...this.propertiesInternal };
   }
 
-  /**
-   * Returns stored transform matrix.
-   */
   public get transform(): Matrix4 {
     return this.transformInternal;
   }
 
-  /**
-   * Returns current visibility state.
-   */
   public get visibility(): boolean {
     return this.visible;
   }
 
-  /**
-   * Returns current transparency state.
-   */
   public get transparency(): UITransparencyMode {
     return this.transparencyInternal;
   }
 
-  /**
-   * Updates properties.
-   *
-   * @param properties - Properties to update
-   * @throws Error if property name is not in layout
-   */
   public setProperties(properties: Record<string, UIPropertyType>): void {
     for (const [name, value] of Object.entries(properties)) {
       const uniform = resolveUniform(name, this.shaderMaterial);
@@ -106,11 +70,6 @@ export class UIGenericPlane extends Mesh {
     this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
-  /**
-   * Updates the transform matrix.
-   *
-   * @param transform - Matrix4 transform to apply
-   */
   public setTransform(transform: Matrix4): void {
     const uniform = resolveUniform("transform", this.shaderMaterial);
     (uniform.value as Matrix4).copy(transform);
@@ -118,20 +77,10 @@ export class UIGenericPlane extends Mesh {
     this.transformInternal.copy(transform);
   }
 
-  /**
-   * Updates visibility state.
-   *
-   * @param visibility - Whether the plane should be visible
-   */
   public setVisibility(visibility: boolean): void {
     this.visible = visibility;
   }
 
-  /**
-   * Updates transparency mode.
-   *
-   * @param transparency - New transparency mode
-   */
   public setTransparency(transparency: UITransparencyMode): void {
     if (this.transparencyInternal !== transparency) {
       this.shaderMaterial.transparent =
@@ -147,9 +96,6 @@ export class UIGenericPlane extends Mesh {
     }
   }
 
-  /**
-   * Extracts complete plane data for relocation/promotion.
-   */
   public extractInstanceData(): GenericPlaneData {
     return {
       source: this.source,
@@ -160,14 +106,6 @@ export class UIGenericPlane extends Mesh {
     };
   }
 
-  /**
-   * Checks if the provided configuration is compatible with this instance.
-   *
-   * @param source - GLSL fragment shader source
-   * @param properties - Map of property names to values
-   * @param transparency - Transparency rendering mode
-   * @returns true if the configuration matches the current instance, false otherwise
-   */
   public isCompatible(
     source: string,
     properties: Record<string, UIPropertyType>,
@@ -180,26 +118,12 @@ export class UIGenericPlane extends Mesh {
     return arePropertiesCompatible(this.propertiesInternal, properties);
   }
 
-  /**
-   * Checks if the provided properties are compatible (ignoring source/transparency).
-   * Useful for checking if property updates would break compatibility.
-   *
-   * @param properties - Map of property names to values
-   * @returns true if properties are compatible
-   */
   public arePropertiesCompatible(
     properties: Record<string, UIPropertyType>,
   ): boolean {
     return arePropertiesCompatible(this.propertiesInternal, properties);
   }
 
-  /**
-   * Disposes material resources.
-   *
-   * @remarks
-   * Geometry is shared and not disposed.
-   * Textures in uniforms are not disposed — caller retains ownership.
-   */
   public destroy(): void {
     this.shaderMaterial.dispose();
   }
