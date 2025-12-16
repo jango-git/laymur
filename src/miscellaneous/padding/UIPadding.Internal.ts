@@ -3,4 +3,4 @@ export type UIPaddingConfig =
   | { left: number; right: number; top: number; bottom: number }
   | number;
 
-export const PADDING_DEFAULT_VALU = 0;
+export const PADDING_DEFAULT_VALUE = 0;

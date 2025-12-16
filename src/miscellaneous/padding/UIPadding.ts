@@ -1,7 +1,7 @@
 import { Vector4 } from "three";
 import { assertValidNonNegativeNumber } from "../asserts";
 import type { UIPaddingConfig } from "./UIPadding.Internal";
-import { PADDING_DEFAULT_VALU } from "./UIPadding.Internal";
+import { PADDING_DEFAULT_VALUE } from "./UIPadding.Internal";
 
 /**
  * Padding values for UI elements (left, right, top, bottom).
@@ -17,12 +17,12 @@ export class UIPadding {
 
   constructor(config?: UIPaddingConfig) {
     if (config === undefined) {
-      this.lInternal = PADDING_DEFAULT_VALU;
-      this.rInternal = PADDING_DEFAULT_VALU;
-      this.tInternal = PADDING_DEFAULT_VALU;
-      this.bInternal = PADDING_DEFAULT_VALU;
+      this.lInternal = PADDING_DEFAULT_VALUE;
+      this.rInternal = PADDING_DEFAULT_VALUE;
+      this.tInternal = PADDING_DEFAULT_VALUE;
+      this.bInternal = PADDING_DEFAULT_VALUE;
     } else if (typeof config === "number") {
-      assertValidNonNegativeNumber(config, "UIBorder.constructor.config");
+      assertValidNonNegativeNumber(config, "UIPadding.constructor.config");
       this.lInternal = config;
       this.rInternal = config;
       this.tInternal = config;
@@ -32,12 +32,12 @@ export class UIPadding {
       const right = config.right;
       const top = config.top;
       const bottom = config.bottom;
-      assertValidNonNegativeNumber(left, "UIBorder.constructor.config.left");
-      assertValidNonNegativeNumber(right, "UIBorder.constructor.config.right");
-      assertValidNonNegativeNumber(top, "UIBorder.constructor.config.top");
+      assertValidNonNegativeNumber(left, "UIPadding.constructor.config.left");
+      assertValidNonNegativeNumber(right, "UIPadding.constructor.config.right");
+      assertValidNonNegativeNumber(top, "UIPadding.constructor.config.top");
       assertValidNonNegativeNumber(
         bottom,
-        "UIBorder.constructor.config.bottom",
+        "UIPadding.constructor.config.bottom",
       );
       this.lInternal = left;
       this.rInternal = right;
@@ -48,11 +48,11 @@ export class UIPadding {
       const vertical = config.vertical;
       assertValidNonNegativeNumber(
         horizontal,
-        "UIBorder.constructor.config.horizontal",
+        "UIPadding.constructor.config.horizontal",
       );
       assertValidNonNegativeNumber(
         vertical,
-        "UIBorder.constructor.config.vertical",
+        "UIPadding.constructor.config.vertical",
       );
       this.lInternal = horizontal;
       this.rInternal = horizontal;
@@ -61,28 +61,28 @@ export class UIPadding {
     }
   }
 
-  /** Left border value. */
+  /** Left padding value. */
   public get left(): number {
     return this.lInternal;
   }
 
-  /** Right border value. */
+  /** Right padding value. */
   public get right(): number {
     return this.rInternal;
   }
 
-  /** Top border value. */
+  /** Top padding value. */
   public get top(): number {
     return this.tInternal;
   }
 
-  /** Bottom border value. */
+  /** Bottom padding value. */
   public get bottom(): number {
     return this.bInternal;
   }
 
   /**
-   * Indicates whether any border value has been modified.
+   * Indicates whether any padding value has been modified.
    * Must be reset to `false` externally by the owner.
    * @internal
    */
@@ -91,7 +91,7 @@ export class UIPadding {
   }
 
   public set left(value: number) {
-    assertValidNonNegativeNumber(value, "UIBorder.left");
+    assertValidNonNegativeNumber(value, "UIPadding.left");
     if (this.lInternal !== value) {
       this.lInternal = value;
       this.dirtyInternal = true;
@@ -99,7 +99,7 @@ export class UIPadding {
   }
 
   public set right(value: number) {
-    assertValidNonNegativeNumber(value, "UIBorder.right");
+    assertValidNonNegativeNumber(value, "UIPadding.right");
     if (this.rInternal !== value) {
       this.rInternal = value;
       this.dirtyInternal = true;
@@ -107,7 +107,7 @@ export class UIPadding {
   }
 
   public set top(value: number) {
-    assertValidNonNegativeNumber(value, "UIBorder.top");
+    assertValidNonNegativeNumber(value, "UIPadding.top");
     if (this.tInternal !== value) {
       this.tInternal = value;
       this.dirtyInternal = true;
@@ -115,7 +115,7 @@ export class UIPadding {
   }
 
   public set bottom(value: number) {
-    assertValidNonNegativeNumber(value, "UIBorder.bottom");
+    assertValidNonNegativeNumber(value, "UIPadding.bottom");
     if (this.bInternal !== value) {
       this.bInternal = value;
       this.dirtyInternal = true;
@@ -124,7 +124,7 @@ export class UIPadding {
 
   /** Sets left and right to the same value. */
   public setHorizontal(value: number): void {
-    assertValidNonNegativeNumber(value, "UIBorder.setHorizontal.value");
+    assertValidNonNegativeNumber(value, "UIPadding.setHorizontal.value");
     if (this.lInternal !== value || this.rInternal !== value) {
       this.lInternal = value;
       this.rInternal = value;
@@ -134,7 +134,7 @@ export class UIPadding {
 
   /** Sets top and bottom to the same value. */
   public setVertical(value: number): void {
-    assertValidNonNegativeNumber(value, "UIBorder.setVertical.value");
+    assertValidNonNegativeNumber(value, "UIPadding.setVertical.value");
     if (this.tInternal !== value || this.bInternal !== value) {
       this.tInternal = value;
       this.bInternal = value;
@@ -142,9 +142,9 @@ export class UIPadding {
     }
   }
 
-  /** Sets all borders to the same value. */
+  /** Sets all padding to the same value. */
   public setUnified(value: number): void {
-    assertValidNonNegativeNumber(value, "UIBorder.setUnified.value");
+    assertValidNonNegativeNumber(value, "UIPadding.setUnified.value");
     if (
       this.lInternal !== value ||
       this.rInternal !== value ||
@@ -161,10 +161,10 @@ export class UIPadding {
 
   /** Sets from Vector4 (x=left, y=right, z=top, w=bottom). */
   public setVector4(vector: Vector4): void {
-    assertValidNonNegativeNumber(vector.x, "UIBorder.setVector4.vector.x");
-    assertValidNonNegativeNumber(vector.y, "UIBorder.setVector4.vector.y");
-    assertValidNonNegativeNumber(vector.z, "UIBorder.setVector4.vector.z");
-    assertValidNonNegativeNumber(vector.w, "UIBorder.setVector4.vector.w");
+    assertValidNonNegativeNumber(vector.x, "UIPadding.setVector4.vector.x");
+    assertValidNonNegativeNumber(vector.y, "UIPadding.setVector4.vector.y");
+    assertValidNonNegativeNumber(vector.z, "UIPadding.setVector4.vector.z");
+    assertValidNonNegativeNumber(vector.w, "UIPadding.setVector4.vector.w");
     if (
       this.lInternal !== vector.x ||
       this.rInternal !== vector.y ||
@@ -189,12 +189,12 @@ export class UIPadding {
     );
   }
 
-  /** Resets all borders to 0. */
+  /** Resets all padding to 0. */
   public reset(): void {
     this.setUnified(0);
   }
 
-  /** Copies values from another UIBorder. */
+  /** Copies values from another UIPadding. */
   public copy(other: UIPadding): void {
     if (
       this.lInternal !== other.lInternal ||

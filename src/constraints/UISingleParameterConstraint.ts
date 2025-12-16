@@ -65,7 +65,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     this.priorityInternal = resolvePriority(priority);
     this.relationInternal = resolveRelation(relation);
     this.orientationInternal = resolveOrientation(orientation);
-    this.layer.on(UILayerEvent.ORIENTATION_CHANGE, this.onOrientationChange);
+    this.layer.on(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
   }
 
   /**
@@ -139,7 +139,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
    * the constraint should not be used anymore.
    */
   public destroy(): void {
-    this.layer.off(UILayerEvent.ORIENTATION_CHANGE, this.onOrientationChange);
+    this.layer.off(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
     this.solverWrapper.removeConstraint(this.constraint);
   }
 

@@ -46,7 +46,7 @@ export abstract class UIElement extends UIDummy {
       false,
     );
 
-    this.layer.on(UILayerEvent.WILL_RENDER, this.onWillRender, this);
+    this.layer.on(UILayerEvent.RENDERING, this.onWillRender, this);
   }
 
   public get transparencyMode(): UITransparencyMode {
@@ -69,7 +69,7 @@ export abstract class UIElement extends UIDummy {
   }
 
   public override destroy(): void {
-    this.layer.off(UILayerEvent.WILL_RENDER, this.onWillRender, this);
+    this.layer.off(UILayerEvent.RENDERING, this.onWillRender, this);
     this.sceneWrapper.destroyPlane(this.planeHandler);
     super.destroy();
   }

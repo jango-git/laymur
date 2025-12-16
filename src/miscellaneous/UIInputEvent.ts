@@ -2,9 +2,9 @@
  * Events that can be emitted by UI elements.
  */
 export enum UIInputEvent {
-  DOWN = "pointerdown",
-  MOVE = "pointermove",
-  UP = "pointerup",
-  ENTER = "pointerenter",
-  LEAVE = "pointerleave",
+  PRESSED = "pointerdown",
+  MOVED = "pointermove",
+  RELEASED = "pointerup",
+  ENTERED = "pointerenter",
+  LEFT = "pointerleave",
 }

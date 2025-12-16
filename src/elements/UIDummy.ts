@@ -154,7 +154,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     y: number,
     identifier: number,
   ): boolean => {
-    return this.handleInputEvent(x, y, identifier, UIInputEvent.DOWN);
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.PRESSED);
   };
 
   protected readonly catchPointerMove = (
@@ -162,7 +162,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     y: number,
     identifier: number,
   ): boolean => {
-    return this.handleInputEvent(x, y, identifier, UIInputEvent.MOVE);
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.MOVED);
   };
 
   protected readonly catchPointerUp = (
@@ -170,7 +170,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     y: number,
     identifier: number,
   ): boolean => {
-    return this.handleInputEvent(x, y, identifier, UIInputEvent.UP);
+    return this.handleInputEvent(x, y, identifier, UIInputEvent.RELEASED);
   };
 
   protected handleInputEvent(
@@ -193,9 +193,9 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     }
 
     if (this.lastPointerInside && !isPointerInside) {
-      this.emit(UIInputEvent.LEAVE, x, y, identifier, this);
+      this.emit(UIInputEvent.LEFT, x, y, identifier, this);
     } else if (!this.lastPointerInside && isPointerInside) {
-      this.emit(UIInputEvent.ENTER, x, y, identifier, this);
+      this.emit(UIInputEvent.ENTERED, x, y, identifier, this);
     }
 
     this.lastPointerInside = isPointerInside;

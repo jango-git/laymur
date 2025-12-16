@@ -172,7 +172,7 @@ export class UIAnimatedImage extends UIElement {
   public play(): void {
     if (!this.isPlaying) {
       this.isPlaying = true;
-      this.emit(UIAnimatedImageEvent.PLAY);
+      this.emit(UIAnimatedImageEvent.PLAYED);
     }
   }
 
@@ -182,7 +182,7 @@ export class UIAnimatedImage extends UIElement {
   public pause(): void {
     if (this.isPlaying) {
       this.isPlaying = false;
-      this.emit(UIAnimatedImageEvent.PAUSE);
+      this.emit(UIAnimatedImageEvent.PAUSED);
     }
   }
 
@@ -199,7 +199,7 @@ export class UIAnimatedImage extends UIElement {
       this.accumulatedTime = 0;
       this.sequenceFrameIndex = 0;
       this.currentFrameIndexDirty = true;
-      this.emit(UIAnimatedImageEvent.STOP);
+      this.emit(UIAnimatedImageEvent.STOPPED);
     }
   }
 
@@ -220,7 +220,7 @@ export class UIAnimatedImage extends UIElement {
         } else if (this.sequenceFrameIndex >= this.sequenceInternal.length) {
           this.sequenceFrameIndex = this.sequenceInternal.length - 1;
           this.isPlaying = false;
-          this.emit(UIAnimatedImageEvent.PAUSE);
+          this.emit(UIAnimatedImageEvent.PAUSED);
           break;
         }
 

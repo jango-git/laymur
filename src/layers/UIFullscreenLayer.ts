@@ -134,7 +134,7 @@ export class UIFullscreenLayer extends UILayer {
    * @param camera - Camera for ray origin and direction
    * @returns Ray in world space
    */
-  public buildRay(position: Vector2, camera: Camera): Ray {
+  public buildRay(position: Vector2, camera: Camera, result = new Ray()): Ray {
     const near = new Vector3(
       MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
       MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
@@ -148,7 +148,7 @@ export class UIFullscreenLayer extends UILayer {
     ).unproject(camera);
 
     const direction = far.sub(near).normalize();
-    return new Ray(near, direction);
+    return result.set(near, direction);
   }
 
   /**
@@ -165,15 +165,15 @@ export class UIFullscreenLayer extends UILayer {
   };
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerDown", UIInputEvent.DOWN);
+    this.handleWindowInput(event, "onPointerDown", UIInputEvent.PRESSED);
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerMove", UIInputEvent.MOVE);
+    this.handleWindowInput(event, "onPointerMove", UIInputEvent.MOVED);
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerUp", UIInputEvent.UP);
+    this.handleWindowInput(event, "onPointerUp", UIInputEvent.RELEASED);
   };
 
   private handleWindowInput(

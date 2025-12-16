@@ -5,9 +5,9 @@ export const ANIMATED_IMAGE_DEFAULT_FRAME_RATE = 24;
 export const ANIMATED_IMAGE_DEFAULT_LOOP = true;
 
 export enum UIAnimatedImageEvent {
-  PLAY = 0,
-  PAUSE = 1,
-  STOP = 2,
+  PLAYED = 0,
+  PAUSED = 1,
+  STOPPED = 2,
 }
 
 /**

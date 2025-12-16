@@ -11,7 +11,7 @@ import { UISceneWrapper } from "../wrappers/UISceneWrapper";
 import type { UISceneWrapperInterface } from "../wrappers/UISceneWrapper.Internal";
 import { UISolverWrapper } from "../wrappers/UISolverWrapper";
 import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
-import type { UILayerMode } from "./UILayer.Internal";
+import type { UILayerMode, UILayerOrientation } from "./UILayer.Internal";
 import { UILayerEvent } from "./UILayer.Internal";
 
 /**
@@ -72,7 +72,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   protected modeInternal: UILayerMode;
 
   /** Internal storage for the current orientation state. */
-  protected orientationInternal: UIOrientation;
+  protected orientationInternal: UILayerOrientation;
 
   /** Collection of input listeners for handling user interactions, sorted by z-index. */
 
@@ -88,10 +88,11 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    */
   constructor(w: number, h: number, mode: UILayerMode) {
     super();
-
     this.sceneWrapperInternal = new UISceneWrapper(w, h);
-
     this.modeInternal = mode;
+    this.orientationInternal =
+      w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+
     this.xVariable = this.solverWrapperInternal.createVariable(
       0,
       UIPriority.P0,
@@ -108,8 +109,6 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
       h,
       UIPriority.P0,
     );
-    this.orientationInternal =
-      w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
   }
 
   /** @internal */
@@ -173,7 +172,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    * @returns The current orientation (horizontal or vertical)
    * @see {@link UIOrientation}
    */
-  public get orientation(): UIOrientation {
+  public get orientation(): UILayerOrientation {
     return this.orientationInternal;
   }
 
@@ -185,7 +184,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;
-      this.emit(UILayerEvent.MODE_CHANGE, this.modeInternal, this);
+      this.emit(UILayerEvent.MODE_CHANGED, this.modeInternal, this);
     }
   }
 
@@ -211,7 +210,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     if (orientation !== this.orientationInternal) {
       this.orientationInternal = orientation;
       this.emit(
-        UILayerEvent.ORIENTATION_CHANGE,
+        UILayerEvent.ORIENTATION_CHANGED,
         this.orientationInternal,
         this,
       );
@@ -231,7 +230,7 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
    */
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (isUIModeVisible(this.mode)) {
-      this.emit(UILayerEvent.WILL_RENDER, renderer, deltaTime, this);
+      this.emit(UILayerEvent.RENDERING, renderer, deltaTime, this);
       this.sceneWrapperInternal.render(renderer);
     }
 
