@@ -1,10 +1,8 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Configuration options for UIVerticalProportionConstraint creation.
- */
+/** Vertical proportion constraint options */
 export interface UIVerticalProportionConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element heights (elementA.height * proportion = elementB.height). */
+  /** Proportion multiplier (A.height * proportion = B.height) */
   proportion: number;
 }

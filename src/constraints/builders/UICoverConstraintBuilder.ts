@@ -13,43 +13,29 @@ import { UIAspectConstraint } from "../UIAspectConstraint";
 import type { UICoverConstraintBuilderOptions } from "./UICoverConstraintBuilder.Internal";
 import { COVER_CONSTRAINT_DEFAULT_ANCHOR } from "./UICoverConstraintBuilder.Internal";
 
-/**
- * Builder for creating "cover" layout constraints that make an element cover its container.
- *
- * Cover layout ensures the active element is large enough to completely cover the passive
- * element while maintaining proportions. This is similar to CSS `background-size: cover`
- * or `object-fit: cover` behavior.
- *
- * The active element will be:
- * - Positioned at the specified anchor point within the passive element
- * - Sized to be at least as large as the passive element in both dimensions
- * - Scaled proportionally to maintain aspect ratio (if enabled)
- *
- * The constraints ensure: passive.dimension * 1 ≤ active.dimension (active covers passive)
- */
+/** Builder for cover layout (like CSS object-fit: cover) */
 export class UICoverConstraintBuilder {
   /**
-   * Creates a set of constraints for cover layout behavior.
-   *
-   * @param passive - The container element (what gets covered)
-   * @param active - The content element (what does the covering)
-   * @param options - Configuration options for the cover layout
-   * @returns Object containing all created constraints
+   * Creates cover layout constraints.
+   * @param passive Container element
+   * @param active Content element that covers container
+   * @param options Cover configuration
+   * @returns Created constraints
    */
   public static build(
     passive: UIPlaneElement,
     active: UIPlaneElement & UILayerElement,
     options: Partial<UICoverConstraintBuilderOptions> = {},
   ): {
-    /** Aspect constraint for the active element (if keepActiveAspect is true) */
+    /** Aspect constraint if keepActiveAspect is true */
     activeAspectConstraint?: UIAspectConstraint;
-    /** Horizontal positioning constraint */
+    /** Horizontal position constraint */
     xConstraint: UIHorizontalDistanceConstraint;
-    /** Vertical positioning constraint */
+    /** Vertical position constraint */
     yConstraint: UIVerticalDistanceConstraint;
-    /** Width proportion constraint (ensures coverage) */
+    /** Width constraint (ensures coverage) */
     widthConstraint: UIHorizontalProportionConstraint;
-    /** Height proportion constraint (ensures coverage) */
+    /** Height constraint (ensures coverage) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
     if (options.anchorH !== undefined) {

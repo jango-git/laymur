@@ -8,10 +8,22 @@ import type {
   UITextSize,
 } from "./UIText.Interfaces";
 
+/**
+ * Splits text into renderable chunks.
+ * @param text Text to split
+ * @returns Array of words, spaces, and newlines
+ */
 export function splitTextIntoChunks(text: string): string[] {
   return text.match(/\S+|\s|\n/g) ?? [];
 }
 
+/**
+ * Measures single text chunk.
+ * @param context Canvas context for measurement
+ * @param text Chunk text
+ * @param textStyle Resolved text style
+ * @returns Chunk metrics
+ */
 export function measureTextChunk(
   context: OffscreenCanvasRenderingContext2D,
   text: string,
@@ -42,6 +54,12 @@ export function measureTextChunk(
   };
 }
 
+/**
+ * Builds text lines with word wrapping.
+ * @param maxWidth Maximum line width in pixels
+ * @param textChunks Measured text chunks
+ * @returns Array of text lines
+ */
 export function buildTextLines(
   maxWidth: number,
   textChunks: UITextChunk[],
@@ -113,6 +131,11 @@ export function buildTextLines(
   return lines;
 }
 
+/**
+ * Calculates total text size from lines.
+ * @param lines Text lines
+ * @returns Total width and height
+ */
 export function calculateTextSize(lines: UITextLine[]): UITextSize {
   if (lines.length === 0) {
     return { width: 0, height: 0 };
@@ -129,6 +152,13 @@ export function calculateTextSize(lines: UITextLine[]): UITextSize {
   return { width: maxLineWidth, height: totalHeight };
 }
 
+/**
+ * Builds measured text chunks from spans.
+ * @param context Canvas context for measurement
+ * @param textSpans Text spans with styles
+ * @param commonStyle Fallback style
+ * @returns Measured text chunks
+ */
 export function buildTextChunks(
   context: OffscreenCanvasRenderingContext2D,
   textSpans: UITextSpan[],
@@ -152,6 +182,12 @@ export function buildTextChunks(
   return textChunks;
 }
 
+/**
+ * Calculates text layout parameters.
+ * @param textChunks Measured text chunks
+ * @param maxLineWidth Maximum line width in pixels
+ * @returns Lines and total size
+ */
 export function calculateTextContentParameters(
   textChunks: UITextChunk[],
   maxLineWidth: number,

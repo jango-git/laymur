@@ -4,33 +4,17 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal";
 
-/**
- * Constraint that enforces a specific width value for UI elements.
- *
- * UIWidthConstraint creates a mathematical relationship that fixes an element's
- * width to a constant value. The constraint equation is: element.width = width.
- * This is useful for ensuring elements maintain a specific width regardless of
- * other layout changes or for setting fixed dimensions in responsive layouts.
- *
- * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIPlaneElement} - Elements that can have width constraints applied
- * @see {@link UIExpression} - Mathematical expressions for constraint equations
- */
+/** Fixes element width to constant value */
 export class UIWidthConstraint extends UISingleParameterConstraint {
-  /** The constraint descriptor managed by the solver system. */
+  /** Solver constraint descriptor */
   protected override readonly constraint: number;
 
-  /** Internal storage for the current width value. */
+  /** Current width value */
   private widthInternal: number;
 
   /**
-   * Creates a new UIWidthConstraint instance.
-   *
-   * If no width is specified in options, the constraint will use the
-   * element's current width as the target width value.
-   *
-   * @param element - The UI element to apply the width constraint to
-   * @param options - Configuration options for the constraint
+   * @param element Element to constrain
+   * @param options Width configuration. Defaults to element's current width.
    */
   constructor(
     private readonly element: UIPlaneElement & UILayerElement,
@@ -55,18 +39,12 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     );
   }
 
-  /**
-   * Gets the current width value being enforced.
-   * @returns The width value in pixels
-   */
+  /** Current width in world units */
   public get width(): number {
     return this.widthInternal;
   }
 
-  /**
-   * Sets a new width value and updates the constraint equation.
-   * @param value - The new width value in pixels
-   */
+  /** Updates width */
   public set width(value: number) {
     assertValidPositiveNumber(value, "UIWidthConstraint.width");
     if (this.widthInternal !== value) {

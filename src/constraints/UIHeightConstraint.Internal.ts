@@ -1,10 +1,8 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Configuration options for UIHeightConstraint creation.
- */
+/** Height constraint options */
 export interface UIHeightConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The desired height value for the element. */
+  /** Target height in world units */
   height: number;
 }

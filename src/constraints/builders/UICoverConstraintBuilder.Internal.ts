@@ -2,16 +2,14 @@ import type { UIOrientation } from "../../miscellaneous/UIOrientation";
 
 export const COVER_CONSTRAINT_DEFAULT_ANCHOR = 0.5;
 
-/**
- * Configuration options for the UICoverConstraintBuilder.
- */
+/** Cover constraint builder options */
 export interface UICoverConstraintBuilderOptions {
-  /** Whether to maintain the aspect ratio of the active (content) element */
+  /** Whether to maintain active element aspect ratio */
   keepActiveAspect: boolean;
-  /** Horizontal anchor point (0.0 = left, 0.5 = center, 1.0 = right) */
+  /** Horizontal anchor (0 = left, 0.5 = center, 1 = right) */
   anchorH: number;
-  /** Vertical anchor point (0.0 = top, 0.5 = center, 1.0 = bottom) */
+  /** Vertical anchor (0 = bottom, 0.5 = center, 1 = top) */
   anchorV: number;
-  /** Orientation context for constraint calculations */
+  /** Orientation for constraints */
   orientation: UIOrientation;
 }

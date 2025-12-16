@@ -16,33 +16,13 @@ import type {
   UIConstraintSize2DOptions,
 } from "./UIConstraint2DBuilder.Internal";
 
-/**
- * Builder utility for creating paired horizontal and vertical constraints.
- *
- * UIConstraint2DBuilder simplifies the creation of constraint pairs that work
- * together to define 2D relationships between UI elements. Instead of manually
- * creating separate horizontal and vertical constraints, this builder allows
- * you to specify both dimensions at once with a unified interface.
- *
- * This is particularly useful for creating consistent spacing, sizing, and
- * proportional relationships across both axes simultaneously.
- *
- * @see {@link UIWidthConstraint} - Horizontal size constraints
- * @see {@link UIHeightConstraint} - Vertical size constraints
- * @see {@link UIHorizontalDistanceConstraint} - Horizontal spacing constraints
- * @see {@link UIVerticalDistanceConstraint} - Vertical spacing constraints
- */
+/** Builder for paired horizontal and vertical constraints */
 export class UIConstraint2DBuilder {
   /**
-   * Creates paired width and height constraints for an element.
-   *
-   * This method generates both horizontal (width) and vertical (height)
-   * size constraints simultaneously, allowing you to set fixed dimensions
-   * for both axes with a single call.
-   *
-   * @param element - The UI element to apply size constraints to
-   * @param options - Configuration options for both width and height constraints
-   * @returns Object containing the created width and height constraint instances
+   * Creates width and height constraints.
+   * @param element Element to constrain
+   * @param options Size configuration for both axes
+   * @returns Width and height constraints
    */
   public static size(
     element: UIElement,
@@ -65,16 +45,11 @@ export class UIConstraint2DBuilder {
   }
 
   /**
-   * Creates paired horizontal and vertical distance constraints between two elements.
-   *
-   * This method generates both horizontal and vertical spacing constraints
-   * simultaneously, allowing you to define 2D spacing relationships with
-   * configurable anchor points for both axes.
-   *
-   * @param a - The first UI element (point or plane element)
-   * @param b - The second UI element (point or plane element)
-   * @param options - Configuration options for both horizontal and vertical distance constraints
-   * @returns Object containing the created horizontal and vertical distance constraint instances
+   * Creates horizontal and vertical distance constraints.
+   * @param a First element
+   * @param b Second element
+   * @param options Distance configuration for both axes
+   * @returns Horizontal and vertical distance constraints
    */
   public static distance(
     a: UIPointElement | UIPlaneElement,
@@ -105,16 +80,11 @@ export class UIConstraint2DBuilder {
   }
 
   /**
-   * Creates paired horizontal and vertical proportion constraints between two elements.
-   *
-   * This method generates both horizontal (width) and vertical (height)
-   * proportion constraints simultaneously, allowing you to define proportional
-   * relationships for both dimensions with a single call.
-   *
-   * @param a - The first UI plane element (whose dimensions will be multiplied by proportion)
-   * @param b - The second UI plane element (target dimensions for the proportion)
-   * @param options - Configuration options for both horizontal and vertical proportion constraints
-   * @returns Object containing the created horizontal and vertical proportion constraint instances
+   * Creates horizontal and vertical proportion constraints.
+   * @param a Element with proportional dimensions
+   * @param b Target element
+   * @param options Proportion configuration for both axes
+   * @returns Horizontal and vertical proportion constraints
    */
   public static proportion(
     a: UIPlaneElement,

@@ -590,8 +590,9 @@ export class UISolverWrapper implements UISolverWrapperInterface {
    */
   private convertExpression(expression: UIExpression): Expression {
     return new Expression(
-      ...expression["prepareTermsInternal"]().map(
-        ([variableIndex, coefficient]): [number, Variable] => {
+      ...expression
+        .prepareTerms()
+        .map(([variableIndex, coefficient]): [number, Variable] => {
           const description = this.variables.get(variableIndex);
           if (description === undefined) {
             throw new Error(
@@ -599,8 +600,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
             );
           }
           return [coefficient, description.variable];
-        },
-      ),
+        }),
       expression.constant,
     );
   }

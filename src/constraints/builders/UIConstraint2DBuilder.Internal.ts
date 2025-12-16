@@ -2,70 +2,50 @@ import type { UIOrientation } from "../../miscellaneous/UIOrientation";
 import type { UIPriority } from "../../miscellaneous/UIPriority";
 import type { UIRelation } from "../../miscellaneous/UIRelation";
 
-/**
- * Generic 2D type for specifying horizontal and vertical values.
- *
- * This interface allows configuration of properties that can have
- * different values for horizontal and vertical directions.
- *
- * @template T - The type of values for horizontal and vertical properties
- */
+/** Horizontal and vertical values */
 export interface UIType2D<T> {
-  /** Horizontal (x-axis) value. */
+  /** Horizontal value */
   h?: T;
-  /** Vertical (y-axis) value. */
+  /** Vertical value */
   v?: T;
 }
 
-/**
- * Base options for 2D constraint configuration.
- */
+/** Base 2D constraint options */
 export interface UIConstraint2DOptions {
-  /** Priority levels for horizontal and vertical constraints. */
+  /** Priority for each axis */
   priority: UIType2D<UIPriority>;
-  /** Mathematical relations for horizontal and vertical constraints. */
+  /** Relation for each axis */
   relation: UIType2D<UIRelation>;
-  /** Orientation settings for horizontal and vertical constraints. */
+  /** Orientation for each axis */
   orientation: UIType2D<UIOrientation>;
 }
 
-/**
- * Configuration options for 2D size constraints.
- */
+/** 2D size constraint options */
 export interface UIConstraintSize2DOptions extends UIConstraint2DOptions {
-  /** Size values for horizontal (width) and vertical (height) dimensions. */
+  /** Width and height */
   size: UIType2D<number>;
 }
 
-/**
- * Configuration options for 2D distance constraints.
- */
+/** 2D distance constraint options */
 export interface UIConstraintDistance2DOptions extends UIConstraint2DOptions {
-  /** Anchor points for element A in horizontal and vertical directions. */
+  /** Anchor on element A for each axis */
   anchorA: UIType2D<number>;
-  /** Anchor points for element B in horizontal and vertical directions. */
+  /** Anchor on element B for each axis */
   anchorB: UIType2D<number>;
-  /** Distance values for horizontal and vertical spacing. */
+  /** Distance for each axis */
   distance: UIType2D<number>;
 }
 
-/**
- * Configuration options for 2D proportion constraints.
- */
+/** 2D proportion constraint options */
 export interface UIConstraintProportion2DOptions extends UIConstraint2DOptions {
-  /** Proportion ratios for horizontal and vertical relationships. */
+  /** Proportion for each axis */
   proportion: UIType2D<number>;
 }
 
-/**
- * Result object containing horizontal and vertical constraint instances.
- *
- * @template TH - The type of the horizontal constraint
- * @template TV - The type of the vertical constraint
- */
+/** Horizontal and vertical constraint pair */
 export interface UIConstraint2DResult<TH, TV> {
-  /** The horizontal constraint instance. */
+  /** Horizontal constraint */
   h: TH;
-  /** The vertical constraint instance. */
+  /** Vertical constraint */
   v: TV;
 }

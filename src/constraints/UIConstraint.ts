@@ -1,35 +1,15 @@
 import type { UILayer } from "../layers/UILayer";
 import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
 
-/**
- * Abstract base class for all UI layout constraints.
- *
- * UIConstraint serves as the fundamental building block for the constraint-based
- * layout system. It provides access to the solver wrapper for creating and
- * managing constraint relationships between UI elements. All concrete constraint
- * implementations must extend this class to participate in the layout solving process.
- *
- * @see {@link UILayer} - Container layer for constraints
- * @see {@link UISolverWrapper} - Constraint solver integration
- */
+/** Base class for layout constraints */
 export abstract class UIConstraint {
-  /** Optional name identifier for the constraint. */
+  /** Optional constraint name */
   public name = "";
 
-  /**
-   * Reference to the constraint solver wrapper for managing solver operations.
-   * @see {@link UISolverWrapper}
-   */
+  /** Constraint solver wrapper */
   protected readonly solverWrapper: UISolverWrapperInterface;
 
-  /**
-   * Creates a new UIConstraint instance.
-   *
-   * Automatically connects to the layer's constraint solver for managing
-   * layout relationships and constraint operations.
-   *
-   * @param layer - The UI layer that contains this constraint
-   */
+  /** @param layer Layer containing this constraint */
   constructor(public readonly layer: UILayer) {
     this.solverWrapper = this.layer.solverWrapper;
   }

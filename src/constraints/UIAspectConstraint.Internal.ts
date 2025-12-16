@@ -1,10 +1,8 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Configuration options for UIAspectConstraint creation.
- */
+/** Aspect constraint options */
 export interface UIAspectConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The desired aspect ratio (width/height) for the element. */
+  /** Target aspect ratio (width/height) */
   aspect: number;
 }

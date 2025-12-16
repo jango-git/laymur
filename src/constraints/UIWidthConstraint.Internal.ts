@@ -1,10 +1,8 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Configuration options for UIWidthConstraint creation.
- */
+/** Width constraint options */
 export interface UIWidthConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The desired width value for the element. */
+  /** Target width in world units */
   width: number;
 }

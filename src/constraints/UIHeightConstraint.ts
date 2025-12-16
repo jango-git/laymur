@@ -4,33 +4,17 @@ import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIHeightConstraintOptions } from "./UIHeightConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
-/**
- * Constraint that enforces a specific height value for UI elements.
- *
- * UIHeightConstraint creates a mathematical relationship that fixes an element's
- * height to a constant value. The constraint equation is: element.height = height.
- * This is useful for ensuring elements maintain a specific height regardless of
- * other layout changes or for setting fixed dimensions in responsive layouts.
- *
- * @see {@link UISingleParameterConstraint} - Base class for single-parameter constraints
- * @see {@link UIPlaneElement} - Elements that can have height constraints applied
- * @see {@link UIExpression} - Mathematical expressions for constraint equations
- */
+/** Fixes element height to constant value */
 export class UIHeightConstraint extends UISingleParameterConstraint {
-  /** The constraint descriptor managed by the solver system. */
+  /** Solver constraint descriptor */
   protected override readonly constraint: number;
 
-  /** Internal storage for the current height value. */
+  /** Current height value */
   private heightInternal: number;
 
   /**
-   * Creates a new UIHeightConstraint instance.
-   *
-   * If no height is specified in options, the constraint will use the
-   * element's current height as the target height value.
-   *
-   * @param element - The UI element to apply the height constraint to
-   * @param options - Configuration options for the constraint
+   * @param element Element to constrain
+   * @param options Height configuration. Defaults to element's current height.
    */
   constructor(
     private readonly element: UIPlaneElement & UILayerElement,
@@ -55,18 +39,12 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
     );
   }
 
-  /**
-   * Gets the current height value being enforced.
-   * @returns The height value in pixels
-   */
+  /** Current height in world units */
   public get height(): number {
     return this.heightInternal;
   }
 
-  /**
-   * Sets a new height value and updates the constraint equation.
-   * @param value - The new height value in pixels
-   */
+  /** Updates height */
   public set height(value: number) {
     assertValidPositiveNumber(value, "UIHeightConstraint.height");
     if (this.heightInternal !== value) {

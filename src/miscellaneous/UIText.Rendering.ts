@@ -2,6 +2,14 @@ import type { UITextStyleConfig } from "./text-style/UITextStyle.Internal";
 import { TEXT_STYLE_DEFAULT_ALIGN } from "./text-style/UITextStyle.Internal";
 import type { UITextLine } from "./UIText.Interfaces";
 
+/**
+ * Renders single text chunk.
+ * @param x X coordinate in pixels
+ * @param y Y coordinate in pixels
+ * @param text Chunk text
+ * @param style Resolved text style
+ * @param context Canvas rendering context
+ */
 export function renderTextChunk(
   x: number,
   y: number,
@@ -28,6 +36,13 @@ export function renderTextChunk(
   context.fillText(text, x, y);
 }
 
+/**
+ * Renders text lines to canvas.
+ * @param paddingTop Top padding in pixels
+ * @param paddingLeft Left padding in pixels
+ * @param lines Text lines to render
+ * @param context Canvas rendering context
+ */
 export function renderTextLines(
   paddingTop: number,
   paddingLeft: number,

@@ -1,8 +1,6 @@
 import { Texture } from "three";
 
-/** Default texture instance */
 export const TEXTURE_DEFAULT_TEXTURE = new Texture();
-/** Default texture size in pixels */
 export const TEXTURE_DEFAULT_SIZE = 2;
 
 /** Events emitted by UITexture */

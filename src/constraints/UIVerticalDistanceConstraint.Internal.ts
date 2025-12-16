@@ -1,17 +1,14 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/** Default anchor point (0.5 = center) for elements when not specified. */
 export const DEFAULT_ANCHOR = 0.5;
 
-/**
- * Configuration options for UIVerticalDistanceConstraint creation.
- */
+/** Vertical distance constraint options */
 export interface UIVerticalDistanceConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** Anchor point for element A (0.0 = top edge, 0.5 = center, 1.0 = bottom edge). */
+  /** Anchor on element A (0 = bottom, 0.5 = center, 1 = top) */
   anchorA: number;
-  /** Anchor point for element B (0.0 = top edge, 0.5 = center, 1.0 = bottom edge). */
+  /** Anchor on element B (0 = bottom, 0.5 = center, 1 = top) */
   anchorB: number;
-  /** The desired vertical distance between the elements. */
+  /** Distance in world units */
   distance: number;
 }

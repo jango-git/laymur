@@ -2,14 +2,12 @@ import type { UIOrientation } from "../miscellaneous/UIOrientation";
 import type { UIPriority } from "../miscellaneous/UIPriority";
 import type { UIRelation } from "../miscellaneous/UIRelation";
 
-/**
- * Configuration options for UISingleParameterConstraint creation.
- */
+/** Single parameter constraint options */
 export interface UISingleParameterConstraintOptions {
-  /** Priority level for the constraint in the solver hierarchy. */
+  /** Constraint priority */
   priority: UIPriority;
-  /** Mathematical relation type for the constraint equation. */
+  /** Constraint relation */
   relation: UIRelation;
-  /** Orientation context for when the constraint should be active. */
+  /** When constraint is active */
   orientation: UIOrientation;
 }

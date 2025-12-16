@@ -1,15 +1,10 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
 import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicro.Internal";
 
-/** Reusable position vector */
 const TEMP_POSITION = new Vector3();
-/** Reusable rotation quaternion */
 const TEMP_QUATERNION = new Quaternion();
-/** Reusable scale vector */
 const TEMP_SCALE = new Vector3();
-/** Reusable transform matrix */
 const TEMP_MATRIX = new Matrix4();
-/** Z-axis for 2D rotation */
 const Z_AXIS = new Vector3(0, 0, 1);
 
 /**

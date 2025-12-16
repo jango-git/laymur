@@ -1,6 +1,5 @@
 import { UILayer } from "../layers/UILayer";
 
-/** Epsilon for floating-point comparisons */
 export const EPSILON = 1e-6;
 
 /** Objects that belong to a UI layer */

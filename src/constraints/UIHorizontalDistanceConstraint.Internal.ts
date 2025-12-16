@@ -1,17 +1,14 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/** Default anchor point (0.5 = center) for elements when not specified. */
 export const DEFAULT_ANCHOR = 0.5;
 
-/**
- * Configuration options for UIHorizontalDistanceConstraint creation.
- */
+/** Horizontal distance constraint options */
 export interface UIHorizontalDistanceConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** Anchor point for element A (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
+  /** Anchor on element A (0 = left, 0.5 = center, 1 = right) */
   anchorA: number;
-  /** Anchor point for element B (0.0 = left edge, 0.5 = center, 1.0 = right edge). */
+  /** Anchor on element B (0 = left, 0.5 = center, 1 = right) */
   anchorB: number;
-  /** The desired horizontal distance between the elements. */
+  /** Distance in world units */
   distance: number;
 }

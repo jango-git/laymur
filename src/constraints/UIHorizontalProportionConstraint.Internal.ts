@@ -1,10 +1,8 @@
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Configuration options for UIHorizontalProportionConstraint creation.
- */
+/** Horizontal proportion constraint options */
 export interface UIHorizontalProportionConstraintOptions
   extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element widths (elementA.width * proportion = elementB.width). */
+  /** Proportion multiplier (A.width * proportion = B.width) */
   proportion: number;
 }

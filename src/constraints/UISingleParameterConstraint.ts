@@ -11,40 +11,21 @@ import { resolveRelation } from "../miscellaneous/UIRelation";
 import { UIConstraint } from "./UIConstraint";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
-/**
- * Abstract base class for constraints that operate with configurable parameters.
- *
- * UISingleParameterConstraint extends UIConstraint with common functionality
- * for constraints that need priority, relation, and orientation configuration.
- * It provides automatic orientation-based enabling/disabling of constraints
- * and manages the lifecycle of solver constraint descriptors.
- *
- * @see {@link UIConstraint} - Base constraint class
- * @see {@link UIPriority} - Priority level configuration
- * @see {@link UIRelation} - Mathematical relation types
- * @see {@link UIOrientation} - Orientation-based activation
- */
+/** Base class for constraints with priority, relation, and orientation */
 export abstract class UISingleParameterConstraint extends UIConstraint {
-  /** Internal storage for the constraint priority level. */
+  /** Constraint priority */
   private priorityInternal: UIPriority;
-  /** Internal storage for the constraint relation type. */
+  /** Constraint relation */
   private relationInternal: UIRelation;
-  /** Internal storage for the constraint orientation setting. */
+  /** Constraint orientation */
   private orientationInternal: UIOrientation;
 
-  /** The constraint descriptor managed by the solver system. */
+  /** Solver constraint descriptor */
   protected abstract readonly constraint: number;
 
   /**
-   * Creates a new UISingleParameterConstraint instance.
-   *
-   * Initializes the constraint with resolved default values and sets up
-   * orientation change event handling for dynamic constraint activation.
-   *
-   * @param layer - The UI layer that contains this constraint
-   * @param priority - Optional priority level (defaults to P0)
-   * @param relation - Optional relation type (defaults to EQUAL)
-   * @param orientation - Optional orientation setting (defaults to ALWAYS)
+   * @param layer Layer containing this constraint
+   * @param options Constraint configuration
    */
   constructor(
     layer: UILayer,
@@ -57,34 +38,22 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     this.layer.on(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
   }
 
-  /**
-   * Gets the current priority level of the constraint.
-   * @returns The constraint priority level
-   */
+  /** Constraint priority */
   public get priority(): UIPriority {
     return this.priorityInternal;
   }
 
-  /**
-   * Gets the current mathematical relation type of the constraint.
-   * @returns The constraint relation type
-   */
+  /** Constraint relation */
   public get relation(): UIRelation {
     return this.relationInternal;
   }
 
-  /**
-   * Gets the current orientation setting of the constraint.
-   * @returns The constraint orientation setting
-   */
+  /** When constraint is active */
   public get orientation(): UIOrientation {
     return this.orientationInternal;
   }
 
-  /**
-   * Sets a new priority level for the constraint.
-   * @param value - The new priority level
-   */
+  /** Updates constraint priority */
   public set priority(value: UIPriority) {
     if (value !== this.priorityInternal) {
       this.priorityInternal = value;
@@ -95,10 +64,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     }
   }
 
-  /**
-   * Sets a new mathematical relation type for the constraint.
-   * @param value - The new relation type
-   */
+  /** Updates constraint relation */
   public set relation(value: UIRelation) {
     if (value !== this.relationInternal) {
       this.relationInternal = value;
@@ -109,10 +75,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     }
   }
 
-  /**
-   * Sets a new orientation setting for the constraint.
-   * @param value - The new orientation setting
-   */
+  /** Updates when constraint is active */
   public set orientation(value: UIOrientation) {
     if (value !== this.orientationInternal) {
       this.orientationInternal = value;
@@ -120,26 +83,15 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     }
   }
 
-  /**
-   * Destroys the constraint by cleaning up event listeners and solver resources.
-   *
-   * This method removes the orientation change event listener and removes
-   * the constraint from the solver system. After calling this method,
-   * the constraint should not be used anymore.
-   */
+  /** Removes constraint from solver and cleans up listeners */
   public destroy(): void {
     this.layer.off(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
     this.solverWrapper.removeConstraint(this.constraint);
   }
 
   /**
-   * Determines if the constraint should be enabled based on orientation.
-   *
-   * The constraint is enabled if its orientation is set to ALWAYS or if
-   * it matches the current layer orientation.
-   *
-   * @returns True if the constraint should be enabled, false otherwise
-   * @protected
+   * Checks if constraint should be active for current orientation.
+   * @returns True if orientation is ALWAYS or matches layer orientation
    */
   protected isConstraintEnabled(): boolean {
     return (
@@ -148,12 +100,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     );
   }
 
-  /**
-   * Event handler for layer orientation changes.
-   *
-   * Updates the constraint's enabled state in the solver based on the
-   * current orientation and the constraint's orientation setting.
-   */
+  /** Updates constraint enabled state when layer orientation changes */
   private readonly onOrientationChange = (): void => {
     this.solverWrapper.setConstraintEnabled(
       this.constraint,

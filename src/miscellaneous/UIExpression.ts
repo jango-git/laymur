@@ -130,7 +130,7 @@ export class UIExpression {
    * @returns Variable-coefficient pairs
    * @internal
    */
-  protected ["prepareTermsInternal"](): [number, number][] {
+  public prepareTerms(): [number, number][] {
     return Array.from(this.terms.entries());
   }
 }

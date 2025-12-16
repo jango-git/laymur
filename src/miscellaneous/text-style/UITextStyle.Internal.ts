@@ -35,33 +35,18 @@ export interface UITextStyleConfig {
   strokeThickness: number;
 }
 
-/** Default text color */
 export const TEXT_STYLE_DEFAULT_COLOR = "#000000";
-/** Default text alignment */
 export const TEXT_STYLE_DEFAULT_ALIGN = "left" as const;
-/** Default font family */
 export const TEXT_STYLE_DEFAULT_FONT_FAMILY = "Arial";
-/** Default font size in pixels */
 export const TEXT_STYLE_DEFAULT_FONT_SIZE = 16;
-/** Default font style */
 export const TEXT_STYLE_DEFAULT_FONT_STYLE = "normal" as const;
-/** Default font weight */
 export const TEXT_STYLE_DEFAULT_FONT_WEIGHT = "normal" as const;
-/** Default line height multiplier */
 export const TEXT_STYLE_DEFAULT_LINE_HEIGHT = 1.2;
-/** Default shadow enabled state */
 export const TEXT_STYLE_DEFAULT_ENABLE_SHADOW = false;
-/** Default shadow horizontal offset */
 export const TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X = 0;
-/** Default shadow vertical offset */
 export const TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y = 0;
-/** Default shadow blur radius */
 export const TEXT_STYLE_DEFAULT_SHADOW_BLUR = 0;
-/** Default shadow color */
 export const TEXT_STYLE_DEFAULT_SHADOW_COLOR = "transparent";
-/** Default stroke enabled state */
 export const TEXT_STYLE_DEFAULT_ENABLE_STROKE = false;
-/** Default stroke color */
 export const TEXT_STYLE_DEFAULT_STROKE_COLOR = "#000000";
-/** Default stroke thickness */
 export const TEXT_STYLE_DEFAULT_STROKE_THICKNESS = 0;

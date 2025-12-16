@@ -13,43 +13,29 @@ import { UIAspectConstraint } from "../UIAspectConstraint";
 import type { UIFitConstraintBuilderOptions } from "./UIFitConstraintBuilder.Internal";
 import { DEFAULT_ANCHOR } from "./UIFitConstraintBuilder.Internal";
 
-/**
- * Builder for creating "fit" layout constraints that make an element fit within its container.
- *
- * Fit layout ensures the active element is sized to completely fit within the passive
- * element while maintaining proportions. This is similar to CSS `background-size: contain`
- * or `object-fit: contain` behavior.
- *
- * The active element will be:
- * - Positioned at the specified anchor point within the passive element
- * - Sized to fit entirely within the passive element in both dimensions
- * - Scaled proportionally to maintain aspect ratio (if enabled)
- *
- * The constraints ensure: passive.dimension * 1 ≥ active.dimension (active fits within passive)
- */
+/** Builder for fit layout (like CSS object-fit: contain) */
 export class UIFitConstraintBuilder {
   /**
-   * Creates a set of constraints for fit layout behavior.
-   *
-   * @param passive - The container element (what contains the content)
-   * @param active - The content element (what gets fitted within the container)
-   * @param options - Configuration options for the fit layout
-   * @returns Object containing all created constraints
+   * Creates fit layout constraints.
+   * @param passive Container element
+   * @param active Content element that fits within container
+   * @param options Fit configuration
+   * @returns Created constraints
    */
   public static build(
     passive: UIPlaneElement,
     active: UIPlaneElement & UILayerElement,
     options: Partial<UIFitConstraintBuilderOptions> = {},
   ): {
-    /** Aspect constraint for the active element (if keepActiveAspect is true) */
+    /** Aspect constraint if keepActiveAspect is true */
     activeAspectConstraint?: UIAspectConstraint;
-    /** Horizontal positioning constraint */
+    /** Horizontal position constraint */
     xConstraint: UIHorizontalDistanceConstraint;
-    /** Vertical positioning constraint */
+    /** Vertical position constraint */
     yConstraint: UIVerticalDistanceConstraint;
-    /** Width proportion constraint (ensures fitting) */
+    /** Width constraint (ensures fitting) */
     widthConstraint: UIHorizontalProportionConstraint;
-    /** Height proportion constraint (ensures fitting) */
+    /** Height constraint (ensures fitting) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
     if (options.anchorH !== undefined) {

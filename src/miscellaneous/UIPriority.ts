@@ -4,17 +4,32 @@ const HIGH_PRIORITY = 1000;
 const MEDIUM_PRIORITY = 100;
 const LOW_PRIORITY = 10;
 
+/** Constraint solver priority levels */
 export enum UIPriority {
+  /** Highest priority */
   P0 = 0,
+  /** High priority */
   P1 = 1,
+  /** Medium-high priority */
   P2 = 2,
+  /** Medium priority */
   P3 = 3,
+  /** Medium-low priority */
   P4 = 4,
+  /** Low priority */
   P5 = 5,
+  /** Very low priority */
   P6 = 6,
+  /** Lowest priority */
   P7 = 7,
 }
 
+/**
+ * Converts priority to solver strength.
+ * @param priority Priority level
+ * @returns Solver strength value
+ * @throws If priority is invalid
+ */
 export function convertPriority(priority: UIPriority): number {
   switch (priority) {
     case UIPriority.P0:
@@ -38,6 +53,11 @@ export function convertPriority(priority: UIPriority): number {
   }
 }
 
+/**
+ * Resolves optional priority.
+ * @param priority Priority to resolve
+ * @returns Priority or P0 if undefined
+ */
 export function resolvePriority(priority?: UIPriority): UIPriority {
   return priority ?? UIPriority.P0;
 }
