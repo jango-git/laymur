@@ -1,28 +1,24 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
-import type { UILayer } from "../layers/UILayer";
-import { UIColor } from "../miscellaneous/color/UIColor";
-import { UIPadding } from "../miscellaneous/padding/UIPadding";
-import { UITextSpan } from "../miscellaneous/text-span/UITextSpan";
-import { UITextStyle } from "../miscellaneous/text-style/UITextStyle";
-import type {
-  UITextChunk,
-  UITextContent,
-} from "../miscellaneous/UIText.Interfaces";
-
-import {
-  buildTextChunks,
-  calculateTextContentParameters,
-} from "../miscellaneous/UIText.Measuring";
-import { renderTextLines } from "../miscellaneous/UIText.Rendering";
-import source from "../shaders/UIImage.glsl";
-import { UIElement } from "./UIElement";
+import type { UILayer } from "../../layers/UILayer";
+import { UIColor } from "../../miscellaneous/color/UIColor";
+import { UIPadding } from "../../miscellaneous/padding/UIPadding";
+import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
+import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
+import source from "../../shaders/UIImage.glsl";
+import { UIElement } from "../UIElement";
+import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {
   TEXT_DEFAULT_MAX_LINE_WIDTH,
   TEXT_DEFAULT_RESIZE_MODE,
   UITextResizeMode,
 } from "./UIText.Internal";
+import {
+  buildTextChunks,
+  calculateTextContentParameters,
+} from "./UIText.Measuring";
+import { renderTextLines } from "./UIText.Rendering";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {
@@ -125,7 +121,7 @@ export class UIText extends UIElement {
     return this.maxLineWidthInternal;
   }
 
-  /** Controls how text adapts to size constraints */
+  /** Controls how text adapts to element size */
   public get resizeMode(): UITextResizeMode {
     return this.resizeModeInternal;
   }

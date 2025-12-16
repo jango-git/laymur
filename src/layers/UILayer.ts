@@ -14,20 +14,31 @@ import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Inter
 import type { UILayerMode, UILayerOrientation } from "./UILayer.Internal";
 import { UILayerEvent } from "./UILayer.Internal";
 
+/** Base layer for UI rendering and layout management */
 export abstract class UILayer extends Eventail implements UIPlaneElement {
+  /** Optional layer name */
   public name = "";
+  /** Solver variable for x coordinate */
   public readonly xVariable: number;
+  /** Solver variable for y coordinate */
   public readonly yVariable: number;
+  /** Solver variable for width */
   public readonly wVariable: number;
+  /** Solver variable for height */
   public readonly hVariable: number;
 
-  protected readonly solverWrapperInternal = new UISolverWrapper();
-  protected readonly sceneWrapperInternal: UISceneWrapper;
   protected readonly inputWrapperInternal = new UIInputWrapper();
+  private readonly solverWrapperInternal = new UISolverWrapper();
+  private readonly sceneWrapperInternal: UISceneWrapper;
 
-  protected modeInternal: UILayerMode;
-  protected orientationInternal: UILayerOrientation;
+  private modeInternal: UILayerMode;
+  private orientationInternal: UILayerOrientation;
 
+  /**
+   * @param w Initial width in world units
+   * @param h Initial height in world units
+   * @param mode Initial visibility and interactivity mode
+   */
   constructor(w: number, h: number, mode: UILayerMode) {
     super();
     this.sceneWrapperInternal = new UISceneWrapper(w, h);
@@ -68,30 +79,37 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     return this.inputWrapperInternal;
   }
 
+  /** X coordinate in world units (always 0 for layers) */
   public get x(): number {
     return this.solverWrapperInternal.readVariableValue(this.xVariable);
   }
 
+  /** Y coordinate in world units (always 0 for layers) */
   public get y(): number {
     return this.solverWrapperInternal.readVariableValue(this.yVariable);
   }
 
+  /** Layer width in world units */
   public get width(): number {
     return this.solverWrapperInternal.readVariableValue(this.wVariable);
   }
 
+  /** Layer height in world units */
   public get height(): number {
     return this.solverWrapperInternal.readVariableValue(this.hVariable);
   }
 
+  /** Current visibility and interactivity mode */
   public get mode(): UILayerMode {
     return this.modeInternal;
   }
 
+  /** Current orientation based on aspect ratio */
   public get orientation(): UILayerOrientation {
     return this.orientationInternal;
   }
 
+  /** Updates visibility and interactivity mode */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;

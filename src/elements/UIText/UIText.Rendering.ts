@@ -1,5 +1,5 @@
-import type { UITextStyleConfig } from "./text-style/UITextStyle.Internal";
-import { TEXT_STYLE_DEFAULT_ALIGN } from "./text-style/UITextStyle.Internal";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
+import { TEXT_STYLE_DEFAULT_ALIGN } from "../../miscellaneous/text-style/UITextStyle.Internal";
 import type { UITextLine } from "./UIText.Interfaces";
 
 /**

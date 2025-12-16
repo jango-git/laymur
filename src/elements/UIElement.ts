@@ -50,7 +50,6 @@ export abstract class UIElement extends UIDummy {
       source,
       properties,
       this.transparencyModeInternal,
-      false,
     );
 
     this.layer.on(UILayerEvent.RENDERING, this.onWillRender, this);

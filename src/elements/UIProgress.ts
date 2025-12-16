@@ -4,8 +4,8 @@ import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
-import { UITexture } from "../miscellaneous/texture/UITexture";
-import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureView } from "../miscellaneous/texture/UITextureView";
+import { UITextureViewEvent } from "../miscellaneous/texture/UITextureView.Internal";
 import source from "../shaders/UIProgress.glsl";
 import { UIElement } from "./UIElement";
 import type { UIProgressOptions } from "./UIProgress.Internal";
@@ -17,7 +17,7 @@ import {
 /** Progress bar with customizable fill direction */
 export class UIProgress extends UIElement {
   /** Texture displayed by this element */
-  public readonly texture: UITexture;
+  public readonly texture: UITextureView;
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
   /** Function controlling fill direction and shape */
@@ -44,12 +44,12 @@ export class UIProgress extends UIElement {
     options: Partial<UIProgressOptions> = {},
   ) {
     const color = new UIColor(options.color);
-    const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateUVTransform();
-    const textureResolution = uiTexture.getResolution();
+    const textureView = new UITextureView(texture);
+    const textureTransform = textureView.calculateUVTransform();
+    const textureResolution = textureView.getResolution();
 
-    options.width = options.width ?? uiTexture.width;
-    options.height = options.height ?? uiTexture.height;
+    options.width = options.width ?? textureView.width;
+    options.height = options.height ?? textureView.height;
 
     const progress = options.progress ?? PROGRESS_DEFAULT_VALUE;
 
@@ -61,7 +61,7 @@ export class UIProgress extends UIElement {
       layer,
       simplifiedSource,
       {
-        texture: uiTexture.texture,
+        texture: textureView.texture,
         textureTransform,
         textureResolution,
         color,
@@ -71,7 +71,7 @@ export class UIProgress extends UIElement {
       options,
     );
 
-    this.texture = uiTexture;
+    this.texture = textureView;
     this.textureTransform = textureTransform;
     this.textureResolution = textureResolution;
     this.color = color;
@@ -79,7 +79,7 @@ export class UIProgress extends UIElement {
     this.maskFunction = maskFunction;
 
     this.texture.on(
-      UITextureEvent.DIMENSIONS_CHANGED,
+      UITextureViewEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
   }

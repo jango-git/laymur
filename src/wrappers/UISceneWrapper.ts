@@ -24,14 +24,8 @@ export class UISceneWrapper {
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-    forceSingleInstance: boolean,
   ): number {
-    return this.registry.create(
-      source,
-      properties,
-      transparency,
-      forceSingleInstance,
-    );
+    return this.registry.create(source, properties, transparency);
   }
 
   public destroyPlane(handler: number): void {

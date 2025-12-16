@@ -8,10 +8,15 @@ import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
 import { UILayer } from "./UILayer";
 import type { UILayerMode } from "./UILayer.Internal";
 
+/** Layer that automatically handles browser window resizing and input events */
 export class UIFullscreenLayer extends UILayer {
   private resizePolicyInternal: UIResizePolicy;
   private resizePolicyDirty = false;
 
+  /**
+   * @param resizePolicy Strategy for handling window resize
+   * @param mode Initial visibility and interactivity mode
+   */
   constructor(
     resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
     mode: UILayerMode = UIMode.VISIBLE,
@@ -28,10 +33,12 @@ export class UIFullscreenLayer extends UILayer {
     window.addEventListener("pointerup", this.onPointerUp);
   }
 
+  /** Current resize policy */
   public get resizePolicy(): UIResizePolicy {
     return this.resizePolicyInternal;
   }
 
+  /** Updates resize policy */
   public set resizePolicy(value: UIResizePolicy) {
     if (this.resizePolicyInternal !== value) {
       this.resizePolicyInternal = value;
@@ -39,6 +46,7 @@ export class UIFullscreenLayer extends UILayer {
     }
   }
 
+  /** Removes event listeners and frees resources */
   public destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onPointerDown);
@@ -46,6 +54,11 @@ export class UIFullscreenLayer extends UILayer {
     window.removeEventListener("pointerup", this.onPointerUp);
   }
 
+  /**
+   * Renders layer and all visible elements
+   * @param renderer Three.js WebGL renderer
+   * @param deltaTime Time since last frame in seconds
+   */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
     if (this.resizePolicy.dirty || this.resizePolicyDirty) {
@@ -54,6 +67,12 @@ export class UIFullscreenLayer extends UILayer {
     super.renderInternal(renderer, deltaTime);
   }
 
+  /**
+   * Projects 3D world position to 2D layer coordinates
+   * @param position World position
+   * @param camera Three.js camera
+   * @returns Layer coordinates
+   */
   public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
     const projectedPosition = position.clone().project(camera);
     projectedPosition.x = MathUtils.mapLinear(
@@ -73,6 +92,13 @@ export class UIFullscreenLayer extends UILayer {
     return projectedPosition;
   }
 
+  /**
+   * Projects 2D layer coordinates to 3D world position
+   * @param position Layer coordinates
+   * @param camera Three.js camera
+   * @param z Depth coordinate
+   * @returns World position
+   */
   public projectLayerPosition(
     position: Vector2,
     camera: Camera,
@@ -85,6 +111,13 @@ export class UIFullscreenLayer extends UILayer {
     ).unproject(camera);
   }
 
+  /**
+   * Builds ray from layer position through camera
+   * @param position Layer coordinates
+   * @param camera Three.js camera
+   * @param result Reusable ray instance
+   * @returns Ray from near to far plane
+   */
   public buildRay(position: Vector2, camera: Camera, result = new Ray()): Ray {
     const near = new Vector3(
       MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),

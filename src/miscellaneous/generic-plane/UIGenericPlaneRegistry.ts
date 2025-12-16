@@ -1,17 +1,12 @@
 import type { Matrix4, Scene } from "three";
 import type { UITransparencyMode } from "../UITransparencyMode";
+import type { GenericPlaneData, UIPropertyType } from "./shared";
 import { UIGenericInstancedPlane } from "./UIGenericInstancedPlane";
 import { UIGenericPlane } from "./UIGenericPlane";
-import type { GenericPlaneData, UIPropertyType } from "./shared";
-
-interface PlaneDescriptor {
-  plane: UIGenericPlane | UIGenericInstancedPlane;
-  instanceHandler?: number;
-  forceSingleInstance: boolean;
-}
+import type { GenericPlaneDescriptor } from "./UIGenericPlaneRegistry.Internal";
 
 export class UIPlaneRegistry {
-  private readonly descriptors = new Map<number, PlaneDescriptor>();
+  private readonly descriptors = new Map<number, GenericPlaneDescriptor>();
   private lastHandler = 0;
 
   constructor(private readonly scene: Scene) {}
@@ -20,14 +15,12 @@ export class UIPlaneRegistry {
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-    forceSingleInstance: boolean,
   ): number {
     const handler = this.lastHandler++;
 
-    const descriptor: PlaneDescriptor = {
+    const descriptor: GenericPlaneDescriptor = {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       plane: undefined!,
-      forceSingleInstance,
     };
     this.descriptors.set(handler, descriptor);
 
@@ -67,11 +60,6 @@ export class UIPlaneRegistry {
     properties: Record<string, UIPropertyType>,
   ): void {
     const descriptor = this.resolveDescriptor(handler);
-
-    if (descriptor.forceSingleInstance) {
-      (descriptor.plane as UIGenericPlane).setProperties(properties);
-      return;
-    }
 
     const currentData = this.extractInstanceData(descriptor);
     const newProperties = { ...currentData.properties, ...properties };
@@ -118,11 +106,6 @@ export class UIPlaneRegistry {
       return;
     }
 
-    if (descriptor.forceSingleInstance) {
-      (descriptor.plane as UIGenericPlane).setTransparency(transparency);
-      return;
-    }
-
     const needsRelocation = this.checkNeedsRelocation(
       descriptor,
       currentData,
@@ -142,47 +125,45 @@ export class UIPlaneRegistry {
   }
 
   private placeInstance(
-    descriptor: PlaneDescriptor,
+    descriptor: GenericPlaneDescriptor,
     data: GenericPlaneData,
   ): void {
     const { source, properties, transparency, transform, visibility } = data;
 
-    if (!descriptor.forceSingleInstance) {
-      const compatibleInstanced = this.findCompatibleInstancedPlane(
-        source,
-        properties,
-        transparency,
-      );
+    const compatibleInstanced = this.findCompatibleInstancedPlane(
+      source,
+      properties,
+      transparency,
+    );
 
-      if (compatibleInstanced) {
-        this.attachToInstancedPlane(
-          descriptor,
-          compatibleInstanced,
-          properties,
-          transform,
-          visibility,
-        );
-        return;
-      }
-
-      const promotable = this.findCompatibleSinglePlane(
-        source,
-        properties,
-        transparency,
+    if (compatibleInstanced) {
+      this.attachToInstancedPlane(
         descriptor,
+        compatibleInstanced,
+        properties,
+        transform,
+        visibility,
       );
+      return;
+    }
 
-      if (promotable) {
-        const instancedPlane = this.promoteToInstanced(promotable, properties);
-        this.attachToInstancedPlane(
-          descriptor,
-          instancedPlane,
-          properties,
-          transform,
-          visibility,
-        );
-        return;
-      }
+    const promotable = this.findCompatibleSinglePlane(
+      source,
+      properties,
+      transparency,
+      descriptor,
+    );
+
+    if (promotable) {
+      const instancedPlane = this.promoteToInstanced(promotable, properties);
+      this.attachToInstancedPlane(
+        descriptor,
+        instancedPlane,
+        properties,
+        transform,
+        visibility,
+      );
+      return;
     }
 
     this.createSinglePlane(
@@ -195,7 +176,9 @@ export class UIPlaneRegistry {
     );
   }
 
-  private extractInstanceData(descriptor: PlaneDescriptor): GenericPlaneData {
+  private extractInstanceData(
+    descriptor: GenericPlaneDescriptor,
+  ): GenericPlaneData {
     if (
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
@@ -206,7 +189,7 @@ export class UIPlaneRegistry {
     return (descriptor.plane as UIGenericPlane).extractInstanceData();
   }
 
-  private removeFromCurrentPlane(descriptor: PlaneDescriptor): void {
+  private removeFromCurrentPlane(descriptor: GenericPlaneDescriptor): void {
     if (
       descriptor.plane instanceof UIGenericInstancedPlane &&
       descriptor.instanceHandler !== undefined
@@ -231,7 +214,7 @@ export class UIPlaneRegistry {
   }
 
   private updatePropertiesInPlace(
-    descriptor: PlaneDescriptor,
+    descriptor: GenericPlaneDescriptor,
     properties: Record<string, UIPropertyType>,
   ): void {
     if (
@@ -245,7 +228,7 @@ export class UIPlaneRegistry {
   }
 
   private checkNeedsRelocation(
-    descriptor: PlaneDescriptor,
+    descriptor: GenericPlaneDescriptor,
     currentData: GenericPlaneData,
     newProperties: Record<string, UIPropertyType>,
     newTransparency: UITransparencyMode,
@@ -283,10 +266,10 @@ export class UIPlaneRegistry {
   }
 
   private attachToInstancedPlane(
-    descriptor: PlaneDescriptor,
+    descriptor: GenericPlaneDescriptor,
     instancedPlane: UIGenericInstancedPlane,
     properties: Record<string, UIPropertyType>,
-    transform: Matrix4 | null,
+    transform: Matrix4 | undefined,
     visibility: boolean,
   ): void {
     const instanceHandler = instancedPlane.createInstance();
@@ -301,11 +284,11 @@ export class UIPlaneRegistry {
   }
 
   private createSinglePlane(
-    descriptor: PlaneDescriptor,
+    descriptor: GenericPlaneDescriptor,
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-    transform: Matrix4 | null,
+    transform: Matrix4 | undefined,
     visibility: boolean,
   ): void {
     const singlePlane = new UIGenericPlane(source, properties, transparency);
@@ -324,13 +307,10 @@ export class UIPlaneRegistry {
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-    excludeDescriptor?: PlaneDescriptor,
-  ): PlaneDescriptor | null {
+    excludeDescriptor?: GenericPlaneDescriptor,
+  ): GenericPlaneDescriptor | undefined {
     for (const descriptor of this.descriptors.values()) {
       if (descriptor === excludeDescriptor) {
-        continue;
-      }
-      if (descriptor.forceSingleInstance) {
         continue;
       }
 
@@ -341,14 +321,14 @@ export class UIPlaneRegistry {
         return descriptor;
       }
     }
-    return null;
+    return undefined;
   }
 
   private findCompatibleInstancedPlane(
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-  ): UIGenericInstancedPlane | null {
+  ): UIGenericInstancedPlane | undefined {
     for (const descriptor of this.descriptors.values()) {
       if (
         descriptor.plane instanceof UIGenericInstancedPlane &&
@@ -357,11 +337,11 @@ export class UIPlaneRegistry {
         return descriptor.plane;
       }
     }
-    return null;
+    return undefined;
   }
 
   private promoteToInstanced(
-    promotableDescriptor: PlaneDescriptor,
+    promotableDescriptor: GenericPlaneDescriptor,
     templateProperties: Record<string, UIPropertyType>,
   ): UIGenericInstancedPlane {
     const oldPlane = promotableDescriptor.plane as UIGenericPlane;
@@ -390,9 +370,9 @@ export class UIPlaneRegistry {
 
   private demoteToSingle(
     instancedPlane: UIGenericInstancedPlane,
-    removedDescriptor: PlaneDescriptor,
+    removedDescriptor: GenericPlaneDescriptor,
   ): void {
-    let remainingDescriptor: PlaneDescriptor | undefined;
+    let remainingDescriptor: GenericPlaneDescriptor | undefined;
 
     for (const descriptor of this.descriptors.values()) {
       if (
@@ -430,7 +410,7 @@ export class UIPlaneRegistry {
     delete remainingDescriptor.instanceHandler;
   }
 
-  private resolveDescriptor(handler: number): PlaneDescriptor {
+  private resolveDescriptor(handler: number): GenericPlaneDescriptor {
     const descriptor = this.descriptors.get(handler);
     if (!descriptor) {
       throw new Error(

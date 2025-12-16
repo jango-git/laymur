@@ -1,5 +1,5 @@
-import type { UITextSpanConfig } from "./text-span/UITextSpan.Internal";
-import type { UITextStyleConfig } from "./text-style/UITextStyle.Internal";
+import type { UITextSpanConfig } from "../../miscellaneous/text-span/UITextSpan.Internal";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
 
 /** Text content configuration */
 export type UITextContent =

@@ -4,8 +4,8 @@ import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
 import { UIPadding } from "../miscellaneous/padding/UIPadding";
-import { UITexture } from "../miscellaneous/texture/UITexture";
-import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureView } from "../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../miscellaneous/texture/UITextureView.Internal";
 import source from "../shaders/UINineSlice.glsl";
 import { UIElement } from "./UIElement";
 import type { UINineSliceOptions } from "./UINineSlice.Internal";
@@ -18,7 +18,7 @@ import {
 /** Scalable textured image preserving border regions */
 export class UINineSlice extends UIElement {
   /** Texture displayed by this element */
-  public readonly texture: UITexture;
+  public readonly texture: UITextureView;
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
   /** Border size in normalized texture coordinates (0 to 1) */
@@ -51,11 +51,11 @@ export class UINineSlice extends UIElement {
     options: Partial<UINineSliceOptions> = {},
   ) {
     const color = new UIColor(options.color);
-    const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateUVTransform();
+    const textureView = new UITextureView(texture);
+    const textureTransform = textureView.calculateUVTransform();
 
-    options.width = options.width ?? uiTexture.width;
-    options.height = options.height ?? uiTexture.height;
+    options.width = options.width ?? textureView.width;
+    options.height = options.height ?? textureView.height;
 
     const sliceBorders = new UIPadding(
       options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER,
@@ -73,7 +73,7 @@ export class UINineSlice extends UIElement {
       layer,
       source,
       {
-        texture: uiTexture.texture,
+        texture: textureView.texture,
         textureTransform: textureTransform,
         color,
         sliceBorders: sliceBordersVector,
@@ -82,7 +82,7 @@ export class UINineSlice extends UIElement {
       options,
     );
 
-    this.texture = uiTexture;
+    this.texture = textureView;
     this.textureTransform = textureTransform;
     this.color = color;
     this.sliceBorders = sliceBorders;

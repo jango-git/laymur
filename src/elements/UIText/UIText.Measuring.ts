@@ -1,6 +1,6 @@
-import type { UITextSpan } from "./text-span/UITextSpan";
-import { UITextStyle } from "./text-style/UITextStyle";
-import type { UITextStyleConfig } from "./text-style/UITextStyle.Internal";
+import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
+import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
 import type {
   UIChunkMetrics,
   UITextChunk,

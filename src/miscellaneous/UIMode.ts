@@ -4,9 +4,9 @@ export enum UIMode {
   HIDDEN = 0,
   /** Rendered, no input */
   VISIBLE = 1,
-  /** Rendered, receives input */
+  /** Rendered, receives input, blocks input to elements behind */
   INTERACTIVE = 2,
-  /** Rendered, receives input, transparent to raycast */
+  /** Rendered, receives input, passes input to elements behind */
   INTERACTIVE_TRANSPARENT = 3,
 }
 

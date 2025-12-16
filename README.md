@@ -9,7 +9,7 @@
 <a href="https://www.npmjs.com/package/laymur"><img src="https://img.shields.io/npm/v/laymur.svg" alt="npm version"></a>
 <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-%5E5.8.0-blue" alt="TypeScript"></a>
-<a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-%5E0.175.0-green" alt="Three.js"></a>
+<a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-0.175.0--0.179.0-green" alt="Three.js"></a>
 </p>
 
 ⚠️ **Early Alpha / Work in Progress** ⚠️
@@ -34,7 +34,7 @@ Originally built for mobile ad development scenarios where you need to keep the 
 npm install laymur
 ```
 
-Requires Three.js ^0.175.0 as a peer dependency.
+Requires Three.js >=0.175.0 <0.180.0 as a peer dependency.
 
 ## Quick Example
 
@@ -70,17 +70,23 @@ animate();
 
 ### Elements
 - **UIImage** - Display textures
-- **UIText** - Text rendering with word wrapping
+- **UIAnimatedImage** - Animated texture sequences
+- **UIText** - Text rendering with word wrapping and styled spans
+- **UIGraphics** - Vector graphics and shapes
 - **UIScene** - Embed 3D scenes
 - **UIProgress** - Progress bars
-- **UINineSline** - Scalable UI panels
+- **UINineSlice** - Scalable UI panels with border preservation
 - **UIAnchor** - Positioning points
+- **UIDummy** - Invisible layout helpers
 
 ### Constraints
 - **UIWidthConstraint** / **UIHeightConstraint** - Fixed sizes
 - **UIAspectConstraint** - Maintain aspect ratios
-- **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing
+- **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing between elements
 - **UIHorizontalProportionConstraint** / **UIVerticalProportionConstraint** - Proportional sizing
+- **UICustomConstraint** - Custom constraint expressions
+- **UIFitConstraintBuilder** - Fit element inside container (like CSS object-fit: contain)
+- **UICoverConstraintBuilder** - Cover container with element (like CSS object-fit: cover)
 
 ## Constraint Layout
 
@@ -124,6 +130,8 @@ new UIWidthConstraint(sidebar, {
 
 ## Text Rendering
 
+Text supports styled spans with different fonts, sizes, and colors:
+
 ```typescript
 import { UIText } from 'laymur';
 
@@ -131,14 +139,15 @@ const text = new UIText(layer, [
   { text: 'Download ', style: { fontSize: 24, color: '#333333' } },
   { text: 'Now!', style: { fontSize: 32, color: '#ff0000', fontWeight: 'bold' } }
 ], {
-  maxWidth: 600,
-  padding: { top: 10, left: 10, right: 10, bottom: 10 }
+  x: 100,
+  y: 100,
+  maxLineWidth: 600,
 });
 ```
 
-## Micro-Transformations
+## Transformations
 
-Apply lightweight animations without affecting the constraint layout:
+Apply visual transformations without affecting the constraint layout:
 
 ```typescript
 const element = new UIImage(layer, texture);
@@ -147,9 +156,9 @@ const element = new UIImage(layer, texture);
 element.micro.x = 10;
 element.micro.scaleX = 1.2;
 element.micro.rotation = 0.1;
-element.micro.anchorX = 0.5;
+element.micro.anchorX = 0.5;  // Transform origin (0 = left/bottom, 0.5 = center, 1 = right/top)
 
-// Reset transformations
+// Reset all transformations
 element.micro.reset();
 ```
 

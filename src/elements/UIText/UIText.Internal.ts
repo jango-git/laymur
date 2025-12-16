@@ -1,13 +1,13 @@
-import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
-import type { UIPaddingConfig } from "../miscellaneous/padding/UIPadding.Internal";
-import type { UITextStyleConfig } from "../miscellaneous/text-style/UITextStyle.Internal";
-import type { UIElementOptions } from "./UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
+import type { UIPaddingConfig } from "../../miscellaneous/padding/UIPadding.Internal";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
+import type { UIElementOptions } from "../UIElement.Internal";
 
-/** Controls how text adapts to size constraints */
+/** Controls how text adapts to element size */
 export enum UITextResizeMode {
-  /** Break text into multiple lines when width constraint exceeded */
+  /** Break text into multiple lines when narrower than content*/
   BREAK = 0,
-  /** Scale element to fit text content */
+  /** Scale text to fit fixed element size */
   SCALE = 1,
 }
 

@@ -4,15 +4,15 @@ import type {
   UITextureAtlasConfig,
   UITextureConfig,
   UITextureTrim,
-} from "./UITexture.Internal";
+} from "./UITextureView.Internal";
 import {
   TEXTURE_DEFAULT_SIZE,
   TEXTURE_DEFAULT_TEXTURE,
-  UITextureEvent,
-} from "./UITexture.Internal";
+  UITextureViewEvent,
+} from "./UITextureView.Internal";
 
-/** Texture with atlas and trim support */
-export class UITexture extends Eventail {
+/** Wrapper for Three.js texture with atlas and trim support. Does not own the underlying texture; user must dispose it. */
+export class UITextureView extends Eventail {
   private textureInternal: Texture = TEXTURE_DEFAULT_TEXTURE;
   private rotatedInternal = false;
 
@@ -158,7 +158,7 @@ export class UITexture extends Eventail {
 
     if (this.width !== previousWidth || this.height !== previousHeight) {
       this.emit(
-        UITextureEvent.DIMENSIONS_CHANGED,
+        UITextureViewEvent.DIMENSIONS_CHANGED,
         this.width,
         this.height,
         this,
@@ -187,7 +187,7 @@ export class UITexture extends Eventail {
     this.dirtyInternal = true;
 
     if (this.width !== previousWidth || this.height !== previousHeight) {
-      this.emit(UITextureEvent.DIMENSIONS_CHANGED, this.width, this.height);
+      this.emit(UITextureViewEvent.DIMENSIONS_CHANGED, this.width, this.height);
     }
   }
 

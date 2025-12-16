@@ -7,7 +7,6 @@ export interface UISceneWrapperInterface {
     source: string,
     properties: Record<string, UIPropertyType>,
     transparency: UITransparencyMode,
-    forceSingleInstance: boolean,
   ): number;
   destroyPlane(handler: number): void;
 

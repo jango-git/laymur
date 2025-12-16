@@ -2,9 +2,9 @@ import type { Matrix3 } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
-import { UITexture } from "../miscellaneous/texture/UITexture";
-import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
-import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureView } from "../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../miscellaneous/texture/UITextureView.Internal";
+import { UITextureViewEvent } from "../miscellaneous/texture/UITextureView.Internal";
 import source from "../shaders/UIImage.glsl";
 import { UIElement } from "./UIElement";
 import type { UIImageOptions } from "./UIImage.Internal";
@@ -12,7 +12,7 @@ import type { UIImageOptions } from "./UIImage.Internal";
 /** Textured image element */
 export class UIImage extends UIElement {
   /** Texture displayed by this image */
-  public readonly texture: UITexture;
+  public readonly texture: UITextureView;
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
 
@@ -33,29 +33,29 @@ export class UIImage extends UIElement {
     options: Partial<UIImageOptions> = {},
   ) {
     const color = new UIColor(options.color);
-    const uiTexture = new UITexture(texture);
-    const textureTransform = uiTexture.calculateUVTransform();
+    const textureView = new UITextureView(texture);
+    const textureTransform = textureView.calculateUVTransform();
 
-    options.width = options.width ?? uiTexture.width;
-    options.height = options.height ?? uiTexture.height;
+    options.width = options.width ?? textureView.width;
+    options.height = options.height ?? textureView.height;
 
     super(
       layer,
       source,
       {
-        texture: uiTexture.texture,
+        texture: textureView.texture,
         textureTransform: textureTransform,
         color,
       },
       options,
     );
 
-    this.texture = uiTexture;
+    this.texture = textureView;
     this.textureTransform = textureTransform;
     this.color = color;
 
     this.texture.on(
-      UITextureEvent.DIMENSIONS_CHANGED,
+      UITextureViewEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
   }
@@ -63,7 +63,7 @@ export class UIImage extends UIElement {
   /** Removes image and frees resources */
   public override destroy(): void {
     this.texture.off(
-      UITextureEvent.DIMENSIONS_CHANGED,
+      UITextureViewEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
     super.destroy();

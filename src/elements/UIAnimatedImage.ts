@@ -3,9 +3,9 @@ import type { UILayer } from "../layers/UILayer";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
-import { UITexture } from "../miscellaneous/texture/UITexture";
-import type { UITextureConfig } from "../miscellaneous/texture/UITexture.Internal";
-import { UITextureEvent } from "../miscellaneous/texture/UITexture.Internal";
+import { UITextureView } from "../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../miscellaneous/texture/UITextureView.Internal";
+import { UITextureViewEvent } from "../miscellaneous/texture/UITextureView.Internal";
 import source from "../shaders/UIImage.glsl";
 import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
 import {
@@ -20,7 +20,7 @@ export class UIAnimatedImage extends UIElement {
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
 
-  private readonly sequenceInternal: UITexture[];
+  private readonly sequenceInternal: UITextureView[];
 
   private frameRateInternal: number;
   private loopInternal: boolean;
@@ -47,7 +47,7 @@ export class UIAnimatedImage extends UIElement {
   ) {
     const color = new UIColor(options.color);
     const uiTextures = sequence.map(
-      (textureConfig) => new UITexture(textureConfig),
+      (textureConfig) => new UITextureView(textureConfig),
     );
 
     const frame = uiTextures[0];
@@ -82,7 +82,7 @@ export class UIAnimatedImage extends UIElement {
   }
 
   /** Animation frames as readonly array */
-  public get sequence(): readonly UITexture[] {
+  public get sequence(): readonly UITextureView[] {
     return this.sequenceInternal;
   }
 
@@ -117,7 +117,7 @@ export class UIAnimatedImage extends UIElement {
       this.sequenceInternal.length = newLength;
     } else if (newLength > currentLength) {
       for (let i = currentLength; i < newLength; i++) {
-        this.sequenceInternal.push(new UITexture(sequence[i]));
+        this.sequenceInternal.push(new UITextureView(sequence[i]));
       }
     }
 
@@ -254,7 +254,7 @@ export class UIAnimatedImage extends UIElement {
   private readonly onTextureDimensionsChanged = (
     width: number,
     height: number,
-    texture: UITexture,
+    texture: UITextureView,
   ): void => {
     if (this.sequenceInternal[this.sequenceFrameIndex] === texture) {
       this.width = width;
@@ -265,7 +265,7 @@ export class UIAnimatedImage extends UIElement {
   private subscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
       frame.on(
-        UITextureEvent.DIMENSIONS_CHANGED,
+        UITextureViewEvent.DIMENSIONS_CHANGED,
         this.onTextureDimensionsChanged,
       );
     }
@@ -274,7 +274,7 @@ export class UIAnimatedImage extends UIElement {
   private unsubscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
       frame.off(
-        UITextureEvent.DIMENSIONS_CHANGED,
+        UITextureViewEvent.DIMENSIONS_CHANGED,
         this.onTextureDimensionsChanged,
       );
     }
