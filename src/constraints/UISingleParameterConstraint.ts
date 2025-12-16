@@ -9,18 +9,6 @@ import { resolveRelation, type UIRelation } from "../miscellaneous/UIRelation";
 import { UIConstraint } from "./UIConstraint";
 
 /**
- * Configuration options for UISingleParameterConstraint creation.
- */
-export interface UISingleParameterConstraintOptions {
-  /** Priority level for the constraint in the solver hierarchy. */
-  priority: UIPriority;
-  /** Mathematical relation type for the constraint equation. */
-  relation: UIRelation;
-  /** Orientation context for when the constraint should be active. */
-  orientation: UIOrientation;
-}
-
-/**
  * Abstract base class for constraints that operate with configurable parameters.
  *
  * UISingleParameterConstraint extends UIConstraint with common functionality

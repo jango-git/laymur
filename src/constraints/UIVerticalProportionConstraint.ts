@@ -1,17 +1,8 @@
 import type { UIPlaneElement } from "../miscellaneous/asserts";
 import { assertValidConstraintSubjects } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-
-/**
- * Configuration options for UIVerticalProportionConstraint creation.
- */
-export interface UIVerticalProportionConstraintOptions
-  extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element heights (elementA.height * proportion = elementB.height). */
-  proportion: number;
-}
+import type { UIVerticalProportionConstraintOptions } from "./UIVerticalProportionConstraint.Internal";
 
 /**
  * Constraint that enforces proportional height relationships between two UI elements.

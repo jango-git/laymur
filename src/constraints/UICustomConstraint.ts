@@ -1,7 +1,7 @@
 import type { UILayer } from "../layers/UILayer";
 import type { UIExpression } from "../miscellaneous/UIExpression";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
 /**
  * Constraint that allows custom mathematical relationships between UI elements.

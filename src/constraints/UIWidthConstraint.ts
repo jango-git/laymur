@@ -1,16 +1,7 @@
 import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-
-/**
- * Configuration options for UIWidthConstraint creation.
- */
-export interface UIWidthConstraintOptions
-  extends UISingleParameterConstraintOptions {
-  /** The desired width value for the element. */
-  width: number;
-}
+import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal";
 
 /**
  * Constraint that enforces a specific width value for UI elements.

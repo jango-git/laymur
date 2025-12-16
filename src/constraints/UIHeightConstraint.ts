@@ -1,16 +1,7 @@
 import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
+import type { UIHeightConstraintOptions } from "./UIHeightConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-
-/**
- * Configuration options for UIHeightConstraint creation.
- */
-export interface UIHeightConstraintOptions
-  extends UISingleParameterConstraintOptions {
-  /** The desired height value for the element. */
-  height: number;
-}
 
 /**
  * Constraint that enforces a specific height value for UI elements.

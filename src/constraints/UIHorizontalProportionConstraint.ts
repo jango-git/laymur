@@ -1,17 +1,8 @@
 import type { UIPlaneElement } from "../miscellaneous/asserts";
 import { assertValidConstraintSubjects } from "../miscellaneous/asserts";
 import { UIExpression } from "../miscellaneous/UIExpression";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint";
+import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-
-/**
- * Configuration options for UIHorizontalProportionConstraint creation.
- */
-export interface UIHorizontalProportionConstraintOptions
-  extends UISingleParameterConstraintOptions {
-  /** The proportional relationship between element widths (elementA.width * proportion = elementB.width). */
-  proportion: number;
-}
 
 /**
  * Constraint that enforces proportional width relationships between two UI elements.
