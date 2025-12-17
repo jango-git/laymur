@@ -52,6 +52,10 @@ export abstract class UIElement extends UIDummy {
       this.transparencyModeInternal,
     );
 
+    if (options?.mode !== undefined && !isUIModeVisible(options.mode)) {
+      this.visibilityDirty = true;
+    }
+
     this.layer.on(UILayerEvent.RENDERING, this.onWillRender, this);
   }
 
