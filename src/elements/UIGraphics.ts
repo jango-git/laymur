@@ -24,7 +24,7 @@ export class UIGraphics extends UIElement {
    */
   constructor(layer: UILayer, options?: Partial<UIGraphicsOptions>) {
     const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
-    const h = options?.width ?? DUMMY_DEFAULT_HEIGHT;
+    const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
     const color = new UIColor(options?.color);
 
     const canvas = new OffscreenCanvas(w, h);
