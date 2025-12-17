@@ -35,20 +35,20 @@ async function buildScene() {
       distance: 50,
     });
 
-    new UIVerticalDistanceConstraint(logotype, layer, {
+    new UIVerticalDistanceConstraint(layer, logotype, {
       anchorA: 1,
       anchorB: 1,
-      distance: 50,
+      distance: -50,
     });
   }
 
   {
     const download = new UIImage(layer, baseScene.loadedTextures["T_Download"]);
 
-    new UIHorizontalDistanceConstraint(download, layer, {
+    new UIHorizontalDistanceConstraint(layer, download, {
       anchorA: 1,
       anchorB: 1,
-      distance: 50,
+      distance: -50,
     });
 
     new UIVerticalDistanceConstraint(layer, download, {

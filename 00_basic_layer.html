@@ -32,31 +32,29 @@
                 <h2>What's happening here?</h2>
 
                 <p>
-                    This example introduces the fundamental concept of
-                    <span class="highlight">UIFullscreenLayer</span> - the base
-                    container for all UI elements in Laymur. A single image is
-                    displayed without any constraints, showing the basic setup
-                    for rendering UI elements in a Three.js scene.
+                    This example demonstrates the basics: a layer with an image
+                    displayed on it. This is the fundamental setup for working
+                    with UI elements in Laymur.
                 </p>
 
-                <pre><code class="language-javascript">// Create the UI layer
+                <pre><code class="language-javascript">// Create the layer
 const layer = new UIFullscreenLayer(
-  new UIResizePolicyFixedHeight(1920, 1920) // Fixed width and height
+  new UIResizePolicyFixedHeight(1920, 1920) // Fixed height
 );
 
 // Add an image to the layer
-new UIImage(
-  layer,
-  downloadTexture,
-);
+new UIImage(layer, downloadButtonTexture, {
+  x: 50,
+  y: 50,
+});
 
 // Render the layer
 layer.render(baseScene.renderer, deltaTime);</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Basic Setup:</strong> This shows the minimal
-                    setup required to display UI elements in Laymur - just a
-                    layer and an image, no constraints needed.
+                    <strong>💡 Coordinate Origin:</strong> All UI elements are
+                    positioned relative to the bottom-left corner (origin
+                    point).
                 </div>
 
                 <div class="navigation">

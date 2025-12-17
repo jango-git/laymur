@@ -13,7 +13,6 @@ import {
   UIOrientation,
   UIMode,
   UIInputEvent,
-  UITransparencyMode,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
@@ -52,13 +51,10 @@ async function buildScene() {
     const vignette = new UINineSlice(
       layer,
       baseScene.loadedTextures["T_Vignette"],
-      {
-        sliceBorder: 0.15,
-      },
+      { sliceBorders: 0.2, sliceRegions: 100 },
     );
 
     // Configure appearance
-    vignette.transparency = UITransparencyMode.BLEND;
     vignette.color.setHexRGB(0xffa500, 0.75);
 
     // Use cover constraints to fill the entire layer
@@ -134,11 +130,9 @@ async function buildScene() {
 
         enableStroke: true,
         strokeColor: "#101010",
-        strokeWidth: 12,
+        strokeThickness: 12,
       },
     });
-
-    text.transparency = UITransparencyMode.BLEND;
 
     UIConstraint2DBuilder.distance(bubble, text, {
       anchorA: { h: 0.5, v: 0.525 },
@@ -174,8 +168,6 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    logotype.mode = UIMode.INTERACTIVE;
-
     logotype.on(UIInputEvent.CLICK, () => {
       gsap
         .timeline()
@@ -195,7 +187,11 @@ async function buildScene() {
   }
 
   {
-    const download = new UIImage(layer, baseScene.loadedTextures["T_Download"]);
+    const download = new UIImage(
+      layer,
+      baseScene.loadedTextures["T_Download"],
+      { mode: UIMode.INTERACTIVE },
+    );
 
     new UIAspectConstraint(download);
 
@@ -217,11 +213,8 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    // Make download button interactive
-    download.mode = UIMode.INTERACTIVE;
-
     // Add click animation
-    download.on(UIInputEvent.CLICK, () => {
+    download.on(UIInputEvent.PRESSED, () => {
       gsap
         .timeline()
         .to(download.micro, {
@@ -240,7 +233,9 @@ async function buildScene() {
   }
 
   {
-    const battle = new UIImage(layer, baseScene.loadedTextures["T_Battle"]);
+    const battle = new UIImage(layer, baseScene.loadedTextures["T_Battle"], {
+      mode: UIMode.INTERACTIVE,
+    });
 
     new UIAspectConstraint(battle);
 
@@ -262,11 +257,8 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    // Make battle button interactive
-    battle.mode = UIMode.INTERACTIVE;
-
     // Add click animation
-    battle.on(UIInputEvent.CLICK, () => {
+    battle.on(UIInputEvent.PRESSED, () => {
       gsap
         .timeline()
         .to(battle.micro, {

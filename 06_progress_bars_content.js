@@ -14,10 +14,10 @@ import {
   UIOrientation,
   UIMode,
   UIInputEvent,
-  UITransparencyMode,
   UIColor,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
+  UIProgressMaskFunctionDirectional,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
@@ -120,11 +120,9 @@ async function buildScene() {
 
         enableStroke: true,
         strokeColor: "#101010",
-        strokeWidth: 12,
+        strokeThickness: 12,
       },
     });
-
-    text.transparency = UITransparencyMode.BLEND;
 
     UIConstraint2DBuilder.distance(bubble, text, {
       anchorA: { h: 0.5, v: 0.525 },
@@ -138,7 +136,11 @@ async function buildScene() {
   }
 
   {
-    const logotype = new UIImage(layer, baseScene.loadedTextures["T_Logotype"]);
+    const logotype = new UIImage(
+      layer,
+      baseScene.loadedTextures["T_Logotype"],
+      { mode: UIMode.INTERACTIVE },
+    );
 
     new UIAspectConstraint(logotype);
 
@@ -160,9 +162,7 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    logotype.mode = UIMode.INTERACTIVE;
-
-    logotype.on(UIInputEvent.CLICK, () => {
+    logotype.on(UIInputEvent.PRESSED, () => {
       gsap
         .timeline()
         .to(logotype.micro, {
@@ -181,7 +181,11 @@ async function buildScene() {
   }
 
   {
-    const download = new UIImage(layer, baseScene.loadedTextures["T_Download"]);
+    const download = new UIImage(
+      layer,
+      baseScene.loadedTextures["T_Download"],
+      { mode: UIMode.INTERACTIVE },
+    );
 
     new UIAspectConstraint(download);
 
@@ -203,11 +207,8 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    // Make download button interactive
-    download.mode = UIMode.INTERACTIVE;
-
     // Add click animation
-    download.on(UIInputEvent.CLICK, () => {
+    download.on(UIInputEvent.PRESSED, () => {
       gsap
         .timeline()
         .to(download.micro, {
@@ -226,7 +227,9 @@ async function buildScene() {
   }
 
   {
-    const battle = new UIImage(layer, baseScene.loadedTextures["T_Battle"]);
+    const battle = new UIImage(layer, baseScene.loadedTextures["T_Battle"], {
+      mode: UIMode.INTERACTIVE,
+    });
 
     new UIAspectConstraint(battle);
 
@@ -248,11 +251,8 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    // Make battle button interactive
-    battle.mode = UIMode.INTERACTIVE;
-
     // Add click animation
-    battle.on(UIInputEvent.CLICK, () => {
+    battle.on(UIInputEvent.PRESSED, () => {
       gsap
         .timeline()
         .to(battle.micro, {
@@ -275,13 +275,10 @@ async function buildScene() {
     const vignette = new UINineSlice(
       layer,
       baseScene.loadedTextures["T_Vignette"],
-      {
-        sliceBorder: 0.15,
-      },
+      { sliceBorders: 0.2, sliceRegions: 100 },
     );
 
     // Configure appearance
-    vignette.transparency = UITransparencyMode.BLEND;
     vignette.color.setHexRGB(0xffa500, 0.75);
 
     // Use cover constraints to fill the entire layer
@@ -289,29 +286,40 @@ async function buildScene() {
   }
 
   {
-    // Create health bar above character
+    const backgroundColor = new UIColor();
+    backgroundColor.lightness = 0.95;
+
+    const barBackground = new UIImage(
+      layer,
+      baseScene.loadedTextures["T_Progress_Background"],
+      { color: backgroundColor },
+    );
+
     const bar = new UIProgress(
       layer,
       baseScene.loadedTextures["T_Progress_Foreground"],
       {
-        backgroundTexture: baseScene.loadedTextures["T_Progress_Background"],
-        progress: 0.75,
-        foregroundColor: new UIColor("orange"),
-        backgroundColor: new UIColor("orange"),
+        color: UIColor.orange,
+        progress: 0.8,
+        maskFunction: new UIProgressMaskFunctionDirectional({ x: 1, y: 0.5 }),
       },
     );
 
+    new UIAspectConstraint(barBackground);
     new UIAspectConstraint(bar);
 
-    // Position above character
-    UIConstraint2DBuilder.distance(character, bar, {
+    UIConstraint2DBuilder.distance(barBackground, bar);
+    new UIHorizontalProportionConstraint(barBackground, bar, {
+      proportion: bar.width / barBackground.width,
+    });
+
+    UIConstraint2DBuilder.distance(character, barBackground, {
       anchorA: { h: 0.6, v: 1.025 },
       anchorB: { h: 0.5, v: 0 },
       distance: { h: 0, v: 0 },
     });
 
-    // Scale health bar to appropriate size
-    new UIHorizontalProportionConstraint(character, bar, {
+    new UIHorizontalProportionConstraint(character, barBackground, {
       proportion: 0.5,
     });
   }

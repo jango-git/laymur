@@ -34,8 +34,6 @@
                     <span class="highlight">UIMicro transformations</span> and
                     interactive animations. UI elements can be animated
                     independently of constraints using micro transformations.
-                    Click on the buttons to see GSAP-powered scale animations
-                    using the micro transformation system.
                 </p>
 
                 <pre><code class="language-javascript">// Make layer and button interactive
@@ -43,7 +41,7 @@ layer.mode = UIMode.INTERACTIVE;
 button.mode = UIMode.INTERACTIVE;
 
 // Add click animation using micro transformations
-button.on(UIInputEvent.CLICK, () => {
+button.on(UIInputEvent.PRESSED, () => {
   // Micro transformations are independent of constraints
   // They allow animations without affecting layout
   gsap

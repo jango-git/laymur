@@ -31,17 +31,12 @@
 
                 <p>
                     This example demonstrates
-                    <span class="highlight">laymur-animations</span> addon for
-                    creating smooth entrance animations with UI elements. Common
-                    UI animations like fade-in, slide-in, and appear effects are
-                    applied to elements using UIAppearAnimator, providing
-                    ready-to-use animation patterns for UI.
+                    <span class="highlight">laymur-animations</span> addon.
+                    Common UI animations like fade-in, slide-in, appear,
+                    disappear, call to action.
                 </p>
 
-                <pre><code class="language-javascript">// Enable transparency for animations
-logotype.transparency = UITransparencyMode.BLEND;
-
-// Animate logotype appearing from bottom-left
+                <pre><code class="language-javascript">// Animate logotype appearing from bottom-left
 UIAppearAnimator.appear(logotype, {
   xFrom: -100,
   yFrom: 100,
@@ -50,8 +45,6 @@ UIAppearAnimator.appear(logotype, {
 });
 
 // Animate multiple elements together
-text.transparency = UITransparencyMode.BLEND;
-bubble.transparency = UITransparencyMode.BLEND;
 UIAppearAnimator.appear([text, bubble], {
   xFrom: -100,
   yFrom: -50,
@@ -60,18 +53,15 @@ UIAppearAnimator.appear([text, bubble], {
 });</code></pre>
 
                 <div class="warning">
-                    <strong>🎬 Animation Addon:</strong> laymur-animations
-                    provides common UI animation patterns like appear, fade,
-                    slide, and bounce effects. It's a collection of the most
-                    frequently used UI animations built on top of GSAP for
-                    Laymur elements.
-                </div>
-
-                <div class="warning">
-                    <strong>📦 Third-party Addon:</strong> laymur-animations is
-                    a separate addon package that requires laymur and GSAP as
-                    peer dependencies. Install with
-                    <code>npm install laymur-animations</code>.
+                    <strong>⚙️ GSAP Dependency:</strong> laymur-animations uses
+                    GSAP, which is not part of the addon. GSAP must be installed
+                    separately and has its own
+                    <a
+                        href="https://greensock.com/licensing/"
+                        target="_blank"
+                        style="color: #4a9eff"
+                        >GSAP licensing</a
+                    >
                 </div>
 
                 <div class="navigation">

@@ -22,9 +22,10 @@ async function buildScene() {
   layer = new UIFullscreenLayer(new UIResizePolicyFixedHeight(1920, 1920));
 
   // Add a single image without any constraints
-  {
-    new UIImage(layer, baseScene.loadedTextures["T_Download"]);
-  }
+  new UIImage(layer, baseScene.loadedTextures["T_Download"], {
+    x: 50,
+    y: 50,
+  });
 
   animate();
 }

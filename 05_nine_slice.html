@@ -34,29 +34,26 @@
                     <span class="highlight">UINineSlice elements</span> for
                     creating scalable UI components with preserved border
                     regions. A vignette overlay is created using nine-slice
-                    scaling that covers the entire layer while maintaining
-                    border quality at any size.
+                    scaling.
                 </p>
 
                 <pre><code class="language-javascript">// Create nine-slice element with 15% border
 const vignette = new UINineSlice(
   layer,
-  vignetteTexture,
-  { sliceBorder: 0.15 }
+  baseScene.loadedTextures["T_Vignette"],
+  { sliceBorders: 0.2, sliceRegions: 100 },
 );
 
 // Configure appearance
-vignette.transparency = UITransparencyMode.BLEND;
 vignette.color.setHexRGB(0xffa500, 0.75);
 
 // Use cover constraints to fill the entire layer
 UICoverConstraintBuilder.build(layer, vignette);</code></pre>
 
                 <div class="warning">
-                    <strong>🎨 Nine-Slice Scaling:</strong> Nine-slice divides
-                    an image into 9 regions - corners stay original size, edges
-                    scale in one dimension, center scales in both. Perfect for
-                    scalable UI panels and borders.
+                    <strong>🎨 Slice Modes:</strong> Nine-slice has two modes:
+                    one uses world coordinates for sliceRegions, the other uses
+                    normalized values (0-1) as fractions of the UI element size.
                 </div>
 
                 <div class="navigation">

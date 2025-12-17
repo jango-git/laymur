@@ -38,23 +38,25 @@
                     elements and a vignette overlay.
                 </p>
 
-                <pre><code class="language-javascript">// Create progress bar
+                <pre><code class="language-javascript">const direction = { x: 1, y: 0.5 };
+
+// Create progress bar
 const bar = new UIProgress(
   layer,
-  foregroundTexture,
+  baseScene.loadedTextures["T_Progress_Foreground"],
   {
-    backgroundTexture,
-    progress: 0.75,
-    foregroundColor: new UIColor("orange"),
-    backgroundColor: new UIColor("orange"),
+    color: UIColor.orange,
+    progress: 0.8,
+    maskFunction:
+      new UIProgressMaskFunctionDirectional(direction),
   },
 );</code></pre>
 
                 <div class="warning">
-                    <strong>📊 Progress Bars:</strong> UIProgress elements
-                    support custom fill directions, separate background and
-                    foreground textures, and real-time progress updates. Perfect
-                    for health bars, loading indicators, and meters.
+                    <strong>📊 Mask Functions:</strong> UIProgress supports
+                    different UIProgressMaskFunction implementations. By
+                    default, UIProgressMaskFunctionDirectional is used for
+                    directional progress filling.
                 </div>
 
                 <div class="navigation">

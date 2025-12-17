@@ -150,19 +150,23 @@ export class BaseScene {
     // Add subtle camera sway
     if (this.camera && this.originalCameraPosition) {
       const time = this.clock.getElapsedTime();
-      const swayIntensity = 0.02;
-      const swaySpeed = 0.5;
+      const swayIntensity = 0.025;
+      const swaySpeed = 0.8;
 
       // Subtle position sway
       this.camera.position.x =
-        this.originalCameraPosition.x + Math.sin(time * swaySpeed) * swayIntensity;
+        this.originalCameraPosition.x +
+        Math.sin(time * swaySpeed) * swayIntensity;
       this.camera.position.y =
         this.originalCameraPosition.y +
         Math.cos(time * swaySpeed * 0.7) * swayIntensity * 0.5;
 
       // Subtle rotation sway
       this.camera.rotation.z =
-        this.originalCameraRotation.z + Math.sin(time * swaySpeed * 0.8) * 0.005;
+        this.originalCameraRotation.z +
+        Math.sin(time * swaySpeed * 0.8) * 0.005;
+      this.camera.rotation.y =
+        this.originalCameraRotation.y + Math.sin(time * swaySpeed * 0.8) * 0.01;
     }
   }
 

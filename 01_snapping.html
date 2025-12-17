@@ -41,17 +41,19 @@
 
                 <pre><code class="language-javascript">// Create horizontal constraint
 // Logotype 50px from left edge of layer
-new UIHorizontalDistanceConstraint(
-  layer, logotype,
-  { anchorA: 0, anchorB: 0, distance: 50 }
-);
+new UIHorizontalDistanceConstraint(layer, logotype, {
+  anchorA: 0,
+  anchorB: 0,
+  distance: 50,
+});
 
 // Create vertical constraint
 // Logotype 50px from top edge of layer
-new UIVerticalDistanceConstraint(
-  logotype, layer,
-  { anchorA: 1, anchorB: 1, distance: 50 }
-);</code></pre>
+new UIVerticalDistanceConstraint(layer, logotype, {
+  anchorA: 1,
+  anchorB: 1,
+  distance: -50,
+});</code></pre>
 
                 <div class="warning">
                     <strong>💡 Interactive:</strong> Use the resize handle to

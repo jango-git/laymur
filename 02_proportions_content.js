@@ -46,7 +46,7 @@ async function buildScene() {
       distance: 25,
     });
 
-    new UIVerticalDistanceConstraint(character, layer, {
+    new UIVerticalDistanceConstraint(layer, character, {
       anchorA: 0,
       anchorB: 0,
       distance: 0,
@@ -76,10 +76,10 @@ async function buildScene() {
       distance: 50,
     });
 
-    new UIVerticalDistanceConstraint(logotype, layer, {
+    new UIVerticalDistanceConstraint(layer, logotype, {
       anchorA: 1,
       anchorB: 1,
-      distance: 50,
+      distance: -50,
     });
 
     new UIHorizontalProportionConstraint(layer, logotype, {
@@ -100,16 +100,16 @@ async function buildScene() {
 
     new UIAspectConstraint(download);
 
-    new UIHorizontalDistanceConstraint(download, layer, {
+    new UIHorizontalDistanceConstraint(layer, download, {
       anchorA: 1,
       anchorB: 1,
-      distance: 50,
+      distance: -50,
     });
 
-    new UIVerticalDistanceConstraint(download, layer, {
+    new UIVerticalDistanceConstraint(layer, download, {
       anchorA: 1,
       anchorB: 1,
-      distance: 50,
+      distance: -50,
     });
 
     new UIHorizontalProportionConstraint(layer, download, {

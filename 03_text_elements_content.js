@@ -11,7 +11,6 @@ import {
   UIRelation,
   UIOrientation,
   UIConstraint2DBuilder,
-  UITransparencyMode,
 } from "https://esm.sh/laymur@latest?deps=three@0.175&min";
 import { BaseScene } from "./base-scene.js";
 
@@ -106,11 +105,9 @@ async function buildScene() {
 
         enableStroke: true,
         strokeColor: "#101010",
-        strokeWidth: 12,
+        strokeThickness: 12,
       },
     });
-
-    text.transparency = UITransparencyMode.BLEND;
 
     UIConstraint2DBuilder.distance(bubble, text, {
       anchorA: { h: 0.5, v: 0.525 },

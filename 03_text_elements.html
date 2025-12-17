@@ -41,7 +41,6 @@
   // Can be a string, span, or array of spans
   "Hello!",
   {
-    padding: { left: 20, right: 20, top: 20, bottom: 20 },
     // Common style - default style
     commonStyle: {
       color: "#ffffff",
@@ -56,19 +55,15 @@
 
       enableStroke: true,
       strokeColor: "#101010",
-      strokeWidth: 12,
+      strokeThickness: 12,
     },
   }
-);
-
-// If a UI element has semi-transparent parts,
-// enable transparency instead of alphaTest
-text.transparency = UITransparencyMode.BLEND;</code></pre>
+);</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Text Elements:</strong> Resize the demo to see
-                    how text elements can be positioned and constrained
-                    alongside images in the same layout system.
+                    <strong>💡 Text Modes:</strong> UIText has two modes: one
+                    scales text size along with element dimensions, the other
+                    wraps text to the next line when it reaches boundaries.
                 </div>
 
                 <div class="navigation">
