@@ -32,8 +32,10 @@ export { UIProgressMaskFunctionCircular } from "./miscellaneous/mask-function/UI
 export { UIProgressMaskFunctionDirectional } from "./miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 export { UIMicro } from "./miscellaneous/micro/UIMicro";
 export { UIMicroAnchorMode } from "./miscellaneous/micro/UIMicro.Internal";
+export { UIResizePolicyCover } from "./miscellaneous/resize-policy/UIResizePolicyCover";
 export { UIResizePolicyCross } from "./miscellaneous/resize-policy/UIResizePolicyCross";
 export { UIResizePolicyCrossInverted } from "./miscellaneous/resize-policy/UIResizePolicyCrossInverted";
+export { UIResizePolicyFit } from "./miscellaneous/resize-policy/UIResizePolicyFit";
 export { UIResizePolicyFixedHeight } from "./miscellaneous/resize-policy/UIResizePolicyFixedHeight";
 export { UIResizePolicyFixedWidth } from "./miscellaneous/resize-policy/UIResizePolicyFixedWidth";
 export { UIResizePolicyNone } from "./miscellaneous/resize-policy/UIResizePolicyNone";
