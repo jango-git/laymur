@@ -11,8 +11,11 @@ import {
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import source from "../shaders/UIImage.glsl";
-import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";
 import { UIElement } from "./UIElement";
+import {
+  DUMMY_DEFAULT_HEIGHT,
+  DUMMY_DEFAULT_WIDTH,
+} from "./UIInputDummy.Internal";
 import type { UISceneOptions } from "./UIScene.Internal";
 import {
   SCENE_DEFAULT_CAMERA_FAR,

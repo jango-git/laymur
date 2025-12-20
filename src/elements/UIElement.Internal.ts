@@ -1,9 +1,9 @@
 import type { UIMicroConfig } from "../miscellaneous/micro/UIMicro.Internal";
 import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
-import type { UIDummyOptions } from "./UIDummy.Internal";
+import type { UIInputDummyOptions } from "./UIInputDummy.Internal";
 
 /** Configuration options for UIElement */
-export interface UIElementOptions extends UIDummyOptions {
+export interface UIElementOptions extends UIInputDummyOptions {
   /** Transforms that don't affect constraints */
   micro: UIMicroConfig;
   /** Alpha blending mode */

@@ -12,9 +12,9 @@ export { UIVerticalProportionConstraint } from "./constraints/UIVerticalProporti
 export { UIWidthConstraint } from "./constraints/UIWidthConstraint";
 export { UIAnchor } from "./elements/UIAnchor";
 export { UIAnimatedImage } from "./elements/UIAnimatedImage";
-export { UIDummy } from "./elements/UIDummy";
 export { UIGraphics } from "./elements/UIGraphics";
 export { UIImage } from "./elements/UIImage";
+export { UIInputDummy } from "./elements/UIInputDummy";
 export { UINineSlice } from "./elements/UINineSlice";
 export { UINineSliceRegionMode } from "./elements/UINineSlice.Internal";
 export { UIProgress } from "./elements/UIProgress";

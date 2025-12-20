@@ -2,8 +2,8 @@ import type { UIArea } from "../miscellaneous/area/UIArea";
 import { UIMode } from "../miscellaneous/UIMode";
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
 
-/** Configuration options for UIDummy */
-export interface UIDummyOptions extends UIAnchorOptions {
+/** Configuration options for UIInputDummy */
+export interface UIInputDummyOptions extends UIAnchorOptions {
   /** Width in world units */
   width: number;
   /** Height in world units */

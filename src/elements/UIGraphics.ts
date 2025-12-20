@@ -3,9 +3,12 @@ import { CanvasTexture, LinearFilter } from "three";
 import type { UILayer } from "../layers/UILayer";
 import { UIColor } from "../miscellaneous/color/UIColor";
 import source from "../shaders/UIImage.glsl";
-import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "./UIDummy.Internal";
 import { UIElement } from "./UIElement";
 import type { UIGraphicsOptions } from "./UIGraphics.Internal";
+import {
+  DUMMY_DEFAULT_HEIGHT,
+  DUMMY_DEFAULT_WIDTH,
+} from "./UIInputDummy.Internal";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {

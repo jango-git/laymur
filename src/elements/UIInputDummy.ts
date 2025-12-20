@@ -12,16 +12,16 @@ import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
 import { UIPriority } from "../miscellaneous/UIPriority";
 import type { UIInputWrapperInterface } from "../wrappers/UIInputWrapper.Internal";
 import { UIAnchor } from "./UIAnchor";
-import type { UIDummyOptions } from "./UIDummy.Internal";
+import type { UIInputDummyOptions } from "./UIInputDummy.Internal";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_MODE,
   DUMMY_DEFAULT_WIDTH,
   DUMMY_DEFAULT_Z_INDEX,
-} from "./UIDummy.Internal";
+} from "./UIInputDummy.Internal";
 
 /** Rectangular area with dimensions but no rendering */
-export class UIDummy extends UIAnchor implements UIPlaneElement {
+export class UIInputDummy extends UIAnchor implements UIPlaneElement {
   /** Shape defining interactive region in normalized coordinates */
   public interactionArea: UIArea;
 
@@ -37,19 +37,20 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   private lastPointerInside = false;
 
   /**
-   * Creates a new UIDummy instance.
+   * Creates a new UIInputDummy instance.
    *
    * @param layer - Layer containing this element
    * @param options - Configuration options
    */
-  constructor(layer: UILayer, options?: Partial<UIDummyOptions>) {
+  constructor(layer: UILayer, options?: Partial<UIInputDummyOptions>) {
     const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
 
-    assertValidPositiveNumber(w, "UIDummy.constructor.width");
-    assertValidPositiveNumber(h, "UIDummy.constructor.height");
+    assertValidPositiveNumber(w, "UIInputDummy.constructor.width");
+    assertValidPositiveNumber(h, "UIInputDummy.constructor.height");
 
     super(layer, options);
+
     this.interactionArea =
       options?.interactionArea ?? new UIAreaRectangle(0, 0, 1, 1);
     this.modeInternal = options?.mode ?? DUMMY_DEFAULT_MODE;
@@ -113,37 +114,37 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
 
   /** Width in world units */
   public set width(value: number) {
-    assertValidPositiveNumber(value, "UIDummy.width");
+    assertValidPositiveNumber(value, "UIInputDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   /** Height in world units */
   public set height(value: number) {
-    assertValidPositiveNumber(value, "UIDummy.height");
+    assertValidPositiveNumber(value, "UIInputDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   /** X coordinate of right edge */
   public set oppositeX(value: number) {
-    assertValidNumber(value, "UIDummy.oppositeX");
+    assertValidNumber(value, "UIInputDummy.oppositeX");
     this.x = value - this.width;
   }
 
   /** Y coordinate of top edge */
   public set oppositeY(value: number) {
-    assertValidNumber(value, "UIDummy.oppositeY");
+    assertValidNumber(value, "UIInputDummy.oppositeY");
     this.y = value - this.height;
   }
 
   /** X coordinate of horizontal center */
   public set centerX(value: number) {
-    assertValidNumber(value, "UIDummy.centerX");
+    assertValidNumber(value, "UIInputDummy.centerX");
     this.x = value - this.width / 2;
   }
 
   /** Y coordinate of vertical center */
   public set centerY(value: number) {
-    assertValidNumber(value, "UIDummy.centerY");
+    assertValidNumber(value, "UIInputDummy.centerY");
     this.y = value - this.height / 2;
   }
 
@@ -158,7 +159,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
 
   /** Rendering and input priority. Higher values on top. */
   public set zIndex(value: number) {
-    assertValidNumber(value, "UIDummy.zIndex");
+    assertValidNumber(value, "UIInputDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
@@ -200,9 +201,9 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     identifier: number,
     inputEvent: UIInputEvent,
   ): boolean {
-    assertValidNumber(x, "UIDummy.handleInputEvent.x");
-    assertValidNumber(y, "UIDummy.handleInputEvent.y");
-    assertValidNumber(identifier, "UIDummy.handleInputEvent.identifier");
+    assertValidNumber(x, "UIInputDummy.handleInputEvent.x");
+    assertValidNumber(y, "UIInputDummy.handleInputEvent.y");
+    assertValidNumber(identifier, "UIInputDummy.handleInputEvent.identifier");
 
     const isPointerInside = this.interactionArea.contains(
       MathUtils.mapLinear(x, this.x, this.oppositeX, 0, 1),

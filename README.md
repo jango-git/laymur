@@ -77,7 +77,6 @@ animate();
 - **UIProgress** - Progress bars
 - **UINineSlice** - Scalable UI panels with border preservation
 - **UIAnchor** - Positioning points
-- **UIDummy** - Invisible layout helpers
 
 ### Constraints
 - **UIWidthConstraint** / **UIHeightConstraint** - Fixed sizes

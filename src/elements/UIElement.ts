@@ -8,12 +8,12 @@ import type { UIMode } from "../miscellaneous/UIMode";
 import { isUIModeVisible } from "../miscellaneous/UIMode";
 import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
 import type { UISceneWrapperInterface } from "../wrappers/UISceneWrapper.Internal";
-import { UIDummy } from "./UIDummy";
 import type { UIElementOptions } from "./UIElement.Internal";
 import { ELEMENT_DEFAULT_TRANSPARENCY_MODE } from "./UIElement.Internal";
+import { UIInputDummy } from "./UIInputDummy";
 
 /** Base class for renderable UI elements */
-export abstract class UIElement extends UIDummy {
+export abstract class UIElement extends UIInputDummy {
   /** Transforms that don't affect constraints */
   public readonly micro: UIMicro;
 
@@ -115,12 +115,8 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
-  protected onWillRender(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
-    renderer: WebGLRenderer,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
-    deltaTime: number,
-  ): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
+  protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.transparencyModeDirty) {
       this.sceneWrapper.setTransparency(
         this.planeHandler,
