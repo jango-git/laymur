@@ -1,5 +1,5 @@
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIPaddingConfig } from "../../miscellaneous/padding/UIPadding.Internal";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
 import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
 /** Controls how sliceRegions values are interpreted */
@@ -15,9 +15,9 @@ export interface UINineSliceOptions extends UIElementOptions {
   /** Multiplicative tint */
   color: UIColorConfig;
   /** Border size in normalized texture coordinates (0 to 1) */
-  sliceBorders: UIPaddingConfig;
+  sliceBorders: UIInsetsConfig;
   /** Region size. Interpretation depends on regionMode. */
-  sliceRegions: UIPaddingConfig;
+  sliceRegions: UIInsetsConfig;
   /** How sliceRegions values are interpreted */
   regionMode: UINineSliceRegionMode;
 }

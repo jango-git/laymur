@@ -1,10 +1,10 @@
 import { Vector4 } from "three";
 import { assertValidNonNegativeNumber } from "../asserts";
-import type { UIPaddingConfig } from "./UIPadding.Internal";
-import { PADDING_DEFAULT_VALUE } from "./UIPadding.Internal";
+import type { UIInsetsConfig } from "./UIInsets.Internal";
+import { INSETS_DEFAULT_VALUE } from "./UIInsets.Internal";
 
-/** Padding values for four sides */
-export class UIPadding {
+/** Insets values for four sides */
+export class UIInsets {
   private lInternal: number;
   private rInternal: number;
   private tInternal: number;
@@ -13,16 +13,16 @@ export class UIPadding {
   private dirtyInternal = false;
 
   /**
-   * Creates UIPadding instance.
+   * Creates UIInsets instance.
    *
    * @param config - Padding configuration
    */
-  constructor(config?: UIPaddingConfig) {
+  constructor(config?: UIInsetsConfig) {
     if (config === undefined) {
-      this.lInternal = PADDING_DEFAULT_VALUE;
-      this.rInternal = PADDING_DEFAULT_VALUE;
-      this.tInternal = PADDING_DEFAULT_VALUE;
-      this.bInternal = PADDING_DEFAULT_VALUE;
+      this.lInternal = INSETS_DEFAULT_VALUE;
+      this.rInternal = INSETS_DEFAULT_VALUE;
+      this.tInternal = INSETS_DEFAULT_VALUE;
+      this.bInternal = INSETS_DEFAULT_VALUE;
     } else if (typeof config === "number") {
       assertValidNonNegativeNumber(config, "UIPadding.constructor.config");
       this.lInternal = config;
@@ -197,7 +197,7 @@ export class UIPadding {
   }
 
   /** Copies from another instance */
-  public copy(other: UIPadding): void {
+  public copy(other: UIInsets): void {
     if (
       this.lInternal !== other.lInternal ||
       this.rInternal !== other.rInternal ||

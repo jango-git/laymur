@@ -2,7 +2,7 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
-import { UIPadding } from "../../miscellaneous/padding/UIPadding";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
@@ -25,7 +25,7 @@ export class UIText extends UIElement {
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
   /** Text padding in world units */
-  public readonly padding: UIPadding;
+  public readonly padding: UIInsets;
   /** Default style applied to all text spans */
   public readonly commonStyle: UITextStyle;
 
@@ -77,7 +77,7 @@ export class UIText extends UIElement {
     });
 
     this.color = color;
-    this.padding = new UIPadding(options.padding);
+    this.padding = new UIInsets(options.padding);
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal =
       options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;

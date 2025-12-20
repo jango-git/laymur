@@ -3,7 +3,7 @@ import { Vector4 } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import { UIPadding } from "../../miscellaneous/padding/UIPadding";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UINineSlice.glsl";
@@ -22,9 +22,9 @@ export class UINineSlice extends UIElement {
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
   /** Border size in normalized texture coordinates (0 to 1) */
-  public readonly sliceBorders: UIPadding;
+  public readonly sliceBorders: UIInsets;
   /** Region size. Interpretation depends on regionMode. */
-  public readonly sliceRegions: UIPadding;
+  public readonly sliceRegions: UIInsets;
 
   private regionModeInternal: UINineSliceRegionMode;
   private regionModeDirty = false;
@@ -57,10 +57,10 @@ export class UINineSlice extends UIElement {
     options.width = options.width ?? textureView.width;
     options.height = options.height ?? textureView.height;
 
-    const sliceBorders = new UIPadding(
+    const sliceBorders = new UIInsets(
       options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER,
     );
-    const sliceRegions = new UIPadding(
+    const sliceRegions = new UIInsets(
       options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER,
     );
 

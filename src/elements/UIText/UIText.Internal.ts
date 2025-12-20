@@ -1,5 +1,5 @@
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIPaddingConfig } from "../../miscellaneous/padding/UIPadding.Internal";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
 import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
@@ -16,7 +16,7 @@ export interface UITextOptions extends UIElementOptions {
   /** Multiplicative tint */
   color: UIColorConfig;
   /** Text padding in world units */
-  padding: UIPaddingConfig;
+  padding: UIInsetsConfig;
   /** Default style applied to all spans */
   commonStyle: Partial<UITextStyleConfig>;
   /** How text adapts to size constraints */
