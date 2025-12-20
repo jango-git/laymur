@@ -1,4 +1,4 @@
-/** Padding configuration as number, per-side, or per-axis */
+/** Insets configuration as number, per-side, or per-axis */
 export type UIInsetsConfig =
   | { horizontal: number; vertical: number }
   | { left: number; right: number; top: number; bottom: number }

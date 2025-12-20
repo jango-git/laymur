@@ -15,7 +15,7 @@ export class UIInsets {
   /**
    * Creates UIInsets instance.
    *
-   * @param config - Padding configuration
+   * @param config - Insets configuration
    */
   constructor(config?: UIInsetsConfig) {
     if (config === undefined) {
@@ -24,7 +24,7 @@ export class UIInsets {
       this.tInternal = INSETS_DEFAULT_VALUE;
       this.bInternal = INSETS_DEFAULT_VALUE;
     } else if (typeof config === "number") {
-      assertValidNonNegativeNumber(config, "UIPadding.constructor.config");
+      assertValidNonNegativeNumber(config, "UIInsets.constructor.config");
       this.lInternal = config;
       this.rInternal = config;
       this.tInternal = config;
@@ -34,12 +34,12 @@ export class UIInsets {
       const right = config.right;
       const top = config.top;
       const bottom = config.bottom;
-      assertValidNonNegativeNumber(left, "UIPadding.constructor.config.left");
-      assertValidNonNegativeNumber(right, "UIPadding.constructor.config.right");
-      assertValidNonNegativeNumber(top, "UIPadding.constructor.config.top");
+      assertValidNonNegativeNumber(left, "UIInsets.constructor.config.left");
+      assertValidNonNegativeNumber(right, "UIInsets.constructor.config.right");
+      assertValidNonNegativeNumber(top, "UIInsets.constructor.config.top");
       assertValidNonNegativeNumber(
         bottom,
-        "UIPadding.constructor.config.bottom",
+        "UIInsets.constructor.config.bottom",
       );
       this.lInternal = left;
       this.rInternal = right;
@@ -50,11 +50,11 @@ export class UIInsets {
       const vertical = config.vertical;
       assertValidNonNegativeNumber(
         horizontal,
-        "UIPadding.constructor.config.horizontal",
+        "UIInsets.constructor.config.horizontal",
       );
       assertValidNonNegativeNumber(
         vertical,
-        "UIPadding.constructor.config.vertical",
+        "UIInsets.constructor.config.vertical",
       );
       this.lInternal = horizontal;
       this.rInternal = horizontal;
@@ -63,22 +63,22 @@ export class UIInsets {
     }
   }
 
-  /** Left padding */
+  /** Left inset */
   public get left(): number {
     return this.lInternal;
   }
 
-  /** Right padding */
+  /** Right inset */
   public get right(): number {
     return this.rInternal;
   }
 
-  /** Top padding */
+  /** Top inset */
   public get top(): number {
     return this.tInternal;
   }
 
-  /** Bottom padding */
+  /** Bottom inset */
   public get bottom(): number {
     return this.bInternal;
   }
@@ -88,36 +88,36 @@ export class UIInsets {
     return this.dirtyInternal;
   }
 
-  /** Left padding */
+  /** Left inset */
   public set left(value: number) {
-    assertValidNonNegativeNumber(value, "UIPadding.left");
+    assertValidNonNegativeNumber(value, "UIInsets.left");
     if (this.lInternal !== value) {
       this.lInternal = value;
       this.dirtyInternal = true;
     }
   }
 
-  /** Right padding */
+  /** Right inset */
   public set right(value: number) {
-    assertValidNonNegativeNumber(value, "UIPadding.right");
+    assertValidNonNegativeNumber(value, "UIInsets.right");
     if (this.rInternal !== value) {
       this.rInternal = value;
       this.dirtyInternal = true;
     }
   }
 
-  /** Top padding */
+  /** Top inset */
   public set top(value: number) {
-    assertValidNonNegativeNumber(value, "UIPadding.top");
+    assertValidNonNegativeNumber(value, "UIInsets.top");
     if (this.tInternal !== value) {
       this.tInternal = value;
       this.dirtyInternal = true;
     }
   }
 
-  /** Bottom padding */
+  /** Bottom inset */
   public set bottom(value: number) {
-    assertValidNonNegativeNumber(value, "UIPadding.bottom");
+    assertValidNonNegativeNumber(value, "UIInsets.bottom");
     if (this.bInternal !== value) {
       this.bInternal = value;
       this.dirtyInternal = true;
@@ -126,7 +126,7 @@ export class UIInsets {
 
   /** Sets left and right to same value */
   public setHorizontal(value: number): void {
-    assertValidNonNegativeNumber(value, "UIPadding.setHorizontal.value");
+    assertValidNonNegativeNumber(value, "UIInsets.setHorizontal.value");
     if (this.lInternal !== value || this.rInternal !== value) {
       this.lInternal = value;
       this.rInternal = value;
@@ -136,7 +136,7 @@ export class UIInsets {
 
   /** Sets top and bottom to same value */
   public setVertical(value: number): void {
-    assertValidNonNegativeNumber(value, "UIPadding.setVertical.value");
+    assertValidNonNegativeNumber(value, "UIInsets.setVertical.value");
     if (this.tInternal !== value || this.bInternal !== value) {
       this.tInternal = value;
       this.bInternal = value;
@@ -146,7 +146,7 @@ export class UIInsets {
 
   /** Sets all sides to same value */
   public setUnified(value: number): void {
-    assertValidNonNegativeNumber(value, "UIPadding.setUnified.value");
+    assertValidNonNegativeNumber(value, "UIInsets.setUnified.value");
     if (
       this.lInternal !== value ||
       this.rInternal !== value ||
@@ -163,10 +163,10 @@ export class UIInsets {
 
   /** Sets from Vector4 (x=left, y=right, z=top, w=bottom) */
   public setVector4(vector: Vector4): void {
-    assertValidNonNegativeNumber(vector.x, "UIPadding.setVector4.vector.x");
-    assertValidNonNegativeNumber(vector.y, "UIPadding.setVector4.vector.y");
-    assertValidNonNegativeNumber(vector.z, "UIPadding.setVector4.vector.z");
-    assertValidNonNegativeNumber(vector.w, "UIPadding.setVector4.vector.w");
+    assertValidNonNegativeNumber(vector.x, "UIInsets.setVector4.vector.x");
+    assertValidNonNegativeNumber(vector.y, "UIInsets.setVector4.vector.y");
+    assertValidNonNegativeNumber(vector.z, "UIInsets.setVector4.vector.z");
+    assertValidNonNegativeNumber(vector.w, "UIInsets.setVector4.vector.w");
     if (
       this.lInternal !== vector.x ||
       this.rInternal !== vector.y ||
