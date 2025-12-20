@@ -1,7 +1,7 @@
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import type { UIPaddingConfig } from "../../miscellaneous/padding/UIPadding.Internal";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
-import type { UIElementOptions } from "../UIElement.Internal";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
 /** Controls how text adapts to element size */
 export enum UITextResizeMode {

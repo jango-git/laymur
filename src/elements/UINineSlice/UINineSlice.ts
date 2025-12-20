@@ -1,13 +1,13 @@
 import type { Matrix3 } from "three";
 import { Vector4 } from "three";
-import type { UILayer } from "../layers/UILayer";
-import { UIColor } from "../miscellaneous/color/UIColor";
-import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
-import { UIPadding } from "../miscellaneous/padding/UIPadding";
-import { UITextureView } from "../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../miscellaneous/texture/UITextureView.Internal";
-import source from "../shaders/UINineSlice.glsl";
-import { UIElement } from "./UIElement";
+import type { UILayer } from "../../layers/UILayer";
+import { UIColor } from "../../miscellaneous/color/UIColor";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import { UIPadding } from "../../miscellaneous/padding/UIPadding";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
+import source from "../../shaders/UINineSlice.glsl";
+import { UIElement } from "../UIElement/UIElement";
 import type { UINineSliceOptions } from "./UINineSlice.Internal";
 import {
   NINE_SLICE_DEFAULT_BORDER,

@@ -1,5 +1,5 @@
-import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
-import type { UIElementOptions } from "./UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
 /** Animation playback events */
 export enum UIAnimatedImageEvent {

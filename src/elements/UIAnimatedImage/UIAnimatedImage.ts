@@ -1,19 +1,19 @@
 import type { Matrix3, WebGLRenderer } from "three";
-import type { UILayer } from "../layers/UILayer";
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import { UIColor } from "../miscellaneous/color/UIColor";
-import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
-import { UITextureView } from "../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../miscellaneous/texture/UITextureView.Internal";
-import { UITextureViewEvent } from "../miscellaneous/texture/UITextureView.Internal";
-import source from "../shaders/UIImage.glsl";
+import type { UILayer } from "../../layers/UILayer";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import { UIColor } from "../../miscellaneous/color/UIColor";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
+import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
+import source from "../../shaders/UIImage.glsl";
+import { UIElement } from "../UIElement/UIElement";
 import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
 import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
   ANIMATED_IMAGE_DEFAULT_LOOP,
   UIAnimatedImageEvent,
 } from "./UIAnimatedImage.Internal";
-import { UIElement } from "./UIElement";
 
 /** Frame-based texture animation element */
 export class UIAnimatedImage extends UIElement {

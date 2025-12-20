@@ -1,6 +1,6 @@
-import type { UIArea } from "../miscellaneous/area/UIArea";
-import { UIMode } from "../miscellaneous/UIMode";
-import type { UIAnchorOptions } from "./UIAnchor.Internal";
+import type { UIArea } from "../../miscellaneous/area/UIArea";
+import { UIMode } from "../../miscellaneous/UIMode";
+import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal";
 
 /** Configuration options for UIInputDummy */
 export interface UIInputDummyOptions extends UIAnchorOptions {

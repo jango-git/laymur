@@ -6,7 +6,7 @@ import { UIPadding } from "../../miscellaneous/padding/UIPadding";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
-import { UIElement } from "../UIElement";
+import { UIElement } from "../UIElement/UIElement";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {

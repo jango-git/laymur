@@ -1,6 +1,6 @@
-import type { UIMicroConfig } from "../miscellaneous/micro/UIMicro.Internal";
-import { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
-import type { UIInputDummyOptions } from "./UIInputDummy.Internal";
+import type { UIMicroConfig } from "../../miscellaneous/micro/UIMicro.Internal";
+import { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
+import type { UIInputDummyOptions } from "../UIInputDummy/UIInputDummy.Internal";
 
 /** Configuration options for UIElement */
 export interface UIElementOptions extends UIInputDummyOptions {

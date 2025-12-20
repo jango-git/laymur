@@ -8,14 +8,14 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import type { UILayer } from "../layers/UILayer";
-import { UIColor } from "../miscellaneous/color/UIColor";
-import source from "../shaders/UIImage.glsl";
-import { UIElement } from "./UIElement";
+import type { UILayer } from "../../layers/UILayer";
+import { UIColor } from "../../miscellaneous/color/UIColor";
+import source from "../../shaders/UIImage.glsl";
+import { UIElement } from "../UIElement/UIElement";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_WIDTH,
-} from "./UIInputDummy.Internal";
+} from "../UIInputDummy/UIInputDummy.Internal";
 import type { UISceneOptions } from "./UIScene.Internal";
 import {
   SCENE_DEFAULT_CAMERA_FAR,

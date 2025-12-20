@@ -1,13 +1,13 @@
 import type { Matrix3, Texture, Vector2 } from "three";
-import type { UILayer } from "../layers/UILayer";
-import { UIColor } from "../miscellaneous/color/UIColor";
-import { computeTrimmedTransformMatrix } from "../miscellaneous/computeTransform";
-import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
-import { UIProgressMaskFunctionDirectional } from "../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
-import { UITextureView } from "../miscellaneous/texture/UITextureView";
-import { UITextureViewEvent } from "../miscellaneous/texture/UITextureView.Internal";
-import source from "../shaders/UIProgress.glsl";
-import { UIElement } from "./UIElement";
+import type { UILayer } from "../../layers/UILayer";
+import { UIColor } from "../../miscellaneous/color/UIColor";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
+import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView";
+import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
+import source from "../../shaders/UIProgress.glsl";
+import { UIElement } from "../UIElement/UIElement";
 import type { UIProgressOptions } from "./UIProgress.Internal";
 import {
   PROGRESS_DEFAULT_VALUE,

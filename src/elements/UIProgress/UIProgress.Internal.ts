@@ -1,6 +1,6 @@
-import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
-import type { UIProgressMaskFunction } from "../miscellaneous/mask-function/UIProgressMaskFunction";
-import type { UIElementOptions } from "./UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
+import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
 /** Configuration options for UIProgress */
 export interface UIProgressOptions extends UIElementOptions {

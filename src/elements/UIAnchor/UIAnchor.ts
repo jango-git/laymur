@@ -1,9 +1,12 @@
 import { Eventail } from "eventail";
-import type { UILayer } from "../layers/UILayer";
-import type { UILayerElement, UIPointElement } from "../miscellaneous/asserts";
-import { assertValidNumber } from "../miscellaneous/asserts";
-import { UIPriority } from "../miscellaneous/UIPriority";
-import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
+import type { UILayer } from "../../layers/UILayer";
+import type {
+  UILayerElement,
+  UIPointElement,
+} from "../../miscellaneous/asserts";
+import { assertValidNumber } from "../../miscellaneous/asserts";
+import { UIPriority } from "../../miscellaneous/UIPriority";
+import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper.Internal";
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
 import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 

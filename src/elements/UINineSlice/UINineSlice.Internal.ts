@@ -1,6 +1,6 @@
-import type { UIColorConfig } from "../miscellaneous/color/UIColor.Internal";
-import type { UIPaddingConfig } from "../miscellaneous/padding/UIPadding.Internal";
-import type { UIElementOptions } from "./UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
+import type { UIPaddingConfig } from "../../miscellaneous/padding/UIPadding.Internal";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
 /** Controls how sliceRegions values are interpreted */
 export enum UINineSliceRegionMode {

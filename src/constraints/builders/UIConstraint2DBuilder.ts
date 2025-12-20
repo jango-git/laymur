@@ -4,7 +4,7 @@ import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontal
 import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
 import { UIWidthConstraint } from "../../constraints/UIWidthConstraint";
-import type { UIElement } from "../../elements/UIElement";
+import type { UIElement } from "../../elements/UIElement/UIElement";
 import type {
   UIPlaneElement,
   UIPointElement,
