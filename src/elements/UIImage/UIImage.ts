@@ -7,7 +7,7 @@ import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
-import type { UIImageOptions } from "./UIImage.Internal";
+import { IMAGE_TEMP_PROPERTIES, type UIImageOptions } from "./UIImage.Internal";
 
 /** Textured image element */
 export class UIImage extends UIElement {
@@ -69,27 +69,41 @@ export class UIImage extends UIElement {
     super.destroy();
   }
 
-  protected override updatePlaneTransform(): void {
-    if (this.texture.dirty || this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.texture.texture,
-        textureTransform: this.texture.calculateUVTransform(
-          this.textureTransform,
-        ),
-        color: this.color,
-      });
-
+  protected override setPlaneTransform(): void {
+    if (this.color.dirty) {
+      IMAGE_TEMP_PROPERTIES["color"] = this.color;
       this.color.setDirtyFalse();
+    } else {
+      delete IMAGE_TEMP_PROPERTIES["color"];
     }
 
-    if (
-      this.texture.dirty ||
+    if (this.texture.textureDirty) {
+      IMAGE_TEMP_PROPERTIES["texture"] = this.texture.texture;
+      this.texture.setTextureDirtyFalse();
+    } else {
+      delete IMAGE_TEMP_PROPERTIES["texture"];
+    }
+
+    if (this.texture.uvTransformDirty) {
+      IMAGE_TEMP_PROPERTIES["textureTransform"] =
+        this.texture.calculateUVTransform(this.textureTransform);
+      this.texture.setUVTransformDirtyFalse();
+    } else {
+      delete IMAGE_TEMP_PROPERTIES["textureTransform"];
+    }
+
+    this.sceneWrapper.setProperties(this.planeHandler, IMAGE_TEMP_PROPERTIES);
+
+    const isTransformDirty =
       this.micro.dirty ||
+      this.texture.trimDirty ||
       this.inputWrapper.dirty ||
-      this.solverWrapper.dirty
-    ) {
-      const trim = this.texture.trim;
+      this.solverWrapper.dirty;
+
+    if (isTransformDirty) {
       const micro = this.micro;
+      const textureTrim = this.texture.trim;
+
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -106,14 +120,14 @@ export class UIImage extends UIElement {
           micro.scaleY,
           micro.rotation,
           micro.anchorMode,
-          trim.left,
-          trim.right,
-          trim.top,
-          trim.bottom,
+          textureTrim.left,
+          textureTrim.right,
+          textureTrim.top,
+          textureTrim.bottom,
         ),
       );
-      this.texture.setDirtyFalse();
       this.micro.setDirtyFalse();
+      this.texture.setTrimDirtyFalse();
     }
   }
 

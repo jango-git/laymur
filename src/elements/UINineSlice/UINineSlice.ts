@@ -109,10 +109,12 @@ export class UINineSlice extends UIElement {
     }
   }
 
-  protected override updatePlaneTransform(): void {
+  protected override setPlaneTransform(): void {
     if (
       this.regionModeDirty ||
-      this.texture.dirty ||
+      this.texture.textureDirty ||
+      this.texture.uvTransformDirty ||
+      this.texture.trimDirty ||
       this.color.dirty ||
       this.sliceBorders.dirty ||
       this.sliceRegions.dirty ||
@@ -140,7 +142,9 @@ export class UINineSlice extends UIElement {
     }
 
     if (
-      this.texture.dirty ||
+      this.texture.textureDirty ||
+      this.texture.uvTransformDirty ||
+      this.texture.trimDirty ||
       this.micro.dirty ||
       this.inputWrapper.dirty ||
       this.solverWrapper.dirty
@@ -169,7 +173,9 @@ export class UINineSlice extends UIElement {
           trim.bottom,
         ),
       );
-      this.texture.setDirtyFalse();
+      this.texture.setTextureDirtyFalse();
+      this.texture.setUVTransformDirtyFalse();
+      this.texture.setTrimDirtyFalse();
       this.micro.setDirtyFalse();
     }
   }

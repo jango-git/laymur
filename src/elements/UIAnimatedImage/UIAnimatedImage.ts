@@ -200,7 +200,7 @@ export class UIAnimatedImage extends UIElement {
     super.onWillRender(renderer, deltaTime);
   }
 
-  protected override updatePlaneTransform(): void {
+  protected override setPlaneTransform(): void {
     const frame = this.sequenceInternal[this.sequenceFrameIndex];
 
     if (this.color.dirty || this.currentFrameIndexDirty) {
@@ -215,13 +215,16 @@ export class UIAnimatedImage extends UIElement {
 
     if (
       this.currentFrameIndexDirty ||
-      frame.dirty ||
+      frame.textureDirty ||
+      frame.uvTransformDirty ||
+      frame.trimDirty ||
       this.micro.dirty ||
       this.inputWrapper.dirty ||
       this.solverWrapper.dirty
     ) {
-      const trim = frame.trim;
       const micro = this.micro;
+      const textureTrim = frame.trim;
+
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -238,16 +241,18 @@ export class UIAnimatedImage extends UIElement {
           micro.scaleY,
           micro.rotation,
           micro.anchorMode,
-          trim.left,
-          trim.right,
-          trim.top,
-          trim.bottom,
+          textureTrim.left,
+          textureTrim.right,
+          textureTrim.top,
+          textureTrim.bottom,
         ),
       );
 
-      frame.setDirtyFalse();
-      this.currentFrameIndexDirty = false;
       this.micro.setDirtyFalse();
+      frame.setTextureDirtyFalse();
+      frame.setUVTransformDirtyFalse();
+      frame.setTrimDirtyFalse();
+      this.currentFrameIndexDirty = false;
     }
   }
 

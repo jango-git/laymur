@@ -11,6 +11,7 @@ import { UIElement } from "../UIElement/UIElement";
 import type { UIProgressOptions } from "./UIProgress.Internal";
 import {
   PROGRESS_DEFAULT_VALUE,
+  PROGRESS_TEMP_PROPERTIES,
   simplifyGLSLSource,
 } from "./UIProgress.Internal";
 
@@ -27,7 +28,8 @@ export class UIProgress extends UIElement {
   private readonly textureResolution: Vector2;
 
   private progressInternal: number;
-  private dirty = false;
+  private progressDirty = false;
+  private textureResolutionDirty = false;
 
   /**
    * Creates a new UIProgress instance.
@@ -93,38 +95,75 @@ export class UIProgress extends UIElement {
   public set progress(value: number) {
     if (this.progressInternal !== value) {
       this.progressInternal = value;
-      this.dirty = true;
+      this.progressDirty = true;
     }
   }
 
-  protected override updatePlaneTransform(): void {
-    if (
-      this.dirty ||
-      this.texture.dirty ||
-      this.color.dirty ||
-      this.maskFunction.dirty
-    ) {
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.texture.texture,
-        textureTransform: this.texture.calculateUVTransform(
-          this.textureTransform,
-        ),
-        textureResolution: this.texture.getResolution(this.textureResolution),
-        color: this.color,
-        progress: this.progressInternal,
-      });
-
-      this.dirty = false;
+  protected override setPlaneTransform(): void {
+    if (this.color.dirty) {
+      PROGRESS_TEMP_PROPERTIES["color"] = this.color;
       this.color.setDirtyFalse();
-      this.maskFunction.setDirtyFalse();
+    } else {
+      delete PROGRESS_TEMP_PROPERTIES["color"];
     }
 
-    if (
-      this.solverWrapper.dirty ||
+    if (this.texture.textureDirty) {
+      PROGRESS_TEMP_PROPERTIES["texture"] = this.texture.texture;
+      this.texture.setTextureDirtyFalse();
+    } else {
+      delete PROGRESS_TEMP_PROPERTIES["texture"];
+    }
+
+    if (this.texture.uvTransformDirty) {
+      PROGRESS_TEMP_PROPERTIES["textureTransform"] =
+        this.texture.calculateUVTransform(this.textureTransform);
+      this.texture.setUVTransformDirtyFalse();
+    } else {
+      delete PROGRESS_TEMP_PROPERTIES["textureTransform"];
+    }
+
+    if (this.texture.uvTransformDirty) {
+      PROGRESS_TEMP_PROPERTIES["progress"] = this.progressInternal;
+      this.progressDirty = false;
+    } else {
+      delete PROGRESS_TEMP_PROPERTIES["progress"];
+    }
+
+    if (this.textureResolutionDirty) {
+      PROGRESS_TEMP_PROPERTIES["textureResolution"] =
+        this.texture.getResolution(this.textureResolution);
+      this.textureResolutionDirty = false;
+    } else {
+      delete PROGRESS_TEMP_PROPERTIES["textureResolution"];
+    }
+
+    if (this.maskFunction.dirty) {
+      const properties = this.maskFunction.enumerateProperties();
+      for (const key in properties) {
+        PROGRESS_TEMP_PROPERTIES[key] = properties[key];
+      }
+      this.maskFunction.setDirtyFalse();
+    } else {
+      for (const key in this.maskFunction.enumerateProperties()) {
+        delete PROGRESS_TEMP_PROPERTIES[key];
+      }
+    }
+
+    this.sceneWrapper.setProperties(
+      this.planeHandler,
+      PROGRESS_TEMP_PROPERTIES,
+    );
+
+    const isTransformDirty =
+      this.micro.dirty ||
+      this.texture.trimDirty ||
       this.inputWrapper.dirty ||
-      this.texture.dirty ||
-      this.micro.dirty
-    ) {
+      this.solverWrapper.dirty;
+
+    if (isTransformDirty) {
+      const micro = this.micro;
+      const textureTrim = this.texture.trim;
+
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -133,23 +172,22 @@ export class UIProgress extends UIElement {
           this.width,
           this.height,
           this.zIndex,
-          this.micro.x,
-          this.micro.y,
-          this.micro.anchorX,
-          this.micro.anchorY,
-          this.micro.scaleX,
-          this.micro.scaleY,
-          this.micro.rotation,
-          this.micro.anchorMode,
-          this.texture.trim.left,
-          this.texture.trim.right,
-          this.texture.trim.top,
-          this.texture.trim.bottom,
+          micro.x,
+          micro.y,
+          micro.anchorX,
+          micro.anchorY,
+          micro.scaleX,
+          micro.scaleY,
+          micro.rotation,
+          micro.anchorMode,
+          textureTrim.left,
+          textureTrim.right,
+          textureTrim.top,
+          textureTrim.bottom,
         ),
       );
-
-      this.texture.setDirtyFalse();
       this.micro.setDirtyFalse();
+      this.texture.setTrimDirtyFalse();
     }
   }
 
@@ -157,7 +195,10 @@ export class UIProgress extends UIElement {
     width: number,
     height: number,
   ): void => {
-    this.width = width;
-    this.height = height;
+    if (this.width !== width || this.height !== height) {
+      this.width = width;
+      this.height = height;
+      this.textureResolutionDirty = true;
+    }
   };
 }

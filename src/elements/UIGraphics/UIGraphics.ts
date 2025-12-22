@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, LinearFilter } from "three";
+import { CanvasTexture, LinearFilter, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import source from "../../shaders/UIImage.glsl";
@@ -8,7 +8,10 @@ import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_WIDTH,
 } from "../UIInputDummy/UIInputDummy.Internal";
-import type { UIGraphicsOptions } from "./UIGraphics.Internal";
+import {
+  GRAPHICS_TEMP_PROPERTIES,
+  type UIGraphicsOptions,
+} from "./UIGraphics.Internal";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
@@ -40,8 +43,10 @@ export class UIGraphics extends UIElement {
     }
 
     const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
     texture.minFilter = LinearFilter;
     texture.magFilter = LinearFilter;
+    texture.needsUpdate = true;
 
     super(
       layer,
@@ -166,9 +171,15 @@ export class UIGraphics extends UIElement {
     deltaTime: number,
   ): void {
     if (this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
+      GRAPHICS_TEMP_PROPERTIES["color"] = this.color;
       this.color.setDirtyFalse();
+    } else {
+      delete GRAPHICS_TEMP_PROPERTIES["color"];
     }
+    this.sceneWrapper.setProperties(
+      this.planeHandler,
+      GRAPHICS_TEMP_PROPERTIES,
+    );
     super.onWillRender(renderer, deltaTime);
   }
 }

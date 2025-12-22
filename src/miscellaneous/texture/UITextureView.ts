@@ -14,23 +14,26 @@ import {
 /** Wrapper for Three.js texture with atlas and trim support. Does not own the underlying texture; user must dispose it. */
 export class UITextureView extends Eventail {
   private textureInternal: Texture = TEXTURE_DEFAULT_TEXTURE;
-  private rotatedInternal = false;
+
+  private sourceWidth = TEXTURE_DEFAULT_SIZE;
+  private sourceHeight = TEXTURE_DEFAULT_SIZE;
 
   private frameX = 0;
   private frameY = 0;
   private frameWidth = TEXTURE_DEFAULT_SIZE;
   private frameHeight = TEXTURE_DEFAULT_SIZE;
 
-  private sourceWidth = TEXTURE_DEFAULT_SIZE;
-  private sourceHeight = TEXTURE_DEFAULT_SIZE;
+  private rotatedInternal = false;
+  private scaleInternal = 1;
 
   private trimLeft = 0;
   private trimRight = 0;
   private trimTop = 0;
   private trimBottom = 0;
 
-  private scaleInternal = 1;
-  private dirtyInternal = false;
+  private textureDirtyInternal = false;
+  private uvTransformDirtyInternal = false;
+  private trimDirtyInternal = false;
 
   /** @param config Texture or atlas configuration */
   constructor(config?: UITextureConfig) {
@@ -88,14 +91,32 @@ export class UITextureView extends Eventail {
     };
   }
 
-  /** Whether texture has been modified since last check */
-  public get dirty(): boolean {
-    return this.dirtyInternal;
+  public get textureDirty(): boolean {
+    return this.textureDirtyInternal;
   }
 
-  /** Marks texture as clean. @internal */
-  public setDirtyFalse(): void {
-    this.dirtyInternal = false;
+  /** Whether UV transform inputs changed since last check */
+  public get uvTransformDirty(): boolean {
+    return this.uvTransformDirtyInternal;
+  }
+
+  /** Whether trim values changed since last check */
+  public get trimDirty(): boolean {
+    return this.trimDirtyInternal;
+  }
+
+  public setTextureDirtyFalse(): void {
+    this.textureDirtyInternal = false;
+  }
+
+  /** Marks UV transform as clean. @internal */
+  public setUVTransformDirtyFalse(): void {
+    this.uvTransformDirtyInternal = false;
+  }
+
+  /** Marks trim as clean. @internal */
+  public setTrimDirtyFalse(): void {
+    this.trimDirtyInternal = false;
   }
 
   /**
@@ -145,8 +166,8 @@ export class UITextureView extends Eventail {
    * @param config Texture or atlas configuration
    */
   public set(config: UITextureConfig): void {
-    const previousWidth = this.width;
-    const previousHeight = this.height;
+    const lastWidth = this.width;
+    const lastHeight = this.height;
 
     if (config instanceof Texture) {
       this.setFromTexture(config);
@@ -154,9 +175,7 @@ export class UITextureView extends Eventail {
       this.setFromAtlasConfig(config);
     }
 
-    this.dirtyInternal = true;
-
-    if (this.width !== previousWidth || this.height !== previousHeight) {
+    if (this.width !== lastWidth || this.height !== lastHeight) {
       this.emit(
         UITextureViewEvent.DIMENSIONS_CHANGED,
         this.width,
@@ -166,65 +185,95 @@ export class UITextureView extends Eventail {
     }
   }
 
-  /** Resets to default empty texture */
-  public reset(): void {
-    const previousWidth = this.width;
-    const previousHeight = this.height;
-
-    this.textureInternal = new Texture();
-    this.frameX = 0;
-    this.frameY = 0;
-    this.frameWidth = TEXTURE_DEFAULT_SIZE;
-    this.frameHeight = TEXTURE_DEFAULT_SIZE;
-    this.rotatedInternal = false;
-    this.sourceWidth = TEXTURE_DEFAULT_SIZE;
-    this.sourceHeight = TEXTURE_DEFAULT_SIZE;
-    this.trimLeft = 0;
-    this.trimRight = 0;
-    this.trimTop = 0;
-    this.trimBottom = 0;
-    this.scaleInternal = 1;
-    this.dirtyInternal = true;
-
-    if (this.width !== previousWidth || this.height !== previousHeight) {
-      this.emit(UITextureViewEvent.DIMENSIONS_CHANGED, this.width, this.height);
-    }
-  }
-
   private setFromTexture(texture: Texture): void {
     const width = texture.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
     const height = texture.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
 
-    this.textureInternal = texture;
-    this.frameX = 0;
-    this.frameY = 0;
-    this.frameWidth = width;
-    this.frameHeight = height;
-    this.rotatedInternal = false;
     this.sourceWidth = width;
     this.sourceHeight = height;
-    this.trimLeft = 0;
-    this.trimRight = 0;
-    this.trimTop = 0;
-    this.trimBottom = 0;
-    this.scaleInternal = 1;
+
+    if (this.texture !== texture) {
+      this.textureInternal = texture;
+      this.textureDirtyInternal = true;
+    }
+
+    if (
+      this.frameX !== 0 ||
+      this.frameY !== 0 ||
+      this.frameWidth !== width ||
+      this.frameHeight !== height ||
+      this.scaleInternal !== 1 ||
+      this.rotatedInternal
+    ) {
+      this.frameX = 0;
+      this.frameY = 0;
+      this.frameWidth = width;
+      this.frameHeight = height;
+      this.rotatedInternal = false;
+      this.scaleInternal = 1;
+      this.uvTransformDirtyInternal = true;
+    }
+
+    if (
+      this.trimLeft !== 0 ||
+      this.trimRight !== 0 ||
+      this.trimTop !== 0 ||
+      this.trimBottom !== 0
+    ) {
+      this.trimLeft = 0;
+      this.trimRight = 0;
+      this.trimTop = 0;
+      this.trimBottom = 0;
+      this.trimDirtyInternal = true;
+    }
   }
 
   private setFromAtlasConfig(config: UITextureAtlasConfig): void {
-    this.textureInternal = config.texture;
-    this.frameX = config.frame.x;
-    this.frameY = config.frame.y;
-    this.frameWidth = config.frame.w;
-    this.frameHeight = config.frame.h;
-    this.rotatedInternal = config.rotated ?? false;
     this.sourceWidth = config.sourceSize.w;
     this.sourceHeight = config.sourceSize.h;
-    this.scaleInternal = config.scale ?? 1;
+
+    if (this.texture !== config.texture) {
+      this.textureInternal = config.texture;
+      this.textureDirtyInternal = true;
+    }
+
+    const scale = config.scale ?? 1;
+    const rotated = config.rotated ?? false;
+
+    if (
+      this.frameX !== 0 ||
+      this.frameY !== 0 ||
+      this.frameWidth !== config.frame.w ||
+      this.frameHeight !== config.frame.h ||
+      this.scaleInternal !== scale ||
+      this.rotatedInternal !== rotated
+    ) {
+      this.frameX = config.frame.x;
+      this.frameY = config.frame.y;
+      this.frameWidth = config.frame.w;
+      this.frameHeight = config.frame.h;
+      this.scaleInternal = scale;
+      this.rotatedInternal = rotated;
+      this.uvTransformDirtyInternal = true;
+    }
 
     const spriteSource = config.spriteSourceSize;
-    this.trimLeft = spriteSource.x;
-    this.trimTop = spriteSource.y;
-    this.trimRight = this.sourceWidth - spriteSource.x - spriteSource.w;
-    this.trimBottom = this.sourceHeight - spriteSource.y - spriteSource.h;
+    const trimLeft = spriteSource.x;
+    const trimTop = spriteSource.y;
+    const trimRight = this.sourceWidth - spriteSource.x - spriteSource.w;
+    const trimBottom = this.sourceHeight - spriteSource.y - spriteSource.h;
+
+    if (
+      this.trimLeft !== trimLeft ||
+      this.trimRight !== trimRight ||
+      this.trimTop !== trimTop ||
+      this.trimBottom !== trimBottom
+    ) {
+      this.trimLeft = trimLeft;
+      this.trimRight = trimRight;
+      this.trimTop = trimTop;
+      this.trimBottom = trimBottom;
+      this.trimDirtyInternal = true;
+    }
   }
 }

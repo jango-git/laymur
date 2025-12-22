@@ -1,4 +1,5 @@
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
 import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
@@ -13,6 +14,7 @@ export interface UIProgressOptions extends UIElementOptions {
 }
 
 export const PROGRESS_DEFAULT_VALUE = 1;
+export const PROGRESS_TEMP_PROPERTIES: Record<string, UIPropertyType> = {};
 
 export function simplifyGLSLSource(source: string): string {
   return source

@@ -87,7 +87,7 @@ export abstract class UIElement extends UIInputDummy {
     super.destroy();
   }
 
-  protected updatePlaneTransform(): void {
+  protected setPlaneTransform(): void {
     if (
       this.micro.dirty ||
       this.inputWrapper.dirty ||
@@ -133,6 +133,6 @@ export abstract class UIElement extends UIInputDummy {
       this.visibilityDirty = false;
     }
 
-    this.updatePlaneTransform();
+    this.setPlaneTransform();
   }
 }

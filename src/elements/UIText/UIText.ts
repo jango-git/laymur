@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, Matrix3 } from "three";
+import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
@@ -68,6 +68,8 @@ export class UIText extends UIElement {
     }
 
     const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    texture.needsUpdate = true;
     const color = new UIColor(options.color);
 
     super(layer, source, {
@@ -325,6 +327,7 @@ export class UIText extends UIElement {
   private rebuildTexture(): void {
     this.texture.dispose();
     this.texture = new CanvasTexture(this.canvas);
+    this.texture.colorSpace = SRGBColorSpace;
     this.texture.needsUpdate = true;
     this.sceneWrapper.setProperties(this.planeHandler, {
       texture: this.texture,
