@@ -1,4 +1,4 @@
-import { UILayer } from "../layers/UILayer";
+import { UILayer } from "../layers/UILayer/UILayer";
 import { isUILayerElement } from "./shared";
 
 export const EPSILON = 1e-6;

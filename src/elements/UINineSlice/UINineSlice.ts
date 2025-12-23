@@ -1,6 +1,6 @@
 import type { Matrix3 } from "three";
 import { Vector4 } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";

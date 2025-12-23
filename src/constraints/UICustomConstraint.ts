@@ -1,4 +1,4 @@
-import type { UILayer } from "../layers/UILayer";
+import type { UILayer } from "../layers/UILayer/UILayer";
 import type { UIExpression } from "../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";

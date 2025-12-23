@@ -1,5 +1,5 @@
 import type { Matrix3, WebGLRenderer } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";

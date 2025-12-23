@@ -1,5 +1,5 @@
 import { MathUtils, type Matrix3, type Texture, type Vector2 } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";

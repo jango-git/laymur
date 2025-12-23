@@ -1,6 +1,6 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";

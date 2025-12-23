@@ -1,4 +1,4 @@
-import type { UILayer } from "../layers/UILayer";
+import type { UILayer } from "../layers/UILayer/UILayer";
 import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
 
 /** Base class for layout constraints */

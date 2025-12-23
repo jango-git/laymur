@@ -24,7 +24,7 @@ export { UIScene } from "./elements/UIScene/UIScene";
 export { UISceneUpdateMode } from "./elements/UIScene/UIScene.Internal";
 export { UIText } from "./elements/UIText/UIText";
 export { UITextResizeMode } from "./elements/UIText/UIText.Internal";
-export { UIFullscreenLayer } from "./layers/UIFullscreenLayer";
+export { UIFullscreenLayer } from "./layers/UIFullscreenLayer/UIFullscreenLayer";
 export { UIAreaCircle } from "./miscellaneous/area/UIAreaCircle";
 export { UIAreaPolygon } from "./miscellaneous/area/UIAreaPolygon";
 export { UIAreaRectangle } from "./miscellaneous/area/UIAreaRectangle";

@@ -1,31 +1,35 @@
 import type { Camera, Vector2, WebGLRenderer } from "three";
 import { MathUtils, Ray, Vector3 } from "three";
-import { assertValidNumber } from "../miscellaneous/asserts";
-import type { UIResizePolicy } from "../miscellaneous/resize-policy/UIResizePolicy";
-import { UIResizePolicyNone } from "../miscellaneous/resize-policy/UIResizePolicyNone";
-import { UIInputEvent } from "../miscellaneous/UIInputEvent";
-import { isUIModeInteractive, UIMode } from "../miscellaneous/UIMode";
-import { UILayer } from "./UILayer";
-import type { UILayerMode } from "./UILayer.Internal";
+import { assertValidNumber } from "../../miscellaneous/asserts";
+import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizePolicy";
+import { UIInputEvent } from "../../miscellaneous/UIInputEvent";
+import { isUIModeInteractive } from "../../miscellaneous/UIMode";
+import { UILayer } from "../UILayer/UILayer";
+import {
+  FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY,
+  type UIFullscreenLayerOptions,
+} from "./UIFullscreenLayer.Internal";
 
 /** Layer that automatically handles browser window resizing and input events */
 export class UIFullscreenLayer extends UILayer {
   private resizePolicyInternal: UIResizePolicy;
   private resizePolicyDirty = false;
 
-  /**
-   * @param resizePolicy Strategy for handling window resize
-   * @param mode Initial visibility and interactivity mode
-   */
-  constructor(
-    resizePolicy: UIResizePolicy = new UIResizePolicyNone(),
-    mode: UILayerMode = UIMode.VISIBLE,
-  ) {
+  constructor(options?: Partial<UIFullscreenLayerOptions>) {
+    const resizePolicy =
+      options?.resizePolicy ?? FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY;
+
     const scale = resizePolicy.calculateScale(
       window.innerWidth,
       window.innerHeight,
     );
-    super(window.innerWidth * scale, window.innerHeight * scale, mode);
+
+    super({
+      width: window.innerWidth * scale,
+      height: window.innerHeight * scale,
+      ...options,
+    });
+
     this.resizePolicyInternal = resizePolicy;
     window.addEventListener("resize", this.onResize);
     window.addEventListener("pointerdown", this.onPointerDown);

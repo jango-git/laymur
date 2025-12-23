@@ -1,18 +1,28 @@
 import { Eventail } from "eventail";
 import type { WebGLRenderer } from "three";
-import type { UIPlaneElement } from "../miscellaneous/shared";
+import type { UIPlaneElement } from "../../miscellaneous/shared";
 
-import { isUIModeVisible } from "../miscellaneous/UIMode";
-import { UIOrientation } from "../miscellaneous/UIOrientation";
-import { UIPriority } from "../miscellaneous/UIPriority";
-import { UIInputWrapper } from "../wrappers/UIInputWrapper";
-import type { UIInputWrapperInterface } from "../wrappers/UIInputWrapper.Internal";
-import { UISceneWrapper } from "../wrappers/UISceneWrapper";
-import type { UISceneWrapperInterface } from "../wrappers/UISceneWrapper.Internal";
-import { UISolverWrapper } from "../wrappers/UISolverWrapper";
-import type { UISolverWrapperInterface } from "../wrappers/UISolverWrapper.Internal";
-import type { UILayerMode, UILayerOrientation } from "./UILayer.Internal";
-import { UILayerEvent } from "./UILayer.Internal";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import { isUIModeVisible } from "../../miscellaneous/UIMode";
+import { UIOrientation } from "../../miscellaneous/UIOrientation";
+import { UIPriority } from "../../miscellaneous/UIPriority";
+import { UIInputWrapper } from "../../wrappers/UIInputWrapper";
+import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper.Internal";
+import { UISceneWrapper } from "../../wrappers/UISceneWrapper";
+import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper.Internal";
+import { UISolverWrapper } from "../../wrappers/UISolverWrapper";
+import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper.Internal";
+import type {
+  UILayerMode,
+  UILayerOptions,
+  UILayerOrientation,
+} from "./UILayer.Internal";
+import {
+  LAYER_DEFAULT_MODE,
+  LAYER_DEFAULT_NAME,
+  LAYER_DEFAULT_SIZE,
+  UILayerEvent,
+} from "./UILayer.Internal";
 
 /** Base layer for UI rendering and layout management */
 export abstract class UILayer extends Eventail implements UIPlaneElement {
@@ -34,17 +44,31 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   private modeInternal: UILayerMode;
   private orientationInternal: UILayerOrientation;
 
-  /**
-   * @param w Initial width in world units
-   * @param h Initial height in world units
-   * @param mode Initial visibility and interactivity mode
-   */
-  constructor(w: number, h: number, mode: UILayerMode) {
+  constructor(options: Partial<UILayerOptions>) {
     super();
-    this.sceneWrapperInternal = new UISceneWrapper(w, h);
-    this.modeInternal = mode;
+
+    if (options.width !== undefined) {
+      assertValidPositiveNumber(
+        options.width,
+        "UILayer.constructor.options.width",
+      );
+    }
+
+    if (options.height !== undefined) {
+      assertValidPositiveNumber(
+        options.height,
+        "UILayer.constructor.options.height",
+      );
+    }
+
+    const width = options.width ?? LAYER_DEFAULT_SIZE;
+    const height = options.height ?? LAYER_DEFAULT_SIZE;
+
+    this.sceneWrapperInternal = new UISceneWrapper(width, height);
+    this.name = options.name ?? LAYER_DEFAULT_NAME;
+    this.modeInternal = options.mode ?? LAYER_DEFAULT_MODE;
     this.orientationInternal =
-      w > h ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+      width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
 
     this.xVariable = this.solverWrapperInternal.createVariable(
       0,
@@ -55,11 +79,11 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
       UIPriority.P0,
     );
     this.wVariable = this.solverWrapperInternal.createVariable(
-      w,
+      width,
       UIPriority.P0,
     );
     this.hVariable = this.solverWrapperInternal.createVariable(
-      h,
+      height,
       UIPriority.P0,
     );
   }

@@ -1,4 +1,4 @@
-import { UILayer } from "../layers/UILayer";
+import { UILayer } from "../layers/UILayer/UILayer";
 
 /** Objects that belong to a UI layer */
 export interface UILayerElement {

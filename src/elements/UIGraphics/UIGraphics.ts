@@ -1,6 +1,6 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, LinearFilter, SRGBColorSpace } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";

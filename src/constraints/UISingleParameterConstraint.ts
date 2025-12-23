@@ -1,5 +1,5 @@
-import type { UILayer } from "../layers/UILayer";
-import { UILayerEvent } from "../layers/UILayer.Internal";
+import type { UILayer } from "../layers/UILayer/UILayer";
+import { UILayerEvent } from "../layers/UILayer/UILayer.Internal";
 import {
   resolveOrientation,
   UIOrientation,

@@ -1,6 +1,6 @@
 import type { WebGLRenderer } from "three";
-import type { UILayer } from "../../layers/UILayer";
-import { UILayerEvent } from "../../layers/UILayer.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer";
+import { UILayerEvent } from "../../layers/UILayer/UILayer.Internal";
 import { computeTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import { UIMicro } from "../../miscellaneous/micro/UIMicro";

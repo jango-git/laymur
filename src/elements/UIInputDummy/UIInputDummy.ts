@@ -1,5 +1,5 @@
 import { MathUtils } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import type { UIArea } from "../../miscellaneous/area/UIArea";
 import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle";
 import {

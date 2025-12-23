@@ -1,5 +1,5 @@
 import type { Matrix3 } from "three";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";

@@ -1,5 +1,5 @@
 import { Eventail } from "eventail";
-import type { UILayer } from "../../layers/UILayer";
+import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import type {
   UILayerElement,
