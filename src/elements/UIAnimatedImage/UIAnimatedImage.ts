@@ -1,6 +1,9 @@
 import type { Matrix3, WebGLRenderer } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import {
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
@@ -12,8 +15,10 @@ import { UIElement } from "../UIElement/UIElement";
 import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
 import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
-  ANIMATED_IMAGE_DEFAULT_LOOP,
+  ANIMATED_IMAGE_DEFAULT_LOOP_MODE,
+  ANIMATED_IMAGE_DEFAULT_TIME_SCALE,
   UIAnimatedImageEvent,
+  UILoopMode,
 } from "./UIAnimatedImage.Internal";
 
 /** Frame-based texture animation element */
@@ -24,7 +29,8 @@ export class UIAnimatedImage extends UIElement {
   private readonly sequenceInternal: UITextureView[];
 
   private frameRateInternal: number;
-  private loopInternal: boolean;
+  private timeScaleInternal: number;
+  private loopModeInternal: UILoopMode;
   private readonly textureTransform: Matrix3;
 
   private isPlaying = false;
@@ -72,7 +78,10 @@ export class UIAnimatedImage extends UIElement {
     this.textureTransform = textureTransform;
     this.frameRateInternal =
       options.frameRate ?? ANIMATED_IMAGE_DEFAULT_FRAME_RATE;
-    this.loopInternal = options.loop ?? ANIMATED_IMAGE_DEFAULT_LOOP;
+    this.timeScaleInternal =
+      options.timeScale ?? ANIMATED_IMAGE_DEFAULT_TIME_SCALE;
+    this.loopModeInternal =
+      options.loopMode ?? ANIMATED_IMAGE_DEFAULT_LOOP_MODE;
     this.color = color;
 
     this.subscribeSequenceEvents();
@@ -92,9 +101,14 @@ export class UIAnimatedImage extends UIElement {
     return this.frameRateInternal;
   }
 
-  /** Whether animation repeats after completion */
-  public get loop(): boolean {
-    return this.loopInternal;
+  /** Playback speed multiplier. Can be negative for reverse playback. */
+  public get timeScale(): number {
+    return this.timeScaleInternal;
+  }
+
+  /** Loop behavior */
+  public get loopMode(): UILoopMode {
+    return this.loopModeInternal;
   }
 
   /** Total animation duration in seconds */
@@ -131,9 +145,15 @@ export class UIAnimatedImage extends UIElement {
     this.frameRateInternal = value;
   }
 
-  /** Whether animation repeats after completion */
-  public set loop(value: boolean) {
-    this.loopInternal = value;
+  /** Playback speed multiplier. Can be negative for reverse playback. */
+  public set timeScale(value: number) {
+    assertValidNumber(value, "UIAnimatedImage.timeScale");
+    this.timeScaleInternal = value;
+  }
+
+  /** Loop behavior */
+  public set loopMode(value: UILoopMode) {
+    this.loopModeInternal = value;
   }
 
   /** Removes element and frees resources */
@@ -177,24 +197,54 @@ export class UIAnimatedImage extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    if (this.isPlaying) {
-      this.accumulatedTime += deltaTime;
+    if (this.isPlaying && this.timeScaleInternal !== 0) {
+      this.accumulatedTime += deltaTime * this.timeScaleInternal;
       const frameDuration = 1 / this.frameRateInternal;
+      const sequenceLength = this.sequenceInternal.length;
+      const lastFrameIndex = sequenceLength - 1;
 
-      while (this.accumulatedTime >= frameDuration) {
-        this.accumulatedTime -= frameDuration;
-        this.sequenceFrameIndex += 1;
+      if (this.timeScaleInternal > 0) {
+        while (this.accumulatedTime >= frameDuration) {
+          this.accumulatedTime -= frameDuration;
+          this.sequenceFrameIndex += 1;
 
-        if (this.loopInternal) {
-          this.sequenceFrameIndex %= this.sequenceInternal.length;
-        } else if (this.sequenceFrameIndex >= this.sequenceInternal.length) {
-          this.sequenceFrameIndex = this.sequenceInternal.length - 1;
-          this.isPlaying = false;
-          this.emit(UIAnimatedImageEvent.PAUSED);
-          break;
+          if (this.sequenceFrameIndex >= sequenceLength) {
+            if (this.loopModeInternal === UILoopMode.LOOP) {
+              this.sequenceFrameIndex = 0;
+            } else if (this.loopModeInternal === UILoopMode.PING_PONG) {
+              this.sequenceFrameIndex = lastFrameIndex;
+              this.timeScaleInternal = -this.timeScaleInternal;
+            } else {
+              this.sequenceFrameIndex = lastFrameIndex;
+              this.isPlaying = false;
+              this.emit(UIAnimatedImageEvent.PAUSED);
+              break;
+            }
+          }
+
+          this.currentFrameIndexDirty = true;
         }
+      } else {
+        while (this.accumulatedTime <= -frameDuration) {
+          this.accumulatedTime += frameDuration;
+          this.sequenceFrameIndex -= 1;
 
-        this.currentFrameIndexDirty = true;
+          if (this.sequenceFrameIndex < 0) {
+            if (this.loopModeInternal === UILoopMode.LOOP) {
+              this.sequenceFrameIndex = lastFrameIndex;
+            } else if (this.loopModeInternal === UILoopMode.PING_PONG) {
+              this.sequenceFrameIndex = 0;
+              this.timeScaleInternal = -this.timeScaleInternal;
+            } else {
+              this.sequenceFrameIndex = 0;
+              this.isPlaying = false;
+              this.emit(UIAnimatedImageEvent.PAUSED);
+              break;
+            }
+          }
+
+          this.currentFrameIndexDirty = true;
+        }
       }
     }
 

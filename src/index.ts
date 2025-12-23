@@ -14,6 +14,7 @@ export { UIVerticalProportionConstraint } from "./constraints/UIVerticalProporti
 export { UIWidthConstraint } from "./constraints/UIWidthConstraint/UIWidthConstraint";
 export { UIAnchor } from "./elements/UIAnchor/UIAnchor";
 export { UIAnimatedImage } from "./elements/UIAnimatedImage/UIAnimatedImage";
+export { UILoopMode } from "./elements/UIAnimatedImage/UIAnimatedImage.Internal";
 export { UIGraphics } from "./elements/UIGraphics/UIGraphics";
 export { UIImage } from "./elements/UIImage/UIImage";
 export { UIInputDummy } from "./elements/UIInputDummy/UIInputDummy";
