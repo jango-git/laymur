@@ -2,6 +2,7 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
@@ -183,11 +184,6 @@ export class UIText extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    if (this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
-      this.color.setDirtyFalse();
-    }
-
     switch (this.resizeModeInternal) {
       case UITextResizeMode.SCALE:
         this.tryToRenderTextScaleMode();
@@ -247,9 +243,7 @@ export class UIText extends UIElement {
 
     renderTextLines(this.padding.top, this.padding.left, lines, this.context);
 
-    if (resolutionDirty) {
-      this.rebuildTexture();
-    }
+    this.updateProperties(resolutionDirty);
 
     this.resizeModeDirty = false;
     this.maxLineWidthDirty = false;
@@ -313,9 +307,7 @@ export class UIText extends UIElement {
       this.context,
     );
 
-    if (resolutionDirty) {
-      this.rebuildTexture();
-    }
+    this.updateProperties(resolutionDirty);
 
     this.resizeModeDirty = false;
     this.maxLineWidthDirty = false;
@@ -324,14 +316,28 @@ export class UIText extends UIElement {
     this.setContentDirtyFalse();
   }
 
-  private rebuildTexture(): void {
-    this.texture.dispose();
-    this.texture = new CanvasTexture(this.canvas);
-    this.texture.colorSpace = SRGBColorSpace;
-    this.texture.needsUpdate = true;
-    this.sceneWrapper.setProperties(this.planeHandler, {
-      texture: this.texture,
-    });
+  private updateProperties(resolutionDirty: boolean): void {
+    let properties: Record<string, UIPropertyType> | undefined;
+
+    if (this.color.dirty) {
+      properties ??= {};
+      properties["color"] = this.color;
+      this.color.setDirtyFalse();
+    }
+
+    if (resolutionDirty) {
+      this.texture.dispose();
+      this.texture = new CanvasTexture(this.canvas);
+      this.texture.colorSpace = SRGBColorSpace;
+      this.texture.needsUpdate = true;
+
+      properties ??= {};
+      properties["texture"] = this.texture;
+    }
+
+    if (properties) {
+      this.sceneWrapper.setProperties(this.planeHandler, properties);
+    }
   }
 
   private buildTextChunks(): UITextChunk[] {
