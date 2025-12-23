@@ -1,5 +1,9 @@
 import { Eventail } from "eventail";
 import { Matrix3, Texture, Vector2 } from "three";
+import {
+  assertValidNonNegativeNumber,
+  assertValidPositiveNumber,
+} from "../asserts";
 import type {
   UITextureAtlasConfig,
   UITextureConfig,
@@ -82,12 +86,12 @@ export class UITextureView extends Eventail {
 
   /** Transparent padding around visible content */
   public get trim(): Readonly<UITextureTrim> {
-    const s = this.scaleInternal;
+    const scale = this.scaleInternal;
     return {
-      left: this.trimLeft / s,
-      right: this.trimRight / s,
-      top: this.trimTop / s,
-      bottom: this.trimBottom / s,
+      left: this.trimLeft / scale,
+      right: this.trimRight / scale,
+      top: this.trimTop / scale,
+      bottom: this.trimBottom / scale,
     };
   }
 
@@ -229,6 +233,54 @@ export class UITextureView extends Eventail {
   }
 
   private setFromAtlasConfig(config: UITextureAtlasConfig): void {
+    assertValidPositiveNumber(
+      config.sourceSize.w,
+      "UITextureView.setFromAtlasConfig.config.sourceSize.w",
+    );
+    assertValidPositiveNumber(
+      config.sourceSize.h,
+      "UITextureView.setFromAtlasConfig.config.sourceSize.h",
+    );
+    assertValidNonNegativeNumber(
+      config.frame.x,
+      "UITextureView.setFromAtlasConfig.config.frame.x",
+    );
+    assertValidNonNegativeNumber(
+      config.frame.y,
+      "UITextureView.setFromAtlasConfig.config.frame.y",
+    );
+    assertValidPositiveNumber(
+      config.frame.w,
+      "UITextureView.setFromAtlasConfig.config.frame.w",
+    );
+    assertValidPositiveNumber(
+      config.frame.h,
+      "UITextureView.setFromAtlasConfig.config.frame.h",
+    );
+    assertValidNonNegativeNumber(
+      config.spriteSourceSize.x,
+      "UITextureView.setFromAtlasConfig.config.spriteSourceSize.x",
+    );
+    assertValidNonNegativeNumber(
+      config.spriteSourceSize.y,
+      "UITextureView.setFromAtlasConfig.config.spriteSourceSize.y",
+    );
+    assertValidPositiveNumber(
+      config.spriteSourceSize.w,
+      "UITextureView.setFromAtlasConfig.config.spriteSourceSize.w",
+    );
+    assertValidPositiveNumber(
+      config.spriteSourceSize.h,
+      "UITextureView.setFromAtlasConfig.config.spriteSourceSize.h",
+    );
+
+    if (config.scale !== undefined) {
+      assertValidPositiveNumber(
+        config.scale,
+        "UITextureView.setFromAtlasConfig.config.scale",
+      );
+    }
+
     this.sourceWidth = config.sourceSize.w;
     this.sourceHeight = config.sourceSize.h;
 

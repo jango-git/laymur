@@ -1,7 +1,9 @@
-import type { Matrix3, Texture, Vector2 } from "three";
+import { MathUtils, type Matrix3, type Texture, type Vector2 } from "three";
 import type { UILayer } from "../../layers/UILayer";
+import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
@@ -9,11 +11,7 @@ import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.In
 import source from "../../shaders/UIProgress.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UIProgressOptions } from "./UIProgress.Internal";
-import {
-  PROGRESS_DEFAULT_VALUE,
-  PROGRESS_TEMP_PROPERTIES,
-  simplifyGLSLSource,
-} from "./UIProgress.Internal";
+import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal";
 
 /** Progress bar with customizable fill direction */
 export class UIProgress extends UIElement {
@@ -45,6 +43,13 @@ export class UIProgress extends UIElement {
     texture: Texture,
     options: Partial<UIProgressOptions> = {},
   ) {
+    if (options.progress !== undefined) {
+      assertValidNumber(
+        options.progress,
+        "UIProgress.constructor.options.progress",
+      );
+    }
+
     const color = new UIColor(options.color);
     const textureView = new UITextureView(texture);
     const textureTransform = textureView.calculateUVTransform();
@@ -53,15 +58,18 @@ export class UIProgress extends UIElement {
     options.width = options.width ?? textureView.width;
     options.height = options.height ?? textureView.height;
 
-    const progress = options.progress ?? PROGRESS_DEFAULT_VALUE;
+    const progress = MathUtils.clamp(
+      options.progress ?? PROGRESS_DEFAULT_VALUE,
+      0,
+      1,
+    );
 
     const maskFunction =
       options.maskFunction ?? new UIProgressMaskFunctionDirectional();
-    const simplifiedSource = simplifyGLSLSource(maskFunction.source + source);
 
     super(
       layer,
-      simplifiedSource,
+      maskFunction.source + source,
       {
         texture: textureView.texture,
         textureTransform,
@@ -91,8 +99,10 @@ export class UIProgress extends UIElement {
     return this.progressInternal;
   }
 
-  /** Progress from 0 (empty) to 1 (full). Clamped by shader. */
+  /** Progress from 0 (empty) to 1 (full). Clamped. */
   public set progress(value: number) {
+    assertValidNumber(value, "UIProgress.progress");
+    value = MathUtils.clamp(value, 0, 1);
     if (this.progressInternal !== value) {
       this.progressInternal = value;
       this.progressDirty = true;
@@ -100,59 +110,54 @@ export class UIProgress extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
+    let properties: Record<string, UIPropertyType> | undefined;
+
     if (this.color.dirty) {
-      PROGRESS_TEMP_PROPERTIES["color"] = this.color;
+      properties ??= {};
+      properties["color"] = this.color;
       this.color.setDirtyFalse();
-    } else {
-      delete PROGRESS_TEMP_PROPERTIES["color"];
     }
 
     if (this.texture.textureDirty) {
-      PROGRESS_TEMP_PROPERTIES["texture"] = this.texture.texture;
+      properties ??= {};
+      properties["texture"] = this.texture.texture;
       this.texture.setTextureDirtyFalse();
-    } else {
-      delete PROGRESS_TEMP_PROPERTIES["texture"];
     }
 
     if (this.texture.uvTransformDirty) {
-      PROGRESS_TEMP_PROPERTIES["textureTransform"] =
-        this.texture.calculateUVTransform(this.textureTransform);
+      properties ??= {};
+      properties["textureTransform"] = this.texture.calculateUVTransform(
+        this.textureTransform,
+      );
       this.texture.setUVTransformDirtyFalse();
-    } else {
-      delete PROGRESS_TEMP_PROPERTIES["textureTransform"];
     }
 
-    if (this.texture.uvTransformDirty) {
-      PROGRESS_TEMP_PROPERTIES["progress"] = this.progressInternal;
+    if (this.progressDirty) {
+      properties ??= {};
+      properties["progress"] = this.progressInternal;
       this.progressDirty = false;
-    } else {
-      delete PROGRESS_TEMP_PROPERTIES["progress"];
     }
 
     if (this.textureResolutionDirty) {
-      PROGRESS_TEMP_PROPERTIES["textureResolution"] =
-        this.texture.getResolution(this.textureResolution);
+      properties ??= {};
+      properties["textureResolution"] = this.texture.getResolution(
+        this.textureResolution,
+      );
       this.textureResolutionDirty = false;
-    } else {
-      delete PROGRESS_TEMP_PROPERTIES["textureResolution"];
     }
 
     if (this.maskFunction.dirty) {
-      const properties = this.maskFunction.enumerateProperties();
-      for (const key in properties) {
-        PROGRESS_TEMP_PROPERTIES[key] = properties[key];
+      properties ??= {};
+      const maskProperties = this.maskFunction.enumerateProperties();
+      for (const key in maskProperties) {
+        properties[key] = maskProperties[key];
       }
       this.maskFunction.setDirtyFalse();
-    } else {
-      for (const key in this.maskFunction.enumerateProperties()) {
-        delete PROGRESS_TEMP_PROPERTIES[key];
-      }
     }
 
-    this.sceneWrapper.setProperties(
-      this.planeHandler,
-      PROGRESS_TEMP_PROPERTIES,
-    );
+    if (properties) {
+      this.sceneWrapper.setProperties(this.planeHandler, properties);
+    }
 
     const isTransformDirty =
       this.micro.dirty ||

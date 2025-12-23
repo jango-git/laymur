@@ -1,4 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
+import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint.Internal";
 
 /** Width constraint options */
 export interface UIWidthConstraintOptions

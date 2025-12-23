@@ -15,12 +15,13 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": false,
+    "verbatimModuleSyntax": true,
     "declaration": true,
     "declarationDir": "./dist",
     "emitDeclarationOnly": false,
     "outDir": "./dist",
     "sourceMap": true,
-    "stripInternal": true
+    "stripInternal": true,
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
 }

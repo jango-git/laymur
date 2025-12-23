@@ -1,11 +1,14 @@
 import {
   assertValidConstraintArguments,
   assertValidNumber,
-} from "../miscellaneous/asserts";
-import type { UIPlaneElement, UIPointElement } from "../miscellaneous/shared";
-import { isUIPlaneElement, isUIPointElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
+} from "../../miscellaneous/asserts";
+import type {
+  UIPlaneElement,
+  UIPointElement,
+} from "../../miscellaneous/shared";
+import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal";
 import { DEFAULT_ANCHOR } from "./UIVerticalDistanceConstraint.Internal";
 

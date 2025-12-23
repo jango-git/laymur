@@ -2,12 +2,13 @@ import type { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
-import { IMAGE_TEMP_PROPERTIES, type UIImageOptions } from "./UIImage.Internal";
+import type { UIImageOptions } from "./UIImage.Internal";
 
 /** Textured image element */
 export class UIImage extends UIElement {
@@ -70,29 +71,31 @@ export class UIImage extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
+    let properties: Record<string, UIPropertyType> | undefined;
+
     if (this.color.dirty) {
-      IMAGE_TEMP_PROPERTIES["color"] = this.color;
+      properties ??= {};
+      properties["color"] = this.color;
       this.color.setDirtyFalse();
-    } else {
-      delete IMAGE_TEMP_PROPERTIES["color"];
     }
 
     if (this.texture.textureDirty) {
-      IMAGE_TEMP_PROPERTIES["texture"] = this.texture.texture;
+      properties ??= {};
+      properties["texture"] = this.texture.texture;
       this.texture.setTextureDirtyFalse();
-    } else {
-      delete IMAGE_TEMP_PROPERTIES["texture"];
     }
 
     if (this.texture.uvTransformDirty) {
-      IMAGE_TEMP_PROPERTIES["textureTransform"] =
-        this.texture.calculateUVTransform(this.textureTransform);
+      properties ??= {};
+      properties["textureTransform"] = this.texture.calculateUVTransform(
+        this.textureTransform,
+      );
       this.texture.setUVTransformDirtyFalse();
-    } else {
-      delete IMAGE_TEMP_PROPERTIES["textureTransform"];
     }
 
-    this.sceneWrapper.setProperties(this.planeHandler, IMAGE_TEMP_PROPERTIES);
+    if (properties) {
+      this.sceneWrapper.setProperties(this.planeHandler, properties);
+    }
 
     const isTransformDirty =
       this.micro.dirty ||

@@ -779,7 +779,6 @@ export class UIColor {
     }
   }
 
-  /** @internal */
   private ensureHSLUpdatedFromRGB(): void {
     if (this.hslDirty) {
       const { rInternal: r, gInternal: g, bInternal: b } = this;

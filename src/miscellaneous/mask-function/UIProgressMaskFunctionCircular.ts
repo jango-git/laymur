@@ -1,4 +1,5 @@
 import source from "../../shaders/UIProgressMaskFunctionCircular.glsl";
+import { assertValidNumber } from "../asserts";
 import type { UIPropertyType } from "../generic-plane/shared";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
 
@@ -14,6 +15,10 @@ export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {
    * @param inverseDirection - Whether to fill counter-clockwise
    */
   constructor(startAngle = 0, inverseDirection = false) {
+    assertValidNumber(
+      startAngle,
+      "UIProgressMaskFunctionCircular.constructor.startAngle",
+    );
     super(source);
     this.startAngleInternal = startAngle;
     this.inverseDirectionInternal = inverseDirection;
@@ -31,6 +36,7 @@ export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {
 
   /** Starting angle in radians */
   public set startAngle(value: number) {
+    assertValidNumber(value, "UIProgressMaskFunctionCircular.startAngle");
     if (this.startAngleInternal !== value) {
       this.startAngleInternal = value;
       this.dirtyInternal = true;

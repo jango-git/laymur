@@ -1,4 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
+import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint.Internal";
 
 export const DEFAULT_ANCHOR = 0.5;
 export const DEFAULT_T = 0.5;

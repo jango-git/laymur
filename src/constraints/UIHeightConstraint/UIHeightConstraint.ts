@@ -1,8 +1,11 @@
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import type {
+  UILayerElement,
+  UIPlaneElement,
+} from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIHeightConstraintOptions } from "./UIHeightConstraint.Internal";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /** Fixes element height to constant value */
 export class UIHeightConstraint extends UISingleParameterConstraint {

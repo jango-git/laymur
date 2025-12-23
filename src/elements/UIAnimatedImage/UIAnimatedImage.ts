@@ -3,6 +3,7 @@ import type { UILayer } from "../../layers/UILayer";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
@@ -201,27 +202,41 @@ export class UIAnimatedImage extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
-    const frame = this.sequenceInternal[this.sequenceFrameIndex];
+    let properties: Record<string, UIPropertyType> | undefined;
 
-    if (this.color.dirty || this.currentFrameIndexDirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: frame.texture,
-        textureTransform: frame.calculateUVTransform(this.textureTransform),
-        color: this.color,
-      });
-
+    if (this.color.dirty) {
+      properties ??= {};
+      properties["color"] = this.color;
       this.color.setDirtyFalse();
     }
 
-    if (
+    const frame = this.sequenceInternal[this.sequenceFrameIndex];
+    if (frame.textureDirty || this.currentFrameIndexDirty) {
+      properties ??= {};
+      properties["texture"] = frame.texture;
+      frame.setTextureDirtyFalse();
+    }
+
+    if (frame.uvTransformDirty || this.currentFrameIndexDirty) {
+      properties ??= {};
+      properties["textureTransform"] = frame.calculateUVTransform(
+        this.textureTransform,
+      );
+      frame.setUVTransformDirtyFalse();
+    }
+
+    if (properties) {
+      this.sceneWrapper.setProperties(this.planeHandler, properties);
+    }
+
+    const isTransformDirty =
       this.currentFrameIndexDirty ||
-      frame.textureDirty ||
-      frame.uvTransformDirty ||
-      frame.trimDirty ||
       this.micro.dirty ||
+      frame.trimDirty ||
       this.inputWrapper.dirty ||
-      this.solverWrapper.dirty
-    ) {
+      this.solverWrapper.dirty;
+
+    if (isTransformDirty) {
       const micro = this.micro;
       const textureTrim = frame.trim;
 
@@ -248,11 +263,9 @@ export class UIAnimatedImage extends UIElement {
         ),
       );
 
-      this.micro.setDirtyFalse();
-      frame.setTextureDirtyFalse();
-      frame.setUVTransformDirtyFalse();
-      frame.setTrimDirtyFalse();
       this.currentFrameIndexDirty = false;
+      this.micro.setDirtyFalse();
+      frame.setTrimDirtyFalse();
     }
   }
 

@@ -1,16 +1,16 @@
-import { UIHeightConstraint } from "../../constraints/UIHeightConstraint";
-import { UIHorizontalDistanceConstraint } from "../../constraints/UIHorizontalDistanceConstraint";
-import { UIHorizontalInterpolationConstraint } from "../../constraints/UIHorizontalInterpolationConstraint";
-import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
-import { UIVerticalInterpolationConstraint } from "../../constraints/UIVerticalInterpolationConstraint";
-import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
-import { UIWidthConstraint } from "../../constraints/UIWidthConstraint";
 import type { UIElement } from "../../elements/UIElement/UIElement";
 import type {
   UIPlaneElement,
   UIPointElement,
 } from "../../miscellaneous/shared";
+import { UIHeightConstraint } from "../UIHeightConstraint/UIHeightConstraint";
+import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
+import { UIHorizontalInterpolationConstraint } from "../UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint";
+import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
+import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
+import { UIVerticalInterpolationConstraint } from "../UIVerticalInterpolationConstraint/UIVerticalInterpolationConstraint";
+import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint";
+import { UIWidthConstraint } from "../UIWidthConstraint/UIWidthConstraint";
 import type {
   UIConstraint2DResult,
   UIConstraintDistance2DOptions,

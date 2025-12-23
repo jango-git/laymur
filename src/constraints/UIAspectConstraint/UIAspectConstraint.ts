@@ -1,8 +1,11 @@
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import type {
+  UILayerElement,
+  UIPlaneElement,
+} from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /** Maintains element aspect ratio (width = height * aspect) */
 export class UIAspectConstraint extends UISingleParameterConstraint {

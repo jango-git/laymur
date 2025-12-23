@@ -1,13 +1,16 @@
 import {
   assertValidConstraintArguments,
   assertValidNumber,
-} from "../miscellaneous/asserts";
-import type { UIPlaneElement, UIPointElement } from "../miscellaneous/shared";
-import { isUIPlaneElement, isUIPointElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
+} from "../../miscellaneous/asserts";
+import type {
+  UIPlaneElement,
+  UIPointElement,
+} from "../../miscellaneous/shared";
+import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIHorizontalDistanceConstraintOptions } from "./UIHorizontalDistanceConstraint.Internal";
 import { DEFAULT_ANCHOR } from "./UIHorizontalDistanceConstraint.Internal";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 
 /** Maintains horizontal distance between elements with configurable anchors */
 export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint {

@@ -1,6 +1,7 @@
 import type { Camera, WebGLRenderer } from "three";
 import {
   LinearFilter,
+  MathUtils,
   Matrix3,
   PerspectiveCamera,
   RGBAFormat,
@@ -9,6 +10,7 @@ import {
   WebGLRenderTarget,
 } from "three";
 import type { UILayer } from "../../layers/UILayer";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
@@ -56,17 +58,18 @@ export class UIScene extends UIElement {
    * @throws If resolutionFactor outside range 0.1 to 2.0
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
-    const resolutionFactor =
-      options.resolutionFactor ?? SCENE_DEFAULT_RESOLUTION_FACTOR;
-
-    if (
-      resolutionFactor < SCENE_MIN_RESOLUTION_FACTOR ||
-      resolutionFactor > SCENE_MAX_RESOLUTION_FACTOR
-    ) {
-      throw new Error(
-        `UIScene.constructor.resolutionFactor: must be between ${SCENE_MIN_RESOLUTION_FACTOR} and ${SCENE_MAX_RESOLUTION_FACTOR}.`,
+    if (options.resolutionFactor !== undefined) {
+      assertValidPositiveNumber(
+        options.resolutionFactor,
+        "UIScene.constructor.resolutionFactor",
       );
     }
+
+    const resolutionFactor = MathUtils.clamp(
+      options.resolutionFactor ?? SCENE_DEFAULT_RESOLUTION_FACTOR,
+      SCENE_MIN_RESOLUTION_FACTOR,
+      SCENE_MAX_RESOLUTION_FACTOR,
+    );
 
     const w = options.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options.height ?? DUMMY_DEFAULT_HEIGHT;
@@ -165,6 +168,12 @@ export class UIScene extends UIElement {
 
   /** Render target resolution multiplier. Range 0.1 to 2.0. */
   public set resolutionFactor(value: number) {
+    assertValidPositiveNumber(value, "UIScene.resolutionFactor");
+    value = MathUtils.clamp(
+      value,
+      SCENE_MIN_RESOLUTION_FACTOR,
+      SCENE_MAX_RESOLUTION_FACTOR,
+    );
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
       this.resolutionFactorDirty = true;
@@ -188,7 +197,7 @@ export class UIScene extends UIElement {
   ): void {
     this.evenFrame = !this.evenFrame;
 
-    if (
+    const isFramebufferDirty =
       this.updateRequired ||
       this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EVERY_SECOND_FRAME &&
@@ -198,8 +207,9 @@ export class UIScene extends UIElement {
       this.color.dirty ||
       this.clearColor.dirty ||
       (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
-        (this.resolutionFactorDirty || this.solverWrapper.dirty))
-    ) {
+        (this.resolutionFactorDirty || this.solverWrapper.dirty));
+
+    if (isFramebufferDirty) {
       if (this.resolutionFactorDirty || this.solverWrapper.dirty) {
         this.renderTarget.setSize(
           this.width * this.resolutionFactorInternal,

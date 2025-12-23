@@ -1,7 +1,10 @@
-import { assertValidPositiveNumber } from "../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import type {
+  UILayerElement,
+  UIPlaneElement,
+} from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal";
 
 /** Fixes element width to constant value */

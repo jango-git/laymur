@@ -1,4 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
+import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint.Internal";
 
 /** Aspect constraint options */
 export interface UIAspectConstraintOptions

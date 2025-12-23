@@ -8,10 +8,7 @@ import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_WIDTH,
 } from "../UIInputDummy/UIInputDummy.Internal";
-import {
-  GRAPHICS_TEMP_PROPERTIES,
-  type UIGraphicsOptions,
-} from "./UIGraphics.Internal";
+import type { UIGraphicsOptions } from "./UIGraphics.Internal";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
@@ -171,15 +168,10 @@ export class UIGraphics extends UIElement {
     deltaTime: number,
   ): void {
     if (this.color.dirty) {
-      GRAPHICS_TEMP_PROPERTIES["color"] = this.color;
+      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
       this.color.setDirtyFalse();
-    } else {
-      delete GRAPHICS_TEMP_PROPERTIES["color"];
     }
-    this.sceneWrapper.setProperties(
-      this.planeHandler,
-      GRAPHICS_TEMP_PROPERTIES,
-    );
+
     super.onWillRender(renderer, deltaTime);
   }
 }

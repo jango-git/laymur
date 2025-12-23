@@ -1,7 +1,3 @@
-import { UIHorizontalDistanceConstraint } from "../../constraints/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import type {
   UILayerElement,
@@ -9,7 +5,11 @@ import type {
 } from "../../miscellaneous/shared";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
-import { UIAspectConstraint } from "../UIAspectConstraint";
+import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint";
+import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
+import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
+import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
+import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint";
 import type { UIFitConstraintBuilderOptions } from "./UIFitConstraintBuilder.Internal";
 import { DEFAULT_ANCHOR } from "./UIFitConstraintBuilder.Internal";
 

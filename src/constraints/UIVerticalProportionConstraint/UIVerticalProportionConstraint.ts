@@ -1,10 +1,10 @@
 import {
   assertValidConstraintArguments,
   assertValidPositiveNumber,
-} from "../miscellaneous/asserts";
-import type { UIPlaneElement } from "../miscellaneous/shared";
-import { UIExpression } from "../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
+} from "../../miscellaneous/asserts";
+import type { UIPlaneElement } from "../../miscellaneous/shared";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
 import type { UIVerticalProportionConstraintOptions } from "./UIVerticalProportionConstraint.Internal";
 
 /** Maintains proportional height relationship (A.height * proportion = B.height) */
