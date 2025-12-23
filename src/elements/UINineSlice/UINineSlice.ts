@@ -3,9 +3,13 @@ import { Vector4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
+import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
+import {
+  UITextureViewEvent,
+  type UITextureConfig,
+} from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UINineSlice.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UINineSliceOptions } from "./UINineSlice.Internal";
@@ -27,14 +31,16 @@ export class UINineSlice extends UIElement {
   public readonly sliceRegions: UIInsets;
 
   private regionModeInternal: UINineSliceRegionMode;
-  private regionModeDirty = false;
+  private regionModeDirty = true;
 
   private readonly textureTransform: Matrix3;
   private readonly sliceBordersVector = new Vector4();
   private readonly sliceRegionsVector = new Vector4();
 
-  private lastWidth: number;
-  private lastHeight: number;
+  private lastElementWidth: number;
+  private lastElementHeight: number;
+
+  private textureDimensionsDirty = true;
 
   /**
    * Creates a new UINineSlice instance.
@@ -92,8 +98,13 @@ export class UINineSlice extends UIElement {
     this.sliceBordersVector = sliceBordersVector;
     this.sliceRegionsVector = sliceRegionsVector;
 
-    this.lastWidth = this.width;
-    this.lastHeight = this.height;
+    this.lastElementWidth = this.width;
+    this.lastElementHeight = this.height;
+
+    this.texture.on(
+      UITextureViewEvent.DIMENSIONS_CHANGED,
+      this.onTextureDimensionsChanged,
+    );
   }
 
   /** Controls how sliceRegions values are interpreted */
@@ -109,48 +120,82 @@ export class UINineSlice extends UIElement {
     }
   }
 
+  /** Removes nine slice and frees resources */
+  public override destroy(): void {
+    this.texture.off(
+      UITextureViewEvent.DIMENSIONS_CHANGED,
+      this.onTextureDimensionsChanged,
+    );
+    super.destroy();
+  }
+
   protected override setPlaneTransform(): void {
-    if (
-      this.regionModeDirty ||
-      this.texture.textureDirty ||
-      this.texture.uvTransformDirty ||
-      this.texture.trimDirty ||
-      this.color.dirty ||
+    let properties: Record<string, UIPropertyType> | undefined;
+
+    const sliceBordersDirty =
+      this.textureDimensionsDirty ||
       this.sliceBorders.dirty ||
-      this.sliceRegions.dirty ||
-      (this.regionModeInternal === UINineSliceRegionMode.WORLD &&
-        this.checkDimensionsDirty())
-    ) {
-      this.calculateSliceBordersForShader(this.sliceBordersVector);
-      this.calculateSliceRegionsForShader(this.sliceRegionsVector);
+      this.texture.trimDirty;
 
-      this.sceneWrapper.setProperties(this.planeHandler, {
-        texture: this.texture.texture,
-        textureTransform: this.texture.calculateUVTransform(
-          this.textureTransform,
-        ),
-        color: this.color,
-        sliceBorders: this.sliceBordersVector,
-        sliceRegions: this.sliceRegionsVector,
-      });
-
-      this.regionModeDirty = false;
-      this.color.setDirtyFalse();
+    if (sliceBordersDirty) {
+      properties ??= {};
+      properties["sliceBorders"] = this.calculateSliceBordersForShader(
+        this.sliceBordersVector,
+      );
       this.sliceBorders.setDirtyFalse();
-      this.sliceRegions.setDirtyFalse();
-      this.setDimensionsDirtyFalse();
+      this.textureDimensionsDirty = false;
     }
 
-    if (
-      this.texture.textureDirty ||
-      this.texture.uvTransformDirty ||
-      this.texture.trimDirty ||
+    const sliceRegionsDirty =
+      this.sliceRegions.dirty ||
+      this.regionModeDirty ||
+      (this.regionModeInternal === UINineSliceRegionMode.WORLD &&
+        this.checkElementDimensionsDirty());
+
+    if (sliceRegionsDirty) {
+      properties ??= {};
+      properties["sliceRegions"] = this.calculateSliceRegionsForShader(
+        this.sliceRegionsVector,
+      );
+      this.sliceRegions.setDirtyFalse();
+      this.regionModeDirty = false;
+      this.setElementDimensionsDirtyFalse();
+    }
+
+    if (this.color.dirty) {
+      properties ??= {};
+      properties["color"] = this.color;
+      this.color.setDirtyFalse();
+    }
+
+    if (this.texture.textureDirty) {
+      properties ??= {};
+      properties["texture"] = this.texture.texture;
+      this.texture.setTextureDirtyFalse();
+    }
+
+    if (this.texture.uvTransformDirty) {
+      properties ??= {};
+      properties["textureTransform"] = this.texture.calculateUVTransform(
+        this.textureTransform,
+      );
+      this.texture.setUVTransformDirtyFalse();
+    }
+
+    if (properties) {
+      this.sceneWrapper.setProperties(this.planeHandler, properties);
+    }
+
+    const isTransformDirty =
       this.micro.dirty ||
+      this.texture.trimDirty ||
       this.inputWrapper.dirty ||
-      this.solverWrapper.dirty
-    ) {
-      const trim = this.texture.trim;
+      this.solverWrapper.dirty;
+
+    if (isTransformDirty) {
       const micro = this.micro;
+      const textureTrim = this.texture.trim;
+
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTrimmedTransformMatrix(
@@ -167,16 +212,14 @@ export class UINineSlice extends UIElement {
           micro.scaleY,
           micro.rotation,
           micro.anchorMode,
-          trim.left,
-          trim.right,
-          trim.top,
-          trim.bottom,
+          textureTrim.left,
+          textureTrim.right,
+          textureTrim.top,
+          textureTrim.bottom,
         ),
       );
-      this.texture.setTextureDirtyFalse();
-      this.texture.setUVTransformDirtyFalse();
-      this.texture.setTrimDirtyFalse();
       this.micro.setDirtyFalse();
+      this.texture.setTrimDirtyFalse();
     }
   }
 
@@ -235,16 +278,20 @@ export class UINineSlice extends UIElement {
     );
   }
 
-  private checkDimensionsDirty(): boolean {
+  private checkElementDimensionsDirty(): boolean {
     return (
       this.solverWrapper.dirty &&
-      (this.lastWidth !== Math.round(this.width) ||
-        this.lastHeight !== Math.round(this.height))
+      (this.lastElementWidth !== Math.round(this.width) ||
+        this.lastElementHeight !== Math.round(this.height))
     );
   }
 
-  private setDimensionsDirtyFalse(): void {
-    this.lastWidth = Math.round(this.width);
-    this.lastHeight = Math.round(this.height);
+  private setElementDimensionsDirtyFalse(): void {
+    this.lastElementWidth = Math.round(this.width);
+    this.lastElementHeight = Math.round(this.height);
   }
+
+  private readonly onTextureDimensionsChanged = (): void => {
+    this.textureDimensionsDirty = true;
+  };
 }
