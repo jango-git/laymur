@@ -1,10 +1,9 @@
-import type { UIPlaneElement, UIPointElement } from "../miscellaneous/asserts";
 import {
-  assertValidConstraintSubjects,
+  assertValidConstraintArguments,
   assertValidNumber,
-  isUIPlaneElement,
-  isUIPointElement,
 } from "../miscellaneous/asserts";
+import type { UIPlaneElement, UIPointElement } from "../miscellaneous/shared";
+import { isUIPlaneElement, isUIPointElement } from "../miscellaneous/shared";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal";
@@ -28,11 +27,6 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
     private readonly b: UIPointElement | UIPlaneElement,
     options: Partial<UIVerticalDistanceConstraintOptions> = {},
   ) {
-    super(
-      assertValidConstraintSubjects(a, b, "UIVerticalDistanceConstraint"),
-      options,
-    );
-
     if (options.anchorA !== undefined) {
       assertValidNumber(
         options.anchorA,
@@ -51,6 +45,15 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
         "UIVerticalDistanceConstraint.constructor.options.distance",
       );
     }
+
+    super(
+      assertValidConstraintArguments(
+        a,
+        b,
+        "UIVerticalDistanceConstraint.constructor",
+      ),
+      options,
+    );
 
     this.anchorAInternal = options.anchorA ?? DEFAULT_ANCHOR;
     this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;

@@ -1,3 +1,4 @@
+import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts";
 import { UIArea } from "./UIArea";
 
 /** Rectangular interaction area with rounded corners */
@@ -21,11 +22,27 @@ export class UIAreaRoundedRectangle extends UIArea {
     public radius: number,
   ) {
     super();
+    assertValidNonNegativeNumber(x, "UIAreaRoundedRectangle.constructor.x");
+    assertValidNonNegativeNumber(y, "UIAreaRoundedRectangle.constructor.y");
+    assertValidNonNegativeNumber(
+      width,
+      "UIAreaRoundedRectangle.constructor.width",
+    );
+    assertValidNonNegativeNumber(
+      height,
+      "UIAreaRoundedRectangle.constructor.height",
+    );
+    assertValidNonNegativeNumber(
+      radius,
+      "UIAreaRoundedRectangle.constructor.radius",
+    );
     this.radius = Math.min(radius, Math.min(width, height) / 2);
   }
 
   /** @internal */
   public contains(pointX: number, pointY: number): boolean {
+    assertValidNumber(pointX, "UIAreaRoundedRectangle.contains.pointX");
+    assertValidNumber(pointY, "UIAreaRoundedRectangle.contains.pointY");
     const left = this.x;
     const right = this.x + this.width;
     const top = this.y;

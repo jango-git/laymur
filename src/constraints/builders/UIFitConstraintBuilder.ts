@@ -2,11 +2,11 @@ import { UIHorizontalDistanceConstraint } from "../../constraints/UIHorizontalDi
 import { UIHorizontalProportionConstraint } from "../../constraints/UIHorizontalProportionConstraint";
 import { UIVerticalDistanceConstraint } from "../../constraints/UIVerticalDistanceConstraint";
 import { UIVerticalProportionConstraint } from "../../constraints/UIVerticalProportionConstraint";
+import { assertValidNumber } from "../../miscellaneous/asserts";
 import type {
   UILayerElement,
   UIPlaneElement,
-} from "../../miscellaneous/asserts";
-import { assertValidNumber } from "../../miscellaneous/asserts";
+} from "../../miscellaneous/shared";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
 import { UIAspectConstraint } from "../UIAspectConstraint";

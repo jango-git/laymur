@@ -1,5 +1,5 @@
-import type { UILayerElement, UIPlaneElement } from "../miscellaneous/asserts";
 import { assertValidPositiveNumber } from "../miscellaneous/asserts";
+import type { UILayerElement, UIPlaneElement } from "../miscellaneous/shared";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
 import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal";
@@ -20,14 +20,14 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     private readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIWidthConstraintOptions> = {},
   ) {
-    super(element.layer, options);
-
     if (options.width !== undefined) {
       assertValidPositiveNumber(
         options.width,
         "UIWidthConstraint.constructor.options.width",
       );
     }
+
+    super(element.layer, options);
 
     this.widthInternal = options.width ?? element.width;
     this.constraint = this.solverWrapper.createConstraint(

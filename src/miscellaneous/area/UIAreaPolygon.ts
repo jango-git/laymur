@@ -1,4 +1,5 @@
 import type { Vector2Like } from "three";
+import { assertValidNumber } from "../asserts";
 import { UIArea } from "./UIArea";
 
 /** Polygonal interaction area using ray casting */
@@ -14,6 +15,8 @@ export class UIAreaPolygon extends UIArea {
 
   /** @internal */
   public contains(pointX: number, pointY: number): boolean {
+    assertValidNumber(pointX, "UIAreaPolygon.contains.pointX");
+    assertValidNumber(pointY, "UIAreaPolygon.contains.pointY");
     const vertexCount = this.vertices.length;
     if (vertexCount < 3) {
       return false;

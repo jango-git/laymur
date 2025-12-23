@@ -1,131 +1,7 @@
 import { UILayer } from "../layers/UILayer";
+import { isUILayerElement } from "./shared";
 
 export const EPSILON = 1e-6;
-
-/** Objects that belong to a UI layer */
-export interface UILayerElement {
-  /** The UI layer containing this element */
-  readonly layer: UILayer;
-}
-
-/** UI elements with position in 2D space */
-export interface UIPointElement {
-  /** Solver variable for x coordinate */
-  readonly xVariable: number;
-  /** Solver variable for y coordinate */
-  readonly yVariable: number;
-
-  /** X coordinate in world units */
-  readonly x: number;
-  /** Y coordinate in world units */
-  readonly y: number;
-}
-
-/** UI elements with position and dimensions */
-export interface UIPlaneElement extends UIPointElement {
-  /** Solver variable for width */
-  readonly wVariable: number;
-  /** Solver variable for height */
-  readonly hVariable: number;
-
-  /** Width in world units */
-  readonly width: number;
-  /** Height in world units */
-  readonly height: number;
-}
-
-/**
- * Checks if object implements UILayerElement.
- * @param obj Object to check
- * @returns True if object has valid layer property
- */
-export function isUILayerElement(obj: unknown): obj is UILayerElement {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "layer" in obj &&
-    obj.layer instanceof UILayer
-  );
-}
-
-/**
- * Checks if object implements UIPointElement.
- * @param obj Object to check
- * @returns True if object has valid position variables
- */
-export function isUIPointElement(obj: unknown): obj is UIPointElement {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "xVariable" in obj &&
-    typeof obj.xVariable === "number" &&
-    "yVariable" in obj &&
-    typeof obj.yVariable === "number" &&
-    "width" in obj &&
-    typeof obj.width === "number" &&
-    "height" in obj &&
-    typeof obj.height === "number"
-  );
-}
-
-/**
- * Checks if object implements UIPlaneElement.
- * @param obj Object to check
- * @returns True if object has valid dimension variables
- */
-export function isUIPlaneElement(obj: unknown): obj is UIPlaneElement {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "wVariable" in obj &&
-    typeof obj.wVariable === "number" &&
-    "hVariable" in obj &&
-    typeof obj.hVariable === "number" &&
-    "width" in obj &&
-    typeof obj.width === "number" &&
-    "height" in obj &&
-    typeof obj.height === "number"
-  );
-}
-
-/**
- * Validates constraint subjects are from same layer.
- * @param a First constraint subject
- * @param b Second constraint subject
- * @param subject Constraint name for error messages
- * @returns Common layer for both subjects
- * @throws If subjects are invalid or from different layers
- */
-export function assertValidConstraintSubjects(
-  a: unknown,
-  b: unknown,
-  subject: string,
-): UILayer {
-  if (a instanceof UILayer && b instanceof UILayer) {
-    throw new Error(`${subject}: layer cannot be snapped to another layer`);
-  }
-
-  let layerA: UILayer;
-  let layerB: UILayer;
-
-  if (a instanceof UILayer || isUILayerElement(a)) {
-    layerA = a instanceof UILayer ? a : a.layer;
-  } else {
-    throw new Error(`${subject}: A must be a UILayer or a UIPointElement`);
-  }
-
-  if (b instanceof UILayer || isUILayerElement(b)) {
-    layerB = b instanceof UILayer ? b : b.layer;
-  } else {
-    throw new Error(`${subject}: B must be a UILayer or a UIPointElement`);
-  }
-
-  if (layerA !== layerB) {
-    throw new Error(`${subject}: elements must be on the same layer`);
-  }
-
-  return layerA;
-}
 
 /**
  * Validates value is finite number within safe range.
@@ -181,4 +57,144 @@ export function assertValidNonNegativeNumber(
       throw new Error(`${subject}: value must be greater than or equal to 0`);
     }
   }
+}
+
+/**
+ * Validates constraint arguments are from same layer.
+ * @param a First constraint subject
+ * @param b Second constraint subject
+ * @param subject Constraint name for error messages
+ * @returns Common layer for both subjects
+ * @throws If subjects are invalid or from different layers
+ */
+export function assertValidConstraintArguments(
+  a: unknown,
+  b: unknown,
+  subject: string,
+): UILayer {
+  if (process.env.NODE_ENV !== "production") {
+    if (a instanceof UILayer && b instanceof UILayer) {
+      throw new Error(`${subject}: layer cannot be snapped to another layer`);
+    }
+
+    let layerA: UILayer;
+    let layerB: UILayer;
+
+    if (a instanceof UILayer) {
+      layerA = a;
+    } else if (isUILayerElement(a)) {
+      layerA = a.layer;
+    } else {
+      throw new Error(`${subject}: A must be a UILayer or a UILayerElement`);
+    }
+
+    if (b instanceof UILayer) {
+      layerB = b;
+    } else if (isUILayerElement(b)) {
+      layerB = b.layer;
+    } else {
+      throw new Error(`${subject}: B must be a UILayer or a UILayerElement`);
+    }
+
+    if (layerA !== layerB) {
+      throw new Error(`${subject}: elements must be on the same layer`);
+    }
+
+    return layerA;
+  }
+
+  if (a instanceof UILayer) {
+    return a;
+  }
+  if (isUILayerElement(a)) {
+    return a.layer;
+  }
+  if (b instanceof UILayer) {
+    return b;
+  }
+  if (isUILayerElement(b)) {
+    return b.layer;
+  }
+
+  throw new Error(`${subject}: no valid subjects found`);
+}
+
+/**
+ * Validates interpolation constraint subjects.
+ * @param subject Constraint name for error messages
+ * @param a First element
+ * @param b Second element
+ * @param c Element to interpolate
+ * @param anchorA Anchor on element A
+ * @param anchorB Anchor on element B
+ * @returns Common layer for all subjects
+ * @throws If subjects violate interpolation constraints
+ */
+export function assertValidInterpolationConstraintArguments(
+  subject: string,
+  a: unknown,
+  b: unknown,
+  c: unknown,
+  anchorA: number,
+  anchorB: number,
+): UILayer {
+  if (process.env.NODE_ENV !== "production") {
+    if (c instanceof UILayer) {
+      throw new Error(`${subject}: C cannot be a layer`);
+    }
+
+    if (!isUILayerElement(c)) {
+      throw new Error(`${subject}: C must be a UILayerElement`);
+    }
+
+    let layerA: UILayer;
+    let layerB: UILayer;
+
+    if (a instanceof UILayer || isUILayerElement(a)) {
+      layerA = a instanceof UILayer ? a : a.layer;
+    } else {
+      throw new Error(`${subject}: A must be UILayer or UILayerElement`);
+    }
+
+    if (b instanceof UILayer || isUILayerElement(b)) {
+      layerB = b instanceof UILayer ? b : b.layer;
+    } else {
+      throw new Error(`${subject}: B must be UILayer or UILayerElement`);
+    }
+
+    const layerC = c.layer;
+
+    if (layerA !== layerB || layerA !== layerC) {
+      throw new Error(`${subject}: all elements must be on the same layer`);
+    }
+
+    if (c === a || c === b) {
+      throw new Error(`${subject}: C cannot be equal to A or B`);
+    }
+
+    if (a === b) {
+      if (Math.abs(anchorA - anchorB) <= EPSILON) {
+        throw new Error(
+          `${subject}: when A and B are the same, anchorA and anchorB must differ by more than ${EPSILON}`,
+        );
+      }
+    }
+
+    return layerA;
+  }
+
+  if (a instanceof UILayer) {
+    return a;
+  }
+  if (isUILayerElement(a)) {
+    return a.layer;
+  }
+  if (b instanceof UILayer) {
+    return b;
+  }
+  if (isUILayerElement(b)) {
+    return b.layer;
+  }
+
+  throw new Error(`${subject}: no valid subjects found`);
 }

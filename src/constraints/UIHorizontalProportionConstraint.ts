@@ -1,8 +1,8 @@
-import type { UIPlaneElement } from "../miscellaneous/asserts";
 import {
-  assertValidConstraintSubjects,
+  assertValidConstraintArguments,
   assertValidPositiveNumber,
 } from "../miscellaneous/asserts";
+import type { UIPlaneElement } from "../miscellaneous/shared";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
@@ -22,17 +22,21 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
     private readonly b: UIPlaneElement,
     options: Partial<UIHorizontalProportionConstraintOptions> = {},
   ) {
-    super(
-      assertValidConstraintSubjects(a, b, "UIHorizontalProportionConstraint"),
-      options,
-    );
-
     if (options.proportion !== undefined) {
       assertValidPositiveNumber(
         options.proportion,
         "UIHorizontalProportionConstraint.constructor.options.proportion",
       );
     }
+
+    super(
+      assertValidConstraintArguments(
+        a,
+        b,
+        "UIHorizontalProportionConstraint.constructor",
+      ),
+      options,
+    );
 
     this.proportionInternal = options.proportion ?? 1;
     this.constraint = this.solverWrapper.createConstraint(

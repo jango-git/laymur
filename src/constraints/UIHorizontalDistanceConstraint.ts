@@ -1,10 +1,9 @@
-import type { UIPlaneElement, UIPointElement } from "../miscellaneous/asserts";
 import {
-  assertValidConstraintSubjects,
+  assertValidConstraintArguments,
   assertValidNumber,
-  isUIPlaneElement,
-  isUIPointElement,
 } from "../miscellaneous/asserts";
+import type { UIPlaneElement, UIPointElement } from "../miscellaneous/shared";
+import { isUIPlaneElement, isUIPointElement } from "../miscellaneous/shared";
 import { UIExpression } from "../miscellaneous/UIExpression";
 import type { UIHorizontalDistanceConstraintOptions } from "./UIHorizontalDistanceConstraint.Internal";
 import { DEFAULT_ANCHOR } from "./UIHorizontalDistanceConstraint.Internal";
@@ -32,11 +31,6 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     private readonly b: UIPointElement | UIPlaneElement,
     options: Partial<UIHorizontalDistanceConstraintOptions> = {},
   ) {
-    super(
-      assertValidConstraintSubjects(a, b, "UIHorizontalDistanceConstraint"),
-      options,
-    );
-
     if (options.anchorA !== undefined) {
       assertValidNumber(
         options.anchorA,
@@ -55,6 +49,15 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
         "UIHorizontalDistanceConstraint.constructor.options.distance",
       );
     }
+
+    super(
+      assertValidConstraintArguments(
+        a,
+        b,
+        "UIHorizontalDistanceConstraint.constructor",
+      ),
+      options,
+    );
 
     this.anchorAInternal = options.anchorA ?? DEFAULT_ANCHOR;
     this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;

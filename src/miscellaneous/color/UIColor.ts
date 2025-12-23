@@ -1,5 +1,6 @@
-import { Color, Vector4 } from "three";
+import { Color, MathUtils, Vector4 } from "three";
 import { LinearToSRGB, SRGBToLinear } from "three/src/math/ColorManagement.js";
+import { assertValidNumber } from "../asserts";
 import type { UIColorConfig, UIColorName } from "./UIColor.Internal";
 import { COLORS } from "./UIColor.Internal";
 
@@ -330,6 +331,8 @@ export class UIColor {
 
   /** Red component (0 to 1) */
   public set r(value: number) {
+    assertValidNumber(value, "UIColor.r");
+    value = MathUtils.clamp(value, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.rInternal) {
       this.rInternal = value;
@@ -340,6 +343,8 @@ export class UIColor {
 
   /** Green component (0 to 1) */
   public set g(value: number) {
+    assertValidNumber(value, "UIColor.g");
+    value = MathUtils.clamp(value, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.gInternal) {
       this.gInternal = value;
@@ -350,6 +355,8 @@ export class UIColor {
 
   /** Blue component (0 to 1) */
   public set b(value: number) {
+    assertValidNumber(value, "UIColor.b");
+    value = MathUtils.clamp(value, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     if (value !== this.bInternal) {
       this.bInternal = value;
@@ -360,6 +367,8 @@ export class UIColor {
 
   /** Alpha component (0 to 1) */
   public set a(value: number) {
+    assertValidNumber(value, "UIColor.a");
+    value = MathUtils.clamp(value, 0, 1);
     if (value !== this.aInternal) {
       this.aInternal = value;
       this.dirtyInternal = true;
@@ -368,6 +377,8 @@ export class UIColor {
 
   /** Hue component (0 to 360) */
   public set hue(value: number) {
+    assertValidNumber(value, "UIColor.hue");
+    value = MathUtils.clamp(value, 0, 360);
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.hInternal) {
       this.hInternal = value;
@@ -378,6 +389,8 @@ export class UIColor {
 
   /** Saturation component (0 to 1) */
   public set saturation(value: number) {
+    assertValidNumber(value, "UIColor.saturation");
+    value = MathUtils.clamp(value, 0, 1);
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.sInternal) {
       this.sInternal = value;
@@ -388,6 +401,8 @@ export class UIColor {
 
   /** Lightness component (0 to 1) */
   public set lightness(value: number) {
+    assertValidNumber(value, "UIColor.lightness");
+    value = MathUtils.clamp(value, 0, 1);
     this.ensureHSLUpdatedFromRGB();
     if (value !== this.lInternal) {
       this.lInternal = value;
@@ -408,6 +423,14 @@ export class UIColor {
     b: number,
     a: number = this.aInternal,
   ): this {
+    assertValidNumber(r, "UIColor.set.r");
+    assertValidNumber(g, "UIColor.set.g");
+    assertValidNumber(b, "UIColor.set.b");
+    assertValidNumber(a, "UIColor.set.a");
+    r = MathUtils.clamp(r, 0, 1);
+    g = MathUtils.clamp(g, 0, 1);
+    b = MathUtils.clamp(b, 0, 1);
+    a = MathUtils.clamp(a, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     if (
       r !== this.rInternal ||
@@ -460,6 +483,7 @@ export class UIColor {
 
   /** Sets from 32-bit hex RGBA (RRGGBBAA) */
   public setHexRGBA(hex: number): this {
+    assertValidNumber(hex, "UIColor.setHexRGBA.hex");
     this.ensureRGBUpdatedFromHSL();
     const r = ((hex >> 16) & 0xff) / 255;
     const g = ((hex >> 8) & 0xff) / 255;
@@ -483,6 +507,9 @@ export class UIColor {
 
   /** Sets from 24-bit hex RGB (RRGGBB) */
   public setHexRGB(hex: number, a = this.aInternal): this {
+    assertValidNumber(hex, "UIColor.setHexRGB.hex");
+    assertValidNumber(a, "UIColor.setHexRGB.a");
+    a = MathUtils.clamp(a, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     const r = ((hex >> 16) & 0xff) / 255;
     const g = ((hex >> 8) & 0xff) / 255;
@@ -543,6 +570,14 @@ export class UIColor {
 
   /** Sets from HSL values */
   public setHSL(h: number, s: number, l: number, a = this.aInternal): this {
+    assertValidNumber(h, "UIColor.setHSL.h");
+    assertValidNumber(s, "UIColor.setHSL.s");
+    assertValidNumber(l, "UIColor.setHSL.l");
+    assertValidNumber(a, "UIColor.setHSL.a");
+    h = MathUtils.clamp(h, 0, 360);
+    s = MathUtils.clamp(s, 0, 1);
+    l = MathUtils.clamp(l, 0, 1);
+    a = MathUtils.clamp(a, 0, 1);
     this.ensureHSLUpdatedFromRGB();
     if (
       h !== this.hInternal ||
@@ -566,6 +601,8 @@ export class UIColor {
    * @throws If color name unknown
    */
   public setColorName(colorName: UIColorName, a = this.aInternal): this {
+    assertValidNumber(a, "UIColor.setColorName.a");
+    a = MathUtils.clamp(a, 0, 1);
     const normalizedName = colorName.toLowerCase().trim();
     const hex = COLORS[normalizedName];
 
@@ -583,6 +620,11 @@ export class UIColor {
     b: number,
     a = this.aInternal,
   ): this {
+    assertValidNumber(r, "UIColor.setGLSLColor.r");
+    assertValidNumber(g, "UIColor.setGLSLColor.g");
+    assertValidNumber(b, "UIColor.setGLSLColor.b");
+    assertValidNumber(a, "UIColor.setGLSLColor.a");
+    a = MathUtils.clamp(a, 0, 1);
     this.ensureRGBUpdatedFromHSL();
 
     const sRGBR = LinearToSRGB(r);
@@ -608,6 +650,8 @@ export class UIColor {
 
   /** Sets from Three.js Color */
   public setThreeColor(threeColor: Color, a = this.aInternal): this {
+    assertValidNumber(a, "UIColor.setThreeColor.a");
+    a = MathUtils.clamp(a, 0, 1);
     this.ensureRGBUpdatedFromHSL();
     if (
       threeColor.r !== this.rInternal ||

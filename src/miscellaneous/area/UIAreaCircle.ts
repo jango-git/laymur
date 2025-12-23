@@ -1,3 +1,4 @@
+import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts";
 import { UIArea } from "./UIArea";
 
 /** Circular interaction area */
@@ -15,10 +16,15 @@ export class UIAreaCircle extends UIArea {
     public radius: number,
   ) {
     super();
+    assertValidNonNegativeNumber(centerX, "UIAreaCircle.constructor.centerX");
+    assertValidNonNegativeNumber(centerY, "UIAreaCircle.constructor.centerY");
+    assertValidNonNegativeNumber(radius, "UIAreaCircle.constructor.radius");
   }
 
   /** @internal */
   public contains(pointX: number, pointY: number): boolean {
+    assertValidNumber(pointX, "UIAreaCircle.contains.pointX");
+    assertValidNumber(pointY, "UIAreaCircle.contains.pointY");
     const deltaX = pointX - this.centerX;
     const deltaY = pointY - this.centerY;
     return deltaX * deltaX + deltaY * deltaY <= this.radius * this.radius;

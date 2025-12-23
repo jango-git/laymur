@@ -1,3 +1,4 @@
+import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts";
 import { UIArea } from "./UIArea";
 
 /** Rectangular interaction area */
@@ -17,10 +18,16 @@ export class UIAreaRectangle extends UIArea {
     public height: number,
   ) {
     super();
+    assertValidNonNegativeNumber(x, "UIAreaRectangle.constructor.x");
+    assertValidNonNegativeNumber(y, "UIAreaRectangle.constructor.y");
+    assertValidNonNegativeNumber(width, "UIAreaRectangle.constructor.width");
+    assertValidNonNegativeNumber(height, "UIAreaRectangle.constructor.height");
   }
 
   /** @internal */
   public contains(pointX: number, pointY: number): boolean {
+    assertValidNumber(pointX, "UIAreaRectangle.contains.pointX");
+    assertValidNumber(pointY, "UIAreaRectangle.contains.pointY");
     return (
       pointX >= this.x &&
       pointX <= this.x + this.width &&

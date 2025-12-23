@@ -1,3 +1,5 @@
+import { assertValidNumber } from "./asserts";
+
 /** Linear expression for constraint equations */
 export class UIExpression {
   /** Constant term */
@@ -10,8 +12,18 @@ export class UIExpression {
    * @param terms Variable-coefficient pairs
    */
   constructor(constant = 0, terms?: [number, number][]) {
+    assertValidNumber(constant, "UIExpression.constructor.constant");
     this.constant = constant;
     this.terms = terms ? new Map(terms) : new Map();
+
+    if (terms) {
+      for (let i = 0; i < terms.length; i++) {
+        assertValidNumber(
+          terms[i][1],
+          `UIExpression.constructor.terms[${i}][1]`,
+        );
+      }
+    }
   }
 
   /**
@@ -55,6 +67,7 @@ export class UIExpression {
    * @returns This instance for chaining
    */
   public plus(variableIndex: number, coefficient: number): this {
+    assertValidNumber(coefficient, "UIExpression.plus.coefficient");
     this.terms.set(
       variableIndex,
       (this.terms.get(variableIndex) ?? 0) + coefficient,
@@ -78,6 +91,7 @@ export class UIExpression {
    * @returns This instance for chaining
    */
   public multiply(value: number): this {
+    assertValidNumber(value, "UIExpression.multiply.value");
     this.constant *= value;
     for (const [variableIndex, coefficient] of this.terms) {
       this.terms.set(variableIndex, coefficient * value);
@@ -91,6 +105,10 @@ export class UIExpression {
    * @returns This instance for chaining
    */
   public divide(value: number): this {
+    assertValidNumber(value, "UIExpression.divide.value");
+    if (value === 0) {
+      throw new Error("UIExpression.divide.value: cannot divide by zero");
+    }
     return this.multiply(1 / value);
   }
 

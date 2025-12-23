@@ -1,6 +1,6 @@
 import { Eventail } from "eventail";
 import type { WebGLRenderer } from "three";
-import type { UIPlaneElement } from "../miscellaneous/asserts";
+import type { UIPlaneElement } from "../miscellaneous/shared";
 
 import { isUIModeVisible } from "../miscellaneous/UIMode";
 import { UIOrientation } from "../miscellaneous/UIOrientation";

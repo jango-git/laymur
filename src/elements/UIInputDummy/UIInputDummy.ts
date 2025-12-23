@@ -2,11 +2,11 @@ import { MathUtils } from "three";
 import type { UILayer } from "../../layers/UILayer";
 import type { UIArea } from "../../miscellaneous/area/UIArea";
 import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle";
-import type { UIPlaneElement } from "../../miscellaneous/asserts";
 import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../../miscellaneous/asserts";
+import type { UIPlaneElement } from "../../miscellaneous/shared";
 import { UIInputEvent } from "../../miscellaneous/UIInputEvent";
 import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode";
 import { UIPriority } from "../../miscellaneous/UIPriority";
