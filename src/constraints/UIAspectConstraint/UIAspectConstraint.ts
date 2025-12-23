@@ -4,7 +4,7 @@ import type {
   UIPlaneElement,
 } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal";
 
 /** Maintains element aspect ratio (width = height * aspect) */

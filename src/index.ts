@@ -7,7 +7,7 @@ export { UIHeightConstraint } from "./constraints/UIHeightConstraint/UIHeightCon
 export { UIHorizontalDistanceConstraint } from "./constraints/UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
 export { UIHorizontalInterpolationConstraint } from "./constraints/UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint";
 export { UIHorizontalProportionConstraint } from "./constraints/UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
-export { UISingleParameterConstraint } from "./constraints/UISingleParameterConstraint";
+export { UISingleParameterConstraint } from "./constraints/UISingleParameterConstraint/UISingleParameterConstraint";
 export { UIVerticalDistanceConstraint } from "./constraints/UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
 export { UIVerticalInterpolationConstraint } from "./constraints/UIVerticalInterpolationConstraint/UIVerticalInterpolationConstraint";
 export { UIVerticalProportionConstraint } from "./constraints/UIVerticalProportionConstraint/UIVerticalProportionConstraint";

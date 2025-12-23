@@ -1,14 +1,14 @@
-import type { UILayer } from "../layers/UILayer/UILayer";
-import { UILayerEvent } from "../layers/UILayer/UILayer.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer";
+import { UILayerEvent } from "../../layers/UILayer/UILayer.Internal";
 import {
   resolveOrientation,
   UIOrientation,
-} from "../miscellaneous/UIOrientation";
-import type { UIPriority } from "../miscellaneous/UIPriority";
-import { resolvePriority } from "../miscellaneous/UIPriority";
-import type { UIRelation } from "../miscellaneous/UIRelation";
-import { resolveRelation } from "../miscellaneous/UIRelation";
-import { UIConstraint } from "./UIConstraint";
+} from "../../miscellaneous/UIOrientation";
+import type { UIPriority } from "../../miscellaneous/UIPriority";
+import { resolvePriority } from "../../miscellaneous/UIPriority";
+import type { UIRelation } from "../../miscellaneous/UIRelation";
+import { resolveRelation } from "../../miscellaneous/UIRelation";
+import { UIConstraint } from "../UIConstraint";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
 
 /** Base class for constraints with priority, relation, and orientation */
@@ -31,7 +31,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     layer: UILayer,
     options?: Partial<UISingleParameterConstraintOptions>,
   ) {
-    super(layer);
+    super(layer, options?.name);
     this.priorityInternal = resolvePriority(options?.priority);
     this.relationInternal = resolveRelation(options?.relation);
     this.orientationInternal = resolveOrientation(options?.orientation);

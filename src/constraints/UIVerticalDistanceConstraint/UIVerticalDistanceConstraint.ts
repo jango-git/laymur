@@ -8,7 +8,7 @@ import type {
 } from "../../miscellaneous/shared";
 import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal";
 import { DEFAULT_ANCHOR } from "./UIVerticalDistanceConstraint.Internal";
 

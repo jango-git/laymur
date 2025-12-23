@@ -1,7 +1,7 @@
 import type { UILayer } from "../layers/UILayer/UILayer";
 import type { UIExpression } from "../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
+import { UISingleParameterConstraint } from "./UISingleParameterConstraint/UISingleParameterConstraint";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint/UISingleParameterConstraint.Internal";
 
 /** Constraint with custom LHS and RHS expressions */
 export class UICustomConstraint extends UISingleParameterConstraint {

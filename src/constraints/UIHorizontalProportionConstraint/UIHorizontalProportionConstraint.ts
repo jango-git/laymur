@@ -4,7 +4,7 @@ import {
 } from "../../miscellaneous/asserts";
 import type { UIPlaneElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal";
 
 /** Maintains proportional width relationship (A.width * proportion = B.width) */
