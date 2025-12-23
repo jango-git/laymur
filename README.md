@@ -39,11 +39,11 @@ Requires Three.js >=0.175.0 <0.180.0 as a peer dependency.
 ## Quick Example
 
 ```typescript
-import { UIFullscreenLayer, UIImage, UIText, UIWidthConstraint } from 'laymur';
+import { UIFullscreenLayer, UIImage, UIText } from 'laymur';
 import { WebGLRenderer, TextureLoader, Clock } from 'three';
 
 const renderer = new WebGLRenderer();
-const layer = new UIFullscreenLayer(1920, 1920);
+const layer = new UIFullscreenLayer();
 const clock = new Clock();
 
 const texture = new TextureLoader().load('background.jpg');
@@ -51,7 +51,7 @@ const background = new UIImage(layer, texture, { x: 0, y: 0 });
 const title = new UIText(layer, 'Mobile Ad Title', {
   x: 100,
   y: 100,
-  maxWidth: 800
+  maxLineWidth: 800
 });
 
 function animate() {
@@ -66,7 +66,6 @@ animate();
 
 ### Layers
 - **UIFullscreenLayer** - Handles browser window scaling
-- **UILayer** - Base layer for custom setups
 
 ### Elements
 - **UIImage** - Display textures
@@ -83,6 +82,7 @@ animate();
 - **UIAspectConstraint** - Maintain aspect ratios
 - **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing between elements
 - **UIHorizontalProportionConstraint** / **UIVerticalProportionConstraint** - Proportional sizing
+- **UIHorizontalInterpolationConstraint** / **UIVerticalInterpolationConstraint** - Position element between two anchors
 - **UICustomConstraint** - Custom constraint expressions
 - **UIFitConstraintBuilder** - Fit element inside container (like CSS object-fit: contain)
 - **UICoverConstraintBuilder** - Cover container with element (like CSS object-fit: cover)
@@ -108,25 +108,6 @@ new UIHorizontalDistanceConstraint(sidebar, content, {
 });
 ```
 
-## Responsive Design
-
-Handle different orientations:
-
-```typescript
-import { UIOrientation } from 'laymur';
-
-// Different widths for landscape vs portrait
-new UIWidthConstraint(sidebar, {
-  width: 300,
-  orientation: UIOrientation.HORIZONTAL
-});
-
-new UIWidthConstraint(sidebar, {
-  width: 200,
-  orientation: UIOrientation.VERTICAL
-});
-```
-
 ## Text Rendering
 
 Text supports styled spans with different fonts, sizes, and colors:
@@ -140,7 +121,7 @@ const text = new UIText(layer, [
 ], {
   x: 100,
   y: 100,
-  maxLineWidth: 600,
+  maxLineWidth: 600
 });
 ```
 
@@ -149,7 +130,7 @@ const text = new UIText(layer, [
 Apply visual transformations without affecting the constraint layout:
 
 ```typescript
-const element = new UIImage(layer, texture);
+const element = new UIImage(layer, texture, { x: 0, y: 0 });
 
 // Apply transformations for animations
 element.micro.x = 10;
@@ -163,14 +144,37 @@ element.micro.reset();
 
 ## Event Handling
 
+UI elements with area (width and height) can emit input events. Layers can also emit input events.
+
 ```typescript
 import { UIInputEvent, UIMode } from 'laymur';
 
-const button = new UIImage(layer, buttonTexture);
-button.mode = UIMode.INTERACTIVE;
+// Element events
+const button = new UIImage(layer, buttonTexture, {
+  x: 0,
+  y: 0,
+  mode: UIMode.INTERACTIVE
+});
 
-button.on(UIInputEvent.CLICK, (x, y, element) => {
-  console.log('Button clicked');
+button.on(UIInputEvent.PRESSED, (x, y, element) => {
+  console.log('Button pressed at', x, y);
+});
+
+button.on(UIInputEvent.RELEASED, (x, y, element) => {
+  console.log('Button released');
+});
+
+button.on(UIInputEvent.ENTERED, (x, y, element) => {
+  console.log('Pointer entered button');
+});
+
+// Layer events
+layer.on(UIInputEvent.PRESSED, (x, y) => {
+  console.log('Layer pressed at', x, y);
+});
+
+layer.on(UIInputEvent.MOVED, (x, y) => {
+  console.log('Pointer moved to', x, y);
 });
 ```
 
