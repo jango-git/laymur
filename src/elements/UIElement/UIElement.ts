@@ -50,7 +50,7 @@ export abstract class UIElement extends UIInputDummy {
       source,
       properties,
       new Matrix4().identity(),
-      options?.mode !== undefined && !isUIModeVisible(options.mode),
+      isUIModeVisible(options?.mode ?? this.mode),
       this.transparencyModeInternal,
     );
 
