@@ -1,4 +1,4 @@
-import type { UIPropertyType } from "../generic-plane/shared";
+import type { UIProperty } from "../generic-plane/shared";
 
 /** Base class for progress bar fill functions */
 export abstract class UIProgressMaskFunction {
@@ -20,5 +20,5 @@ export abstract class UIProgressMaskFunction {
   }
 
   /** @internal */
-  public abstract enumerateProperties(): Record<string, UIPropertyType>;
+  public abstract enumerateProperties(): Record<string, UIProperty>;
 }

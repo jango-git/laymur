@@ -1,28 +1,31 @@
 import type { ShaderMaterial, Vector4 } from "three";
 import { Matrix4, Mesh } from "three";
-
-import { UIColor } from "../color/UIColor";
-import { UITransparencyMode } from "../UITransparencyMode";
-import type { GenericPlaneData, UIPropertyType } from "./shared";
+import { UIColor } from "../../color/UIColor";
+import { UITransparencyMode } from "../../UITransparencyMode";
+import type { GLProperty, PlaneData } from "../shared";
 import {
-  arePropertiesCompatible,
+  arePropertiesPartiallyCompatible,
   DEFAULT_ALPHA_TEST,
-  resolveUniform,
-} from "./shared";
+  resolvePropertyUniform,
+} from "../shared";
 import {
   buildGenericPlaneMaterial,
   PLANE_GEOMETRY,
 } from "./UIGenericPlane.Internal";
 
 export class UIGenericPlane extends Mesh {
-  private readonly shaderMaterial: ShaderMaterial;
-  private readonly propertiesInternal: Record<string, UIPropertyType>;
+  private shaderMaterial: ShaderMaterial;
+
+  private readonly sourceInternal: string;
+  private readonly propertiesInternal: Record<string, GLProperty>;
   private readonly transformInternal = new Matrix4().identity();
   private transparencyInternal: UITransparencyMode;
 
   constructor(
-    public readonly source: string,
-    properties: Record<string, UIPropertyType>,
+    source: string,
+    properties: Record<string, GLProperty>,
+    transform: Matrix4,
+    visibility: boolean,
     transparency: UITransparencyMode,
   ) {
     const shaderMaterial = buildGenericPlaneMaterial(
@@ -32,21 +35,31 @@ export class UIGenericPlane extends Mesh {
     );
     super(PLANE_GEOMETRY, shaderMaterial);
 
+    this.sourceInternal = source;
+    this.shaderMaterial = shaderMaterial;
+    this.propertiesInternal = { ...properties };
+    this.transparencyInternal = transparency;
+
     this.frustumCulled = false;
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
 
-    this.shaderMaterial = shaderMaterial;
-    this.propertiesInternal = { ...properties };
-    this.transparencyInternal = transparency;
+    this.setProperties(properties);
+    this.setTransform(transform);
+    this.setVisibility(visibility);
+    this.setTransparency(transparency);
   }
 
-  public get properties(): Record<string, UIPropertyType> {
+  public get source(): string {
+    return this.sourceInternal;
+  }
+
+  public get properties(): Record<string, GLProperty> {
     return { ...this.propertiesInternal };
   }
 
   public get transform(): Matrix4 {
-    return this.transformInternal;
+    return this.transformInternal.clone();
   }
 
   public get visibility(): boolean {
@@ -57,21 +70,34 @@ export class UIGenericPlane extends Mesh {
     return this.transparencyInternal;
   }
 
-  public setProperties(properties: Record<string, UIPropertyType>): void {
-    for (const [name, value] of Object.entries(properties)) {
-      const uniform = resolveUniform(name, this.shaderMaterial);
-      if (value instanceof UIColor) {
-        value.toGLSLColor(uniform.value as Vector4);
+  public setSource(source: string): void {
+    const previousMaterial = this.shaderMaterial;
+    this.shaderMaterial = buildGenericPlaneMaterial(
+      source,
+      this.propertiesInternal,
+      this.transparencyInternal,
+    );
+    this.material = this.shaderMaterial;
+    previousMaterial.dispose();
+  }
+
+  public setProperties(properties: Record<string, GLProperty>): void {
+    for (const name in properties) {
+      const descriptor = properties[name];
+      const uniform = resolvePropertyUniform(name, this.shaderMaterial);
+
+      if (descriptor.value instanceof UIColor) {
+        descriptor.value.toGLSLColor(uniform.value as Vector4);
       } else {
-        uniform.value = value;
+        uniform.value = descriptor.value;
       }
-      this.propertiesInternal[name] = value;
+      this.propertiesInternal[name] = descriptor;
     }
     this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
   public setTransform(transform: Matrix4): void {
-    const uniform = resolveUniform("transform", this.shaderMaterial);
+    const uniform = resolvePropertyUniform("transform", this.shaderMaterial);
     (uniform.value as Matrix4).copy(transform);
     this.shaderMaterial.uniformsNeedUpdate = true;
     this.transformInternal.copy(transform);
@@ -96,32 +122,38 @@ export class UIGenericPlane extends Mesh {
     }
   }
 
-  public extractInstanceData(): GenericPlaneData {
+  public extractPlaneData(): PlaneData {
     return {
       source: this.source,
       properties: this.properties,
-      transparency: this.transparencyInternal,
-      transform: this.transformInternal.clone(),
+      transform: this.transform,
       visibility: this.visible,
+      transparency: this.transparencyInternal,
     };
   }
 
-  public isCompatible(
+  public isPartiallyCompatible(
     source: string,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, GLProperty>,
     transparency: UITransparencyMode,
   ): boolean {
     if (this.transparencyInternal !== transparency || this.source !== source) {
       return false;
     }
 
-    return arePropertiesCompatible(this.propertiesInternal, properties);
+    return arePropertiesPartiallyCompatible(
+      this.propertiesInternal,
+      properties,
+    );
   }
 
-  public arePropertiesCompatible(
-    properties: Record<string, UIPropertyType>,
+  public arePropertiesPartiallyCompatible(
+    properties: Record<string, GLProperty>,
   ): boolean {
-    return arePropertiesCompatible(this.propertiesInternal, properties);
+    return arePropertiesPartiallyCompatible(
+      this.propertiesInternal,
+      properties,
+    );
   }
 
   public destroy(): void {

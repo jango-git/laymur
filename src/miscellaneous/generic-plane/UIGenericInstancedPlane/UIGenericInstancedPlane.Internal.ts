@@ -9,14 +9,14 @@ import {
   Vector3,
   Vector4,
 } from "three";
-import { UIColor } from "../color/UIColor";
-import { UITransparencyMode } from "../UITransparencyMode";
-import type { UIPropertyType } from "./shared";
+import { UIColor } from "../../color/UIColor";
+import { UITransparencyMode } from "../../UITransparencyMode";
+import type { GLProperty, UIProperty } from "../shared";
 import {
   buildGenericPlaneFragmentShader,
   DEFAULT_ALPHA_TEST,
   resolveGLSLTypeInfo,
-} from "./shared";
+} from "../shared";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const planeGeometry = new PlaneGeometry(1, 1);
@@ -37,7 +37,7 @@ const IDENTITY_MATRIX_ELEMENTS = [
 ];
 
 export function writePropertyToArray(
-  value: UIPropertyType,
+  value: UIProperty,
   array: Float32Array,
   offset: number,
 ): void {
@@ -83,7 +83,7 @@ export function writeInstanceDefaults(
 }
 
 export function buildEmptyInstancedBufferAttribute(
-  value: UIPropertyType,
+  value: UIProperty,
   capacity: number,
 ): InstancedBufferAttribute {
   const info = resolveGLSLTypeInfo(value);
@@ -93,15 +93,15 @@ export function buildEmptyInstancedBufferAttribute(
     );
   }
   return new InstancedBufferAttribute(
-    new Float32Array(capacity * info.itemSize),
-    info.itemSize,
+    new Float32Array(capacity * info.bufferSize),
+    info.bufferSize,
   );
 }
 
 export function buildMaterial(
   source: string,
-  uniformProperties: Record<string, UIPropertyType>,
-  varyingProperties: Record<string, UIPropertyType>,
+  uniformProperties: Record<string, GLProperty>,
+  varyingProperties: Record<string, GLProperty>,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
   const uniforms: Record<string, { value: unknown }> = {};
@@ -111,18 +111,20 @@ export function buildMaterial(
   const varyingDeclarations: string[] = [];
   const vertexAssignments: string[] = [];
 
-  for (const [name, value] of Object.entries(uniformProperties)) {
-    const info = resolveGLSLTypeInfo(value);
+  for (const name in uniformProperties) {
+    const { value, glslTypeInfo } = uniformProperties[name];
     uniforms[`p_${name}`] = {
       value: value instanceof UIColor ? value.toGLSLColor() : value,
     };
-    uniformDeclarations.push(`uniform ${info.glslType} p_${name};`);
+    uniformDeclarations.push(`uniform ${glslTypeInfo.glslTypeName} p_${name};`);
   }
 
-  for (const [name, value] of Object.entries(varyingProperties)) {
-    const info = resolveGLSLTypeInfo(value);
-    attributeDeclarations.push(`attribute ${info.glslType} a_${name};`);
-    varyingDeclarations.push(`varying ${info.glslType} p_${name};`);
+  for (const name in varyingProperties) {
+    const { glslTypeInfo } = varyingProperties[name];
+    attributeDeclarations.push(
+      `attribute ${glslTypeInfo.glslTypeName} a_${name};`,
+    );
+    varyingDeclarations.push(`varying ${glslTypeInfo.glslTypeName} p_${name};`);
     vertexAssignments.push(`p_${name} = a_${name};`);
   }
 
@@ -175,10 +177,10 @@ export function buildMaterial(
 }
 
 export function reconstructValue(
-  referenceValue: UIPropertyType,
+  referenceValue: UIProperty,
   array: Float32Array,
   offset: number,
-): UIPropertyType {
+): UIProperty {
   if (typeof referenceValue === "number") {
     return array[offset];
   }

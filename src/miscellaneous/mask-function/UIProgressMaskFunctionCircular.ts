@@ -1,6 +1,6 @@
 import source from "../../shaders/UIProgressMaskFunctionCircular.glsl";
 import { assertValidNumber } from "../asserts";
-import type { UIPropertyType } from "../generic-plane/shared";
+import type { UIProperty } from "../generic-plane/shared";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
 
 /** Circular radial progress fill */
@@ -52,7 +52,7 @@ export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {
   }
 
   /** @internal */
-  public enumerateProperties(): Record<string, UIPropertyType> {
+  public enumerateProperties(): Record<string, UIProperty> {
     return {
       direction: this.inverseDirectionInternal ? -1 : 1,
       startAngle: this.startAngleInternal,

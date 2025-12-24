@@ -6,7 +6,7 @@ import {
 } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
@@ -252,7 +252,7 @@ export class UIAnimatedImage extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
-    let properties: Record<string, UIPropertyType> | undefined;
+    let properties: Record<string, UIProperty> | undefined;
 
     if (this.color.dirty) {
       properties ??= {};

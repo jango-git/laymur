@@ -1,12 +1,12 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
-import { UITransparencyMode } from "../UITransparencyMode";
-import type { GenericPlaneData, UIPropertyType } from "./shared";
+import { UITransparencyMode } from "../../UITransparencyMode";
+import type { GLProperty, PlaneData } from "../shared";
 import {
-  arePropertiesCompatible,
+  arePropertiesPartiallyCompatible,
   resolveGLSLTypeInfo,
-  resolveUniform,
-} from "./shared";
+  resolvePropertyUniform,
+} from "../shared";
 import {
   buildEmptyInstancedBufferAttribute,
   buildMaterial,
@@ -18,38 +18,45 @@ import {
 } from "./UIGenericInstancedPlane.Internal";
 
 export class UIGenericInstancedPlane extends Mesh {
+  private readonly instancedGeometry: InstancedBufferGeometry;
+  private readonly shaderMaterial: ShaderMaterial;
+
   private readonly handlerToIndex = new Map<number, number>();
   private readonly propertyBuffers = new Map<
     string,
     InstancedBufferAttribute
   >();
-  private readonly instancedGeometry: InstancedBufferGeometry;
-  private readonly shaderMaterial: ShaderMaterial;
 
-  private readonly uniformProperties: Record<string, UIPropertyType>;
-  private readonly varyingProperties: Record<string, UIPropertyType>;
+  private readonly uniformProperties: Record<string, GLProperty>;
+  private readonly varyingProperties: Record<string, GLProperty>;
 
   private lastHandler = 0;
   private capacity: number;
 
   constructor(
     public readonly source: string,
-    properties: Record<string, UIPropertyType>,
-    public readonly transparency: UITransparencyMode = UITransparencyMode.BLEND,
+    properties: Record<string, GLProperty>,
+    public readonly transparency: UITransparencyMode,
     initialCapacity: number = CAPACITY_STEP,
   ) {
-    const uniformProperties: Record<string, UIPropertyType> = {};
-    const varyingProperties: Record<string, UIPropertyType> = {
-      instanceVisibility: 1,
-      instanceTransform: new Matrix4().identity(),
+    const uniformProperties: Record<string, GLProperty> = {};
+    const varyingProperties: Record<string, GLProperty> = {
+      instanceVisibility: {
+        value: 1,
+        glslTypeInfo: resolveGLSLTypeInfo("number"),
+      },
+      instanceTransform: {
+        value: new Matrix4().identity(),
+        glslTypeInfo: resolveGLSLTypeInfo("Matrix4"),
+      },
     };
 
-    for (const [name, value] of Object.entries(properties)) {
-      const info = resolveGLSLTypeInfo(value);
-      if (info.instantiable) {
-        varyingProperties[name] = value;
+    for (const name in properties) {
+      const descriptor = properties[name];
+      if (descriptor.glslTypeInfo.instantiable) {
+        varyingProperties[name] = descriptor;
       } else {
-        uniformProperties[name] = value;
+        uniformProperties[name] = descriptor;
       }
     }
 
@@ -78,7 +85,8 @@ export class UIGenericInstancedPlane extends Mesh {
     );
 
     {
-      for (const [name, value] of Object.entries(this.varyingProperties)) {
+      for (const name in this.varyingProperties) {
+        const { value } = this.varyingProperties[name];
         const attribute = buildEmptyInstancedBufferAttribute(
           value,
           this.capacity,
@@ -89,8 +97,9 @@ export class UIGenericInstancedPlane extends Mesh {
     }
 
     {
-      for (const [name, value] of Object.entries(this.uniformProperties)) {
-        const uniform = resolveUniform(name, this.shaderMaterial);
+      for (const name in this.uniformProperties) {
+        const { value } = this.varyingProperties[name];
+        const uniform = resolvePropertyUniform(name, this.shaderMaterial);
         uniform.value = value;
       }
       this.shaderMaterial.uniformsNeedUpdate = true;
@@ -101,30 +110,42 @@ export class UIGenericInstancedPlane extends Mesh {
     return this.instancedGeometry.instanceCount;
   }
 
-  public get properties(): Record<string, UIPropertyType> {
-    return { ...this.uniformProperties, ...this.varyingProperties };
-  }
-
   public createInstance(): number {
     const handler = this.lastHandler++;
     const index = this.instancedGeometry.instanceCount;
 
-    this.ensureCapacity(index + 1);
+    {
+      this.ensureCapacity(index + 1);
+      this.handlerToIndex.set(handler, index);
+      this.instancedGeometry.instanceCount++;
+    }
 
-    this.handlerToIndex.set(handler, index);
-    this.instancedGeometry.instanceCount++;
+    {
+      const visibilityBufferAttribute = this.propertyBuffers.get(
+        "instanceVisibility",
+      ) as InstancedBufferAttribute;
+      const transformBufferAttribute = this.propertyBuffers.get(
+        "instanceTransform",
+      ) as InstancedBufferAttribute;
 
-    this.initializeInstanceDefaults(index);
+      writeInstanceDefaults(
+        visibilityBufferAttribute.array as Float32Array,
+        transformBufferAttribute.array as Float32Array,
+        index,
+      );
+
+      visibilityBufferAttribute.needsUpdate = true;
+      transformBufferAttribute.needsUpdate = true;
+    }
+
     return handler;
   }
 
   public destroyInstance(handler: number): void {
     const index = this.resolveIndex(handler);
-
     this.handlerToIndex.delete(handler);
 
     const lastIndex = this.instancedGeometry.instanceCount - 1;
-
     if (index < lastIndex) {
       this.moveInstanceData(lastIndex, index);
       this.updateIndicesAfterMove(lastIndex, index);
@@ -135,20 +156,20 @@ export class UIGenericInstancedPlane extends Mesh {
 
   public setProperties(
     handler: number,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, GLProperty>,
   ): void {
     const index = this.resolveIndex(handler);
 
-    for (const [name, value] of Object.entries(properties)) {
-      const typeInfo = resolveGLSLTypeInfo(value);
+    for (const name in properties) {
+      const { value, glslTypeInfo } = properties[name];
 
-      if (typeInfo.instantiable) {
+      if (glslTypeInfo.instantiable) {
         const attribute = this.resolveAttribute(name);
         const offset = index * attribute.itemSize;
         writePropertyToArray(value, attribute.array as Float32Array, offset);
         attribute.needsUpdate = true;
       } else {
-        const uniform = resolveUniform(name, this.shaderMaterial);
+        const uniform = resolvePropertyUniform(name, this.shaderMaterial);
         uniform.value = value;
         this.shaderMaterial.uniformsNeedUpdate = true;
       }
@@ -180,25 +201,31 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
-  public isCompatible(
+  public isPartiallyCompatible(
     source: string,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, GLProperty>,
     transparency: UITransparencyMode = UITransparencyMode.BLEND,
   ): boolean {
-    if (this.source !== source || this.transparency !== transparency) {
+    if (this.transparency !== transparency || this.source !== source) {
       return false;
     }
 
-    return arePropertiesCompatible(this.properties, properties);
+    return arePropertiesPartiallyCompatible(
+      { ...this.uniformProperties, ...this.varyingProperties },
+      properties,
+    );
   }
 
-  public arePropertiesCompatible(
-    properties: Record<string, UIPropertyType>,
+  public arePropertiesPartiallyCompatible(
+    properties: Readonly<Record<string, Readonly<GLProperty>>>,
   ): boolean {
-    return arePropertiesCompatible(this.properties, properties);
+    return arePropertiesPartiallyCompatible(
+      { ...this.uniformProperties, ...this.varyingProperties },
+      properties,
+    );
   }
 
-  public extractInstanceData(handler: number): GenericPlaneData {
+  public extractInstanceData(handler: number): PlaneData {
     return {
       source: this.source,
       properties: this.extractProperties(handler),
@@ -208,29 +235,38 @@ export class UIGenericInstancedPlane extends Mesh {
     };
   }
 
-  public extractProperties(handler: number): Record<string, UIPropertyType> {
-    const index = this.resolveIndex(handler);
-    const result: Record<string, UIPropertyType> = {};
+  public destroy(): void {
+    this.instancedGeometry.dispose();
+    this.shaderMaterial.dispose();
+    this.propertyBuffers.clear();
+    this.handlerToIndex.clear();
+  }
 
-    for (const [name, value] of Object.entries(this.uniformProperties)) {
-      result[name] = value;
+  private extractProperties(handler: number): Record<string, GLProperty> {
+    const index = this.resolveIndex(handler);
+    const result: Record<string, GLProperty> = {};
+
+    for (const name in this.uniformProperties) {
+      result[name] = this.uniformProperties[name];
     }
 
-    for (const [name, referenceValue] of Object.entries(
-      this.varyingProperties,
-    )) {
+    for (const name in this.varyingProperties) {
+      const { value, glslTypeInfo } = this.varyingProperties[name];
       const attribute = this.propertyBuffers.get(
         name,
       ) as InstancedBufferAttribute;
       const array = attribute.array as Float32Array;
       const offset = index * attribute.itemSize;
-      result[name] = reconstructValue(referenceValue, array, offset);
+      result[name] = {
+        value: reconstructValue(value, array, offset),
+        glslTypeInfo,
+      };
     }
 
     return result;
   }
 
-  public extractTransform(handler: number): Matrix4 {
+  private extractTransform(handler: number): Matrix4 {
     const index = this.resolveIndex(handler);
     const attribute = this.propertyBuffers.get(
       "instanceTransform",
@@ -242,38 +278,13 @@ export class UIGenericInstancedPlane extends Mesh {
     return matrix;
   }
 
-  public extractVisibility(handler: number): boolean {
+  private extractVisibility(handler: number): boolean {
     const index = this.resolveIndex(handler);
     const attribute = this.propertyBuffers.get(
       "instanceVisibility",
     ) as InstancedBufferAttribute;
     const array = attribute.array as Float32Array;
     return array[index] >= 0.5;
-  }
-
-  public destroy(): void {
-    this.instancedGeometry.dispose();
-    this.shaderMaterial.dispose();
-    this.propertyBuffers.clear();
-    this.handlerToIndex.clear();
-  }
-
-  private initializeInstanceDefaults(index: number): void {
-    const visibilityAttr = this.propertyBuffers.get(
-      "instanceVisibility",
-    ) as InstancedBufferAttribute;
-    const transformAttr = this.propertyBuffers.get(
-      "instanceTransform",
-    ) as InstancedBufferAttribute;
-
-    writeInstanceDefaults(
-      visibilityAttr.array as Float32Array,
-      transformAttr.array as Float32Array,
-      index,
-    );
-
-    visibilityAttr.needsUpdate = true;
-    transformAttr.needsUpdate = true;
   }
 
   private ensureCapacity(requiredCapacity: number): void {
@@ -284,7 +295,7 @@ export class UIGenericInstancedPlane extends Mesh {
     const newCapacity =
       Math.ceil(requiredCapacity / CAPACITY_STEP) * CAPACITY_STEP;
 
-    for (const [name, oldAttribute] of this.propertyBuffers.entries()) {
+    for (const [name, oldAttribute] of this.propertyBuffers) {
       const itemSize = oldAttribute.itemSize;
       const newArray = new Float32Array(newCapacity * itemSize);
       newArray.set(oldAttribute.array as Float32Array);

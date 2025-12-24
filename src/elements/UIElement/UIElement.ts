@@ -1,8 +1,8 @@
-import type { WebGLRenderer } from "three";
+import { Matrix4, type WebGLRenderer } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UILayerEvent } from "../../layers/UILayer/UILayer.Internal";
 import { computeTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIMicro } from "../../miscellaneous/micro/UIMicro";
 import type { UIMode } from "../../miscellaneous/UIMode";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
@@ -36,7 +36,7 @@ export abstract class UIElement extends UIInputDummy {
   constructor(
     layer: UILayer,
     source: string,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, UIProperty>,
     options?: Partial<UIElementOptions>,
   ) {
     super(layer, options);
@@ -49,12 +49,10 @@ export abstract class UIElement extends UIInputDummy {
     this.planeHandler = this.sceneWrapper.createPlane(
       source,
       properties,
+      new Matrix4().identity(),
+      options?.mode !== undefined && !isUIModeVisible(options.mode),
       this.transparencyModeInternal,
     );
-
-    if (options?.mode !== undefined && !isUIModeVisible(options.mode)) {
-      this.visibilityDirty = true;
-    }
 
     this.layer.on(UILayerEvent.RENDERING, this.onWillRender, this);
   }

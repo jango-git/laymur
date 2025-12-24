@@ -3,7 +3,7 @@ import { Vector4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import {
@@ -130,7 +130,7 @@ export class UINineSlice extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
-    let properties: Record<string, UIPropertyType> | undefined;
+    let properties: Record<string, UIProperty> | undefined;
 
     const sliceBordersDirty =
       this.textureDimensionsDirty ||

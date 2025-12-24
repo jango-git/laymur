@@ -3,7 +3,7 @@ import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 import type { UITransparencyMode } from "../UITransparencyMode";
 import { UIColor } from "../color/UIColor";
 
-export type UIPropertyType =
+export type UIProperty =
   | Texture
   | UIColor
   | Vector2
@@ -13,15 +13,40 @@ export type UIPropertyType =
   | Matrix4
   | number;
 
-export interface GLSLTypeInfo {
+export type UIPropertyName =
+  | "Texture"
+  | "UIColor"
+  | "Vector2"
+  | "Vector3"
+  | "Vector4"
+  | "Matrix3"
+  | "Matrix4"
+  | "number";
+
+export type UIPropertyConstructor =
+  | typeof Texture
+  | typeof UIColor
+  | typeof Vector2
+  | typeof Vector3
+  | typeof Vector4
+  | typeof Matrix3
+  | typeof Matrix4
+  | NumberConstructor;
+
+export interface GLTypeInfo {
+  glslTypeName: string;
+  bufferSize: number;
   instantiable: boolean;
-  glslType: string;
-  itemSize: number;
 }
 
-export interface GenericPlaneData {
+export interface GLProperty {
+  value: UIProperty;
+  glslTypeInfo: GLTypeInfo;
+}
+
+export interface PlaneData {
   source: string;
-  properties: Record<string, UIPropertyType>;
+  properties: Record<string, GLProperty>;
   transparency: UITransparencyMode;
   transform: Matrix4;
   visibility: boolean;
@@ -29,40 +54,137 @@ export interface GenericPlaneData {
 
 export const DEFAULT_ALPHA_TEST = 0.5;
 
-export function resolveGLSLTypeInfo(value: UIPropertyType): GLSLTypeInfo {
+const GLSL_TYPE_INFO_FLOAT: GLTypeInfo = Object.freeze({
+  glslTypeName: "float",
+  bufferSize: 1,
+  instantiable: true,
+} as const);
+
+const GLSL_TYPE_INFO_SAMPLER2D: GLTypeInfo = Object.freeze({
+  glslTypeName: "sampler2D",
+  bufferSize: -1,
+  instantiable: false,
+} as const);
+
+const GLSL_TYPE_INFO_VEC2: GLTypeInfo = Object.freeze({
+  glslTypeName: "vec2",
+  bufferSize: 2,
+  instantiable: true,
+} as const);
+
+const GLSL_TYPE_INFO_VEC3: GLTypeInfo = Object.freeze({
+  glslTypeName: "vec3",
+  bufferSize: 3,
+  instantiable: true,
+} as const);
+
+const GLSL_TYPE_INFO_VEC4: GLTypeInfo = Object.freeze({
+  glslTypeName: "vec4",
+  bufferSize: 4,
+  instantiable: true,
+} as const);
+
+const GLSL_TYPE_INFO_MAT3: GLTypeInfo = Object.freeze({
+  glslTypeName: "mat3",
+  bufferSize: 9,
+  instantiable: true,
+} as const);
+
+const GLSL_TYPE_INFO_MAT4: GLTypeInfo = Object.freeze({
+  glslTypeName: "mat4",
+  bufferSize: 16,
+  instantiable: true,
+} as const);
+
+export function resolveGLSLTypeInfo(
+  value: UIProperty | UIPropertyName | UIPropertyConstructor,
+): GLTypeInfo {
+  if (typeof value === "string") {
+    switch (value) {
+      case "number":
+        return GLSL_TYPE_INFO_FLOAT;
+      case "Texture":
+        return GLSL_TYPE_INFO_SAMPLER2D;
+      case "UIColor":
+        return GLSL_TYPE_INFO_VEC4;
+      case "Vector2":
+        return GLSL_TYPE_INFO_VEC2;
+      case "Vector3":
+        return GLSL_TYPE_INFO_VEC3;
+      case "Vector4":
+        return GLSL_TYPE_INFO_VEC4;
+      case "Matrix3":
+        return GLSL_TYPE_INFO_MAT3;
+      case "Matrix4":
+        return GLSL_TYPE_INFO_MAT4;
+      default:
+        throw new Error(
+          `resolveGLSLTypeInfo.value: unsupported property type name`,
+        );
+    }
+  }
+  if (typeof value === "function") {
+    if (value === Number) {
+      return GLSL_TYPE_INFO_FLOAT;
+    }
+    if (value === Texture) {
+      return GLSL_TYPE_INFO_SAMPLER2D;
+    }
+    if (value === UIColor) {
+      return GLSL_TYPE_INFO_VEC4;
+    }
+    if (value === Vector2) {
+      return GLSL_TYPE_INFO_VEC2;
+    }
+    if (value === Vector3) {
+      return GLSL_TYPE_INFO_VEC3;
+    }
+    if (value === Vector4) {
+      return GLSL_TYPE_INFO_VEC4;
+    }
+    if (value === Matrix3) {
+      return GLSL_TYPE_INFO_MAT3;
+    }
+    if (value === Matrix4) {
+      return GLSL_TYPE_INFO_MAT4;
+    }
+    throw new Error(
+      `resolveGLSLTypeInfo.value: unsupported property type constructor`,
+    );
+  }
   if (typeof value === "number") {
-    return { glslType: "float", instantiable: true, itemSize: 1 };
+    return GLSL_TYPE_INFO_FLOAT;
   }
   if (value instanceof Texture) {
-    return { glslType: "sampler2D", instantiable: false, itemSize: -1 };
+    return GLSL_TYPE_INFO_SAMPLER2D;
   }
   if (value instanceof UIColor) {
-    return { glslType: "vec4", instantiable: true, itemSize: 4 };
+    return GLSL_TYPE_INFO_VEC4;
   }
   if (value instanceof Vector2) {
-    return { glslType: "vec2", instantiable: true, itemSize: 2 };
+    return GLSL_TYPE_INFO_VEC2;
   }
   if (value instanceof Vector3) {
-    return { glslType: "vec3", instantiable: true, itemSize: 3 };
+    return GLSL_TYPE_INFO_VEC3;
   }
   if (value instanceof Vector4) {
-    return { glslType: "vec4", instantiable: true, itemSize: 4 };
+    return GLSL_TYPE_INFO_VEC4;
   }
   if (value instanceof Matrix3) {
-    return { glslType: "mat3", instantiable: true, itemSize: 9 };
+    return GLSL_TYPE_INFO_MAT3;
   }
   if (value instanceof Matrix4) {
-    return { glslType: "mat4", instantiable: true, itemSize: 16 };
+    return GLSL_TYPE_INFO_MAT4;
   }
   throw new Error(`resolveGLSLTypeInfo.value: unsupported property type`);
 }
 
-export function resolveUniform(
+export function resolvePropertyUniform(
   name: string,
   material: ShaderMaterial,
-): IUniform<unknown> {
+): IUniform<UIProperty> {
   const uniform = material.uniforms[`p_${name}`] as
-    | IUniform<unknown>
+    | IUniform<UIProperty>
     | undefined;
   if (uniform === undefined) {
     throw new Error(`resolveUniform.name: unknown uniform`);
@@ -70,39 +192,42 @@ export function resolveUniform(
   return uniform;
 }
 
-export function arePropertiesCompatible(
-  currentProperties: Record<string, UIPropertyType>,
-  newProperties: Record<string, UIPropertyType>,
+export function arePropertiesPartiallyCompatible(
+  full: Readonly<Record<string, Readonly<GLProperty>>>,
+  partial: Readonly<Record<string, Readonly<GLProperty>>>,
 ): boolean {
-  const currentKeys = Object.keys(currentProperties);
-  const newKeys = Object.keys(newProperties);
-
-  if (currentKeys.length !== newKeys.length) {
-    return false;
-  }
-
-  for (const newKey of newKeys) {
-    if (!(newKey in currentProperties)) {
+  for (const key in partial) {
+    if (!(key in full)) {
       return false;
     }
 
-    const currentInfo = resolveGLSLTypeInfo(currentProperties[newKey]);
-    const newInfo = resolveGLSLTypeInfo(newProperties[newKey]);
+    const infoFull = full[key].glslTypeInfo;
+    const infoPartial = partial[key].glslTypeInfo;
 
-    if (currentInfo.glslType !== newInfo.glslType) {
+    if (infoFull.glslTypeName !== infoPartial.glslTypeName) {
       return false;
     }
 
     // Non-instantiable (textures) must match by reference
-    if (
-      !newInfo.instantiable &&
-      newProperties[newKey] !== currentProperties[newKey]
-    ) {
+    if (!infoFull.instantiable && full[key] !== partial[key]) {
       return false;
     }
   }
 
   return true;
+}
+
+export function convertUIPropertiesToGLProperties(
+  uiProperties: Record<string, UIProperty>,
+): Record<string, GLProperty> {
+  const glProperties: Record<string, GLProperty> = {};
+
+  for (const name in uiProperties) {
+    const value = uiProperties[name];
+    glProperties[name] = { value, glslTypeInfo: resolveGLSLTypeInfo(value) };
+  }
+
+  return glProperties;
 }
 
 export function buildGenericPlaneFragmentShader(

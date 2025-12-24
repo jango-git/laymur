@@ -3,7 +3,7 @@ import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
@@ -110,7 +110,7 @@ export class UIProgress extends UIElement {
   }
 
   protected override setPlaneTransform(): void {
-    let properties: Record<string, UIPropertyType> | undefined;
+    let properties: Record<string, UIProperty> | undefined;
 
     if (this.color.dirty) {
       properties ??= {};

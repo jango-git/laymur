@@ -2,7 +2,7 @@ import type { Vector2Like } from "three";
 import { Vector2 } from "three";
 import source from "../../shaders/UIProgressMaskFunctionDirectional.glsl";
 import { EPSILON } from "../asserts";
-import type { UIPropertyType } from "../generic-plane/shared";
+import type { UIProperty } from "../generic-plane/shared";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
 
 /** Linear directional progress fill */
@@ -36,7 +36,7 @@ export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {
   }
 
   /** @internal */
-  public enumerateProperties(): Record<string, UIPropertyType> {
+  public enumerateProperties(): Record<string, UIProperty> {
     this.ensureDirectionNormalized();
     return { direction: this.direction };
   }

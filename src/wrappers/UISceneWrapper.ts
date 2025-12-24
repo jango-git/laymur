@@ -1,8 +1,9 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
-import type { UIPropertyType } from "../miscellaneous/generic-plane/shared";
-import { UIPlaneRegistry } from "../miscellaneous/generic-plane/UIGenericPlaneRegistry";
+import type { UIProperty } from "../miscellaneous/generic-plane/shared";
+import { UIPlaneRegistry } from "../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry";
 import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
+import type { UISceneWrapperInterface } from "./UISceneWrapper.Internal";
 
 let originalClearColor = new Color();
 let originalClearAlpha = 0;
@@ -11,10 +12,10 @@ let originalAutoClearColor = false;
 let originalAutoClearDepth = false;
 let originalAutoClearStencil = false;
 
-export class UISceneWrapper {
+export class UISceneWrapper implements UISceneWrapperInterface {
   private readonly scene = new Scene();
   private readonly camera: OrthographicCamera;
-  private readonly registry = new UIPlaneRegistry(this.scene);
+  private readonly planeRegistry = new UIPlaneRegistry(this.scene);
 
   constructor(width: number, height: number) {
     this.camera = new OrthographicCamera(0, width, height, 0, -1024, 1024);
@@ -22,36 +23,44 @@ export class UISceneWrapper {
 
   public createPlane(
     source: string,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, UIProperty>,
+    transform: Matrix4,
+    visibility: boolean,
     transparency: UITransparencyMode,
   ): number {
-    return this.registry.create(source, properties, transparency);
+    return this.planeRegistry.createPlane(
+      source,
+      properties,
+      transform,
+      visibility,
+      transparency,
+    );
   }
 
   public destroyPlane(handler: number): void {
-    this.registry.destroy(handler);
+    this.planeRegistry.destroyPlane(handler);
   }
 
   public setTransform(handler: number, transform: Matrix4): void {
-    this.registry.setTransform(handler, transform);
+    this.planeRegistry.setTransform(handler, transform);
   }
 
   public setProperties(
     handler: number,
-    properties: Record<string, UIPropertyType>,
+    properties: Record<string, UIProperty>,
   ): void {
-    this.registry.setProperties(handler, properties);
+    this.planeRegistry.setProperties(handler, properties);
   }
 
   public setVisibility(handler: number, visible: boolean): void {
-    this.registry.setVisibility(handler, visible);
+    this.planeRegistry.setVisibility(handler, visible);
   }
 
   public setTransparency(
     handler: number,
     transparency: UITransparencyMode,
   ): void {
-    this.registry.setTransparency(handler, transparency);
+    this.planeRegistry.setTransparency(handler, transparency);
   }
 
   public insertCustomObject(object: Object3D): this {

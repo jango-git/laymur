@@ -2,7 +2,7 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIPropertyType } from "../../miscellaneous/generic-plane/shared";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
@@ -317,7 +317,7 @@ export class UIText extends UIElement {
   }
 
   private updateProperties(resolutionDirty: boolean): void {
-    let properties: Record<string, UIPropertyType> | undefined;
+    let properties: Record<string, UIProperty> | undefined;
 
     if (this.color.dirty) {
       properties ??= {};
