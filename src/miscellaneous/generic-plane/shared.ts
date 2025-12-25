@@ -47,9 +47,9 @@ export interface GLProperty {
 export interface PlaneData {
   source: string;
   properties: Record<string, GLProperty>;
-  transparency: UITransparencyMode;
   transform: Matrix4;
   visibility: boolean;
+  transparency: UITransparencyMode;
 }
 
 export const DEFAULT_ALPHA_TEST = 0.5;

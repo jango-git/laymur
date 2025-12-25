@@ -56,6 +56,8 @@ export class UIPlaneRegistry {
         instancedPlane.destroy();
       } else if (instancedPlane.instanceCount === 2) {
         this.demoteInstancedPlaneToSinglePlane(instancedPlane, planeDescriptor);
+      } else {
+        instancedPlane.destroyInstance(planeDescriptor.instanceHandler);
       }
     }
 
@@ -150,9 +152,10 @@ export class UIPlaneRegistry {
     handler: number,
     planeDescriptor: SinglePlaneDescriptor,
   ): UIGenericInstancedPlane {
-    this.destroyPlane(handler);
     const { source, properties, transform, visibility, transparency } =
       planeDescriptor.plane.extractPlaneData();
+
+    this.destroyPlane(handler);
     const plane = new UIGenericInstancedPlane(source, properties, transparency);
 
     const instanceHandler = plane.createInstance();
@@ -160,6 +163,7 @@ export class UIPlaneRegistry {
     plane.setTransform(instanceHandler, transform);
     plane.setVisibility(instanceHandler, visibility);
 
+    this.scene.add(plane);
     this.handlerToPlaneDescriptor.set(handler, { plane, instanceHandler });
     return plane;
   }

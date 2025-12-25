@@ -98,7 +98,7 @@ export class UIGenericInstancedPlane extends Mesh {
 
     {
       for (const name in this.uniformProperties) {
-        const { value } = this.varyingProperties[name];
+        const { value } = this.uniformProperties[name];
         const uniform = resolvePropertyUniform(name, this.shaderMaterial);
         uniform.value = value;
       }
@@ -187,7 +187,6 @@ export class UIGenericInstancedPlane extends Mesh {
     for (let j = 0; j < 16; j++) {
       array[offset + j] = elements[j];
     }
-
     attribute.needsUpdate = true;
   }
 

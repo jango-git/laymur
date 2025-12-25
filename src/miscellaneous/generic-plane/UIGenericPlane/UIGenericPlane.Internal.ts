@@ -1,4 +1,5 @@
-import { Matrix4, PlaneGeometry, ShaderMaterial } from "three";
+import type { Matrix4 } from "three";
+import { PlaneGeometry, ShaderMaterial } from "three";
 import { UIColor } from "../../color/UIColor";
 import { UITransparencyMode } from "../../UITransparencyMode";
 import type { GLProperty } from "../shared";
@@ -10,10 +11,11 @@ export function buildGenericPlaneMaterial(
   source: string,
   properties: Record<string, GLProperty>,
   transparency: UITransparencyMode,
+  transform: Matrix4,
 ): ShaderMaterial {
   const uniforms: Record<string, { value: unknown }> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention -- unform name
-    p_transform: { value: new Matrix4() },
+    p_transform: { value: transform.clone() },
   };
 
   const uniformDeclarations: string[] = [];
