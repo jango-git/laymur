@@ -1,7 +1,7 @@
 import type { Constraint, Variable } from "@lume/kiwi";
-import type { UIExpression } from "../miscellaneous/UIExpression";
-import type { UIPriority } from "../miscellaneous/UIPriority";
-import type { UIRelation } from "../miscellaneous/UIRelation";
+import type { UIExpression } from "../../miscellaneous/UIExpression";
+import type { UIPriority } from "../../miscellaneous/UIPriority";
+import type { UIRelation } from "../../miscellaneous/UIRelation";
 
 export interface UISolverWrapperInterface {
   get dirty(): boolean;

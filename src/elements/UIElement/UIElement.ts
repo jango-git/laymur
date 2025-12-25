@@ -7,7 +7,7 @@ import { UIMicro } from "../../miscellaneous/micro/UIMicro";
 import type { UIMode } from "../../miscellaneous/UIMode";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
-import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper.Internal";
+import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
 import { UIInputDummy } from "../UIInputDummy/UIInputDummy";
 import type { UIElementOptions } from "./UIElement.Internal";
 import { ELEMENT_DEFAULT_TRANSPARENCY_MODE } from "./UIElement.Internal";

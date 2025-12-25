@@ -6,7 +6,7 @@ import type {
   UIPointElement,
 } from "../../miscellaneous/shared";
 import { UIPriority } from "../../miscellaneous/UIPriority";
-import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper.Internal";
+import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
 import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 

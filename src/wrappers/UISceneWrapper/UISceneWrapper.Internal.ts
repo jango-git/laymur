@@ -1,6 +1,6 @@
 import type { Matrix4, Object3D } from "three";
-import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
-import type { UIProperty } from "../miscellaneous/generic-plane/shared";
+import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 
 export interface UISceneWrapperInterface {
   createPlane(

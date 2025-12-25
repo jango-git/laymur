@@ -1,7 +1,7 @@
 import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
-import { UIExpression } from "../miscellaneous/UIExpression";
-import { convertPriority, UIPriority } from "../miscellaneous/UIPriority";
-import { convertRelation, UIRelation } from "../miscellaneous/UIRelation";
+import { UIExpression } from "../../miscellaneous/UIExpression";
+import { convertPriority, UIPriority } from "../../miscellaneous/UIPriority";
+import { convertRelation, UIRelation } from "../../miscellaneous/UIRelation";
 import type {
   ConstraintDescription,
   UISolverWrapperInterface,

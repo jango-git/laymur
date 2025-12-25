@@ -10,7 +10,7 @@ import type { UIPlaneElement } from "../../miscellaneous/shared";
 import { UIInputEvent } from "../../miscellaneous/UIInputEvent";
 import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode";
 import { UIPriority } from "../../miscellaneous/UIPriority";
-import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper.Internal";
+import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal";
 import { UIAnchor } from "../UIAnchor/UIAnchor";
 import type { UIInputDummyOptions } from "./UIInputDummy.Internal";
 import {

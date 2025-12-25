@@ -1,8 +1,8 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
-import type { UIProperty } from "../miscellaneous/generic-plane/shared";
-import { UIPlaneRegistry } from "../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry";
-import type { UITransparencyMode } from "../miscellaneous/UITransparencyMode";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
+import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry";
+import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
 import type { UISceneWrapperInterface } from "./UISceneWrapper.Internal";
 
 let originalClearColor = new Color();

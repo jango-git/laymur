@@ -6,12 +6,12 @@ import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import { UIOrientation } from "../../miscellaneous/UIOrientation";
 import { UIPriority } from "../../miscellaneous/UIPriority";
-import { UIInputWrapper } from "../../wrappers/UIInputWrapper";
-import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper.Internal";
-import { UISceneWrapper } from "../../wrappers/UISceneWrapper";
-import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper.Internal";
-import { UISolverWrapper } from "../../wrappers/UISolverWrapper";
-import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper.Internal";
+import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper";
+import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal";
+import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper";
+import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
+import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper";
+import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
 import type {
   UILayerMode,
   UILayerOptions,
