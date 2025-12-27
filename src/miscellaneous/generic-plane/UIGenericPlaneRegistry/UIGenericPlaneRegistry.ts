@@ -1,21 +1,31 @@
 import type { Matrix4, Scene } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode";
+import type { GLProperty, PlaneData, UIProperty } from "../shared";
 import {
+  cloneProperties,
+  cloneProperty,
   convertUIPropertiesToGLProperties,
-  type GLProperty,
-  type PlaneData,
-  type UIProperty,
 } from "../shared";
 import { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane";
 import { UIGenericPlane } from "../UIGenericPlane/UIGenericPlane";
+import type {
+  InstancedPlaneDescriptor,
+  PlaneDescriptor,
+  SinglePlaneDescriptor,
+} from "./UIGenericPlaneRegistry.Internal";
 import {
   isInstancedPlaneDescriptor,
   isSinglePlaneDescriptor,
-  type InstancedPlaneDescriptor,
-  type PlaneDescriptor,
-  type SinglePlaneDescriptor,
 } from "./UIGenericPlaneRegistry.Internal";
 
+/**
+ * Manages shader plane instances with automatic batching.
+ *
+ * Clones all incoming properties and transforms. No external references
+ * are retained after method calls return.
+ *
+ * @internal
+ */
 export class UIPlaneRegistry {
   private lastHandler = 0;
   private readonly handlerToPlaneDescriptor = new Map<
@@ -25,6 +35,11 @@ export class UIPlaneRegistry {
 
   constructor(private readonly scene: Scene) {}
 
+  /**
+   * Creates plane with given shader and properties.
+   * Properties and transform are cloned; originals can be safely modified.
+   * @returns Plane handler for subsequent operations
+   */
   public createPlane(
     source: string,
     properties: Record<string, UIProperty>,
@@ -35,14 +50,17 @@ export class UIPlaneRegistry {
     const handler = this.lastHandler++;
     this.insertPlane(handler, {
       source,
-      properties: convertUIPropertiesToGLProperties(properties),
-      transform,
+      properties: convertUIPropertiesToGLProperties(
+        cloneProperties(properties),
+      ),
+      transform: transform.clone(),
       visibility,
       transparency,
     });
     return handler;
   }
 
+  /** Removes plane and frees resources */
   public destroyPlane(handler: number): void {
     const planeDescriptor = this.resolvePlaneDescriptor(handler);
 
@@ -64,6 +82,10 @@ export class UIPlaneRegistry {
     this.handlerToPlaneDescriptor.delete(handler);
   }
 
+  /**
+   * Updates plane properties.
+   * Values are copied; originals can be safely modified.
+   */
   public setProperties(
     handler: number,
     properties: Record<string, UIProperty>,
@@ -90,11 +112,22 @@ export class UIPlaneRegistry {
     const planeData = planeDescriptor.plane.extractInstanceData(
       planeDescriptor.instanceHandler,
     );
-    planeData.properties = { ...planeData.properties, ...glProperties };
+
+    for (const name in glProperties) {
+      planeData.properties[name] = {
+        value: cloneProperty(glProperties[name].value),
+        glslTypeInfo: glProperties[name].glslTypeInfo,
+      };
+    }
+
     this.destroyPlane(handler);
     this.insertPlane(handler, planeData);
   }
 
+  /**
+   * Updates plane transform matrix.
+   * Matrix is copied; original can be safely modified.
+   */
   public setTransform(handler: number, transform: Matrix4): void {
     const planeDescriptor = this.resolvePlaneDescriptor(handler);
 
@@ -109,6 +142,7 @@ export class UIPlaneRegistry {
     );
   }
 
+  /** Updates plane visibility */
   public setVisibility(handler: number, visibility: boolean): void {
     const planeDescriptor = this.resolvePlaneDescriptor(handler);
 
@@ -123,6 +157,7 @@ export class UIPlaneRegistry {
     );
   }
 
+  /** Updates plane transparency mode */
   public setTransparency(
     handler: number,
     transparency: UITransparencyMode,
@@ -187,7 +222,7 @@ export class UIPlaneRegistry {
 
     if (!remainingPair) {
       throw new Error(
-        "UIGenericPlaneRegistry.demoteInstancedPlaneToSinglePlane: remaining pair not found",
+        "UIGenericPlaneRegistry.demoteInstancedPlaneToSinglePlane.instancedPlane: remaining pair not found",
       );
     }
 

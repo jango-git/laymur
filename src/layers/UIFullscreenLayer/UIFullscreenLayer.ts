@@ -5,10 +5,8 @@ import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizeP
 import { UIInputEvent } from "../../miscellaneous/UIInputEvent";
 import { isUIModeInteractive } from "../../miscellaneous/UIMode";
 import { UILayer } from "../UILayer/UILayer";
-import {
-  FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY,
-  type UIFullscreenLayerOptions,
-} from "./UIFullscreenLayer.Internal";
+import type { UIFullscreenLayerOptions } from "./UIFullscreenLayer.Internal";
+import { FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY } from "./UIFullscreenLayer.Internal";
 
 /** Layer that automatically handles browser window resizing and input events */
 export class UIFullscreenLayer extends UILayer {

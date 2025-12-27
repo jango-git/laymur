@@ -34,7 +34,9 @@ export class UIInputWrapper implements UIInputWrapperInterface {
   public destroyInputCatcher(handler: number): void {
     const index = this.catchers.findIndex((item) => item.handler === handler);
     if (index === -1) {
-      throw new Error("UIInputWrapper.destroyInputCatcher: handler not found");
+      throw new Error(
+        "UIInputWrapper.destroyInputCatcher.handler: handler not found",
+      );
     }
     this.catchers.splice(index, 1);
   }
@@ -43,7 +45,7 @@ export class UIInputWrapper implements UIInputWrapperInterface {
     this.ensureSorted();
     const found = this.catchers.find((item) => item.handler === handler);
     if (!found) {
-      throw new Error("UIInputWrapper.getZIndex: handler not found");
+      throw new Error("UIInputWrapper.getZIndex.handler: handler not found");
     }
     return found.zIndex;
   }
@@ -51,7 +53,7 @@ export class UIInputWrapper implements UIInputWrapperInterface {
   public setZIndex(handler: number, zIndex: number): void {
     const found = this.catchers.find((item) => item.handler === handler);
     if (!found) {
-      throw new Error("UIInputWrapper.setZIndex: handler not found");
+      throw new Error("UIInputWrapper.setZIndex.handler: handler not found");
     }
     if (found.zIndex !== zIndex) {
       found.zIndex = zIndex;
@@ -63,7 +65,7 @@ export class UIInputWrapper implements UIInputWrapperInterface {
   public getActive(handler: number): boolean {
     const found = this.catchers.find((item) => item.handler === handler);
     if (!found) {
-      throw new Error("UIInputWrapper.getActive: handler not found");
+      throw new Error("UIInputWrapper.getActive.handler: handler not found");
     }
     return found.active;
   }
@@ -71,7 +73,7 @@ export class UIInputWrapper implements UIInputWrapperInterface {
   public setActive(handler: number, active: boolean): void {
     const found = this.catchers.find((item) => item.handler === handler);
     if (!found) {
-      throw new Error("UIInputWrapper.setActive: handler not found");
+      throw new Error("UIInputWrapper.setActive.handler: handler not found");
     }
     if (found.active !== active) {
       found.active = active;

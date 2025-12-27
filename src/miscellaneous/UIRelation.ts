@@ -25,7 +25,7 @@ export function convertRelation(relation: UIRelation): Operator {
     case UIRelation.GREATER_THAN:
       return Operator.Ge;
     default:
-      throw new Error(`convertRelation: invalid relation`);
+      throw new Error(`convertRelation.relation: invalid relation`);
   }
 }
 

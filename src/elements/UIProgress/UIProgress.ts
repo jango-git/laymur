@@ -1,4 +1,5 @@
-import { MathUtils, type Matrix3, type Texture, type Vector2 } from "three";
+import type { Matrix3, Texture, Vector2 } from "three";
+import { MathUtils } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";

@@ -183,17 +183,17 @@ export function assertValidInterpolationConstraintArguments(
     return layerA;
   }
 
-  if (a instanceof UILayer) {
-    return a;
-  }
   if (isUILayerElement(a)) {
     return a.layer;
   }
-  if (b instanceof UILayer) {
-    return b;
-  }
   if (isUILayerElement(b)) {
     return b.layer;
+  }
+  if (a instanceof UILayer) {
+    return a;
+  }
+  if (b instanceof UILayer) {
+    return b;
   }
 
   throw new Error(`${subject}: no valid subjects found`);

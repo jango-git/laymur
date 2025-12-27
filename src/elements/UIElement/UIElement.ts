@@ -1,4 +1,5 @@
-import { Matrix4, type WebGLRenderer } from "three";
+import type { WebGLRenderer } from "three";
+import { Matrix4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UILayerEvent } from "../../layers/UILayer/UILayer.Internal";
 import { computeTransformMatrix } from "../../miscellaneous/computeTransform";

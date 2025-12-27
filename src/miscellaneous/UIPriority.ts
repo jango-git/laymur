@@ -49,7 +49,7 @@ export function convertPriority(priority: UIPriority): number {
     case UIPriority.P7:
       return Strength.create(0, 0, 1);
     default:
-      throw new Error(`convertPriority: invalid priority`);
+      throw new Error(`convertPriority.priority: invalid priority`);
   }
 }
 

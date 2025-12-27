@@ -33,6 +33,21 @@ export type UIPropertyConstructor =
   | typeof Matrix4
   | NumberConstructor;
 
+export type UIPropertyCopyTo =
+  | UIColor
+  | Vector2
+  | Vector3
+  | Vector4
+  | Matrix3
+  | Matrix4;
+
+export type UIPropertyCopyFrom = UIColor &
+  Vector2 &
+  Vector3 &
+  Vector4 &
+  Matrix3 &
+  Matrix4;
+
 export interface GLTypeInfo {
   glslTypeName: string;
   bufferSize: number;
@@ -187,7 +202,7 @@ export function resolvePropertyUniform(
     | IUniform<UIProperty>
     | undefined;
   if (uniform === undefined) {
-    throw new Error(`resolveUniform.name: unknown uniform`);
+    throw new Error(`resolvePropertyUniform.name: unknown uniform`);
   }
   return uniform;
 }
@@ -228,6 +243,24 @@ export function convertUIPropertiesToGLProperties(
   }
 
   return glProperties;
+}
+
+export function cloneProperty<T extends UIProperty>(property: T): T {
+  if (typeof property === "number" || property instanceof Texture) {
+    return property;
+  }
+
+  return property.clone() as T;
+}
+
+export function cloneProperties(
+  properties: Record<string, UIProperty>,
+): Record<string, UIProperty> {
+  const result: Record<string, UIProperty> = {};
+  for (const name in properties) {
+    result[name] = cloneProperty(properties[name]);
+  }
+  return result;
 }
 
 export function buildGenericPlaneFragmentShader(

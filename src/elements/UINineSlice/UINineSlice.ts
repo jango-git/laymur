@@ -6,10 +6,8 @@ import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransf
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import {
-  UITextureViewEvent,
-  type UITextureConfig,
-} from "../../miscellaneous/texture/UITextureView.Internal";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
+import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UINineSlice.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UINineSliceOptions } from "./UINineSlice.Internal";

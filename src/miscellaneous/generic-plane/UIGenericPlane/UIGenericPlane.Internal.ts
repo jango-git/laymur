@@ -15,7 +15,7 @@ export function buildGenericPlaneMaterial(
 ): ShaderMaterial {
   const uniforms: Record<string, { value: unknown }> = {
     // eslint-disable-next-line @typescript-eslint/naming-convention -- unform name
-    p_transform: { value: transform.clone() },
+    p_transform: { value: transform },
   };
 
   const uniformDeclarations: string[] = [];

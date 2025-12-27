@@ -17,6 +17,14 @@ import {
   writePropertyToArray,
 } from "./UIGenericInstancedPlane.Internal";
 
+/**
+ * Instanced shader plane mesh for batched rendering.
+ *
+ * Copies property values into internal buffers. No external references
+ * are retained after method calls return.
+ *
+ * @internal
+ */
 export class UIGenericInstancedPlane extends Mesh {
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
@@ -106,10 +114,15 @@ export class UIGenericInstancedPlane extends Mesh {
     }
   }
 
+  /** Current number of active instances */
   public get instanceCount(): number {
     return this.instancedGeometry.instanceCount;
   }
 
+  /**
+   * Creates new instance with default values.
+   * @returns Instance handler for subsequent operations
+   */
   public createInstance(): number {
     const handler = this.lastHandler++;
     const index = this.instancedGeometry.instanceCount;
@@ -141,6 +154,7 @@ export class UIGenericInstancedPlane extends Mesh {
     return handler;
   }
 
+  /** Removes instance and compacts buffer */
   public destroyInstance(handler: number): void {
     const index = this.resolveIndex(handler);
     this.handlerToIndex.delete(handler);
@@ -154,6 +168,7 @@ export class UIGenericInstancedPlane extends Mesh {
     this.instancedGeometry.instanceCount--;
   }
 
+  /** Updates instance properties. Values are copied into buffers. */
   public setProperties(
     handler: number,
     properties: Record<string, GLProperty>,
@@ -176,6 +191,7 @@ export class UIGenericInstancedPlane extends Mesh {
     }
   }
 
+  /** Updates instance transform. Matrix is copied into buffer. */
   public setTransform(handler: number, transform: Matrix4): void {
     const index = this.resolveIndex(handler);
 
@@ -190,6 +206,7 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
+  /** Updates instance visibility */
   public setVisibility(handler: number, visible: boolean): void {
     const index = this.resolveIndex(handler);
 
@@ -200,6 +217,7 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
+  /** Checks if plane can accept given properties without reconstruction */
   public isPartiallyCompatible(
     source: string,
     properties: Record<string, GLProperty>,
@@ -215,6 +233,7 @@ export class UIGenericInstancedPlane extends Mesh {
     );
   }
 
+  /** Checks if properties are compatible with current plane configuration */
   public arePropertiesPartiallyCompatible(
     properties: Readonly<Record<string, Readonly<GLProperty>>>,
   ): boolean {
@@ -224,6 +243,7 @@ export class UIGenericInstancedPlane extends Mesh {
     );
   }
 
+  /** Returns reconstructed instance data with new object instances */
   public extractInstanceData(handler: number): PlaneData {
     return {
       source: this.source,
@@ -234,6 +254,7 @@ export class UIGenericInstancedPlane extends Mesh {
     };
   }
 
+  /** Disposes geometry, material, and clears buffers */
   public destroy(): void {
     this.instancedGeometry.dispose();
     this.shaderMaterial.dispose();

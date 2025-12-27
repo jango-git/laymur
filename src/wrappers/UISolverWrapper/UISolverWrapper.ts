@@ -596,7 +596,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
           const description = this.variables.get(variableIndex);
           if (description === undefined) {
             throw new Error(
-              `UISolverWrapper.convertExpression: variable does not exist`,
+              `UISolverWrapper.convertExpression.expression: variable does not exist`,
             );
           }
           return [coefficient, description.variable];
