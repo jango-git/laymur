@@ -9,6 +9,7 @@ import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/U
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
+import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import source from "../../shaders/UIProgress.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UIProgressOptions } from "./UIProgress.Internal";
@@ -20,12 +21,11 @@ export class UIProgress extends UIElement {
   public readonly texture: UITextureView;
   /** Multiplicative tint. Alpha channel controls opacity. */
   public readonly color: UIColor;
-  /** Function controlling fill direction and shape */
-  public readonly maskFunction: UIProgressMaskFunction;
 
   private readonly textureTransform: Matrix3;
   private readonly textureResolution: Vector2;
 
+  private maskFunctionInternal: UIProgressMaskFunction;
   private progressInternal: number;
   private progressDirty = false;
   private textureResolutionDirty = false;
@@ -87,7 +87,7 @@ export class UIProgress extends UIElement {
     this.textureResolution = textureResolution;
     this.color = color;
     this.progressInternal = progress;
-    this.maskFunction = maskFunction;
+    this.maskFunctionInternal = maskFunction;
 
     this.texture.on(
       UITextureViewEvent.DIMENSIONS_CHANGED,
@@ -95,9 +95,22 @@ export class UIProgress extends UIElement {
     );
   }
 
+  /** Function controlling fill direction and shape */
+  public get maskFunction(): UIProgressMaskFunction {
+    return this.maskFunctionInternal;
+  }
+
   /** Progress from 0 (empty) to 1 (full) */
   public get progress(): number {
     return this.progressInternal;
+  }
+
+  /** Function controlling fill direction and shape */
+  public set maskFunction(value: UIProgressMaskFunction) {
+    if (this.maskFunctionInternal !== value) {
+      this.maskFunctionInternal = value;
+      this.rebuildPlane();
+    }
   }
 
   /** Progress from 0 (empty) to 1 (full). Clamped. */
@@ -207,4 +220,55 @@ export class UIProgress extends UIElement {
       this.textureResolutionDirty = true;
     }
   };
+
+  private rebuildPlane(): void {
+    this.sceneWrapper.destroyPlane(this.planeHandler);
+
+    const micro = this.micro;
+    const textureTrim = this.texture.trim;
+
+    this.planeHandler = this.sceneWrapper.createPlane(
+      this.maskFunctionInternal.source + source,
+      {
+        texture: this.texture.texture,
+        textureTransform: this.texture.calculateUVTransform(
+          this.textureTransform,
+        ),
+        textureResolution: this.texture.getResolution(this.textureResolution),
+        color: this.color,
+        progress: this.progressInternal,
+        ...this.maskFunctionInternal.enumerateProperties(),
+      },
+      computeTrimmedTransformMatrix(
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+        this.zIndex,
+        micro.x,
+        micro.y,
+        micro.anchorX,
+        micro.anchorY,
+        micro.scaleX,
+        micro.scaleY,
+        micro.rotation,
+        micro.anchorMode,
+        textureTrim.left,
+        textureTrim.right,
+        textureTrim.top,
+        textureTrim.bottom,
+      ),
+      isUIModeVisible(this.mode),
+      this.transparencyMode,
+    );
+
+    this.color.setDirtyFalse();
+    this.texture.setTextureDirtyFalse();
+    this.texture.setUVTransformDirtyFalse();
+    this.texture.setTrimDirtyFalse();
+    this.progressDirty = false;
+    this.textureResolutionDirty = false;
+    this.maskFunctionInternal.setDirtyFalse();
+    this.micro.setDirtyFalse();
+  }
 }

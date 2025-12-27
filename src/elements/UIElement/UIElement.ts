@@ -19,7 +19,7 @@ export abstract class UIElement extends UIInputDummy {
   public readonly micro: UIMicro;
 
   protected readonly sceneWrapper: UISceneWrapperInterface;
-  protected readonly planeHandler: number;
+  protected planeHandler: number;
 
   private transparencyModeInternal: UITransparencyMode;
   private transparencyModeDirty = false;
