@@ -5,7 +5,7 @@ import type { UIInputDummyOptions } from "../UIInputDummy/UIInputDummy.Internal"
 /** Configuration options for UIElement */
 export interface UIElementOptions extends UIInputDummyOptions {
   /** Transforms that don't affect constraints */
-  micro: UIMicroConfig;
+  micro: Partial<UIMicroConfig>;
   /** Alpha blending mode */
   transparencyMode: UITransparencyMode;
 }
