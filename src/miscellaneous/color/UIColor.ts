@@ -434,7 +434,7 @@ export class UIColor {
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   public set(uiColorConfig?: UIColorConfig): this;
   public set(...args: unknown[]): this {
-    if (args.length === 0) {
+    if (args.length === 0 || args[0] === undefined) {
       return this.setRGBA(1, 1, 1, 1);
     }
 
