@@ -12,6 +12,7 @@ import {
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import {
@@ -34,11 +35,10 @@ import {
 
 /** Renders Three.js scene to texture */
 export class UIScene extends UIElement {
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
   /** Background color for render target */
   public readonly clearColor: UIColor;
 
+  private readonly colorInternal: UIColor;
   private readonly renderTarget: WebGLRenderTarget;
   private sceneInternal: Scene;
   private cameraInternal: Camera;
@@ -100,7 +100,7 @@ export class UIScene extends UIElement {
       options,
     );
 
-    this.color = color;
+    this.colorInternal = color;
     this.clearColor = new UIColor(
       options.clearColor ?? SCENE_DEFAULT_CLEAR_COLOR,
     );
@@ -122,6 +122,11 @@ export class UIScene extends UIElement {
     this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
   }
 
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
   /** Three.js scene to render */
   public get scene(): Scene {
     return this.sceneInternal;
@@ -140,6 +145,11 @@ export class UIScene extends UIElement {
   /** Render target resolution multiplier. Range 0.1 to 2.0. */
   public get resolutionFactor(): number {
     return this.resolutionFactorInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Three.js scene to render */
@@ -204,7 +214,7 @@ export class UIScene extends UIElement {
         this.evenFrame) ||
       (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE &&
         this.propertyDirty) ||
-      this.color.dirty ||
+      this.colorInternal.dirty ||
       this.clearColor.dirty ||
       (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
         (this.resolutionFactorDirty || this.solverWrapper.dirty));
@@ -218,11 +228,11 @@ export class UIScene extends UIElement {
         this.resolutionFactorDirty = false;
       }
 
-      if (this.color.dirty) {
+      if (this.colorInternal.dirty) {
         this.sceneWrapper.setProperties(this.planeHandler, {
-          color: this.color,
+          color: this.colorInternal,
         });
-        this.color.setDirtyFalse();
+        this.colorInternal.setDirtyFalse();
       }
 
       renderer.setClearColor(this.clearColor.getHexRGB(), this.clearColor.a);

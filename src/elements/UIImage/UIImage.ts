@@ -1,6 +1,7 @@
 import type { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
@@ -14,9 +15,8 @@ import type { UIImageOptions } from "./UIImage.Internal";
 export class UIImage extends UIElement {
   /** Texture displayed by this image */
   public readonly texture: UITextureView;
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
 
+  private readonly colorInternal: UIColor;
   private readonly textureTransform: Matrix3;
 
   /**
@@ -53,12 +53,22 @@ export class UIImage extends UIElement {
 
     this.texture = textureView;
     this.textureTransform = textureTransform;
-    this.color = color;
+    this.colorInternal = color;
 
     this.texture.on(
       UITextureViewEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Removes image and frees resources */
@@ -73,10 +83,10 @@ export class UIImage extends UIElement {
   protected override setPlaneTransform(): void {
     let properties: Record<string, UIProperty> | undefined;
 
-    if (this.color.dirty) {
+    if (this.colorInternal.dirty) {
       properties ??= {};
-      properties["color"] = this.color;
-      this.color.setDirtyFalse();
+      properties["color"] = this.colorInternal;
+      this.colorInternal.setDirtyFalse();
     }
 
     if (this.texture.textureDirty) {

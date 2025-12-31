@@ -1,20 +1,20 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, LinearFilter, SRGBColorSpace } from "three";
+import { CanvasTexture, LinearFilter, Matrix4, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import {
-  DUMMY_DEFAULT_HEIGHT,
-  DUMMY_DEFAULT_WIDTH,
-} from "../UIInputDummy/UIInputDummy.Internal";
-import type { UIGraphicsOptions } from "./UIGraphics.Internal";
+  GRAPHICS_DEFAULT_HEIGHT,
+  GRAPHICS_DEFAULT_WIDTH,
+  GRAPHICS_TEMP_COLOR,
+  type UIGraphicsOptions,
+} from "./UIGraphics.Internal";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
-
+  private readonly colorInternal: UIColor;
   private readonly canvas: OffscreenCanvas;
   private readonly context: OffscreenCanvasRenderingContext2D;
   private readonly texture: CanvasTexture;
@@ -26,8 +26,8 @@ export class UIGraphics extends UIElement {
    * @param options - Configuration options
    */
   constructor(layer: UILayer, options?: Partial<UIGraphicsOptions>) {
-    const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
-    const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
+    const w = options?.width ?? GRAPHICS_DEFAULT_WIDTH;
+    const h = options?.height ?? GRAPHICS_DEFAULT_HEIGHT;
     const color = new UIColor(options?.color);
 
     const canvas = new OffscreenCanvas(w, h);
@@ -50,7 +50,7 @@ export class UIGraphics extends UIElement {
       source,
       {
         texture: texture,
-        textureTransform: texture.matrix,
+        textureTransform: new Matrix4(),
         color,
       },
       options,
@@ -59,7 +59,17 @@ export class UIGraphics extends UIElement {
     this.canvas = canvas;
     this.context = context;
     this.texture = texture;
-    this.color = color;
+    this.colorInternal = color;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /**
@@ -67,10 +77,10 @@ export class UIGraphics extends UIElement {
    *
    * @param color - Fill color after clearing
    */
-  public clear(color?: UIColor): this {
+  public clear(color?: UIColorConfig): this {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
     if (color !== undefined) {
-      this.context.fillStyle = color.toCSSColor();
+      this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
       this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
     this.texture.needsUpdate = true;
@@ -83,9 +93,9 @@ export class UIGraphics extends UIElement {
     y: number,
     width: number,
     height: number,
-    color: UIColor,
+    color: UIColorConfig,
   ): this {
-    this.context.fillStyle = color.toCSSColor();
+    this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.fillRect(x, y, width, height);
     this.texture.needsUpdate = true;
     return this;
@@ -96,9 +106,9 @@ export class UIGraphics extends UIElement {
     x: number,
     y: number,
     radius: number,
-    color: UIColor,
+    color: UIColorConfig,
   ): this {
-    this.context.fillStyle = color.toCSSColor();
+    this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.beginPath();
     this.context.arc(x, y, radius, 0, Math.PI * 2);
     this.context.fill();
@@ -118,9 +128,9 @@ export class UIGraphics extends UIElement {
     radius: number,
     startAngle: number,
     endAngle: number,
-    color: UIColor,
+    color: UIColorConfig,
   ): this {
-    this.context.fillStyle = color.toCSSColor();
+    this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.beginPath();
     this.context.arc(x, y, radius, startAngle, endAngle);
     this.context.fill();
@@ -143,7 +153,7 @@ export class UIGraphics extends UIElement {
       return this;
     }
 
-    this.context.strokeStyle = color.toCSSColor();
+    this.context.strokeStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.lineWidth = lineWidth;
     this.context.beginPath();
     this.context.moveTo(points[0][0], points[0][1]);
@@ -167,9 +177,11 @@ export class UIGraphics extends UIElement {
     renderer: WebGLRenderer,
     deltaTime: number,
   ): void {
-    if (this.color.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, { color: this.color });
-      this.color.setDirtyFalse();
+    if (this.colorInternal.dirty) {
+      this.sceneWrapper.setProperties(this.planeHandler, {
+        color: this.colorInternal,
+      });
+      this.colorInternal.setDirtyFalse();
     }
 
     super.onWillRender(renderer, deltaTime);

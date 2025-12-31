@@ -22,7 +22,7 @@ import {
 
 /** Rectangular area with dimensions but no rendering */
 export class UIInputDummy extends UIAnchor implements UIPlaneElement {
-  /** Shape defining interactive region in normalized coordinates */
+  /** Shape defining interactive region in element-local space (0,0 = bottom-left, 1,1 = top-right) */
   public interactionArea: UIArea;
 
   /** Solver variable for width */
@@ -34,7 +34,7 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
   protected modeInternal: UIMode;
   protected readonly inputWrapper: UIInputWrapperInterface;
   private readonly catcherHandler: number;
-  private lastPointerInside = false;
+  private wasPointerInside = false;
 
   /**
    * Creates a new UIInputDummy instance.
@@ -214,15 +214,15 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
       this.emit(inputEvent, x, y, identifier, this);
     }
 
-    if (this.lastPointerInside && !isPointerInside) {
+    if (this.wasPointerInside && !isPointerInside) {
       this.emit(UIInputEvent.LEFT, x, y, identifier, this);
-    } else if (!this.lastPointerInside && isPointerInside) {
+    } else if (!this.wasPointerInside && isPointerInside) {
       this.emit(UIInputEvent.ENTERED, x, y, identifier, this);
     }
 
-    this.lastPointerInside = isPointerInside;
-    return this.modeInternal === UIMode.INTERACTIVE_TRANSPARENT
-      ? false
-      : isPointerInside;
+    this.wasPointerInside = isPointerInside;
+    return (
+      this.modeInternal !== UIMode.INTERACTIVE_TRANSPARENT && isPointerInside
+    );
   }
 }

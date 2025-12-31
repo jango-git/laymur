@@ -62,34 +62,8 @@ export class UIColor {
   // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
   constructor(uiColorConfig?: UIColorConfig);
   constructor(...args: unknown[]) {
-    if (args.length >= 3 && typeof args[0] === "number") {
-      const [r, g, b, a = 1] = args as number[];
-      this.rInternal = r;
-      this.gInternal = g;
-      this.bInternal = b;
-      this.aInternal = a;
-    } else if (args.length >= 1 && args[0] !== undefined) {
-      const [firstArgument, a = 1] = args;
-      if (typeof firstArgument === "string") {
-        if (firstArgument.startsWith("#")) {
-          this.setHexString(firstArgument);
-        } else {
-          this.setColorName(firstArgument as UIColorName, a as number);
-        }
-      } else if (firstArgument instanceof UIColor) {
-        firstArgument.ensureRGBUpdatedFromHSL();
-        this.rInternal = firstArgument.rInternal;
-        this.gInternal = firstArgument.gInternal;
-        this.bInternal = firstArgument.bInternal;
-        this.aInternal = firstArgument.aInternal;
-      } else if (firstArgument instanceof Color) {
-        this.rInternal = firstArgument.r;
-        this.gInternal = firstArgument.g;
-        this.bInternal = firstArgument.b;
-        this.aInternal = a as number;
-      } else if (typeof firstArgument === "number") {
-        this.setHexRGB(firstArgument, a as number);
-      }
+    if (args.length > 0) {
+      (this.set as (...a: unknown[]) => this)(...args);
     }
   }
 
@@ -416,17 +390,93 @@ export class UIColor {
     this.dirtyInternal = false;
   }
 
-  /** Sets RGB(A) components */
-  public set(
+  /** Sets to white (default) */
+  public set(): this;
+  /**
+   * @param r - Red (0-1)
+   * @param g - Green (0-1)
+   * @param b - Blue (0-1)
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(r: number, g: number, b: number, a?: number): this;
+  /**
+   * @param colorName - Named color
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(colorName: UIColorName, a?: number): this;
+  /**
+   * @param threeColor - Three.js Color object
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(threeColor: Color, a?: number): this;
+  /**
+   * @param hexRGB - Hex RGB value (e.g., 0xff0000)
+   * @param a - Alpha (0-1)
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(hexRGB: number, a?: number): this;
+  /**
+   * @param hexString - Hex string (e.g., "#ffffff" or "#ffffffff")
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(hexString: string): this;
+  /**
+   * @param uiColor - UIColor object to copy from
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(uiColor: UIColor): this;
+  /**
+   * @param uiColorConfig - UIColorConfig object
+   */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures -- Separate overloads make the different constructor patterns more clear
+  public set(uiColorConfig?: UIColorConfig): this;
+  public set(...args: unknown[]): this {
+    if (args.length === 0) {
+      return this.setRGBA(1, 1, 1, 1);
+    }
+
+    if (args.length >= 3 && typeof args[0] === "number") {
+      const [r, g, b, a = 1] = args as number[];
+      return this.setRGBA(r, g, b, a);
+    }
+
+    const [firstArgument, a = 1] = args;
+
+    if (typeof firstArgument === "string") {
+      return firstArgument.startsWith("#")
+        ? this.setHexString(firstArgument)
+        : this.setColorName(firstArgument as UIColorName, a as number);
+    }
+
+    if (firstArgument instanceof UIColor) {
+      return this.copy(firstArgument);
+    }
+
+    if (firstArgument instanceof Color) {
+      return this.setThreeColor(firstArgument, a as number);
+    }
+
+    if (typeof firstArgument === "number") {
+      return this.setHexRGB(firstArgument, a as number);
+    }
+
+    throw new Error("UIColor.set: cannot create color from provided arguments");
+  }
+
+  /** Sets RGBA components directly */
+  public setRGBA(
     r: number,
     g: number,
     b: number,
     a: number = this.aInternal,
   ): this {
-    assertValidNumber(r, "UIColor.set.r");
-    assertValidNumber(g, "UIColor.set.g");
-    assertValidNumber(b, "UIColor.set.b");
-    assertValidNumber(a, "UIColor.set.a");
+    assertValidNumber(r, "UIColor.setRGBA.r");
+    assertValidNumber(g, "UIColor.setRGBA.g");
+    assertValidNumber(b, "UIColor.setRGBA.b");
+    assertValidNumber(a, "UIColor.setRGBA.a");
     r = MathUtils.clamp(r, 0, 1);
     g = MathUtils.clamp(g, 0, 1);
     b = MathUtils.clamp(b, 0, 1);

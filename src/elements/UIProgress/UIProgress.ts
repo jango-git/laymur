@@ -3,6 +3,7 @@ import { MathUtils } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
@@ -19,9 +20,8 @@ import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal";
 export class UIProgress extends UIElement {
   /** Texture displayed by this element */
   public readonly texture: UITextureView;
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
 
+  private readonly colorInternal: UIColor;
   private readonly textureTransform: Matrix3;
   private readonly textureResolution: Vector2;
 
@@ -85,7 +85,7 @@ export class UIProgress extends UIElement {
     this.texture = textureView;
     this.textureTransform = textureTransform;
     this.textureResolution = textureResolution;
-    this.color = color;
+    this.colorInternal = color;
     this.progressInternal = progress;
     this.maskFunctionInternal = maskFunction;
 
@@ -93,6 +93,11 @@ export class UIProgress extends UIElement {
       UITextureViewEvent.DIMENSIONS_CHANGED,
       this.onTextureDimensionsChanged,
     );
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /** Function controlling fill direction and shape */
@@ -103,6 +108,11 @@ export class UIProgress extends UIElement {
   /** Progress from 0 (empty) to 1 (full) */
   public get progress(): number {
     return this.progressInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Function controlling fill direction and shape */
@@ -126,10 +136,10 @@ export class UIProgress extends UIElement {
   protected override setPlaneTransform(): void {
     let properties: Record<string, UIProperty> | undefined;
 
-    if (this.color.dirty) {
+    if (this.colorInternal.dirty) {
       properties ??= {};
-      properties["color"] = this.color;
-      this.color.setDirtyFalse();
+      properties["color"] = this.colorInternal;
+      this.colorInternal.setDirtyFalse();
     }
 
     if (this.texture.textureDirty) {
@@ -235,7 +245,7 @@ export class UIProgress extends UIElement {
           this.textureTransform,
         ),
         textureResolution: this.texture.getResolution(this.textureResolution),
-        color: this.color,
+        color: this.colorInternal,
         progress: this.progressInternal,
         ...this.maskFunctionInternal.enumerateProperties(),
       },
@@ -262,7 +272,7 @@ export class UIProgress extends UIElement {
       this.transparencyMode,
     );
 
-    this.color.setDirtyFalse();
+    this.colorInternal.setDirtyFalse();
     this.texture.setTextureDirtyFalse();
     this.texture.setUVTransformDirtyFalse();
     this.texture.setTrimDirtyFalse();

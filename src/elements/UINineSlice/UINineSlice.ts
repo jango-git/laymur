@@ -2,6 +2,7 @@ import type { Matrix3 } from "three";
 import { Vector4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
@@ -21,13 +22,12 @@ import {
 export class UINineSlice extends UIElement {
   /** Texture displayed by this element */
   public readonly texture: UITextureView;
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
   /** Border size in normalized texture coordinates (0 to 1) */
   public readonly sliceBorders: UIInsets;
   /** Region size. Interpretation depends on regionMode. */
   public readonly sliceRegions: UIInsets;
 
+  private readonly colorInternal: UIColor;
   private regionModeInternal: UINineSliceRegionMode;
   private regionModeDirty = true;
 
@@ -88,7 +88,7 @@ export class UINineSlice extends UIElement {
 
     this.texture = textureView;
     this.textureTransform = textureTransform;
-    this.color = color;
+    this.colorInternal = color;
     this.sliceBorders = sliceBorders;
     this.sliceRegions = sliceRegions;
     this.regionModeInternal = regionMode;
@@ -105,9 +105,19 @@ export class UINineSlice extends UIElement {
     );
   }
 
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
   /** Controls how sliceRegions values are interpreted */
   public get regionMode(): UINineSliceRegionMode {
     return this.regionModeInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Controls how sliceRegions values are interpreted */
@@ -160,10 +170,10 @@ export class UINineSlice extends UIElement {
       this.setElementDimensionsDirtyFalse();
     }
 
-    if (this.color.dirty) {
+    if (this.colorInternal.dirty) {
       properties ??= {};
-      properties["color"] = this.color;
-      this.color.setDirtyFalse();
+      properties["color"] = this.colorInternal;
+      this.colorInternal.setDirtyFalse();
     }
 
     if (this.texture.textureDirty) {

@@ -2,6 +2,7 @@ import type { WebGLRenderer } from "three";
 import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
@@ -23,13 +24,12 @@ import { renderTextLines } from "./UIText.Rendering";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
   /** Text padding in world units */
   public readonly padding: UIInsets;
   /** Default style applied to all text spans */
   public readonly commonStyle: UITextStyle;
 
+  private readonly colorInternal: UIColor;
   private readonly canvas: OffscreenCanvas;
   private readonly context: OffscreenCanvasRenderingContext2D;
   private texture: CanvasTexture;
@@ -79,7 +79,7 @@ export class UIText extends UIElement {
       color,
     });
 
-    this.color = color;
+    this.colorInternal = color;
     this.padding = new UIInsets(options.padding);
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal =
@@ -114,6 +114,11 @@ export class UIText extends UIElement {
     }
   }
 
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
   /** Text content as array of styled spans */
   public get content(): UITextSpan[] {
     return this.contentInternal;
@@ -127,6 +132,11 @@ export class UIText extends UIElement {
   /** Controls how text adapts to element size */
   public get resizeMode(): UITextResizeMode {
     return this.resizeModeInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Text content as string, span config, or array */
@@ -319,10 +329,10 @@ export class UIText extends UIElement {
   private updateProperties(resolutionDirty: boolean): void {
     let properties: Record<string, UIProperty> | undefined;
 
-    if (this.color.dirty) {
+    if (this.colorInternal.dirty) {
       properties ??= {};
-      properties["color"] = this.color;
-      this.color.setDirtyFalse();
+      properties["color"] = this.colorInternal;
+      this.colorInternal.setDirtyFalse();
     }
 
     if (resolutionDirty) {
