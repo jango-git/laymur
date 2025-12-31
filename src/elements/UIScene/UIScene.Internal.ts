@@ -6,7 +6,7 @@ import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 /** Controls when scene re-renders */
 export enum UISceneUpdateMode {
   /** Re-render every frame */
-  EACH_FRAME = 1,
+  EVERY_FRAME = 1,
   /** Re-render every other frame */
   EVERY_SECOND_FRAME = 2,
   /** Re-render when scene, camera, or updateMode changes */

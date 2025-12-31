@@ -217,7 +217,7 @@ export class UIScene extends UIElement {
 
     const isFramebufferDirty =
       this.updateRequired ||
-      this.updateModeInternal === UISceneUpdateMode.EACH_FRAME ||
+      this.updateModeInternal === UISceneUpdateMode.EVERY_FRAME ||
       (this.updateModeInternal === UISceneUpdateMode.EVERY_SECOND_FRAME &&
         this.evenFrame) ||
       (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE &&
