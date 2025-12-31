@@ -2,6 +2,8 @@
 export type UIInsetsConfig =
   | { horizontal: number; vertical: number }
   | { left: number; right: number; top: number; bottom: number }
+  | [number, number, number, number]
+  | [number, number]
   | number;
 
 export const INSETS_DEFAULT_VALUE = 0;

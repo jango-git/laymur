@@ -6,6 +6,7 @@ import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
@@ -22,12 +23,10 @@ import {
 export class UINineSlice extends UIElement {
   /** Texture displayed by this element */
   public readonly texture: UITextureView;
-  /** Border size in normalized texture coordinates (0 to 1) */
-  public readonly sliceBorders: UIInsets;
-  /** Region size. Interpretation depends on regionMode. */
-  public readonly sliceRegions: UIInsets;
 
   private readonly colorInternal: UIColor;
+  private readonly sliceBordersInternal: UIInsets;
+  private readonly sliceRegionsInternal: UIInsets;
   private regionModeInternal: UINineSliceRegionMode;
   private regionModeDirty = true;
 
@@ -89,8 +88,8 @@ export class UINineSlice extends UIElement {
     this.texture = textureView;
     this.textureTransform = textureTransform;
     this.colorInternal = color;
-    this.sliceBorders = sliceBorders;
-    this.sliceRegions = sliceRegions;
+    this.sliceBordersInternal = sliceBorders;
+    this.sliceRegionsInternal = sliceRegions;
     this.regionModeInternal = regionMode;
 
     this.sliceBordersVector = sliceBordersVector;
@@ -115,6 +114,16 @@ export class UINineSlice extends UIElement {
     return this.regionModeInternal;
   }
 
+  /** Border size in normalized texture coordinates (0 to 1) */
+  public get sliceBorders(): UIInsets {
+    return this.sliceBordersInternal;
+  }
+
+  /** Region size. Interpretation depends on regionMode. */
+  public get sliceRegions(): UIInsets {
+    return this.sliceRegionsInternal;
+  }
+
   /** Multiplicative tint. Alpha channel controls opacity. */
   public set color(value: UIColorConfig) {
     this.colorInternal.set(value);
@@ -126,6 +135,16 @@ export class UINineSlice extends UIElement {
       this.regionModeInternal = value;
       this.regionModeDirty = true;
     }
+  }
+
+  /** Border size in normalized texture coordinates (0 to 1) */
+  public set sliceBorders(value: UIInsetsConfig) {
+    this.sliceBordersInternal.set(value);
+  }
+
+  /** Region size. Interpretation depends on regionMode. */
+  public set sliceRegions(value: UIInsetsConfig) {
+    this.sliceRegionsInternal.set(value);
   }
 
   /** Removes nine slice and frees resources */
@@ -142,7 +161,7 @@ export class UINineSlice extends UIElement {
 
     const sliceBordersDirty =
       this.textureDimensionsDirty ||
-      this.sliceBorders.dirty ||
+      this.sliceBordersInternal.dirty ||
       this.texture.trimDirty;
 
     if (sliceBordersDirty) {
@@ -150,12 +169,12 @@ export class UINineSlice extends UIElement {
       properties["sliceBorders"] = this.calculateSliceBordersForShader(
         this.sliceBordersVector,
       );
-      this.sliceBorders.setDirtyFalse();
+      this.sliceBordersInternal.setDirtyFalse();
       this.textureDimensionsDirty = false;
     }
 
     const sliceRegionsDirty =
-      this.sliceRegions.dirty ||
+      this.sliceRegionsInternal.dirty ||
       this.regionModeDirty ||
       (this.regionModeInternal === UINineSliceRegionMode.WORLD &&
         this.checkElementDimensionsDirty());
@@ -165,7 +184,7 @@ export class UINineSlice extends UIElement {
       properties["sliceRegions"] = this.calculateSliceRegionsForShader(
         this.sliceRegionsVector,
       );
-      this.sliceRegions.setDirtyFalse();
+      this.sliceRegionsInternal.setDirtyFalse();
       this.regionModeDirty = false;
       this.setElementDimensionsDirtyFalse();
     }
@@ -247,10 +266,10 @@ export class UINineSlice extends UIElement {
     const trimmedWidthNorm = trimmedWidth / sourceWidth;
     const trimmedHeightNorm = trimmedHeight / sourceHeight;
 
-    const srcLeft = this.sliceBorders.left;
-    const srcRight = this.sliceBorders.right;
-    const srcTop = this.sliceBorders.top;
-    const srcBottom = this.sliceBorders.bottom;
+    const srcLeft = this.sliceBordersInternal.left;
+    const srcRight = this.sliceBordersInternal.right;
+    const srcTop = this.sliceBordersInternal.top;
+    const srcBottom = this.sliceBordersInternal.bottom;
 
     const left = Math.max(0, srcLeft - trimNLeft) / trimmedWidthNorm;
     const right = Math.max(0, srcRight - trimNRight) / trimmedWidthNorm;
@@ -268,10 +287,10 @@ export class UINineSlice extends UIElement {
   private calculateSliceRegionsForShader(result: Vector4): Vector4 {
     if (this.regionModeInternal === UINineSliceRegionMode.NORMALIZED) {
       return result.set(
-        this.sliceRegions.left,
-        this.sliceRegions.right,
-        this.sliceRegions.top,
-        this.sliceRegions.bottom,
+        this.sliceRegionsInternal.left,
+        this.sliceRegionsInternal.right,
+        this.sliceRegionsInternal.top,
+        this.sliceRegionsInternal.bottom,
       );
     }
 
@@ -279,10 +298,10 @@ export class UINineSlice extends UIElement {
     const height = this.height;
 
     return result.set(
-      this.sliceRegions.left / width,
-      this.sliceRegions.right / width,
-      this.sliceRegions.top / height,
-      this.sliceRegions.bottom / height,
+      this.sliceRegionsInternal.left / width,
+      this.sliceRegionsInternal.right / width,
+      this.sliceRegionsInternal.top / height,
+      this.sliceRegionsInternal.bottom / height,
     );
   }
 

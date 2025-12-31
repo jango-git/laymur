@@ -5,6 +5,7 @@ import {
   assertValidPositiveNumber,
 } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
@@ -23,9 +24,7 @@ import {
 
 /** Frame-based texture animation element */
 export class UIAnimatedImage extends UIElement {
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public readonly color: UIColor;
-
+  private readonly colorInternal: UIColor;
   private readonly sequenceInternal: UITextureView[];
 
   private frameRateInternal: number;
@@ -74,6 +73,7 @@ export class UIAnimatedImage extends UIElement {
       options,
     );
 
+    this.colorInternal = color;
     this.sequenceInternal = uiTextures;
     this.textureTransform = textureTransform;
     this.frameRateInternal =
@@ -82,7 +82,6 @@ export class UIAnimatedImage extends UIElement {
       options.timeScale ?? ANIMATED_IMAGE_DEFAULT_TIME_SCALE;
     this.loopModeInternal =
       options.loopMode ?? ANIMATED_IMAGE_DEFAULT_LOOP_MODE;
-    this.color = color;
 
     this.subscribeSequenceEvents();
 
@@ -91,9 +90,14 @@ export class UIAnimatedImage extends UIElement {
     }
   }
 
-  /** Animation frames as readonly array */
-  public get sequence(): readonly UITextureView[] {
-    return this.sequenceInternal;
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
+  }
+
+  /** Total animation duration in seconds */
+  public get duration(): number {
+    return this.sequenceInternal.length / this.frameRateInternal;
   }
 
   /** Animation speed in frames per second */
@@ -101,19 +105,35 @@ export class UIAnimatedImage extends UIElement {
     return this.frameRateInternal;
   }
 
-  /** Playback speed multiplier. Can be negative for reverse playback. */
-  public get timeScale(): number {
-    return this.timeScaleInternal;
-  }
-
   /** Loop behavior */
   public get loopMode(): UILoopMode {
     return this.loopModeInternal;
   }
 
-  /** Total animation duration in seconds */
-  public get duration(): number {
-    return this.sequenceInternal.length / this.frameRateInternal;
+  /** Animation frames as readonly array */
+  public get sequence(): readonly UITextureView[] {
+    return this.sequenceInternal;
+  }
+
+  /** Playback speed multiplier. Can be negative for reverse playback. */
+  public get timeScale(): number {
+    return this.timeScaleInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
+  }
+
+  /** Animation speed in frames per second */
+  public set frameRate(value: number) {
+    assertValidPositiveNumber(value, "UIAnimatedImage.frameRate");
+    this.frameRateInternal = value;
+  }
+
+  /** Loop behavior */
+  public set loopMode(value: UILoopMode) {
+    this.loopModeInternal = value;
   }
 
   /** Replaces animation frames. Stops playback. */
@@ -139,21 +159,10 @@ export class UIAnimatedImage extends UIElement {
     this.subscribeSequenceEvents();
   }
 
-  /** Animation speed in frames per second */
-  public set frameRate(value: number) {
-    assertValidPositiveNumber(value, "UIAnimatedImage.frameRate");
-    this.frameRateInternal = value;
-  }
-
   /** Playback speed multiplier. Can be negative for reverse playback. */
   public set timeScale(value: number) {
     assertValidNumber(value, "UIAnimatedImage.timeScale");
     this.timeScaleInternal = value;
-  }
-
-  /** Loop behavior */
-  public set loopMode(value: UILoopMode) {
-    this.loopModeInternal = value;
   }
 
   /** Removes element and frees resources */
@@ -254,10 +263,10 @@ export class UIAnimatedImage extends UIElement {
   protected override setPlaneTransform(): void {
     let properties: Record<string, UIProperty> | undefined;
 
-    if (this.color.dirty) {
+    if (this.colorInternal.dirty) {
       properties ??= {};
-      properties["color"] = this.color;
-      this.color.setDirtyFalse();
+      properties["color"] = this.colorInternal;
+      this.colorInternal.setDirtyFalse();
     }
 
     const frame = this.sequenceInternal[this.sequenceFrameIndex];

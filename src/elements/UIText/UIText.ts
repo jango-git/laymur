@@ -5,6 +5,7 @@ import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
@@ -24,12 +25,11 @@ import { renderTextLines } from "./UIText.Rendering";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {
-  /** Text padding in world units */
-  public readonly padding: UIInsets;
   /** Default style applied to all text spans */
   public readonly commonStyle: UITextStyle;
 
   private readonly colorInternal: UIColor;
+  private readonly paddingInternal: UIInsets;
   private readonly canvas: OffscreenCanvas;
   private readonly context: OffscreenCanvasRenderingContext2D;
   private texture: CanvasTexture;
@@ -80,7 +80,7 @@ export class UIText extends UIElement {
     });
 
     this.colorInternal = color;
-    this.padding = new UIInsets(options.padding);
+    this.paddingInternal = new UIInsets(options.padding);
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal =
       options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
@@ -95,7 +95,7 @@ export class UIText extends UIElement {
     this.lastHeight = this.height;
 
     if (options.padding === undefined) {
-      this.padding.setUnified(
+      this.paddingInternal.setUnified(
         this.content.reduce(
           (a, b) => Math.max(a, b.style.calculatePadding()),
           this.commonStyle.calculatePadding(),
@@ -127,6 +127,11 @@ export class UIText extends UIElement {
   /** Maximum line width before wrapping in pixels */
   public get maxLineWidth(): number {
     return this.maxLineWidthInternal;
+  }
+
+  /** Text padding in world units */
+  public get padding(): UIInsets {
+    return this.paddingInternal;
   }
 
   /** Controls how text adapts to element size */
@@ -176,6 +181,11 @@ export class UIText extends UIElement {
     }
   }
 
+  /** Text padding in world units */
+  public set padding(value: UIInsetsConfig) {
+    this.paddingInternal.set(value);
+  }
+
   /** Controls how text adapts to size constraints */
   public set resizeMode(value: UITextResizeMode) {
     if (this.resizeModeInternal !== value) {
@@ -211,7 +221,7 @@ export class UIText extends UIElement {
     if (
       !this.resizeModeDirty &&
       !this.maxLineWidthDirty &&
-      !this.padding.dirty &&
+      !this.paddingInternal.dirty &&
       !(
         this.solverWrapper.dirty &&
         this.lastWidth / this.lastHeight !==
@@ -229,8 +239,8 @@ export class UIText extends UIElement {
       this.maxLineWidthInternal,
     );
 
-    const paddingV = this.padding.top + this.padding.bottom;
-    const paddingH = this.padding.left + this.padding.right;
+    const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
+    const paddingH = this.paddingInternal.left + this.paddingInternal.right;
 
     const desiredHeight = size.height + paddingV;
     const desiredWidth = size.width + paddingH;
@@ -251,13 +261,18 @@ export class UIText extends UIElement {
       this.canvas.width = desiredWidth;
     }
 
-    renderTextLines(this.padding.top, this.padding.left, lines, this.context);
+    renderTextLines(
+      this.paddingInternal.top,
+      this.paddingInternal.left,
+      lines,
+      this.context,
+    );
 
     this.updateProperties(resolutionDirty);
 
     this.resizeModeDirty = false;
     this.maxLineWidthDirty = false;
-    this.padding.setDirtyFalse();
+    this.paddingInternal.setDirtyFalse();
     this.setDimensionsDirtyFalse();
     this.setContentDirtyFalse();
   }
@@ -266,7 +281,7 @@ export class UIText extends UIElement {
     if (
       !this.resizeModeDirty &&
       !this.maxLineWidthDirty &&
-      !this.padding.dirty &&
+      !this.paddingInternal.dirty &&
       !this.checkDimensionsDirty() &&
       !this.checkContentDirty()
     ) {
@@ -284,8 +299,8 @@ export class UIText extends UIElement {
       this.maxLineWidthInternal,
     );
 
-    const paddingV = this.padding.top + this.padding.bottom;
-    const paddingH = this.padding.left + this.padding.right;
+    const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
+    const paddingH = this.paddingInternal.left + this.paddingInternal.right;
 
     this.height = desiredTextSize.height + paddingV;
     this.width = desiredTextSize.width + paddingH; // Width should remain a priority, so it is set last.
@@ -311,8 +326,8 @@ export class UIText extends UIElement {
     }
 
     renderTextLines(
-      this.padding.top,
-      this.padding.left,
+      this.paddingInternal.top,
+      this.paddingInternal.left,
       realTextLines,
       this.context,
     );
@@ -321,7 +336,7 @@ export class UIText extends UIElement {
 
     this.resizeModeDirty = false;
     this.maxLineWidthDirty = false;
-    this.padding.setDirtyFalse();
+    this.paddingInternal.setDirtyFalse();
     this.setDimensionsDirtyFalse();
     this.setContentDirtyFalse();
   }

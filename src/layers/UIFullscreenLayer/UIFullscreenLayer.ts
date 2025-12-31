@@ -73,25 +73,18 @@ export class UIFullscreenLayer extends UILayer {
    * Projects 3D world position to 2D layer coordinates
    * @param position World position
    * @param camera Three.js camera
+   * @param result Reusable vector instance
    * @returns Layer coordinates
    */
-  public projectWorldPosition(position: Vector3, camera: Camera): Vector3 {
-    const projectedPosition = position.clone().project(camera);
-    projectedPosition.x = MathUtils.mapLinear(
-      projectedPosition.x,
-      -1,
-      1,
-      this.x,
-      this.width,
-    );
-    projectedPosition.y = MathUtils.mapLinear(
-      projectedPosition.y,
-      -1,
-      1,
-      this.y,
-      this.height,
-    );
-    return projectedPosition;
+  public projectWorldPosition(
+    position: Vector3,
+    camera: Camera,
+    result = new Vector3(),
+  ): Vector3 {
+    result.copy(position).project(camera);
+    result.x = MathUtils.mapLinear(result.x, -1, 1, this.x, this.width);
+    result.y = MathUtils.mapLinear(result.y, -1, 1, this.y, this.height);
+    return result;
   }
 
   /**
@@ -99,18 +92,22 @@ export class UIFullscreenLayer extends UILayer {
    * @param position Layer coordinates
    * @param camera Three.js camera
    * @param z Depth coordinate
+   * @param result Reusable vector instance
    * @returns World position
    */
   public projectLayerPosition(
     position: Vector2,
     camera: Camera,
     z = -1,
+    result = new Vector3(),
   ): Vector3 {
-    return new Vector3(
-      MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
-      MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
-      z,
-    ).unproject(camera);
+    return result
+      .set(
+        MathUtils.mapLinear(position.x, this.x, this.width, -1, 1),
+        MathUtils.mapLinear(position.y, this.y, this.height, -1, 1),
+        z,
+      )
+      .unproject(camera);
   }
 
   /**

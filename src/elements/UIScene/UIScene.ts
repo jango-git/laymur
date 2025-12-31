@@ -35,10 +35,8 @@ import {
 
 /** Renders Three.js scene to texture */
 export class UIScene extends UIElement {
-  /** Background color for render target */
-  public readonly clearColor: UIColor;
-
   private readonly colorInternal: UIColor;
+  private readonly clearColorInternal: UIColor;
   private readonly renderTarget: WebGLRenderTarget;
   private sceneInternal: Scene;
   private cameraInternal: Camera;
@@ -101,7 +99,7 @@ export class UIScene extends UIElement {
     );
 
     this.colorInternal = color;
-    this.clearColor = new UIColor(
+    this.clearColorInternal = new UIColor(
       options.clearColor ?? SCENE_DEFAULT_CLEAR_COLOR,
     );
 
@@ -122,24 +120,19 @@ export class UIScene extends UIElement {
     this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
   }
 
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public get color(): UIColor {
-    return this.colorInternal;
-  }
-
-  /** Three.js scene to render */
-  public get scene(): Scene {
-    return this.sceneInternal;
-  }
-
   /** Camera used for rendering */
   public get camera(): Camera {
     return this.cameraInternal;
   }
 
-  /** Controls when scene re-renders */
-  public get updateMode(): UISceneUpdateMode {
-    return this.updateModeInternal;
+  /** Background color for render target */
+  public get clearColor(): UIColor {
+    return this.clearColorInternal;
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public get color(): UIColor {
+    return this.colorInternal;
   }
 
   /** Render target resolution multiplier. Range 0.1 to 2.0. */
@@ -147,17 +140,14 @@ export class UIScene extends UIElement {
     return this.resolutionFactorInternal;
   }
 
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public set color(value: UIColorConfig) {
-    this.colorInternal.set(value);
+  /** Three.js scene to render */
+  public get scene(): Scene {
+    return this.sceneInternal;
   }
 
-  /** Three.js scene to render */
-  public set scene(value: Scene) {
-    if (this.sceneInternal !== value) {
-      this.sceneInternal = value;
-      this.propertyDirty = true;
-    }
+  /** Controls when scene re-renders */
+  public get updateMode(): UISceneUpdateMode {
+    return this.updateModeInternal;
   }
 
   /** Camera used for rendering */
@@ -168,12 +158,14 @@ export class UIScene extends UIElement {
     }
   }
 
-  /** Controls when scene re-renders */
-  public set updateMode(value: UISceneUpdateMode) {
-    if (this.updateModeInternal !== value) {
-      this.updateModeInternal = value;
-      this.propertyDirty = true;
-    }
+  /** Background color for render target */
+  public set clearColor(value: UIColorConfig) {
+    this.clearColorInternal.set(value);
+  }
+
+  /** Multiplicative tint. Alpha channel controls opacity. */
+  public set color(value: UIColorConfig) {
+    this.colorInternal.set(value);
   }
 
   /** Render target resolution multiplier. Range 0.1 to 2.0. */
@@ -187,6 +179,22 @@ export class UIScene extends UIElement {
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
       this.resolutionFactorDirty = true;
+    }
+  }
+
+  /** Three.js scene to render */
+  public set scene(value: Scene) {
+    if (this.sceneInternal !== value) {
+      this.sceneInternal = value;
+      this.propertyDirty = true;
+    }
+  }
+
+  /** Controls when scene re-renders */
+  public set updateMode(value: UISceneUpdateMode) {
+    if (this.updateModeInternal !== value) {
+      this.updateModeInternal = value;
+      this.propertyDirty = true;
     }
   }
 
@@ -215,7 +223,7 @@ export class UIScene extends UIElement {
       (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE &&
         this.propertyDirty) ||
       this.colorInternal.dirty ||
-      this.clearColor.dirty ||
+      this.clearColorInternal.dirty ||
       (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
         (this.resolutionFactorDirty || this.solverWrapper.dirty));
 
@@ -235,7 +243,10 @@ export class UIScene extends UIElement {
         this.colorInternal.setDirtyFalse();
       }
 
-      renderer.setClearColor(this.clearColor.getHexRGB(), this.clearColor.a);
+      renderer.setClearColor(
+        this.clearColorInternal.getHexRGB(),
+        this.clearColorInternal.a,
+      );
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);

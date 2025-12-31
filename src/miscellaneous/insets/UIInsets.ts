@@ -5,10 +5,10 @@ import { INSETS_DEFAULT_VALUE } from "./UIInsets.Internal";
 
 /** Insets values for four sides */
 export class UIInsets {
-  private lInternal: number;
-  private rInternal: number;
-  private tInternal: number;
-  private bInternal: number;
+  private lInternal = INSETS_DEFAULT_VALUE;
+  private rInternal = INSETS_DEFAULT_VALUE;
+  private tInternal = INSETS_DEFAULT_VALUE;
+  private bInternal = INSETS_DEFAULT_VALUE;
 
   private dirtyInternal = false;
 
@@ -18,49 +18,7 @@ export class UIInsets {
    * @param config - Insets configuration
    */
   constructor(config?: UIInsetsConfig) {
-    if (config === undefined) {
-      this.lInternal = INSETS_DEFAULT_VALUE;
-      this.rInternal = INSETS_DEFAULT_VALUE;
-      this.tInternal = INSETS_DEFAULT_VALUE;
-      this.bInternal = INSETS_DEFAULT_VALUE;
-    } else if (typeof config === "number") {
-      assertValidNonNegativeNumber(config, "UIInsets.constructor.config");
-      this.lInternal = config;
-      this.rInternal = config;
-      this.tInternal = config;
-      this.bInternal = config;
-    } else if ("left" in config) {
-      const left = config.left;
-      const right = config.right;
-      const top = config.top;
-      const bottom = config.bottom;
-      assertValidNonNegativeNumber(left, "UIInsets.constructor.config.left");
-      assertValidNonNegativeNumber(right, "UIInsets.constructor.config.right");
-      assertValidNonNegativeNumber(top, "UIInsets.constructor.config.top");
-      assertValidNonNegativeNumber(
-        bottom,
-        "UIInsets.constructor.config.bottom",
-      );
-      this.lInternal = left;
-      this.rInternal = right;
-      this.tInternal = top;
-      this.bInternal = bottom;
-    } else {
-      const horizontal = config.horizontal;
-      const vertical = config.vertical;
-      assertValidNonNegativeNumber(
-        horizontal,
-        "UIInsets.constructor.config.horizontal",
-      );
-      assertValidNonNegativeNumber(
-        vertical,
-        "UIInsets.constructor.config.vertical",
-      );
-      this.lInternal = horizontal;
-      this.rInternal = horizontal;
-      this.tInternal = vertical;
-      this.bInternal = vertical;
-    }
+    this.set(config);
   }
 
   /** Left inset */
@@ -157,6 +115,85 @@ export class UIInsets {
       this.rInternal = value;
       this.tInternal = value;
       this.bInternal = value;
+      this.dirtyInternal = true;
+    }
+  }
+
+  /** Sets insets */
+  public set(config?: UIInsetsConfig): void {
+    const lOld = this.lInternal;
+    const rOld = this.rInternal;
+    const tOld = this.tInternal;
+    const bOld = this.bInternal;
+
+    if (config === undefined) {
+      this.lInternal = INSETS_DEFAULT_VALUE;
+      this.rInternal = INSETS_DEFAULT_VALUE;
+      this.tInternal = INSETS_DEFAULT_VALUE;
+      this.bInternal = INSETS_DEFAULT_VALUE;
+    } else if (typeof config === "number") {
+      assertValidNonNegativeNumber(config, "UIInsets.set.config");
+      this.lInternal = config;
+      this.rInternal = config;
+      this.tInternal = config;
+      this.bInternal = config;
+    } else if (Array.isArray(config)) {
+      if (config.length === 2) {
+        const horizontal = config[0];
+        const vertical = config[1];
+        assertValidNonNegativeNumber(horizontal, "UIInsets.set.config[0]");
+        assertValidNonNegativeNumber(vertical, "UIInsets.set.config[1]");
+        this.lInternal = horizontal;
+        this.rInternal = horizontal;
+        this.tInternal = vertical;
+        this.bInternal = vertical;
+      } else {
+        const left = config[0];
+        const right = config[1];
+        const top = config[2];
+        const bottom = config[3];
+        assertValidNonNegativeNumber(left, "UIInsets.set.config[0]");
+        assertValidNonNegativeNumber(right, "UIInsets.set.config[1]");
+        assertValidNonNegativeNumber(top, "UIInsets.set.config[2]");
+        assertValidNonNegativeNumber(bottom, "UIInsets.set.config[3]");
+        this.lInternal = left;
+        this.rInternal = right;
+        this.tInternal = top;
+        this.bInternal = bottom;
+      }
+    } else if ("left" in config) {
+      const left = config.left;
+      const right = config.right;
+      const top = config.top;
+      const bottom = config.bottom;
+      assertValidNonNegativeNumber(left, "UIInsets.set.config.left");
+      assertValidNonNegativeNumber(right, "UIInsets.set.config.right");
+      assertValidNonNegativeNumber(top, "UIInsets.set.config.top");
+      assertValidNonNegativeNumber(bottom, "UIInsets.set.config.bottom");
+      this.lInternal = left;
+      this.rInternal = right;
+      this.tInternal = top;
+      this.bInternal = bottom;
+    } else {
+      const horizontal = config.horizontal;
+      const vertical = config.vertical;
+      assertValidNonNegativeNumber(
+        horizontal,
+        "UIInsets.set.config.horizontal",
+      );
+      assertValidNonNegativeNumber(vertical, "UIInsets.set.config.vertical");
+      this.lInternal = horizontal;
+      this.rInternal = horizontal;
+      this.tInternal = vertical;
+      this.bInternal = vertical;
+    }
+
+    if (
+      this.lInternal !== lOld ||
+      this.rInternal !== rOld ||
+      this.tInternal !== tOld ||
+      this.bInternal !== bOld
+    ) {
       this.dirtyInternal = true;
     }
   }
