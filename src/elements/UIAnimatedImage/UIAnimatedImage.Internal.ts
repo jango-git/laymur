@@ -12,7 +12,7 @@ export enum UIAnimatedImageEvent {
 }
 
 /** Animation loop behavior */
-export enum UILoopMode {
+export enum UIAnimatedImageLoopMode {
   /** No looping, stops at boundary frame */
   NONE = 0,
   /** Loops back to opposite frame */
@@ -30,11 +30,11 @@ export interface UIAnimatedImageOptions extends UIElementOptions {
   /** Playback speed multiplier. Can be negative for reverse playback. */
   timeScale: number;
   /** Loop behavior */
-  loopMode: UILoopMode;
+  loopMode: UIAnimatedImageLoopMode;
   /** Whether to start playing immediately */
   playByDefault: boolean;
 }
 
 export const ANIMATED_IMAGE_DEFAULT_FRAME_RATE = 24;
 export const ANIMATED_IMAGE_DEFAULT_TIME_SCALE = 1;
-export const ANIMATED_IMAGE_DEFAULT_LOOP_MODE = UILoopMode.LOOP;
+export const ANIMATED_IMAGE_DEFAULT_LOOP_MODE = UIAnimatedImageLoopMode.LOOP;

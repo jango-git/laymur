@@ -23,7 +23,6 @@ export abstract class UIElement extends UIInputDummy {
 
   private transparencyModeInternal: UITransparencyMode;
   private transparencyModeDirty = false;
-
   private visibilityDirty = false;
 
   /**

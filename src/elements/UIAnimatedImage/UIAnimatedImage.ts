@@ -19,7 +19,7 @@ import {
   ANIMATED_IMAGE_DEFAULT_LOOP_MODE,
   ANIMATED_IMAGE_DEFAULT_TIME_SCALE,
   UIAnimatedImageEvent,
-  UILoopMode,
+  UIAnimatedImageLoopMode,
 } from "./UIAnimatedImage.Internal";
 
 /** Frame-based texture animation element */
@@ -29,7 +29,7 @@ export class UIAnimatedImage extends UIElement {
 
   private frameRateInternal: number;
   private timeScaleInternal: number;
-  private loopModeInternal: UILoopMode;
+  private loopModeInternal: UIAnimatedImageLoopMode;
   private readonly textureTransform: Matrix3;
 
   private isPlaying = false;
@@ -106,7 +106,7 @@ export class UIAnimatedImage extends UIElement {
   }
 
   /** Loop behavior */
-  public get loopMode(): UILoopMode {
+  public get loopMode(): UIAnimatedImageLoopMode {
     return this.loopModeInternal;
   }
 
@@ -132,7 +132,7 @@ export class UIAnimatedImage extends UIElement {
   }
 
   /** Loop behavior */
-  public set loopMode(value: UILoopMode) {
+  public set loopMode(value: UIAnimatedImageLoopMode) {
     this.loopModeInternal = value;
   }
 
@@ -218,9 +218,11 @@ export class UIAnimatedImage extends UIElement {
           this.sequenceFrameIndex += 1;
 
           if (this.sequenceFrameIndex >= sequenceLength) {
-            if (this.loopModeInternal === UILoopMode.LOOP) {
+            if (this.loopModeInternal === UIAnimatedImageLoopMode.LOOP) {
               this.sequenceFrameIndex = 0;
-            } else if (this.loopModeInternal === UILoopMode.PING_PONG) {
+            } else if (
+              this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG
+            ) {
               this.sequenceFrameIndex = lastFrameIndex;
               this.timeScaleInternal = -this.timeScaleInternal;
             } else {
@@ -239,9 +241,11 @@ export class UIAnimatedImage extends UIElement {
           this.sequenceFrameIndex -= 1;
 
           if (this.sequenceFrameIndex < 0) {
-            if (this.loopModeInternal === UILoopMode.LOOP) {
+            if (this.loopModeInternal === UIAnimatedImageLoopMode.LOOP) {
               this.sequenceFrameIndex = lastFrameIndex;
-            } else if (this.loopModeInternal === UILoopMode.PING_PONG) {
+            } else if (
+              this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG
+            ) {
               this.sequenceFrameIndex = 0;
               this.timeScaleInternal = -this.timeScaleInternal;
             } else {
