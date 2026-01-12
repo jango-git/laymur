@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, LinearFilter, Matrix4, SRGBColorSpace } from "three";
+import { CanvasTexture, LinearFilter, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
@@ -50,7 +50,7 @@ export class UIGraphics extends UIElement {
       source,
       {
         texture: texture,
-        textureTransform: new Matrix4(),
+        textureTransform: new Matrix3(),
         color,
       },
       options,
