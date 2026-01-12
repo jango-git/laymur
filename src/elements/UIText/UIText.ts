@@ -219,6 +219,7 @@ export class UIText extends UIElement {
 
   private tryToRenderTextScaleMode(): void {
     if (
+      !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
@@ -279,6 +280,7 @@ export class UIText extends UIElement {
 
   private tryToRenderTextBreakMode(): void {
     if (
+      !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
