@@ -1,3 +1,4 @@
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
 import { TEXT_STYLE_DEFAULT_ALIGN } from "../../miscellaneous/text-style/UITextStyle.Internal";
 import type { UITextLine } from "./UIText.Interfaces";
@@ -15,7 +16,7 @@ export function renderTextChunk(
   y: number,
   text: string,
   style: UITextStyleConfig,
-  context: OffscreenCanvasRenderingContext2D,
+  context: UICanvasRenderingContext2D,
 ): void {
   context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`;
 
@@ -47,7 +48,7 @@ export function renderTextLines(
   paddingTop: number,
   paddingLeft: number,
   lines: UITextLine[],
-  context: OffscreenCanvasRenderingContext2D,
+  context: UICanvasRenderingContext2D,
 ): void {
   let currentY = paddingTop;
 

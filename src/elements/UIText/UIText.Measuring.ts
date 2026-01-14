@@ -1,3 +1,4 @@
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
 import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
@@ -25,7 +26,7 @@ export function splitTextIntoChunks(text: string): string[] {
  * @returns Chunk metrics
  */
 export function measureTextChunk(
-  context: OffscreenCanvasRenderingContext2D,
+  context: UICanvasRenderingContext2D,
   text: string,
   textStyle: UITextStyleConfig,
 ): UIChunkMetrics {
@@ -160,7 +161,7 @@ export function calculateTextSize(lines: UITextLine[]): UITextSize {
  * @returns Measured text chunks
  */
 export function buildTextChunks(
-  context: OffscreenCanvasRenderingContext2D,
+  context: UICanvasRenderingContext2D,
   textSpans: UITextSpan[],
   commonStyle: UITextStyle,
 ): UITextChunk[] {

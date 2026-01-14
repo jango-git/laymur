@@ -10,6 +10,11 @@ import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
+import type {
+  UICanvas,
+  UICanvasRenderingContext2D,
+} from "../../miscellaneous/canvas";
+import { createCanvas } from "../../miscellaneous/canvas";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {
@@ -30,8 +35,8 @@ export class UIText extends UIElement {
 
   private readonly colorInternal: UIColor;
   private readonly paddingInternal: UIInsets;
-  private readonly canvas: OffscreenCanvas;
-  private readonly context: OffscreenCanvasRenderingContext2D;
+  private readonly canvas: UICanvas;
+  private readonly context: UICanvasRenderingContext2D;
   private texture: CanvasTexture;
 
   private contentInternal: UITextSpan[] = [];
@@ -61,8 +66,8 @@ export class UIText extends UIElement {
     content: UITextContent,
     options: Partial<UITextOptions> = {},
   ) {
-    const canvas = new OffscreenCanvas(2, 2);
-    const context = canvas.getContext("2d");
+    const canvas = createCanvas(2, 2);
+    const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
 
     if (!context) {
       throw new Error("UIText.constructor: failed to create canvas context");

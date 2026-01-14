@@ -1,6 +1,11 @@
 import type { WebGLRenderer } from "three";
 import { CanvasTexture, LinearFilter, Matrix3, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
+import type {
+  UICanvas,
+  UICanvasRenderingContext2D,
+} from "../../miscellaneous/canvas";
+import { createCanvas } from "../../miscellaneous/canvas";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
@@ -15,8 +20,8 @@ import {
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
   private readonly colorInternal: UIColor;
-  private readonly canvas: OffscreenCanvas;
-  private readonly context: OffscreenCanvasRenderingContext2D;
+  private readonly canvas: UICanvas;
+  private readonly context: UICanvasRenderingContext2D;
   private readonly texture: CanvasTexture;
 
   /**
@@ -30,12 +35,12 @@ export class UIGraphics extends UIElement {
     const h = options?.height ?? GRAPHICS_DEFAULT_HEIGHT;
     const color = new UIColor(options?.color);
 
-    const canvas = new OffscreenCanvas(w, h);
-    const context = canvas.getContext("2d");
+    const canvas = createCanvas(w, h);
+    const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
 
     if (!context) {
       throw new Error(
-        "UIGraphics.constructor: failed to get 2D context from OffscreenCanvas",
+        "UIGraphics.constructor: failed to get 2D context from canvas",
       );
     }
 
