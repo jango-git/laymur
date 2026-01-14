@@ -70,7 +70,7 @@ export default {
           mangle: {
             toplevel: true,
             properties: {
-              regex: /^_/,
+              regex: /^_private_/,
             },
           },
         }),
