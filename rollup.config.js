@@ -3,6 +3,7 @@ import terser from "@rollup/plugin-terser";
 import typescript from "rollup-plugin-typescript2";
 import minifyPrivatesTransformer from "ts-transformer-minify-privates";
 import { string } from "rollup-plugin-string";
+import { babel } from "@rollup/plugin-babel";
 
 const replaceNodeEnv = (isProduction) => ({
   name: "replace-node-env",
@@ -105,6 +106,13 @@ export default {
           before: [minifyPrivatesTransformer.default(service.getProgram())],
           after: [],
         }),
+      ],
+    }),
+    babel({
+      babelHelpers: "bundled",
+      extensions: [".js", ".ts"],
+      presets: [
+        ["@babel/preset-env", { targets: { ios: "13" } }],
       ],
     }),
   ],
