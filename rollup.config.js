@@ -34,7 +34,7 @@ export default {
         replaceNodeEnv(true),
         terser({
           compress: {
-            ecma: 2020,
+            ecma: 2015,
             passes: 5,
             arrows: true,
             arguments: true,
@@ -63,7 +63,7 @@ export default {
             unsafe_undefined: true,
           },
           format: {
-            ecma: 2020,
+            ecma: 2015,
             comments: false,
           },
           mangle: {
