@@ -1,11 +1,11 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, LinearFilter, Matrix3, SRGBColorSpace } from "three";
+import { CanvasTexture, ClampToEdgeWrapping, LinearFilter, Matrix3, NoColorSpace, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import type {
   UICanvas,
   UICanvasRenderingContext2D,
 } from "../../miscellaneous/canvas";
-import { createCanvas } from "../../miscellaneous/canvas";
+import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
@@ -16,6 +16,7 @@ import {
   GRAPHICS_TEMP_COLOR,
   type UIGraphicsOptions,
 } from "./UIGraphics.Internal";
+import { SRGB_SUPPORTED } from "../../miscellaneous/webglCapabilities";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {
@@ -44,10 +45,7 @@ export class UIGraphics extends UIElement {
       );
     }
 
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    texture.minFilter = LinearFilter;
-    texture.magFilter = LinearFilter;
+    const texture = createCanvasTexture(canvas);
     texture.needsUpdate = true;
 
     super(

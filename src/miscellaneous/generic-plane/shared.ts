@@ -2,6 +2,7 @@ import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 import type { UITransparencyMode } from "../UITransparencyMode";
 import { UIColor } from "../color/UIColor";
+import { SRGB_SUPPORTED } from "../webglCapabilities";
 
 export type UIProperty =
   | Texture
@@ -271,37 +272,44 @@ export function buildGenericPlaneFragmentShader(
   return `
     // Defines
     #define PI 3.14159265359
-
+    #define SRGB_SUPPORTED ${SRGB_SUPPORTED ? '1' : '0'}
+    
     // Uniforms
     ${uniformDeclarations.join("\n")}
-
+    
     // Builtin varyings
     varying vec3 p_position;
     varying vec2 p_uv;
-
+    
     // User varyings
     ${varyingDeclarations.join("\n")}
-
+    
     #include <alphahash_pars_fragment>
-
+    
+    // sRGB decode helper
+    vec4 srgbTexture2D(sampler2D textureSampler, vec2 uv) {
+      #if SRGB_SUPPORTED
+        return texture2D(textureSampler, uv);
+      #else
+        vec4 textureValue = texture2D(textureSampler, uv);
+        return vec4(pow(textureValue.rgb, vec3(2.2)), textureValue.a);
+      #endif
+    }
+    
     // Source must define vec4 draw() function
     ${source}
-
     void main() {
       vec4 diffuseColor = draw();
-
       #ifdef USE_ALPHATEST
         if (diffuseColor.a < ${DEFAULT_ALPHA_TEST.toFixed(2)}) {
           discard;
         }
       #endif
-
       #ifdef USE_ALPHAHASH
         if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
           discard;
         }
       #endif
-
       gl_FragColor = linearToOutputTexel(diffuseColor);
     }
   `;

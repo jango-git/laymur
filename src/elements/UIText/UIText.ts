@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, Matrix3, SRGBColorSpace } from "three";
+import { CanvasTexture, ClampToEdgeWrapping, LinearFilter, LinearMipMapLinearFilter, Matrix3, NoColorSpace, SRGBColorSpace } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
@@ -14,7 +14,7 @@ import type {
   UICanvas,
   UICanvasRenderingContext2D,
 } from "../../miscellaneous/canvas";
-import { createCanvas } from "../../miscellaneous/canvas";
+import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {
@@ -27,6 +27,7 @@ import {
   calculateTextContentParameters,
 } from "./UIText.Measuring";
 import { renderTextLines } from "./UIText.Rendering";
+import { SRGB_SUPPORTED } from "../../miscellaneous/webglCapabilities";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {
@@ -73,8 +74,7 @@ export class UIText extends UIElement {
       throw new Error("UIText.constructor: failed to create canvas context");
     }
 
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
+    const texture = createCanvasTexture(canvas);
     texture.needsUpdate = true;
     const color = new UIColor(options.color);
 
@@ -359,8 +359,7 @@ export class UIText extends UIElement {
 
     if (resolutionDirty) {
       this.texture.dispose();
-      this.texture = new CanvasTexture(this.canvas);
-      this.texture.colorSpace = SRGBColorSpace;
+      this.texture = createCanvasTexture(this.canvas);
       this.texture.needsUpdate = true;
 
       properties ??= {};

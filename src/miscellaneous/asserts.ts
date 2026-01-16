@@ -1,7 +1,6 @@
 import { UILayer } from "../layers/UILayer/UILayer";
+import { EPSILON } from "./math";
 import { isUILayerElement } from "./shared";
-
-export const EPSILON = 1e-6;
 
 /**
  * Validates value is finite number within safe range.

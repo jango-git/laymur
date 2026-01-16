@@ -9,7 +9,7 @@
 
 vec4 draw() {
     vec2 transformedUV = (p_textureTransform * vec3(p_uv, 1.0)).xy;
-    vec4 diffuseColor = texture2D(p_texture, transformedUV) * p_color;
+    vec4 diffuseColor = srgbTexture2D(p_texture, transformedUV) * p_color;
     diffuseColor.a *= calculateMask();
     return diffuseColor;
 }
