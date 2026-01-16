@@ -1,5 +1,5 @@
-import type { WebGLRenderer } from "three";
-import { CanvasTexture, ClampToEdgeWrapping, LinearFilter, LinearMipMapLinearFilter, Matrix3, NoColorSpace, SRGBColorSpace } from "three";
+import type { CanvasTexture, WebGLRenderer } from "three";
+import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
@@ -27,7 +27,6 @@ import {
   calculateTextContentParameters,
 } from "./UIText.Measuring";
 import { renderTextLines } from "./UIText.Rendering";
-import { SRGB_SUPPORTED } from "../../miscellaneous/webglCapabilities";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {

@@ -1,5 +1,5 @@
-import type { WebGLRenderer } from "three";
-import { CanvasTexture, ClampToEdgeWrapping, LinearFilter, Matrix3, NoColorSpace, SRGBColorSpace } from "three";
+import type { CanvasTexture, WebGLRenderer } from "three";
+import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import type {
   UICanvas,
@@ -16,7 +16,6 @@ import {
   GRAPHICS_TEMP_COLOR,
   type UIGraphicsOptions,
 } from "./UIGraphics.Internal";
-import { SRGB_SUPPORTED } from "../../miscellaneous/webglCapabilities";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {

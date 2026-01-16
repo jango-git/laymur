@@ -1,28 +1,26 @@
 /**
- * Checks if WebGL2 is available.
- */
-function checkWebGL2Support(): boolean {
-  const canvas = document.createElement("canvas");
-  return canvas.getContext("webgl2") !== null;
-}
-
-/**
  * Checks real OffscreenCanvas support as a texture source
  */
-function checkOffscreenCanvasSupport(): boolean {
-  if (typeof OffscreenCanvas === "undefined") return false;
+function checkOffscreenCanvasSupportInternal(): boolean {
+  if (typeof OffscreenCanvas === "undefined") {
+    return false;
+  }
 
   const testCanvasElement = document.createElement("canvas");
   testCanvasElement.width = 4;
   testCanvasElement.height = 4;
 
   const gl = testCanvasElement.getContext("webgl") ?? testCanvasElement.getContext("webgl2");
-  if (!gl) return false;
+  if (!gl) {
+    return false;
+  }
 
   try {
     const offscreenCanvas = new OffscreenCanvas(4, 4);
     const offscreenContext = offscreenCanvas.getContext("2d");
-    if (!offscreenContext) return false;
+    if (!offscreenContext) {
+      return false;
+    }
 
     offscreenContext.fillStyle = "#ff0000";
     offscreenContext.fillRect(0, 0, 4, 4);
@@ -55,10 +53,13 @@ function checkOffscreenCanvasSupport(): boolean {
 
     // Check that the read pixel is red (with tolerance)
     const isRedPixel = pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
-    if (!isRedPixel) return false;
+    if (!isRedPixel) {
+      return false;
+    }
 
     return true;
   } catch (error) {
+    void error;
     return false;
   }
 }
@@ -66,10 +67,12 @@ function checkOffscreenCanvasSupport(): boolean {
 /**
  * Checks sRGB support
  */
-function checkSRGBSupport(): boolean {
+function checkSRGBSupportInternal(): boolean {
   const canvasElement = document.createElement("canvas");
   const gl = canvasElement.getContext("webgl2") ?? canvasElement.getContext("webgl");
-  if (!gl) return false;
+  if (!gl) {
+    return false;
+  }
 
   if (gl instanceof WebGL2RenderingContext) {
     try {
@@ -85,7 +88,9 @@ function checkSRGBSupport(): boolean {
   }
 
   const extension = gl.getExtension("EXT_sRGB");
-  if (!extension) return false;
+  if (!extension) {
+    return false;
+  }
 
   try {
     const texture = gl.createTexture();
@@ -99,12 +104,15 @@ function checkSRGBSupport(): boolean {
   }
 }
 
-export const WEBGL2_SUPPORTED = checkWebGL2Support();
-export const OFFSCREEN_CANVAS_SUPPORTED = checkOffscreenCanvasSupport();
-export const SRGB_SUPPORTED = checkSRGBSupport();
+let OFFSCREEN_CANVAS_SUPPORTED_INTERNAL: boolean | undefined;
+let SRGB_SUPPORTED_INTERNAL: boolean | undefined;
 
-console.log("[WebGL] Capabilities:", {
-  webgl2: WEBGL2_SUPPORTED,
-  offscreenCanvas: OFFSCREEN_CANVAS_SUPPORTED,
-  srgb: SRGB_SUPPORTED,
-});
+export const checkOffscreenCanvasSupport = (): boolean => {
+  OFFSCREEN_CANVAS_SUPPORTED_INTERNAL ??= checkOffscreenCanvasSupportInternal();
+  return OFFSCREEN_CANVAS_SUPPORTED_INTERNAL;
+};
+
+export const checkSRGBSupport = (): boolean => {
+  SRGB_SUPPORTED_INTERNAL ??= checkSRGBSupportInternal();
+  return SRGB_SUPPORTED_INTERNAL;
+};

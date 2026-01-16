@@ -8,7 +8,7 @@ import {
   SRGBColorSpace,
   NoColorSpace,
 } from "three";
-import { OFFSCREEN_CANVAS_SUPPORTED, SRGB_SUPPORTED } from "./webglCapabilities";
+import { checkOffscreenCanvasSupport, checkSRGBSupport } from "./webglCapabilities";
 
 /** Canvas type that works both in main thread and workers */
 export type UICanvas = HTMLCanvasElement | OffscreenCanvas;
@@ -24,7 +24,7 @@ export type UICanvasRenderingContext2D = CanvasRenderingContext2D | OffscreenCan
  * @returns Canvas instance
  */
 export function createCanvas(width: number, height: number): UICanvas {
-  if (OFFSCREEN_CANVAS_SUPPORTED) {
+  if (checkOffscreenCanvasSupport()) {
     return new OffscreenCanvas(width, height);
   }
   const canvasElement = document.createElement("canvas");
@@ -65,7 +65,7 @@ export function createCanvasTexture(canvas: UICanvas): CanvasTexture {
     UnsignedByteType,
     1
   );
-  texture.colorSpace = SRGB_SUPPORTED ? SRGBColorSpace : NoColorSpace;
+  texture.colorSpace = checkSRGBSupport() ? SRGBColorSpace : NoColorSpace;
   texture.generateMipmaps = false;
   return texture;
 }

@@ -2,7 +2,7 @@ import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 import type { UITransparencyMode } from "../UITransparencyMode";
 import { UIColor } from "../color/UIColor";
-import { SRGB_SUPPORTED } from "../webglCapabilities";
+import { checkSRGBSupport } from "../webglCapabilities";
 
 export type UIProperty =
   | Texture
@@ -272,7 +272,7 @@ export function buildGenericPlaneFragmentShader(
   return `
     // Defines
     #define PI 3.14159265359
-    #define SRGB_SUPPORTED ${SRGB_SUPPORTED ? '1' : '0'}
+    #define SRGB_SUPPORTED ${checkSRGBSupport() ? '1' : '0'}
     
     // Uniforms
     ${uniformDeclarations.join("\n")}
