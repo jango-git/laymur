@@ -1,9 +1,12 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
-import { UITransparencyMode } from "../../UITransparencyMode";
+import type { UITransparencyMode } from "../../UITransparencyMode";
 import type { GLProperty, PlaneData } from "../shared";
 import {
   arePropertiesPartiallyCompatible,
+  cloneGLProperties,
+  cloneProperty,
+  extractZIndexFromBuffer,
   resolveGLSLTypeInfo,
   resolvePropertyUniform,
 } from "../shared";
@@ -11,41 +14,40 @@ import {
   buildEmptyInstancedBufferAttribute,
   buildMaterial,
   CAPACITY_STEP,
+  copyBetweenBuffers,
+  INITIAL_CAPACITY,
   INSTANCED_PLANE_GEOMETRY,
   reconstructValue,
-  writeInstanceDefaults,
+  shiftBufferRegion,
   writePropertyToArray,
 } from "./UIGenericInstancedPlane.Internal";
 
 /**
  * Instanced shader plane mesh for batched rendering.
  *
- * Copies property values into internal buffers. No external references
- * are retained after method calls return.
+ * Operates on indices, not handlers. Registry manages handler→index mapping.
+ * Elements are ordered by zIndex (ascending) within the buffer.
  *
  * @internal
  */
 export class UIGenericInstancedPlane extends Mesh {
+  public readonly source: string;
+  public readonly transparency: UITransparencyMode;
+
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
-
-  private readonly handlerToIndex = new Map<number, number>();
-  private readonly propertyBuffers = new Map<
-    string,
-    InstancedBufferAttribute
-  >();
-
   private readonly uniformProperties: Record<string, GLProperty>;
   private readonly varyingProperties: Record<string, GLProperty>;
+  private readonly propertyBuffers: Map<string, InstancedBufferAttribute>;
 
-  private lastHandler = 0;
   private capacity: number;
+  private instancesCountInternal: number;
 
   constructor(
-    public readonly source: string,
+    source: string,
     properties: Record<string, GLProperty>,
-    public readonly transparency: UITransparencyMode,
-    initialCapacity: number = CAPACITY_STEP,
+    transparency: UITransparencyMode,
+    initialCapacity: number = INITIAL_CAPACITY,
   ) {
     const uniformProperties: Record<string, GLProperty> = {};
     const varyingProperties: Record<string, GLProperty> = {
@@ -82,98 +84,99 @@ export class UIGenericInstancedPlane extends Mesh {
     this.matrixAutoUpdate = false;
     this.matrixWorldAutoUpdate = false;
 
+    this.source = source;
+    this.transparency = transparency;
     this.instancedGeometry = instancedGeometry;
-    this.instancedGeometry.instanceCount = 0;
     this.shaderMaterial = shaderMaterial;
     this.uniformProperties = uniformProperties;
     this.varyingProperties = varyingProperties;
+    this.propertyBuffers = new Map();
+
     this.capacity = Math.max(
       Math.ceil(initialCapacity / CAPACITY_STEP) * CAPACITY_STEP,
       CAPACITY_STEP,
     );
+    this.instancesCountInternal = 0;
+    this.instancedGeometry.instanceCount = 0;
 
-    {
-      for (const name in this.varyingProperties) {
-        const { value } = this.varyingProperties[name];
-        const attribute = buildEmptyInstancedBufferAttribute(
-          value,
-          this.capacity,
-        );
-        this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-        this.propertyBuffers.set(name, attribute);
-      }
+    for (const name in this.varyingProperties) {
+      const { value } = this.varyingProperties[name];
+      const attribute = buildEmptyInstancedBufferAttribute(
+        value,
+        this.capacity,
+      );
+      this.instancedGeometry.setAttribute(`a_${name}`, attribute);
+      this.propertyBuffers.set(name, attribute);
     }
 
-    {
-      for (const name in this.uniformProperties) {
-        const { value } = this.uniformProperties[name];
-        const uniform = resolvePropertyUniform(name, this.shaderMaterial);
-        uniform.value = value;
-      }
-      this.shaderMaterial.uniformsNeedUpdate = true;
+    for (const name in this.uniformProperties) {
+      const { value } = this.uniformProperties[name];
+      const uniform = resolvePropertyUniform(name, this.shaderMaterial);
+      uniform.value = value;
     }
+    this.shaderMaterial.uniformsNeedUpdate = true;
   }
 
   /** Current number of active instances */
-  public get instanceCount(): number {
-    return this.instancedGeometry.instanceCount;
+  public get instancesCount(): number {
+    return this.instancesCountInternal;
   }
 
   /**
-   * Creates new instance with default values.
-   * @returns Instance handler for subsequent operations
+   * Insert instance at given index. Elements at [index..end) are shifted right.
    */
-  public createInstance(): number {
-    const handler = this.lastHandler++;
-    const index = this.instancedGeometry.instanceCount;
-
-    {
-      this.ensureCapacity(index + 1);
-      this.handlerToIndex.set(handler, index);
-      this.instancedGeometry.instanceCount++;
-    }
-
-    {
-      const visibilityBufferAttribute = this.propertyBuffers.get(
-        "instanceVisibility",
-      ) as InstancedBufferAttribute;
-      const transformBufferAttribute = this.propertyBuffers.get(
-        "instanceTransform",
-      ) as InstancedBufferAttribute;
-
-      writeInstanceDefaults(
-        visibilityBufferAttribute.array as Float32Array,
-        transformBufferAttribute.array as Float32Array,
-        index,
+  public insertAt(
+    index: number,
+    properties: Record<string, GLProperty>,
+    transform: Matrix4,
+    visibility: boolean,
+  ): void {
+    if (index < 0 || index > this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.insertAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
       );
-
-      visibilityBufferAttribute.needsUpdate = true;
-      transformBufferAttribute.needsUpdate = true;
     }
 
-    return handler;
-  }
+    this.ensureCapacity(this.instancesCountInternal + 1);
 
-  /** Removes instance and compacts buffer */
-  public destroyInstance(handler: number): void {
-    const index = this.resolveIndex(handler);
-    this.handlerToIndex.delete(handler);
-
-    const lastIndex = this.instancedGeometry.instanceCount - 1;
-    if (index < lastIndex) {
-      this.moveInstanceData(lastIndex, index);
-      this.updateIndicesAfterMove(lastIndex, index);
+    if (index < this.instancesCountInternal) {
+      this.shiftBuffersRight(index, 1);
     }
 
-    this.instancedGeometry.instanceCount--;
+    this.writeToBuffers(index, properties, transform, visibility);
+
+    this.instancesCountInternal++;
+    this.instancedGeometry.instanceCount = this.instancesCountInternal;
   }
 
-  /** Updates instance properties. Values are copied into buffers. */
-  public setProperties(
-    handler: number,
+  /**
+   * Remove instance at given index. Elements at [index+1..end) are shifted left.
+   */
+  public removeAt(index: number): void {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.removeAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
+
+    if (index < this.instancesCountInternal - 1) {
+      this.shiftBuffersLeft(index + 1, 1);
+    }
+
+    this.instancesCountInternal--;
+    this.instancedGeometry.instanceCount = this.instancesCountInternal;
+  }
+
+  /** Update properties at given index */
+  public setPropertiesAt(
+    index: number,
     properties: Record<string, GLProperty>,
   ): void {
-    const index = this.resolveIndex(handler);
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.setPropertiesAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
 
     for (const name in properties) {
       const { value, glslTypeInfo } = properties[name];
@@ -191,9 +194,13 @@ export class UIGenericInstancedPlane extends Mesh {
     }
   }
 
-  /** Updates instance transform. Matrix is copied into buffer. */
-  public setTransform(handler: number, transform: Matrix4): void {
-    const index = this.resolveIndex(handler);
+  /** Update transform at given index */
+  public setTransformAt(index: number, transform: Matrix4): void {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.setTransformAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
 
     const attribute = this.resolveAttribute("instanceTransform");
     const array = attribute.array as Float32Array;
@@ -206,105 +213,234 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
-  /** Updates instance visibility */
-  public setVisibility(handler: number, visible: boolean): void {
-    const index = this.resolveIndex(handler);
+  /** Update visibility at given index */
+  public setVisibilityAt(index: number, visible: boolean): void {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.setVisibilityAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
 
     const attribute = this.resolveAttribute("instanceVisibility");
     const array = attribute.array as Float32Array;
     array[index] = visible ? 1 : 0;
-
     attribute.needsUpdate = true;
   }
 
-  /** Checks if plane can accept given properties without reconstruction */
-  public isPartiallyCompatible(
-    source: string,
-    properties: Record<string, GLProperty>,
-    transparency: UITransparencyMode = UITransparencyMode.BLEND,
-  ): boolean {
-    if (this.transparency !== transparency || this.source !== source) {
-      return false;
+  /**
+   * Extract complete instance data at given index.
+   * Returns cloned data safe for external use.
+   */
+  public extractDataAt(index: number): PlaneData {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.extractDataAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
     }
 
-    return arePropertiesPartiallyCompatible(
-      { ...this.uniformProperties, ...this.varyingProperties },
-      properties,
-    );
-  }
-
-  /** Checks if properties are compatible with current plane configuration */
-  public arePropertiesPartiallyCompatible(
-    properties: Readonly<Record<string, Readonly<GLProperty>>>,
-  ): boolean {
-    return arePropertiesPartiallyCompatible(
-      { ...this.uniformProperties, ...this.varyingProperties },
-      properties,
-    );
-  }
-
-  /** Returns reconstructed instance data with new object instances */
-  public extractInstanceData(handler: number): PlaneData {
-    return {
-      source: this.source,
-      properties: this.extractProperties(handler),
-      transparency: this.transparency,
-      transform: this.extractTransform(handler),
-      visibility: this.extractVisibility(handler),
-    };
-  }
-
-  /** Disposes geometry, material, and clears buffers */
-  public destroy(): void {
-    this.instancedGeometry.dispose();
-    this.shaderMaterial.dispose();
-    this.propertyBuffers.clear();
-    this.handlerToIndex.clear();
-  }
-
-  private extractProperties(handler: number): Record<string, GLProperty> {
-    const index = this.resolveIndex(handler);
-    const result: Record<string, GLProperty> = {};
+    const properties: Record<string, GLProperty> = {};
 
     for (const name in this.uniformProperties) {
-      result[name] = this.uniformProperties[name];
+      const prop = this.uniformProperties[name];
+      properties[name] = {
+        value: cloneProperty(prop.value),
+        glslTypeInfo: prop.glslTypeInfo,
+      };
     }
 
     for (const name in this.varyingProperties) {
+      if (name === "instanceVisibility" || name === "instanceTransform") {
+        continue;
+      }
+
       const { value, glslTypeInfo } = this.varyingProperties[name];
       const attribute = this.propertyBuffers.get(
         name,
       ) as InstancedBufferAttribute;
       const array = attribute.array as Float32Array;
       const offset = index * attribute.itemSize;
-      result[name] = {
+
+      properties[name] = {
         value: reconstructValue(value, array, offset),
         glslTypeInfo,
       };
     }
 
-    return result;
+    const transformAttribute = this.propertyBuffers.get(
+      "instanceTransform",
+    ) as InstancedBufferAttribute;
+    const transformArray = transformAttribute.array as Float32Array;
+    const transform = new Matrix4();
+    transform.fromArray(transformArray, index * 16);
+
+    const visibilityAttribute = this.propertyBuffers.get(
+      "instanceVisibility",
+    ) as InstancedBufferAttribute;
+    const visibilityArray = visibilityAttribute.array as Float32Array;
+    const visibility = visibilityArray[index] >= 0.5;
+
+    return {
+      source: this.source,
+      properties,
+      transform,
+      visibility,
+      transparency: this.transparency,
+    };
   }
 
-  private extractTransform(handler: number): Matrix4 {
-    const index = this.resolveIndex(handler);
+  /** Get zIndex at given index (from transform buffer) */
+  public getZIndexAt(index: number): number {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.getZIndexAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
+
     const attribute = this.propertyBuffers.get(
       "instanceTransform",
     ) as InstancedBufferAttribute;
-    const array = attribute.array as Float32Array;
-
-    const matrix = new Matrix4();
-    matrix.fromArray(array, index * 16);
-    return matrix;
+    return extractZIndexFromBuffer(attribute.array as Float32Array, index);
   }
 
-  private extractVisibility(handler: number): boolean {
-    const index = this.resolveIndex(handler);
-    const attribute = this.propertyBuffers.get(
-      "instanceVisibility",
-    ) as InstancedBufferAttribute;
-    const array = attribute.array as Float32Array;
-    return array[index] >= 0.5;
+  /**
+   * Merge another instanced plane into this one (append).
+   * Other plane becomes empty after merge.
+   */
+  public merge(other: UIGenericInstancedPlane): void {
+    if (other.instancesCountInternal === 0) {
+      return;
+    }
+
+    this.ensureCapacity(
+      this.instancesCountInternal + other.instancesCountInternal,
+    );
+
+    for (const [name, thisAttribute] of this.propertyBuffers) {
+      const otherAttribute = other.propertyBuffers.get(name);
+      if (!otherAttribute) {
+        throw new Error(
+          `UIGenericInstancedPlane.merge: missing attribute ${name} in source`,
+        );
+      }
+
+      const itemSize = thisAttribute.itemSize;
+      const srcArray = otherAttribute.array as Float32Array;
+      const dstArray = thisAttribute.array as Float32Array;
+
+      copyBetweenBuffers(
+        srcArray,
+        0,
+        dstArray,
+        this.instancesCountInternal * itemSize,
+        other.instancesCountInternal * itemSize,
+      );
+
+      thisAttribute.needsUpdate = true;
+    }
+
+    this.instancesCountInternal += other.instancesCountInternal;
+    this.instancedGeometry.instanceCount = this.instancesCountInternal;
+
+    other.instancesCountInternal = 0;
+    other.instancedGeometry.instanceCount = 0;
+  }
+
+  /**
+   * Split this plane at given index.
+   * Returns new plane with elements [atIndex..end).
+   * This plane keeps elements [0..atIndex).
+   */
+  public split(atIndex: number): UIGenericInstancedPlane {
+    if (atIndex <= 0 || atIndex >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.split.atIndex: must be in range (0, count) (atIndex=${atIndex}, count=${this.instancesCountInternal})`,
+      );
+    }
+
+    const tailCount = this.instancesCountInternal - atIndex;
+
+    const newPlane = new UIGenericInstancedPlane(
+      this.source,
+      cloneGLProperties({
+        ...this.uniformProperties,
+        ...this.varyingProperties,
+      }),
+      this.transparency,
+      tailCount,
+    );
+
+    for (const [name, thisAttribute] of this.propertyBuffers) {
+      const newAttribute = newPlane.propertyBuffers.get(name);
+      if (!newAttribute) {
+        throw new Error(
+          `UIGenericInstancedPlane.split: missing attribute ${name} in new plane`,
+        );
+      }
+
+      const itemSize = thisAttribute.itemSize;
+      const srcArray = thisAttribute.array as Float32Array;
+      const dstArray = newAttribute.array as Float32Array;
+
+      copyBetweenBuffers(
+        srcArray,
+        atIndex * itemSize,
+        dstArray,
+        0,
+        tailCount * itemSize,
+      );
+
+      newAttribute.needsUpdate = true;
+    }
+
+    newPlane.instancesCountInternal = tailCount;
+    newPlane.instancedGeometry.instanceCount = tailCount;
+
+    this.instancesCountInternal = atIndex;
+    this.instancedGeometry.instanceCount = atIndex;
+
+    return newPlane;
+  }
+
+  /**
+   * Check if this plane can accept elements with given parameters.
+   */
+  public isCompatibleWith(
+    source: string,
+    properties: Record<string, GLProperty>,
+    transparency: UITransparencyMode,
+  ): boolean {
+    if (this.source !== source) {
+      return false;
+    }
+
+    if (this.transparency !== transparency) {
+      return false;
+    }
+
+    const result = arePropertiesPartiallyCompatible(
+      { ...this.uniformProperties, ...this.varyingProperties },
+      properties,
+    );
+
+    return result;
+  }
+
+  /** Get all properties configuration (for compatibility checks) */
+  public getProperties(): Record<string, GLProperty> {
+    return { ...this.uniformProperties, ...this.varyingProperties };
+  }
+
+  /** Remove all instances, reset to empty state */
+  public clearInstances(): void {
+    this.instancesCountInternal = 0;
+    this.instancedGeometry.instanceCount = 0;
+  }
+
+  /** Dispose geometry, material, and clear buffers */
+  public destroy(): void {
+    this.instancedGeometry.dispose();
+    this.shaderMaterial.dispose();
+    this.propertyBuffers.clear();
   }
 
   private ensureCapacity(requiredCapacity: number): void {
@@ -328,46 +464,84 @@ export class UIGenericInstancedPlane extends Mesh {
     this.capacity = newCapacity;
   }
 
-  private moveInstanceData(sourceIndex: number, targetIndex: number): void {
+  private shiftBuffersRight(fromIndex: number, delta: number): void {
+    const elementsToMove = this.instancesCountInternal - fromIndex;
+    if (elementsToMove <= 0) {
+      return;
+    }
+
     for (const attribute of this.propertyBuffers.values()) {
-      const array = attribute.array as Float32Array;
-      const itemSize = attribute.itemSize;
-
-      const srcOffset = sourceIndex * itemSize;
-      const dstOffset = targetIndex * itemSize;
-
-      for (let i = 0; i < itemSize; i++) {
-        array[dstOffset + i] = array[srcOffset + i];
-      }
-
+      shiftBufferRegion(
+        attribute.array as Float32Array,
+        attribute.itemSize,
+        fromIndex,
+        elementsToMove,
+        delta,
+      );
       attribute.needsUpdate = true;
     }
   }
 
-  private updateIndicesAfterMove(oldIndex: number, newIndex: number): void {
-    for (const [handler, index] of this.handlerToIndex) {
-      if (index === oldIndex) {
-        this.handlerToIndex.set(handler, newIndex);
-        break;
-      }
+  private shiftBuffersLeft(fromIndex: number, delta: number): void {
+    const elementsToMove = this.instancesCountInternal - fromIndex;
+    if (elementsToMove <= 0) {
+      return;
+    }
+
+    for (const attribute of this.propertyBuffers.values()) {
+      shiftBufferRegion(
+        attribute.array as Float32Array,
+        attribute.itemSize,
+        fromIndex,
+        elementsToMove,
+        -delta,
+      );
+      attribute.needsUpdate = true;
     }
   }
 
-  private resolveIndex(handler: number): number {
-    const index = this.handlerToIndex.get(handler);
-    if (index === undefined) {
-      throw new Error(
-        `UIGenericInstancedPlane.resolveIndex.handler: invalid handler`,
-      );
+  private writeToBuffers(
+    index: number,
+    properties: Record<string, GLProperty>,
+    transform: Matrix4,
+    visibility: boolean,
+  ): void {
+    const visibilityAttribute = this.resolveAttribute("instanceVisibility");
+    (visibilityAttribute.array as Float32Array)[index] = visibility ? 1 : 0;
+    visibilityAttribute.needsUpdate = true;
+
+    const transformAttribute = this.resolveAttribute("instanceTransform");
+    const transformArray = transformAttribute.array as Float32Array;
+    const transformOffset = index * 16;
+    const elements = transform.elements;
+    for (let j = 0; j < 16; j++) {
+      transformArray[transformOffset + j] = elements[j];
     }
-    return index;
+    transformAttribute.needsUpdate = true;
+
+    for (const name in properties) {
+      const { value, glslTypeInfo } = properties[name];
+
+      if (glslTypeInfo.instantiable) {
+        const attribute = this.propertyBuffers.get(name);
+        if (attribute) {
+          const offset = index * attribute.itemSize;
+          writePropertyToArray(value, attribute.array as Float32Array, offset);
+          attribute.needsUpdate = true;
+        }
+      } else {
+        const uniform = resolvePropertyUniform(name, this.shaderMaterial);
+        uniform.value = value;
+        this.shaderMaterial.uniformsNeedUpdate = true;
+      }
+    }
   }
 
   private resolveAttribute(name: string): InstancedBufferAttribute {
     const attribute = this.propertyBuffers.get(name);
     if (attribute === undefined) {
       throw new Error(
-        `UIGenericInstancedPlane.resolveAttribute.name: unknown attribute`,
+        `UIGenericInstancedPlane.resolveAttribute.name: unknown attribute "${name}"`,
       );
     }
     return attribute;

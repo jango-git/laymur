@@ -30,11 +30,9 @@ export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
 })();
 
 export const CAPACITY_STEP = 4;
+export const INITIAL_CAPACITY = 1;
 
 const TEMP_COLOR_VECTOR = new Vector4();
-const IDENTITY_MATRIX_ELEMENTS = [
-  1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
-];
 
 export function writePropertyToArray(
   value: UIProperty,
@@ -66,19 +64,6 @@ export function writePropertyToArray(
     }
   } else if (typeof value === "number") {
     array[offset] = value;
-  }
-}
-
-export function writeInstanceDefaults(
-  visibilityArray: Float32Array,
-  transformArray: Float32Array,
-  index: number,
-): void {
-  visibilityArray[index] = 1;
-
-  const transformOffset = index * 16;
-  for (let j = 0; j < 16; j++) {
-    transformArray[transformOffset + j] = IDENTITY_MATRIX_ELEMENTS[j];
   }
 }
 
@@ -219,4 +204,41 @@ export function reconstructValue(
   throw new Error(
     `reconstructValue.referenceValue: cannot reconstruct value for type`,
   );
+}
+
+/**
+ * Shift buffer region within the same array.
+ * Uses copyWithin for efficient memory moves with correct overlap handling.
+ */
+export function shiftBufferRegion(
+  array: Float32Array,
+  itemSize: number,
+  fromIndex: number,
+  count: number,
+  delta: number,
+): void {
+  if (count <= 0 || delta === 0) {
+    return;
+  }
+
+  const srcOffset = fromIndex * itemSize;
+  const dstOffset = (fromIndex + delta) * itemSize;
+  const length = count * itemSize;
+
+  array.copyWithin(dstOffset, srcOffset, srcOffset + length);
+}
+
+/**
+ * Copy data between two different buffers.
+ */
+export function copyBetweenBuffers(
+  src: Float32Array,
+  srcOffset: number,
+  dst: Float32Array,
+  dstOffset: number,
+  length: number,
+): void {
+  for (let i = 0; i < length; i++) {
+    dst[dstOffset + i] = src[srcOffset + i];
+  }
 }

@@ -19,6 +19,8 @@ export class UISceneWrapper implements UISceneWrapperInterface {
 
   constructor(width: number, height: number) {
     this.camera = new OrthographicCamera(0, width, height, 0, -1024, 1024);
+    this.camera.matrixAutoUpdate = false;
+    this.camera.matrixWorldAutoUpdate = false;
   }
 
   public createPlane(
@@ -81,6 +83,8 @@ export class UISceneWrapper implements UISceneWrapperInterface {
   }
 
   public render(renderer: WebGLRenderer): this {
+    this.planeRegistry.flush();
+
     originalClearColor = renderer.getClearColor(originalClearColor);
     originalClearAlpha = renderer.getClearAlpha();
     originalAutoClear = renderer.autoClear;

@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "scripts": {
     "clean": "rm -rf dist",
@@ -50,9 +50,6 @@
     "three": ">=0.157.0 <0.180.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
-    "@rollup/plugin-babel": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^0.4.4",

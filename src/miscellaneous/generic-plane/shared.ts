@@ -225,7 +225,7 @@ export function arePropertiesPartiallyCompatible(
     }
 
     // Non-instantiable (textures) must match by reference
-    if (!infoFull.instantiable && full[key] !== partial[key]) {
+    if (!infoFull.instantiable && full[key].value !== partial[key].value) {
       return false;
     }
   }
@@ -264,6 +264,33 @@ export function cloneProperties(
   return result;
 }
 
+export function cloneGLProperties(
+  properties: Record<string, GLProperty>,
+): Record<string, GLProperty> {
+  const result: Record<string, GLProperty> = {};
+  for (const name in properties) {
+    const prop = properties[name];
+    result[name] = {
+      value: cloneProperty(prop.value),
+      glslTypeInfo: prop.glslTypeInfo,
+    };
+  }
+  return result;
+}
+
+/** Extracts zIndex from transform matrix (translation.z component) */
+export function extractZIndex(transform: Matrix4): number {
+  return transform.elements[14];
+}
+
+/** Extracts zIndex from transform buffer at given instance index */
+export function extractZIndexFromBuffer(
+  buffer: Float32Array,
+  instanceIndex: number,
+): number {
+  return buffer[instanceIndex * 16 + 14];
+}
+
 export function buildGenericPlaneFragmentShader(
   uniformDeclarations: string[],
   varyingDeclarations: string[],
@@ -272,20 +299,20 @@ export function buildGenericPlaneFragmentShader(
   return `
     // Defines
     #define PI 3.14159265359
-    #define SRGB_SUPPORTED ${checkSRGBSupport() ? '1' : '0'}
-    
+    #define SRGB_SUPPORTED ${checkSRGBSupport() ? "1" : "0"}
+
     // Uniforms
     ${uniformDeclarations.join("\n")}
-    
+
     // Builtin varyings
     varying vec3 p_position;
     varying vec2 p_uv;
-    
+
     // User varyings
     ${varyingDeclarations.join("\n")}
-    
+
     #include <alphahash_pars_fragment>
-    
+
     // sRGB decode helper
     vec4 srgbTexture2D(sampler2D textureSampler, vec2 uv) {
       #if SRGB_SUPPORTED
@@ -295,7 +322,7 @@ export function buildGenericPlaneFragmentShader(
         return vec4(pow(textureValue.rgb, vec3(2.2)), textureValue.a);
       #endif
     }
-    
+
     // Source must define vec4 draw() function
     ${source}
     void main() {

@@ -55,14 +55,10 @@ export function isUIPointElement(obj: unknown): obj is UIPointElement {
   return (
     typeof obj === "object" &&
     obj !== null &&
-    "xVariable" in obj &&
-    typeof obj.xVariable === "number" &&
-    "yVariable" in obj &&
-    typeof obj.yVariable === "number" &&
-    "width" in obj &&
-    typeof obj.width === "number" &&
-    "height" in obj &&
-    typeof obj.height === "number"
+    typeof (obj as UIPointElement).xVariable === "number" &&
+    typeof (obj as UIPointElement).yVariable === "number" &&
+    typeof (obj as UIPointElement).x === "number" &&
+    typeof (obj as UIPointElement).y === "number"
   );
 }
 
@@ -73,15 +69,10 @@ export function isUIPointElement(obj: unknown): obj is UIPointElement {
  */
 export function isUIPlaneElement(obj: unknown): obj is UIPlaneElement {
   return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "wVariable" in obj &&
-    typeof obj.wVariable === "number" &&
-    "hVariable" in obj &&
-    typeof obj.hVariable === "number" &&
-    "width" in obj &&
-    typeof obj.width === "number" &&
-    "height" in obj &&
-    typeof obj.height === "number"
+    isUIPointElement(obj) &&
+    typeof (obj as UIPlaneElement).wVariable === "number" &&
+    typeof (obj as UIPlaneElement).hVariable === "number" &&
+    typeof (obj as UIPlaneElement).width === "number" &&
+    typeof (obj as UIPlaneElement).height === "number"
   );
 }
