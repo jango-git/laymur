@@ -4,22 +4,25 @@ import { MathUtils } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import type { UIArea } from "../../miscellaneous/area/UIArea";
 import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle";
-import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts";
+import {
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts";
 import type { UIPlaneElement } from "../../miscellaneous/shared";
 import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import type { UIInputWrapperInterface } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal";
 import { UIAnchor } from "../UIAnchor/UIAnchor";
-import type { UIInputDummyOptions, UIInputEventData } from "./UIInputDummy.Internal";
+import type { UIDummyOptions, UIInputEventData } from "./UIDummy.Internal";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_MODE,
   DUMMY_DEFAULT_WIDTH,
   DUMMY_DEFAULT_Z_INDEX,
-} from "./UIInputDummy.Internal";
+} from "./UIDummy.Internal";
 
 /** Rectangular area with dimensions but no rendering */
-export class UIInputDummy extends UIAnchor implements UIPlaneElement {
+export class UIDummy extends UIAnchor implements UIPlaneElement {
   /** Shape defining interactive region in element-local space (0,0 = bottom-left, 1,1 = top-right) */
   public interactionArea: UIArea;
 
@@ -34,28 +37,34 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
   private readonly catcherHandler: number;
   private wasPointerInside = false;
 
-  private readonly signalPressedInternal = new Ferrsign1<UIInputEventData>();
-  private readonly signalMovedInternal = new Ferrsign1<UIInputEventData>();
-  private readonly signalReleasedInternal = new Ferrsign1<UIInputEventData>();
-  private readonly signalEnteredInternal = new Ferrsign1<UIInputEventData>();
-  private readonly signalLeftInternal = new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerPressedInternal =
+    new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerMovedInternal =
+    new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerReleasedInternal =
+    new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerEnteredInternal =
+    new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerLeftInternal =
+    new Ferrsign1<UIInputEventData>();
 
   /**
-   * Creates a new UIInputDummy instance.
+   * Creates a new UIDummy instance.
    *
    * @param layer - Layer containing this element
    * @param options - Configuration options
    */
-  constructor(layer: UILayer, options?: Partial<UIInputDummyOptions>) {
+  constructor(layer: UILayer, options?: Partial<UIDummyOptions>) {
     const w = options?.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options?.height ?? DUMMY_DEFAULT_HEIGHT;
 
-    assertValidPositiveNumber(w, "UIInputDummy.constructor.width");
-    assertValidPositiveNumber(h, "UIInputDummy.constructor.height");
+    assertValidPositiveNumber(w, "UIDummy.constructor.width");
+    assertValidPositiveNumber(h, "UIDummy.constructor.height");
 
     super(layer, options);
 
-    this.interactionArea = options?.interactionArea ?? new UIAreaRectangle(0, 0, 1, 1);
+    this.interactionArea =
+      options?.interactionArea ?? new UIAreaRectangle(0, 0, 1, 1);
     this.modeInternal = options?.mode ?? DUMMY_DEFAULT_MODE;
     this.inputWrapper = this.layer.inputWrapper;
 
@@ -69,7 +78,10 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
       DUMMY_DEFAULT_Z_INDEX,
     );
 
-    this.inputWrapper.setActive(this.catcherHandler, isUIModeInteractive(this.modeInternal));
+    this.inputWrapper.setActive(
+      this.catcherHandler,
+      isUIModeInteractive(this.modeInternal),
+    );
   }
 
   /** Width in world units */
@@ -113,63 +125,63 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
   }
 
   /** Signal fired when pointer is pressed */
-  public get signalPressed(): FerrsignView1<UIInputEventData> {
-    return this.signalPressedInternal;
+  public get signalPointerPressed(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerPressedInternal;
   }
 
   /** Signal fired when pointer is moved */
-  public get signalMoved(): FerrsignView1<UIInputEventData> {
-    return this.signalMovedInternal;
+  public get signalPointerMoved(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerMovedInternal;
   }
 
   /** Signal fired when pointer is released */
-  public get signalReleased(): FerrsignView1<UIInputEventData> {
-    return this.signalReleasedInternal;
+  public get signalPointerReleased(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerReleasedInternal;
   }
 
   /** Signal fired when pointer enters element */
-  public get signalEntered(): FerrsignView1<UIInputEventData> {
-    return this.signalEnteredInternal;
+  public get signalPointerEntered(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerEnteredInternal;
   }
 
   /** Signal fired when pointer leaves element */
-  public get signalLeft(): FerrsignView1<UIInputEventData> {
-    return this.signalLeftInternal;
+  public get signalPointerLeft(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerLeftInternal;
   }
 
   /** Width in world units */
   public set width(value: number) {
-    assertValidPositiveNumber(value, "UIInputDummy.width");
+    assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   /** Height in world units */
   public set height(value: number) {
-    assertValidPositiveNumber(value, "UIInputDummy.height");
+    assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   /** X coordinate of right edge */
   public set oppositeX(value: number) {
-    assertValidNumber(value, "UIInputDummy.oppositeX");
+    assertValidNumber(value, "UIDummy.oppositeX");
     this.x = value - this.width;
   }
 
   /** Y coordinate of top edge */
   public set oppositeY(value: number) {
-    assertValidNumber(value, "UIInputDummy.oppositeY");
+    assertValidNumber(value, "UIDummy.oppositeY");
     this.y = value - this.height;
   }
 
   /** X coordinate of horizontal center */
   public set centerX(value: number) {
-    assertValidNumber(value, "UIInputDummy.centerX");
+    assertValidNumber(value, "UIDummy.centerX");
     this.x = value - this.width / 2;
   }
 
   /** Y coordinate of vertical center */
   public set centerY(value: number) {
-    assertValidNumber(value, "UIInputDummy.centerY");
+    assertValidNumber(value, "UIDummy.centerY");
     this.y = value - this.height / 2;
   }
 
@@ -184,7 +196,7 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
 
   /** Rendering and input priority. Higher values on top. */
   public set zIndex(value: number) {
-    assertValidNumber(value, "UIInputDummy.zIndex");
+    assertValidNumber(value, "UIDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
@@ -196,16 +208,43 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
     super.destroy();
   }
 
-  protected readonly catchPointerDown = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalPressedInternal);
+  protected readonly catchPointerDown = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(
+      x,
+      y,
+      identifier,
+      this.signalPointerPressedInternal,
+    );
   };
 
-  protected readonly catchPointerMove = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalMovedInternal);
+  protected readonly catchPointerMove = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(
+      x,
+      y,
+      identifier,
+      this.signalPointerMovedInternal,
+    );
   };
 
-  protected readonly catchPointerUp = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalReleasedInternal);
+  protected readonly catchPointerUp = (
+    x: number,
+    y: number,
+    identifier: number,
+  ): boolean => {
+    return this.handleInputEvent(
+      x,
+      y,
+      identifier,
+      this.signalPointerReleasedInternal,
+    );
   };
 
   protected handleInputEvent(
@@ -214,9 +253,9 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
     identifier: number,
     signal: Ferrsign1<UIInputEventData>,
   ): boolean {
-    assertValidNumber(x, "UIInputDummy.handleInputEvent.x");
-    assertValidNumber(y, "UIInputDummy.handleInputEvent.y");
-    assertValidNumber(identifier, "UIInputDummy.handleInputEvent.identifier");
+    assertValidNumber(x, "UIDummy.handleInputEvent.x");
+    assertValidNumber(y, "UIDummy.handleInputEvent.y");
+    assertValidNumber(identifier, "UIDummy.handleInputEvent.identifier");
 
     const isPointerInside = this.interactionArea.contains(
       MathUtils.mapLinear(x, this.x, this.oppositeX, 0, 1),
@@ -228,12 +267,19 @@ export class UIInputDummy extends UIAnchor implements UIPlaneElement {
     }
 
     if (this.wasPointerInside && !isPointerInside) {
-      this.signalLeftInternal.emit({ x, y, identifier, element: this });
+      this.signalPointerLeftInternal.emit({ x, y, identifier, element: this });
     } else if (!this.wasPointerInside && isPointerInside) {
-      this.signalEnteredInternal.emit({ x, y, identifier, element: this });
+      this.signalPointerEnteredInternal.emit({
+        x,
+        y,
+        identifier,
+        element: this,
+      });
     }
 
     this.wasPointerInside = isPointerInside;
-    return this.modeInternal !== UIMode.INTERACTIVE_TRANSPARENT && isPointerInside;
+    return (
+      this.modeInternal !== UIMode.INTERACTIVE_TRANSPARENT && isPointerInside
+    );
   }
 }

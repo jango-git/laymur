@@ -196,16 +196,16 @@ Fullscreen layers emit input events:
 ```typescript
 import type { UIFullscreenLayerInputEventData } from "laymur";
 
-layer.signalPressed.on((data: UIFullscreenLayerInputEventData) => {
+layer.signalPointerPressed.on((data: UIFullscreenLayerInputEventData) => {
   console.log("Layer pressed at", data.x, data.y);
   console.log("Layer:", data.layer);
 });
 
-layer.signalMoved.on((data: UIFullscreenLayerInputEventData) => {
+layer.signalPointerMoved.on((data: UIFullscreenLayerInputEventData) => {
   console.log("Pointer moved to", data.x, data.y);
 });
 
-layer.signalReleased.on((data: UIFullscreenLayerInputEventData) => {
+layer.signalPointerReleased.on((data: UIFullscreenLayerInputEventData) => {
   console.log("Pointer released");
 });
 ```

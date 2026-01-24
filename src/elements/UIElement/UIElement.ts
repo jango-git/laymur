@@ -8,12 +8,12 @@ import type { UIMode } from "../../miscellaneous/UIMode";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
 import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
-import { UIInputDummy } from "../UIInputDummy/UIInputDummy";
+import { UIDummy } from "../UIDummy/UIDummy";
 import type { UIElementOptions } from "./UIElement.Internal";
 import { ELEMENT_DEFAULT_TRANSPARENCY_MODE } from "./UIElement.Internal";
 
 /** Base class for renderable UI elements */
-export abstract class UIElement extends UIInputDummy {
+export abstract class UIElement extends UIDummy {
   /** Transforms that don't affect constraints */
   public readonly micro: UIMicro;
 

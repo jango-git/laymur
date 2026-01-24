@@ -17,14 +17,21 @@ export class UIFullscreenLayer extends UILayer {
   private resizePolicyInternal: UIResizePolicy;
   private resizePolicyDirty = false;
 
-  private readonly signalPressedInternal = new Ferrsign1<UIFullscreenLayerInputEventData>();
-  private readonly signalMovedInternal = new Ferrsign1<UIFullscreenLayerInputEventData>();
-  private readonly signalReleasedInternal = new Ferrsign1<UIFullscreenLayerInputEventData>();
+  private readonly signalPointerPressedInternal =
+    new Ferrsign1<UIFullscreenLayerInputEventData>();
+  private readonly signalPointerMovedInternal =
+    new Ferrsign1<UIFullscreenLayerInputEventData>();
+  private readonly signalPointerReleasedInternal =
+    new Ferrsign1<UIFullscreenLayerInputEventData>();
 
   constructor(options?: Partial<UIFullscreenLayerOptions>) {
-    const resizePolicy = options?.resizePolicy ?? FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY;
+    const resizePolicy =
+      options?.resizePolicy ?? FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY;
 
-    const scale = resizePolicy.calculateScale(window.innerWidth, window.innerHeight);
+    const scale = resizePolicy.calculateScale(
+      window.innerWidth,
+      window.innerHeight,
+    );
 
     super({
       width: window.innerWidth * scale,
@@ -45,18 +52,18 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   /** Signal fired when pointer is pressed */
-  public get signalPressed(): FerrsignView1<UIFullscreenLayerInputEventData> {
-    return this.signalPressedInternal;
+  public get signalPointerPressed(): FerrsignView1<UIFullscreenLayerInputEventData> {
+    return this.signalPointerPressedInternal;
   }
 
   /** Signal fired when pointer is moved */
-  public get signalMoved(): FerrsignView1<UIFullscreenLayerInputEventData> {
-    return this.signalMovedInternal;
+  public get signalPointerMoved(): FerrsignView1<UIFullscreenLayerInputEventData> {
+    return this.signalPointerMovedInternal;
   }
 
   /** Signal fired when pointer is released */
-  public get signalReleased(): FerrsignView1<UIFullscreenLayerInputEventData> {
-    return this.signalReleasedInternal;
+  public get signalPointerReleased(): FerrsignView1<UIFullscreenLayerInputEventData> {
+    return this.signalPointerReleasedInternal;
   }
 
   /** Updates resize policy */
@@ -95,7 +102,11 @@ export class UIFullscreenLayer extends UILayer {
    * @param result Reusable vector instance
    * @returns Layer coordinates
    */
-  public projectWorldPosition(position: Vector3, camera: Camera, result = new Vector3()): Vector3 {
+  public projectWorldPosition(
+    position: Vector3,
+    camera: Camera,
+    result = new Vector3(),
+  ): Vector3 {
     result.copy(position).project(camera);
     result.x = MathUtils.mapLinear(result.x, -1, 1, this.x, this.width);
     result.y = MathUtils.mapLinear(result.y, -1, 1, this.y, this.height);
@@ -150,22 +161,37 @@ export class UIFullscreenLayer extends UILayer {
   }
 
   private readonly onResize = (): void => {
-    const scale = this.resizePolicy.calculateScale(window.innerWidth, window.innerHeight);
+    const scale = this.resizePolicy.calculateScale(
+      window.innerWidth,
+      window.innerHeight,
+    );
     this.resizePolicy.dirty = false;
     this.resizePolicyDirty = false;
     this.resizeInternal(window.innerWidth * scale, window.innerHeight * scale);
   };
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerDown", this.signalPressedInternal);
+    this.handleWindowInput(
+      event,
+      "onPointerDown",
+      this.signalPointerPressedInternal,
+    );
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerMove", this.signalMovedInternal);
+    this.handleWindowInput(
+      event,
+      "onPointerMove",
+      this.signalPointerMovedInternal,
+    );
   };
 
   private readonly onPointerUp = (event: PointerEvent): void => {
-    this.handleWindowInput(event, "onPointerUp", this.signalReleasedInternal);
+    this.handleWindowInput(
+      event,
+      "onPointerUp",
+      this.signalPointerReleasedInternal,
+    );
   };
 
   private handleWindowInput(
@@ -173,12 +199,20 @@ export class UIFullscreenLayer extends UILayer {
     pointerFunctionName: "onPointerDown" | "onPointerMove" | "onPointerUp",
     signal: Ferrsign1<UIFullscreenLayerInputEventData>,
   ): void {
-    const rect = event.target instanceof HTMLElement ? event.target.getBoundingClientRect() : null;
+    const rect =
+      event.target instanceof HTMLElement
+        ? event.target.getBoundingClientRect()
+        : null;
 
     const x = rect ? event.clientX - rect.left : event.clientX;
-    const y = rect ? rect.bottom - event.clientY : window.innerHeight - event.clientY;
+    const y = rect
+      ? rect.bottom - event.clientY
+      : window.innerHeight - event.clientY;
 
-    const scale = this.resizePolicy.calculateScale(window.innerWidth, window.innerHeight);
+    const scale = this.resizePolicy.calculateScale(
+      window.innerWidth,
+      window.innerHeight,
+    );
     const scaledX = x * scale;
     const scaledY = y * scale;
 
@@ -189,7 +223,11 @@ export class UIFullscreenLayer extends UILayer {
         identifier: event.pointerId,
         layer: this,
       });
-      this.inputWrapperInternal[pointerFunctionName](scaledX, scaledY, event.pointerId);
+      this.inputWrapperInternal[pointerFunctionName](
+        scaledX,
+        scaledY,
+        event.pointerId,
+      );
     }
   }
 }

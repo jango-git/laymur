@@ -1,7 +1,7 @@
 import type { UIArea } from "../../miscellaneous/area/UIArea";
 import { UIMode } from "../../miscellaneous/UIMode";
 import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal";
-import type { UIInputDummy } from "./UIInputDummy";
+import type { UIDummy } from "./UIDummy";
 
 /** Input event data */
 export interface UIInputEventData {
@@ -12,11 +12,11 @@ export interface UIInputEventData {
   /** Pointer identifier */
   identifier: number;
   /** Element that emitted the event */
-  element: UIInputDummy;
+  element: UIDummy;
 }
 
-/** Configuration options for UIInputDummy */
-export interface UIInputDummyOptions extends UIAnchorOptions {
+/** Configuration options for UIDummy */
+export interface UIDummyOptions extends UIAnchorOptions {
   /** Width in world units */
   width: number;
   /** Height in world units */

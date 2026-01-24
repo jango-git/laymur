@@ -15,9 +15,9 @@ export { UIWidthConstraint } from "./constraints/UIWidthConstraint/UIWidthConstr
 export { UIAnchor } from "./elements/UIAnchor/UIAnchor";
 export { UIAnimatedImage } from "./elements/UIAnimatedImage/UIAnimatedImage";
 export { UIAnimatedImageLoopMode } from "./elements/UIAnimatedImage/UIAnimatedImage.Internal";
+export { UIDummy } from "./elements/UIDummy/UIDummy";
 export { UIGraphics } from "./elements/UIGraphics/UIGraphics";
 export { UIImage } from "./elements/UIImage/UIImage";
-export { UIInputDummy } from "./elements/UIInputDummy/UIInputDummy";
 export { UINineSlice } from "./elements/UINineSlice/UINineSlice";
 export { UINineSliceRegionMode } from "./elements/UINineSlice/UINineSlice.Internal";
 export { UIProgress } from "./elements/UIProgress/UIProgress";
@@ -26,6 +26,7 @@ export { UISceneUpdateMode } from "./elements/UIScene/UIScene.Internal";
 export { UIText } from "./elements/UIText/UIText";
 export { UITextResizeMode } from "./elements/UIText/UIText.Internal";
 export { UIFullscreenLayer } from "./layers/UIFullscreenLayer/UIFullscreenLayer";
+export { UILayer } from "./layers/UILayer/UILayer";
 export { UIAreaCircle } from "./miscellaneous/area/UIAreaCircle";
 export { UIAreaPolygon } from "./miscellaneous/area/UIAreaPolygon";
 export { UIAreaRectangle } from "./miscellaneous/area/UIAreaRectangle";
