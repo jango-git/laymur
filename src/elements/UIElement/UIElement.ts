@@ -41,7 +41,8 @@ export abstract class UIElement extends UIInputDummy {
     super(layer, options);
     this.micro = new UIMicro(options?.micro);
 
-    this.transparencyModeInternal = options?.transparencyMode ?? ELEMENT_DEFAULT_TRANSPARENCY_MODE;
+    this.transparencyModeInternal =
+      options?.transparencyMode ?? ELEMENT_DEFAULT_TRANSPARENCY_MODE;
 
     this.sceneWrapper = this.layer.sceneWrapper;
     this.planeHandler = this.sceneWrapper.createPlane(
@@ -52,7 +53,7 @@ export abstract class UIElement extends UIInputDummy {
       this.transparencyModeInternal,
     );
 
-    this.layer.signalRendering.on(this.onWillRender);
+    this.layer.signalRendering.on(this.handleWillRender);
   }
 
   /** Alpha blending mode */
@@ -70,20 +71,25 @@ export abstract class UIElement extends UIInputDummy {
 
   public override set mode(value: UIMode) {
     if (this.modeInternal !== value) {
-      this.visibilityDirty = isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
+      this.visibilityDirty =
+        isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
       super.mode = value;
     }
   }
 
   /** Removes element and frees resources */
   public override destroy(): void {
-    this.layer.signalRendering.off(this.onWillRender);
+    this.layer.signalRendering.off(this.handleWillRender);
     this.sceneWrapper.destroyPlane(this.planeHandler);
     super.destroy();
   }
 
   protected setPlaneTransform(): void {
-    if (this.micro.dirty || this.inputWrapper.dirty || this.solverWrapper.dirty) {
+    if (
+      this.micro.dirty ||
+      this.inputWrapper.dirty ||
+      this.solverWrapper.dirty
+    ) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
         computeTransformMatrix(
@@ -109,15 +115,28 @@ export abstract class UIElement extends UIInputDummy {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
   protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.transparencyModeDirty) {
-      this.sceneWrapper.setTransparency(this.planeHandler, this.transparencyModeInternal);
+      this.sceneWrapper.setTransparency(
+        this.planeHandler,
+        this.transparencyModeInternal,
+      );
       this.transparencyModeDirty = false;
     }
 
     if (this.visibilityDirty) {
-      this.sceneWrapper.setVisibility(this.planeHandler, isUIModeVisible(this.modeInternal));
+      this.sceneWrapper.setVisibility(
+        this.planeHandler,
+        isUIModeVisible(this.modeInternal),
+      );
       this.visibilityDirty = false;
     }
 
     this.setPlaneTransform();
   }
+
+  private readonly handleWillRender = (
+    renderer: WebGLRenderer,
+    deltaTime: number,
+  ): void => {
+    this.onWillRender(renderer, deltaTime);
+  };
 }
