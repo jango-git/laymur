@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.14.2",
+  "version": "0.15.0",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "scripts": {
     "clean": "rm -rf dist",
@@ -43,7 +43,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jango-git/laymur.git"
+    "url": "git+https://github.com/jango-git/laymur.git"
   },
   "type": "module",
   "peerDependencies": {
@@ -66,6 +66,6 @@
   },
   "dependencies": {
     "@lume/kiwi": "^0.4.4",
-    "eventail": "^0.2.12"
+    "ferrsign": "^0.0.4"
   }
 }

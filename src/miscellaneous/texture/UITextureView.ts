@@ -1,22 +1,16 @@
-import { Eventail } from "eventail";
+import type { FerrsignView3 } from "ferrsign";
+import { Ferrsign3 } from "ferrsign";
 import { Matrix3, Texture, Vector2 } from "three";
-import {
-  assertValidNonNegativeNumber,
-  assertValidPositiveNumber,
-} from "../asserts";
+import { assertValidNonNegativeNumber, assertValidPositiveNumber } from "../asserts";
 import type {
   UITextureAtlasConfig,
   UITextureConfig,
   UITextureTrim,
 } from "./UITextureView.Internal";
-import {
-  TEXTURE_DEFAULT_SIZE,
-  TEXTURE_DEFAULT_TEXTURE,
-  UITextureViewEvent,
-} from "./UITextureView.Internal";
+import { TEXTURE_DEFAULT_SIZE, TEXTURE_DEFAULT_TEXTURE } from "./UITextureView.Internal";
 
 /** Wrapper for Three.js texture with atlas and trim support. Does not own the underlying texture; user must dispose it. */
-export class UITextureView extends Eventail {
+export class UITextureView {
   private textureInternal: Texture = TEXTURE_DEFAULT_TEXTURE;
 
   private sourceWidth = TEXTURE_DEFAULT_SIZE;
@@ -39,9 +33,10 @@ export class UITextureView extends Eventail {
   private uvTransformDirtyInternal = false;
   private trimDirtyInternal = false;
 
+  private readonly signalDiminsionsChangedInternal = new Ferrsign3<number, number, UITextureView>();
+
   /** @param config Texture or atlas configuration */
   constructor(config?: UITextureConfig) {
-    super();
     if (config !== undefined) {
       this.set(config);
     }
@@ -109,6 +104,10 @@ export class UITextureView extends Eventail {
     return this.trimDirtyInternal;
   }
 
+  public get signalDiminsionsChanged(): FerrsignView3<number, number, UITextureView> {
+    return this.signalDiminsionsChangedInternal;
+  }
+
   public setTextureDirtyFalse(): void {
     this.textureDirtyInternal = false;
   }
@@ -129,10 +128,8 @@ export class UITextureView extends Eventail {
    * @returns UV transform matrix
    */
   public calculateUVTransform(result = new Matrix3()): Matrix3 {
-    const atlasWidth =
-      this.textureInternal.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
-    const atlasHeight =
-      this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
+    const atlasWidth = this.textureInternal.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
+    const atlasHeight = this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
 
     if (this.rotatedInternal) {
       const physicalWidth = this.frameHeight;
@@ -180,12 +177,7 @@ export class UITextureView extends Eventail {
     }
 
     if (this.width !== lastWidth || this.height !== lastHeight) {
-      this.emit(
-        UITextureViewEvent.DIMENSIONS_CHANGED,
-        this.width,
-        this.height,
-        this,
-      );
+      this.signalDiminsionsChangedInternal.emit(this.width, this.height, this);
     }
   }
 
@@ -241,22 +233,10 @@ export class UITextureView extends Eventail {
       config.sourceSize.h,
       "UITextureView.setFromAtlasConfig.config.sourceSize.h",
     );
-    assertValidNonNegativeNumber(
-      config.frame.x,
-      "UITextureView.setFromAtlasConfig.config.frame.x",
-    );
-    assertValidNonNegativeNumber(
-      config.frame.y,
-      "UITextureView.setFromAtlasConfig.config.frame.y",
-    );
-    assertValidPositiveNumber(
-      config.frame.w,
-      "UITextureView.setFromAtlasConfig.config.frame.w",
-    );
-    assertValidPositiveNumber(
-      config.frame.h,
-      "UITextureView.setFromAtlasConfig.config.frame.h",
-    );
+    assertValidNonNegativeNumber(config.frame.x, "UITextureView.setFromAtlasConfig.config.frame.x");
+    assertValidNonNegativeNumber(config.frame.y, "UITextureView.setFromAtlasConfig.config.frame.y");
+    assertValidPositiveNumber(config.frame.w, "UITextureView.setFromAtlasConfig.config.frame.w");
+    assertValidPositiveNumber(config.frame.h, "UITextureView.setFromAtlasConfig.config.frame.h");
     assertValidNonNegativeNumber(
       config.spriteSourceSize.x,
       "UITextureView.setFromAtlasConfig.config.spriteSourceSize.x",
@@ -275,10 +255,7 @@ export class UITextureView extends Eventail {
     );
 
     if (config.scale !== undefined) {
-      assertValidPositiveNumber(
-        config.scale,
-        "UITextureView.setFromAtlasConfig.config.scale",
-      );
+      assertValidPositiveNumber(config.scale, "UITextureView.setFromAtlasConfig.config.scale");
     }
 
     this.sourceWidth = config.sourceSize.w;

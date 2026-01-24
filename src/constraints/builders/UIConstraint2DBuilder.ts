@@ -1,8 +1,5 @@
 import type { UIElement } from "../../elements/UIElement/UIElement";
-import type {
-  UIPlaneElement,
-  UIPointElement,
-} from "../../miscellaneous/shared";
+import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared";
 import { UIHeightConstraint } from "../UIHeightConstraint/UIHeightConstraint";
 import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
 import { UIHorizontalInterpolationConstraint } from "../UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint";
@@ -64,10 +61,7 @@ export class UIConstraint2DBuilder {
     a: UIPointElement | UIPlaneElement,
     b: UIPointElement | UIPlaneElement,
     options: Partial<UIConstraintDistance2DOptions> = {},
-  ): UIConstraint2DResult<
-    UIHorizontalDistanceConstraint,
-    UIVerticalDistanceConstraint
-  > {
+  ): UIConstraint2DResult<UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint> {
     const anchorA = normalizeUIType2D(options.anchorA);
     const anchorB = normalizeUIType2D(options.anchorB);
     const distance = normalizeUIType2D(options.distance);
@@ -106,10 +100,7 @@ export class UIConstraint2DBuilder {
     a: UIPlaneElement,
     b: UIPlaneElement,
     options: Partial<UIConstraintProportion2DOptions> = {},
-  ): UIConstraint2DResult<
-    UIHorizontalProportionConstraint,
-    UIVerticalProportionConstraint
-  > {
+  ): UIConstraint2DResult<UIHorizontalProportionConstraint, UIVerticalProportionConstraint> {
     const proportion = normalizeUIType2D(options.proportion);
     const priority = normalizeUIType2D(options.priority);
     const relation = normalizeUIType2D(options.relation);
@@ -144,10 +135,7 @@ export class UIConstraint2DBuilder {
     b: UIPointElement | UIPlaneElement,
     c: UIPointElement | UIPlaneElement,
     options: Partial<UIConstraintInterpolation2DOptions> = {},
-  ): UIConstraint2DResult<
-    UIHorizontalInterpolationConstraint,
-    UIVerticalInterpolationConstraint
-  > {
+  ): UIConstraint2DResult<UIHorizontalInterpolationConstraint, UIVerticalInterpolationConstraint> {
     const anchorA = normalizeUIType2D(options.anchorA);
     const anchorB = normalizeUIType2D(options.anchorB);
     const anchorC = normalizeUIType2D(options.anchorC);

@@ -14,7 +14,9 @@ import { checkOffscreenCanvasSupport, checkSRGBSupport } from "./webglCapabiliti
 export type UICanvas = HTMLCanvasElement | OffscreenCanvas;
 
 /** 2D rendering context type for UICanvas */
-export type UICanvasRenderingContext2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+export type UICanvasRenderingContext2D =
+  | CanvasRenderingContext2D
+  | OffscreenCanvasRenderingContext2D;
 
 /**
  * Creates a canvas using OffscreenCanvas if available, otherwise falls back to HTMLCanvasElement.
@@ -63,7 +65,7 @@ export function createCanvasTexture(canvas: UICanvas): CanvasTexture {
     LinearFilter,
     RGBAFormat,
     UnsignedByteType,
-    1
+    1,
   );
   texture.colorSpace = checkSRGBSupport() ? SRGBColorSpace : NoColorSpace;
   texture.generateMipmaps = false;

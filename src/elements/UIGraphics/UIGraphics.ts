@@ -1,20 +1,17 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
 import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
-import type {
-  UICanvas,
-  UICanvasRenderingContext2D,
-} from "../../miscellaneous/canvas";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
 import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
+import type { UIGraphicsOptions } from "./UIGraphics.Internal";
 import {
   GRAPHICS_DEFAULT_HEIGHT,
   GRAPHICS_DEFAULT_WIDTH,
   GRAPHICS_TEMP_COLOR,
-  type UIGraphicsOptions,
 } from "./UIGraphics.Internal";
 
 /** Canvas-based 2D drawing element */
@@ -39,9 +36,7 @@ export class UIGraphics extends UIElement {
     const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
 
     if (!context) {
-      throw new Error(
-        "UIGraphics.constructor: failed to get 2D context from canvas",
-      );
+      throw new Error("UIGraphics.constructor: failed to get 2D context from canvas");
     }
 
     const texture = createCanvasTexture(canvas);
@@ -90,13 +85,7 @@ export class UIGraphics extends UIElement {
   }
 
   /** Draws filled rectangle */
-  public drawRect(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    color: UIColorConfig,
-  ): this {
+  public drawRect(x: number, y: number, width: number, height: number, color: UIColorConfig): this {
     this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.fillRect(x, y, width, height);
     this.texture.needsUpdate = true;
@@ -104,12 +93,7 @@ export class UIGraphics extends UIElement {
   }
 
   /** Draws filled circle */
-  public drawCircle(
-    x: number,
-    y: number,
-    radius: number,
-    color: UIColorConfig,
-  ): this {
+  public drawCircle(x: number, y: number, radius: number, color: UIColorConfig): this {
     this.context.fillStyle = GRAPHICS_TEMP_COLOR.set(color).toCSSColor();
     this.context.beginPath();
     this.context.arc(x, y, radius, 0, Math.PI * 2);
@@ -146,11 +130,7 @@ export class UIGraphics extends UIElement {
    * @param points - Array of [x, y] pairs
    * @param lineWidth - Line width in pixels
    */
-  public drawPolyline(
-    points: [number, number][],
-    color: UIColor,
-    lineWidth = 1,
-  ): this {
+  public drawPolyline(points: [number, number][], color: UIColor, lineWidth = 1): this {
     if (points.length < 2) {
       return this;
     }
@@ -175,10 +155,7 @@ export class UIGraphics extends UIElement {
     super.destroy();
   }
 
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
+  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.colorInternal.dirty) {
       this.sceneWrapper.setProperties(this.planeHandler, {
         color: this.colorInternal,

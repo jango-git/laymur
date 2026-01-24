@@ -39,10 +39,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
 
   /** Target height when landscape */
   public set fixedHeightLandscape(value: number) {
-    assertValidPositiveNumber(
-      value,
-      "UIResizePolicyFixedHeight.fixedHeightLandscape",
-    );
+    assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.fixedHeightLandscape");
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
       this.dirty = true;
@@ -51,10 +48,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
 
   /** Target height when portrait */
   public set fixedHeightPortrait(value: number) {
-    assertValidPositiveNumber(
-      value,
-      "UIResizePolicyFixedHeight.fixedHeightPortrait",
-    );
+    assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.fixedHeightPortrait");
     if (value !== this.fixedHeightPortraitInternal) {
       this.fixedHeightPortraitInternal = value;
       this.dirty = true;
@@ -62,14 +56,8 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
   }
 
   public calculateScale(width: number, height: number): number {
-    assertValidPositiveNumber(
-      width,
-      "UIResizePolicyFixedHeight.calculateScale.width",
-    );
-    assertValidPositiveNumber(
-      height,
-      "UIResizePolicyFixedHeight.calculateScale.height",
-    );
+    assertValidPositiveNumber(width, "UIResizePolicyFixedHeight.calculateScale.width");
+    assertValidPositiveNumber(height, "UIResizePolicyFixedHeight.calculateScale.height");
     return width > height
       ? this.fixedHeightLandscapeInternal / height
       : this.fixedHeightPortraitInternal / height;

@@ -34,8 +34,7 @@ export default [
       "@typescript-eslint/no-unnecessary-type-constraint": "error",
       "@typescript-eslint/no-unnecessary-template-expression": "error",
       "@typescript-eslint/no-unnecessary-qualifier": "error",
-      "@typescript-eslint/no-unnecessary-parameter-property-assignment":
-        "error",
+      "@typescript-eslint/no-unnecessary-parameter-property-assignment": "error",
       "@typescript-eslint/no-unnecessary-boolean-literal-compare": "error",
       "@typescript-eslint/no-this-alias": "error",
       "@typescript-eslint/no-redundant-type-constituents": "error",
@@ -57,10 +56,7 @@ export default [
       eqeqeq: ["error", "always"],
       curly: ["error", "all"],
 
-      "@typescript-eslint/explicit-function-return-type": [
-        "error",
-        { allowExpressions: false },
-      ],
+      "@typescript-eslint/explicit-function-return-type": ["error", { allowExpressions: false }],
       "@typescript-eslint/explicit-module-boundary-types": "error",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-inferrable-types": "warn",

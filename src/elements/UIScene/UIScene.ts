@@ -15,10 +15,7 @@ import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
-import {
-  DUMMY_DEFAULT_HEIGHT,
-  DUMMY_DEFAULT_WIDTH,
-} from "../UIInputDummy/UIInputDummy.Internal";
+import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "../UIInputDummy/UIInputDummy.Internal";
 import type { UISceneOptions } from "./UIScene.Internal";
 import {
   SCENE_DEFAULT_CAMERA_FAR,
@@ -57,10 +54,7 @@ export class UIScene extends UIElement {
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
     if (options.resolutionFactor !== undefined) {
-      assertValidPositiveNumber(
-        options.resolutionFactor,
-        "UIScene.constructor.resolutionFactor",
-      );
+      assertValidPositiveNumber(options.resolutionFactor, "UIScene.constructor.resolutionFactor");
     }
 
     const resolutionFactor = MathUtils.clamp(
@@ -72,18 +66,14 @@ export class UIScene extends UIElement {
     const w = options.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options.height ?? DUMMY_DEFAULT_HEIGHT;
 
-    const renderTarget = new WebGLRenderTarget(
-      w * resolutionFactor,
-      h * resolutionFactor,
-      {
-        format: RGBAFormat,
-        minFilter: LinearFilter,
-        magFilter: LinearFilter,
-        type: UnsignedByteType,
-        depthBuffer: options.enableDepthBuffer ?? SCENE_DEFAULT_USE_DEPTH,
-        stencilBuffer: false,
-      },
-    );
+    const renderTarget = new WebGLRenderTarget(w * resolutionFactor, h * resolutionFactor, {
+      format: RGBAFormat,
+      minFilter: LinearFilter,
+      magFilter: LinearFilter,
+      type: UnsignedByteType,
+      depthBuffer: options.enableDepthBuffer ?? SCENE_DEFAULT_USE_DEPTH,
+      stencilBuffer: false,
+    });
 
     const color = new UIColor(options.color);
 
@@ -99,9 +89,7 @@ export class UIScene extends UIElement {
     );
 
     this.colorInternal = color;
-    this.clearColorInternal = new UIColor(
-      options.clearColor ?? SCENE_DEFAULT_CLEAR_COLOR,
-    );
+    this.clearColorInternal = new UIColor(options.clearColor ?? SCENE_DEFAULT_CLEAR_COLOR);
 
     this.renderTarget = renderTarget;
     this.sceneInternal = options.scene ?? new Scene();
@@ -171,11 +159,7 @@ export class UIScene extends UIElement {
   /** Render target resolution multiplier. Range 0.1 to 2.0. */
   public set resolutionFactor(value: number) {
     assertValidPositiveNumber(value, "UIScene.resolutionFactor");
-    value = MathUtils.clamp(
-      value,
-      SCENE_MIN_RESOLUTION_FACTOR,
-      SCENE_MAX_RESOLUTION_FACTOR,
-    );
+    value = MathUtils.clamp(value, SCENE_MIN_RESOLUTION_FACTOR, SCENE_MAX_RESOLUTION_FACTOR);
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
       this.resolutionFactorDirty = true;
@@ -209,19 +193,14 @@ export class UIScene extends UIElement {
     this.updateRequired = true;
   }
 
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
+  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     this.evenFrame = !this.evenFrame;
 
     const isFramebufferDirty =
       this.updateRequired ||
       this.updateModeInternal === UISceneUpdateMode.EVERY_FRAME ||
-      (this.updateModeInternal === UISceneUpdateMode.EVERY_SECOND_FRAME &&
-        this.evenFrame) ||
-      (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE &&
-        this.propertyDirty) ||
+      (this.updateModeInternal === UISceneUpdateMode.EVERY_SECOND_FRAME && this.evenFrame) ||
+      (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE && this.propertyDirty) ||
       this.colorInternal.dirty ||
       this.clearColorInternal.dirty ||
       (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
@@ -243,10 +222,7 @@ export class UIScene extends UIElement {
         this.colorInternal.setDirtyFalse();
       }
 
-      renderer.setClearColor(
-        this.clearColorInternal.getHexRGB(),
-        this.clearColorInternal.a,
-      );
+      renderer.setClearColor(this.clearColorInternal.getHexRGB(), this.clearColorInternal.a);
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);

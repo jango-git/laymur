@@ -34,20 +34,9 @@ export type UIPropertyConstructor =
   | typeof Matrix4
   | NumberConstructor;
 
-export type UIPropertyCopyTo =
-  | UIColor
-  | Vector2
-  | Vector3
-  | Vector4
-  | Matrix3
-  | Matrix4;
+export type UIPropertyCopyTo = UIColor | Vector2 | Vector3 | Vector4 | Matrix3 | Matrix4;
 
-export type UIPropertyCopyFrom = UIColor &
-  Vector2 &
-  Vector3 &
-  Vector4 &
-  Matrix3 &
-  Matrix4;
+export type UIPropertyCopyFrom = UIColor & Vector2 & Vector3 & Vector4 & Matrix3 & Matrix4;
 
 export interface GLTypeInfo {
   glslTypeName: string;
@@ -134,9 +123,7 @@ export function resolveGLSLTypeInfo(
       case "Matrix4":
         return GLSL_TYPE_INFO_MAT4;
       default:
-        throw new Error(
-          `resolveGLSLTypeInfo.value: unsupported property type name`,
-        );
+        throw new Error(`resolveGLSLTypeInfo.value: unsupported property type name`);
     }
   }
   if (typeof value === "function") {
@@ -164,9 +151,7 @@ export function resolveGLSLTypeInfo(
     if (value === Matrix4) {
       return GLSL_TYPE_INFO_MAT4;
     }
-    throw new Error(
-      `resolveGLSLTypeInfo.value: unsupported property type constructor`,
-    );
+    throw new Error(`resolveGLSLTypeInfo.value: unsupported property type constructor`);
   }
   if (typeof value === "number") {
     return GLSL_TYPE_INFO_FLOAT;
@@ -199,9 +184,7 @@ export function resolvePropertyUniform(
   name: string,
   material: ShaderMaterial,
 ): IUniform<UIProperty> {
-  const uniform = material.uniforms[`p_${name}`] as
-    | IUniform<UIProperty>
-    | undefined;
+  const uniform = material.uniforms[`p_${name}`] as IUniform<UIProperty> | undefined;
   if (uniform === undefined) {
     throw new Error(`resolvePropertyUniform.name: unknown uniform`);
   }
@@ -284,10 +267,7 @@ export function extractZIndex(transform: Matrix4): number {
 }
 
 /** Extracts zIndex from transform buffer at given instance index */
-export function extractZIndexFromBuffer(
-  buffer: Float32Array,
-  instanceIndex: number,
-): number {
+export function extractZIndexFromBuffer(buffer: Float32Array, instanceIndex: number): number {
   return buffer[instanceIndex * 16 + 14];
 }
 

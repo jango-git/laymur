@@ -3,8 +3,7 @@ import type { UISingleParameterConstraintOptions } from "../UISingleParameterCon
 export const DEFAULT_ANCHOR = 0.5;
 
 /** Horizontal distance constraint options */
-export interface UIHorizontalDistanceConstraintOptions
-  extends UISingleParameterConstraintOptions {
+export interface UIHorizontalDistanceConstraintOptions extends UISingleParameterConstraintOptions {
   /** Anchor on element A (0 = left, 0.5 = center, 1 = right) */
   anchorA: number;
   /** Anchor on element B (0 = left, 0.5 = center, 1 = right) */

@@ -2,10 +2,7 @@ import type { UITextSpanConfig } from "../../miscellaneous/text-span/UITextSpan.
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
 
 /** Text content configuration */
-export type UITextContent =
-  | (UITextSpanConfig | string)[]
-  | UITextSpanConfig
-  | string;
+export type UITextContent = (UITextSpanConfig | string)[] | UITextSpanConfig | string;
 
 /** Text dimensions */
 export interface UITextSize {

@@ -1,9 +1,5 @@
 import type { UILayer } from "../../layers/UILayer/UILayer";
-import { UILayerEvent } from "../../layers/UILayer/UILayer.Internal";
-import {
-  resolveOrientation,
-  UIOrientation,
-} from "../../miscellaneous/UIOrientation";
+import { resolveOrientation, UIOrientation } from "../../miscellaneous/UIOrientation";
 import type { UIPriority } from "../../miscellaneous/UIPriority";
 import { resolvePriority } from "../../miscellaneous/UIPriority";
 import type { UIRelation } from "../../miscellaneous/UIRelation";
@@ -27,15 +23,12 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
    * @param layer Layer containing this constraint
    * @param options Constraint configuration
    */
-  constructor(
-    layer: UILayer,
-    options?: Partial<UISingleParameterConstraintOptions>,
-  ) {
+  constructor(layer: UILayer, options?: Partial<UISingleParameterConstraintOptions>) {
     super(layer, options?.name);
     this.priorityInternal = resolvePriority(options?.priority);
     this.relationInternal = resolveRelation(options?.relation);
     this.orientationInternal = resolveOrientation(options?.orientation);
-    this.layer.on(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
+    this.layer.signalOrientationChanged.on(this.onOrientationChange);
   }
 
   /** Constraint priority */
@@ -57,10 +50,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
   public set priority(value: UIPriority) {
     if (value !== this.priorityInternal) {
       this.priorityInternal = value;
-      this.solverWrapper.setConstraintPriority(
-        this.constraint,
-        this.priorityInternal,
-      );
+      this.solverWrapper.setConstraintPriority(this.constraint, this.priorityInternal);
     }
   }
 
@@ -68,10 +58,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
   public set relation(value: UIRelation) {
     if (value !== this.relationInternal) {
       this.relationInternal = value;
-      this.solverWrapper.setConstraintRelation(
-        this.constraint,
-        this.relationInternal,
-      );
+      this.solverWrapper.setConstraintRelation(this.constraint, this.relationInternal);
     }
   }
 
@@ -85,7 +72,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
 
   /** Removes constraint from solver and cleans up listeners */
   public destroy(): void {
-    this.layer.off(UILayerEvent.ORIENTATION_CHANGED, this.onOrientationChange);
+    this.layer.signalOrientationChanged.off(this.onOrientationChange);
     this.solverWrapper.removeConstraint(this.constraint);
   }
 
@@ -102,9 +89,6 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
 
   /** Updates constraint enabled state when layer orientation changes */
   private readonly onOrientationChange = (): void => {
-    this.solverWrapper.setConstraintEnabled(
-      this.constraint,
-      this.isConstraintEnabled(),
-    );
+    this.solverWrapper.setConstraintEnabled(this.constraint, this.isConstraintEnabled());
   };
 }

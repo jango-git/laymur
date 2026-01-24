@@ -6,7 +6,6 @@ import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransf
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UIImageOptions } from "./UIImage.Internal";
@@ -28,11 +27,7 @@ export class UIImage extends UIElement {
    * @param texture - Texture to display
    * @param options - Configuration options
    */
-  constructor(
-    layer: UILayer,
-    texture: UITextureConfig,
-    options: Partial<UIImageOptions> = {},
-  ) {
+  constructor(layer: UILayer, texture: UITextureConfig, options: Partial<UIImageOptions> = {}) {
     const color = new UIColor(options.color);
     const textureView = new UITextureView(texture);
     const textureTransform = textureView.calculateUVTransform();
@@ -55,10 +50,7 @@ export class UIImage extends UIElement {
     this.textureTransform = textureTransform;
     this.colorInternal = color;
 
-    this.texture.on(
-      UITextureViewEvent.DIMENSIONS_CHANGED,
-      this.onTextureDimensionsChanged,
-    );
+    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -73,10 +65,7 @@ export class UIImage extends UIElement {
 
   /** Removes image and frees resources */
   public override destroy(): void {
-    this.texture.off(
-      UITextureViewEvent.DIMENSIONS_CHANGED,
-      this.onTextureDimensionsChanged,
-    );
+    this.texture.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
     super.destroy();
   }
 
@@ -97,9 +86,7 @@ export class UIImage extends UIElement {
 
     if (this.texture.uvTransformDirty) {
       properties ??= {};
-      properties["textureTransform"] = this.texture.calculateUVTransform(
-        this.textureTransform,
-      );
+      properties["textureTransform"] = this.texture.calculateUVTransform(this.textureTransform);
       this.texture.setUVTransformDirtyFalse();
     }
 
@@ -144,10 +131,7 @@ export class UIImage extends UIElement {
     }
   }
 
-  private readonly onTextureDimensionsChanged = (
-    width: number,
-    height: number,
-  ): void => {
+  private readonly onTextureDimensionsChanged = (width: number, height: number): void => {
     this.width = width;
     this.height = height;
   };

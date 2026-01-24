@@ -1,11 +1,5 @@
-import {
-  assertValidConstraintArguments,
-  assertValidNumber,
-} from "../../miscellaneous/asserts";
-import type {
-  UIPlaneElement,
-  UIPointElement,
-} from "../../miscellaneous/shared";
+import { assertValidConstraintArguments, assertValidNumber } from "../../miscellaneous/asserts";
+import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared";
 import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
@@ -54,11 +48,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     }
 
     super(
-      assertValidConstraintArguments(
-        a,
-        b,
-        "UIHorizontalDistanceConstraint.constructor",
-      ),
+      assertValidConstraintArguments(a, b, "UIHorizontalDistanceConstraint.constructor"),
       options,
     );
 
@@ -95,10 +85,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     assertValidNumber(value, "UIHorizontalDistanceConstraint.distance");
     if (this.distanceInternal !== value) {
       this.distanceInternal = value;
-      this.solverWrapper.setConstraintRHS(
-        this.constraint,
-        new UIExpression(this.distanceInternal),
-      );
+      this.solverWrapper.setConstraintRHS(this.constraint, new UIExpression(this.distanceInternal));
     }
   }
 
@@ -133,9 +120,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.xVariable, 1);
     } else {
-      throw new Error(
-        "UIHorizontalDistanceConstraint.buildLHS.a: invalid element type",
-      );
+      throw new Error("UIHorizontalDistanceConstraint.buildLHS.a: invalid element type");
     }
 
     if (isUIPlaneElement(this.b)) {
@@ -146,9 +131,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.xVariable, 1);
     } else {
-      throw new Error(
-        "UIHorizontalDistanceConstraint.buildLHS.b: invalid element type",
-      );
+      throw new Error("UIHorizontalDistanceConstraint.buildLHS.b: invalid element type");
     }
 
     return UIExpression.minus(bExpression, aExpression);

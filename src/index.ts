@@ -43,7 +43,6 @@ export { UIResizePolicyFixedHeight } from "./miscellaneous/resize-policy/UIResiz
 export { UIResizePolicyFixedWidth } from "./miscellaneous/resize-policy/UIResizePolicyFixedWidth";
 export { UIResizePolicyNone } from "./miscellaneous/resize-policy/UIResizePolicyNone";
 export { UIExpression } from "./miscellaneous/UIExpression";
-export { UIInputEvent } from "./miscellaneous/UIInputEvent";
 export { UIMode } from "./miscellaneous/UIMode";
 export { UIOrientation } from "./miscellaneous/UIOrientation";
 export { UIPriority } from "./miscellaneous/UIPriority";

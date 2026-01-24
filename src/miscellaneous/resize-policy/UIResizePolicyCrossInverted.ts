@@ -39,10 +39,7 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
 
   /** Target height when landscape */
   public set fixedHeightLandscape(value: number) {
-    assertValidPositiveNumber(
-      value,
-      "UIResizePolicyCrossInverted.fixedHeightLandscape",
-    );
+    assertValidPositiveNumber(value, "UIResizePolicyCrossInverted.fixedHeightLandscape");
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
       this.dirty = true;
@@ -51,10 +48,7 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
 
   /** Target width when portrait */
   public set fixedWidthPortrait(value: number) {
-    assertValidPositiveNumber(
-      value,
-      "UIResizePolicyCrossInverted.fixedWidthPortrait",
-    );
+    assertValidPositiveNumber(value, "UIResizePolicyCrossInverted.fixedWidthPortrait");
     if (value !== this.fixedWidthPortraitInternal) {
       this.fixedWidthPortraitInternal = value;
       this.dirty = true;
@@ -62,14 +56,8 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
   }
 
   public calculateScale(width: number, height: number): number {
-    assertValidPositiveNumber(
-      width,
-      "UIResizePolicyCrossInverted.calculateScale.width",
-    );
-    assertValidPositiveNumber(
-      height,
-      "UIResizePolicyCrossInverted.calculateScale.height",
-    );
+    assertValidPositiveNumber(width, "UIResizePolicyCrossInverted.calculateScale.width");
+    assertValidPositiveNumber(height, "UIResizePolicyCrossInverted.calculateScale.height");
     return width > height
       ? this.fixedHeightLandscapeInternal / height
       : this.fixedWidthPortraitInternal / width;

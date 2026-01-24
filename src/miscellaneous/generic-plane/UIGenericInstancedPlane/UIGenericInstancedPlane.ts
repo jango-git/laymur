@@ -101,10 +101,7 @@ export class UIGenericInstancedPlane extends Mesh {
 
     for (const name in this.varyingProperties) {
       const { value } = this.varyingProperties[name];
-      const attribute = buildEmptyInstancedBufferAttribute(
-        value,
-        this.capacity,
-      );
+      const attribute = buildEmptyInstancedBufferAttribute(value, this.capacity);
       this.instancedGeometry.setAttribute(`a_${name}`, attribute);
       this.propertyBuffers.set(name, attribute);
     }
@@ -168,10 +165,7 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   /** Update properties at given index */
-  public setPropertiesAt(
-    index: number,
-    properties: Record<string, GLProperty>,
-  ): void {
+  public setPropertiesAt(index: number, properties: Record<string, GLProperty>): void {
     if (index < 0 || index >= this.instancesCountInternal) {
       throw new Error(
         `UIGenericInstancedPlane.setPropertiesAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
@@ -254,9 +248,7 @@ export class UIGenericInstancedPlane extends Mesh {
       }
 
       const { value, glslTypeInfo } = this.varyingProperties[name];
-      const attribute = this.propertyBuffers.get(
-        name,
-      ) as InstancedBufferAttribute;
+      const attribute = this.propertyBuffers.get(name) as InstancedBufferAttribute;
       const array = attribute.array as Float32Array;
       const offset = index * attribute.itemSize;
 
@@ -296,9 +288,7 @@ export class UIGenericInstancedPlane extends Mesh {
       );
     }
 
-    const attribute = this.propertyBuffers.get(
-      "instanceTransform",
-    ) as InstancedBufferAttribute;
+    const attribute = this.propertyBuffers.get("instanceTransform") as InstancedBufferAttribute;
     return extractZIndexFromBuffer(attribute.array as Float32Array, index);
   }
 
@@ -311,16 +301,12 @@ export class UIGenericInstancedPlane extends Mesh {
       return;
     }
 
-    this.ensureCapacity(
-      this.instancesCountInternal + other.instancesCountInternal,
-    );
+    this.ensureCapacity(this.instancesCountInternal + other.instancesCountInternal);
 
     for (const [name, thisAttribute] of this.propertyBuffers) {
       const otherAttribute = other.propertyBuffers.get(name);
       if (!otherAttribute) {
-        throw new Error(
-          `UIGenericInstancedPlane.merge: missing attribute ${name} in source`,
-        );
+        throw new Error(`UIGenericInstancedPlane.merge: missing attribute ${name} in source`);
       }
 
       const itemSize = thisAttribute.itemSize;
@@ -372,22 +358,14 @@ export class UIGenericInstancedPlane extends Mesh {
     for (const [name, thisAttribute] of this.propertyBuffers) {
       const newAttribute = newPlane.propertyBuffers.get(name);
       if (!newAttribute) {
-        throw new Error(
-          `UIGenericInstancedPlane.split: missing attribute ${name} in new plane`,
-        );
+        throw new Error(`UIGenericInstancedPlane.split: missing attribute ${name} in new plane`);
       }
 
       const itemSize = thisAttribute.itemSize;
       const srcArray = thisAttribute.array as Float32Array;
       const dstArray = newAttribute.array as Float32Array;
 
-      copyBetweenBuffers(
-        srcArray,
-        atIndex * itemSize,
-        dstArray,
-        0,
-        tailCount * itemSize,
-      );
+      copyBetweenBuffers(srcArray, atIndex * itemSize, dstArray, 0, tailCount * itemSize);
 
       newAttribute.needsUpdate = true;
     }
@@ -448,8 +426,7 @@ export class UIGenericInstancedPlane extends Mesh {
       return;
     }
 
-    const newCapacity =
-      Math.ceil(requiredCapacity / CAPACITY_STEP) * CAPACITY_STEP;
+    const newCapacity = Math.ceil(requiredCapacity / CAPACITY_STEP) * CAPACITY_STEP;
 
     for (const [name, oldAttribute] of this.propertyBuffers) {
       const itemSize = oldAttribute.itemSize;
@@ -540,9 +517,7 @@ export class UIGenericInstancedPlane extends Mesh {
   private resolveAttribute(name: string): InstancedBufferAttribute {
     const attribute = this.propertyBuffers.get(name);
     if (attribute === undefined) {
-      throw new Error(
-        `UIGenericInstancedPlane.resolveAttribute.name: unknown attribute "${name}"`,
-      );
+      throw new Error(`UIGenericInstancedPlane.resolveAttribute.name: unknown attribute "${name}"`);
     }
     return attribute;
   }

@@ -467,12 +467,7 @@ export class UIColor {
   }
 
   /** Sets RGBA components directly */
-  public setRGBA(
-    r: number,
-    g: number,
-    b: number,
-    a: number = this.aInternal,
-  ): this {
+  public setRGBA(r: number, g: number, b: number, a: number = this.aInternal): this {
     assertValidNumber(r, "UIColor.setRGBA.r");
     assertValidNumber(g, "UIColor.setRGBA.g");
     assertValidNumber(b, "UIColor.setRGBA.b");
@@ -664,12 +659,7 @@ export class UIColor {
   }
 
   /** Sets from linear (GLSL) color space */
-  public setGLSLColor(
-    r: number,
-    g: number,
-    b: number,
-    a = this.aInternal,
-  ): this {
+  public setGLSLColor(r: number, g: number, b: number, a = this.aInternal): this {
     assertValidNumber(r, "UIColor.setGLSLColor.r");
     assertValidNumber(g, "UIColor.setGLSLColor.g");
     assertValidNumber(b, "UIColor.setGLSLColor.b");
@@ -793,12 +783,7 @@ export class UIColor {
   /** Returns copy of this color */
   public clone(): UIColor {
     this.ensureRGBUpdatedFromHSL();
-    return new UIColor(
-      this.rInternal,
-      this.gInternal,
-      this.bInternal,
-      this.aInternal,
-    );
+    return new UIColor(this.rInternal, this.gInternal, this.bInternal, this.aInternal);
   }
 
   /** @internal */

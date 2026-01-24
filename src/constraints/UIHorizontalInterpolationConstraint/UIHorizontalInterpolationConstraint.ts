@@ -2,18 +2,12 @@ import {
   assertValidInterpolationConstraintArguments,
   assertValidNumber,
 } from "../../miscellaneous/asserts";
-import type {
-  UIPlaneElement,
-  UIPointElement,
-} from "../../miscellaneous/shared";
+import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared";
 import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIHorizontalInterpolationConstraintOptions } from "./UIHorizontalInterpolationConstraint.Internal";
-import {
-  DEFAULT_ANCHOR,
-  DEFAULT_T,
-} from "./UIHorizontalInterpolationConstraint.Internal";
+import { DEFAULT_ANCHOR, DEFAULT_T } from "./UIHorizontalInterpolationConstraint.Internal";
 
 /** Positions element C horizontally between A and B based on interpolation factor */
 export class UIHorizontalInterpolationConstraint extends UISingleParameterConstraint {
@@ -60,10 +54,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
       );
     }
     if (options.t !== undefined) {
-      assertValidNumber(
-        options.t,
-        "UIHorizontalInterpolationConstraint.constructor.options.t",
-      );
+      assertValidNumber(options.t, "UIHorizontalInterpolationConstraint.constructor.options.t");
     }
 
     const anchorA = options.anchorA ?? DEFAULT_ANCHOR;
@@ -165,9 +156,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.xVariable, 1);
     } else {
-      throw new Error(
-        "UIHorizontalInterpolationConstraint.buildLHS.a: invalid element type",
-      );
+      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.a: invalid element type");
     }
 
     if (isUIPlaneElement(this.b)) {
@@ -178,9 +167,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.xVariable, 1);
     } else {
-      throw new Error(
-        "UIHorizontalInterpolationConstraint.buildLHS.b: invalid element type",
-      );
+      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.b: invalid element type");
     }
 
     if (isUIPlaneElement(this.c)) {
@@ -191,17 +178,12 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.c)) {
       cExpression = new UIExpression().plus(this.c.xVariable, 1);
     } else {
-      throw new Error(
-        "UIHorizontalInterpolationConstraint.buildLHS.c: invalid element type",
-      );
+      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.c: invalid element type");
     }
 
     // C - A*(1-t) - B*t = 0
     const aScaled = aExpression.clone().multiply(1 - this.tInternal);
     const bScaled = bExpression.clone().multiply(this.tInternal);
-    return UIExpression.minus(
-      UIExpression.minus(cExpression, aScaled),
-      bScaled,
-    );
+    return UIExpression.minus(UIExpression.minus(cExpression, aScaled), bScaled);
   }
 }

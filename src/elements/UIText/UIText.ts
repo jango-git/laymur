@@ -10,10 +10,7 @@ import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
-import type {
-  UICanvas,
-  UICanvasRenderingContext2D,
-} from "../../miscellaneous/canvas";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
 import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
@@ -22,10 +19,7 @@ import {
   TEXT_DEFAULT_RESIZE_MODE,
   UITextResizeMode,
 } from "./UIText.Internal";
-import {
-  buildTextChunks,
-  calculateTextContentParameters,
-} from "./UIText.Measuring";
+import { buildTextChunks, calculateTextContentParameters } from "./UIText.Measuring";
 import { renderTextLines } from "./UIText.Rendering";
 
 /** Canvas-based text rendering element */
@@ -61,11 +55,7 @@ export class UIText extends UIElement {
    * @param content - Text content as string or styled spans
    * @param options - Configuration options
    */
-  constructor(
-    layer: UILayer,
-    content: UITextContent,
-    options: Partial<UITextOptions> = {},
-  ) {
+  constructor(layer: UILayer, content: UITextContent, options: Partial<UITextOptions> = {}) {
     const canvas = createCanvas(2, 2);
     const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
 
@@ -86,8 +76,7 @@ export class UIText extends UIElement {
     this.colorInternal = color;
     this.paddingInternal = new UIInsets(options.padding);
     this.commonStyle = new UITextStyle(options.commonStyle);
-    this.maxLineWidthInternal =
-      options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
+    this.maxLineWidthInternal = options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
     this.resizeModeInternal = options.resizeMode ?? TEXT_DEFAULT_RESIZE_MODE;
 
     this.canvas = canvas;
@@ -152,9 +141,7 @@ export class UIText extends UIElement {
   public set content(value: UITextContent) {
     if (this.contentInternal !== value) {
       if (typeof value === "string") {
-        this.contentInternal = [
-          new UITextSpan({ text: value, style: new UITextStyle() }),
-        ];
+        this.contentInternal = [new UITextSpan({ text: value, style: new UITextStyle() })];
       } else if (Array.isArray(value)) {
         this.contentInternal = value.map((span) =>
           typeof span === "string"
@@ -204,10 +191,7 @@ export class UIText extends UIElement {
     super.destroy();
   }
 
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
+  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     switch (this.resizeModeInternal) {
       case UITextResizeMode.SCALE:
         this.tryToRenderTextScaleMode();
@@ -229,8 +213,7 @@ export class UIText extends UIElement {
       !this.paddingInternal.dirty &&
       !(
         this.solverWrapper.dirty &&
-        this.lastWidth / this.lastHeight !==
-          Math.round(this.width) / Math.round(this.height)
+        this.lastWidth / this.lastHeight !== Math.round(this.width) / Math.round(this.height)
       ) &&
       !this.checkContentDirty()
     ) {
@@ -239,10 +222,7 @@ export class UIText extends UIElement {
 
     const textChunks = this.buildTextChunks();
 
-    const { lines, size } = calculateTextContentParameters(
-      textChunks,
-      this.maxLineWidthInternal,
-    );
+    const { lines, size } = calculateTextContentParameters(textChunks, this.maxLineWidthInternal);
 
     const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
     const paddingH = this.paddingInternal.left + this.paddingInternal.right;
@@ -258,20 +238,14 @@ export class UIText extends UIElement {
     this.height = (desiredHeight / desiredWidth) * Math.round(this.width);
     this.width = (desiredWidth / desiredHeight) * Math.round(this.height);
 
-    const resolutionDirty =
-      this.lastWidth !== desiredHeight || this.lastHeight !== desiredWidth;
+    const resolutionDirty = this.lastWidth !== desiredHeight || this.lastHeight !== desiredWidth;
 
     if (resolutionDirty) {
       this.canvas.height = desiredHeight;
       this.canvas.width = desiredWidth;
     }
 
-    renderTextLines(
-      this.paddingInternal.top,
-      this.paddingInternal.left,
-      lines,
-      this.context,
-    );
+    renderTextLines(this.paddingInternal.top, this.paddingInternal.left, lines, this.context);
 
     this.updateProperties(resolutionDirty);
 
@@ -311,11 +285,10 @@ export class UIText extends UIElement {
     this.height = desiredTextSize.height + paddingV;
     this.width = desiredTextSize.width + paddingH; // Width should remain a priority, so it is set last.
 
-    const { lines: realTextLines, size: realTextSize } =
-      calculateTextContentParameters(
-        textChunks,
-        Math.round(this.width) - paddingH,
-      );
+    const { lines: realTextLines, size: realTextSize } = calculateTextContentParameters(
+      textChunks,
+      Math.round(this.width) - paddingH,
+    );
 
     this.height = realTextSize.height + paddingV;
     this.width = realTextSize.width + paddingH;
@@ -323,8 +296,7 @@ export class UIText extends UIElement {
     const safeWidth = Math.max(Math.round(this.width), 2);
     const safeHeight = Math.max(Math.round(this.height), 2);
 
-    const resolutionDirty =
-      this.lastWidth !== safeWidth || this.lastHeight !== safeHeight;
+    const resolutionDirty = this.lastWidth !== safeWidth || this.lastHeight !== safeHeight;
 
     if (resolutionDirty) {
       this.canvas.width = safeWidth;
@@ -372,11 +344,7 @@ export class UIText extends UIElement {
 
   private buildTextChunks(): UITextChunk[] {
     if (this.textChunksDirty) {
-      this.textChunks = buildTextChunks(
-        this.context,
-        this.contentInternal,
-        this.commonStyle,
-      );
+      this.textChunks = buildTextChunks(this.context, this.contentInternal, this.commonStyle);
       this.textChunksDirty = false;
     }
 
@@ -386,8 +354,7 @@ export class UIText extends UIElement {
   private checkDimensionsDirty(): boolean {
     return (
       this.solverWrapper.dirty &&
-      (this.lastWidth !== Math.round(this.width) ||
-        this.lastHeight !== Math.round(this.height))
+      (this.lastWidth !== Math.round(this.width) || this.lastHeight !== Math.round(this.height))
     );
   }
 
@@ -397,9 +364,7 @@ export class UIText extends UIElement {
   }
 
   private checkContentDirty(): boolean {
-    return (
-      this.contentDirty || this.content.some((span): boolean => span.dirty)
-    );
+    return this.contentDirty || this.content.some((span): boolean => span.dirty);
   }
 
   private setContentDirtyFalse(): void {

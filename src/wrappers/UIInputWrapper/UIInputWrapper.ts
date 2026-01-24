@@ -1,7 +1,4 @@
-import type {
-  UIInputWrapperCatcher,
-  UIInputWrapperInterface,
-} from "./UIInputWrapper.Internal";
+import type { UIInputWrapperCatcher, UIInputWrapperInterface } from "./UIInputWrapper.Internal";
 
 export class UIInputWrapper implements UIInputWrapperInterface {
   /** @internal */
@@ -34,9 +31,7 @@ export class UIInputWrapper implements UIInputWrapperInterface {
   public destroyInputCatcher(handler: number): void {
     const index = this.catchers.findIndex((item) => item.handler === handler);
     if (index === -1) {
-      throw new Error(
-        "UIInputWrapper.destroyInputCatcher.handler: handler not found",
-      );
+      throw new Error("UIInputWrapper.destroyInputCatcher.handler: handler not found");
     }
     this.catchers.splice(index, 1);
   }

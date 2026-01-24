@@ -1,16 +1,14 @@
+import type { FerrsignView0 } from "ferrsign";
+import { Ferrsign0 } from "ferrsign";
 import type { Matrix3, WebGLRenderer } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
-import {
-  assertValidNumber,
-  assertValidPositiveNumber,
-} from "../../miscellaneous/asserts";
+import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
@@ -18,7 +16,6 @@ import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
   ANIMATED_IMAGE_DEFAULT_LOOP_MODE,
   ANIMATED_IMAGE_DEFAULT_TIME_SCALE,
-  UIAnimatedImageEvent,
   UIAnimatedImageLoopMode,
 } from "./UIAnimatedImage.Internal";
 
@@ -37,6 +34,10 @@ export class UIAnimatedImage extends UIElement {
   private currentFrameIndexDirty = false;
   private accumulatedTime = 0;
 
+  private readonly signalPlayedInternal = new Ferrsign0();
+  private readonly signalPausedInternal = new Ferrsign0();
+  private readonly signalStoppedInternal = new Ferrsign0();
+
   /**
    * Creates a new UIAnimatedImage instance.
    *
@@ -52,9 +53,7 @@ export class UIAnimatedImage extends UIElement {
     options: Partial<UIAnimatedImageOptions> = {},
   ) {
     const color = new UIColor(options.color);
-    const uiTextures = sequence.map(
-      (textureConfig) => new UITextureView(textureConfig),
-    );
+    const uiTextures = sequence.map((textureConfig) => new UITextureView(textureConfig));
 
     const frame = uiTextures[0];
     options.width = options.width ?? frame.width;
@@ -76,12 +75,9 @@ export class UIAnimatedImage extends UIElement {
     this.colorInternal = color;
     this.sequenceInternal = uiTextures;
     this.textureTransform = textureTransform;
-    this.frameRateInternal =
-      options.frameRate ?? ANIMATED_IMAGE_DEFAULT_FRAME_RATE;
-    this.timeScaleInternal =
-      options.timeScale ?? ANIMATED_IMAGE_DEFAULT_TIME_SCALE;
-    this.loopModeInternal =
-      options.loopMode ?? ANIMATED_IMAGE_DEFAULT_LOOP_MODE;
+    this.frameRateInternal = options.frameRate ?? ANIMATED_IMAGE_DEFAULT_FRAME_RATE;
+    this.timeScaleInternal = options.timeScale ?? ANIMATED_IMAGE_DEFAULT_TIME_SCALE;
+    this.loopModeInternal = options.loopMode ?? ANIMATED_IMAGE_DEFAULT_LOOP_MODE;
 
     this.subscribeSequenceEvents();
 
@@ -118,6 +114,21 @@ export class UIAnimatedImage extends UIElement {
   /** Playback speed multiplier. Can be negative for reverse playback. */
   public get timeScale(): number {
     return this.timeScaleInternal;
+  }
+
+  /** Signal fired when animation starts or resumes */
+  public get signalPlayed(): FerrsignView0 {
+    return this.signalPlayedInternal;
+  }
+
+  /** Signal fired when animation pauses */
+  public get signalPaused(): FerrsignView0 {
+    return this.signalPausedInternal;
+  }
+
+  /** Signal fired when animation stops and resets */
+  public get signalStopped(): FerrsignView0 {
+    return this.signalStoppedInternal;
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -175,7 +186,7 @@ export class UIAnimatedImage extends UIElement {
   public play(): void {
     if (!this.isPlaying) {
       this.isPlaying = true;
-      this.emit(UIAnimatedImageEvent.PLAYED);
+      this.signalPlayedInternal.emit();
     }
   }
 
@@ -183,29 +194,22 @@ export class UIAnimatedImage extends UIElement {
   public pause(): void {
     if (this.isPlaying) {
       this.isPlaying = false;
-      this.emit(UIAnimatedImageEvent.PAUSED);
+      this.signalPausedInternal.emit();
     }
   }
 
   /** Stops animation and resets to first frame */
   public stop(): void {
-    if (
-      this.isPlaying ||
-      this.accumulatedTime > 0 ||
-      this.sequenceFrameIndex > 0
-    ) {
+    if (this.isPlaying || this.accumulatedTime > 0 || this.sequenceFrameIndex > 0) {
       this.isPlaying = false;
       this.accumulatedTime = 0;
       this.sequenceFrameIndex = 0;
       this.currentFrameIndexDirty = true;
-      this.emit(UIAnimatedImageEvent.STOPPED);
+      this.signalStoppedInternal.emit();
     }
   }
 
-  protected override onWillRender(
-    renderer: WebGLRenderer,
-    deltaTime: number,
-  ): void {
+  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.isPlaying && this.timeScaleInternal !== 0) {
       this.accumulatedTime += deltaTime * this.timeScaleInternal;
       const frameDuration = 1 / this.frameRateInternal;
@@ -220,15 +224,13 @@ export class UIAnimatedImage extends UIElement {
           if (this.sequenceFrameIndex >= sequenceLength) {
             if (this.loopModeInternal === UIAnimatedImageLoopMode.LOOP) {
               this.sequenceFrameIndex = 0;
-            } else if (
-              this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG
-            ) {
+            } else if (this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG) {
               this.sequenceFrameIndex = lastFrameIndex;
               this.timeScaleInternal = -this.timeScaleInternal;
             } else {
               this.sequenceFrameIndex = lastFrameIndex;
               this.isPlaying = false;
-              this.emit(UIAnimatedImageEvent.PAUSED);
+              this.signalPausedInternal.emit();
               break;
             }
           }
@@ -243,15 +245,13 @@ export class UIAnimatedImage extends UIElement {
           if (this.sequenceFrameIndex < 0) {
             if (this.loopModeInternal === UIAnimatedImageLoopMode.LOOP) {
               this.sequenceFrameIndex = lastFrameIndex;
-            } else if (
-              this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG
-            ) {
+            } else if (this.loopModeInternal === UIAnimatedImageLoopMode.PING_PONG) {
               this.sequenceFrameIndex = 0;
               this.timeScaleInternal = -this.timeScaleInternal;
             } else {
               this.sequenceFrameIndex = 0;
               this.isPlaying = false;
-              this.emit(UIAnimatedImageEvent.PAUSED);
+              this.signalPausedInternal.emit();
               break;
             }
           }
@@ -282,9 +282,7 @@ export class UIAnimatedImage extends UIElement {
 
     if (frame.uvTransformDirty || this.currentFrameIndexDirty) {
       properties ??= {};
-      properties["textureTransform"] = frame.calculateUVTransform(
-        this.textureTransform,
-      );
+      properties["textureTransform"] = frame.calculateUVTransform(this.textureTransform);
       frame.setUVTransformDirtyFalse();
     }
 
@@ -345,19 +343,13 @@ export class UIAnimatedImage extends UIElement {
 
   private subscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
-      frame.on(
-        UITextureViewEvent.DIMENSIONS_CHANGED,
-        this.onTextureDimensionsChanged,
-      );
+      frame.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
     }
   }
 
   private unsubscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
-      frame.off(
-        UITextureViewEvent.DIMENSIONS_CHANGED,
-        this.onTextureDimensionsChanged,
-      );
+      frame.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
     }
   }
 }

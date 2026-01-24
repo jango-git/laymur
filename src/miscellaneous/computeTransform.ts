@@ -113,10 +113,8 @@ export function computeTrimmedTransformMatrix(
   } else {
     const rawAnchorOffsetX = microAnchorX * width;
     const rawAnchorOffsetY = microAnchorY * height;
-    TEMP_POSITION.x =
-      x + rawAnchorOffsetX - rotatedAnchorX + microX + rotatedTrimX;
-    TEMP_POSITION.y =
-      y + rawAnchorOffsetY - rotatedAnchorY + microY + rotatedTrimY;
+    TEMP_POSITION.x = x + rawAnchorOffsetX - rotatedAnchorX + microX + rotatedTrimX;
+    TEMP_POSITION.y = y + rawAnchorOffsetY - rotatedAnchorY + microY + rotatedTrimY;
   }
 
   TEMP_POSITION.z = zIndex;

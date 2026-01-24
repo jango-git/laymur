@@ -1,20 +1,13 @@
-import { Eventail } from "eventail";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
-import type {
-  UILayerElement,
-  UIPointElement,
-} from "../../miscellaneous/shared";
+import type { UILayerElement, UIPointElement } from "../../miscellaneous/shared";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
 import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 
 /** Point in 2D space with constraint-based positioning */
-export class UIAnchor
-  extends Eventail
-  implements UILayerElement, UIPointElement
-{
+export class UIAnchor implements UILayerElement, UIPointElement {
   /** Optional identifier for debugging */
   public name = "";
 
@@ -41,7 +34,6 @@ export class UIAnchor
     assertValidNumber(x, "UIAnchor.constructor.options.x");
     assertValidNumber(y, "UIAnchor.constructor.options.y");
 
-    super();
     this.solverWrapper = this.layer.solverWrapper;
     this.xVariable = this.solverWrapper.createVariable(x, UIPriority.P7);
     this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);

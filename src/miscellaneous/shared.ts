@@ -38,12 +38,7 @@ export interface UIPlaneElement extends UIPointElement {
  * @returns True if object has valid layer property
  */
 export function isUILayerElement(obj: unknown): obj is UILayerElement {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "layer" in obj &&
-    obj.layer instanceof UILayer
-  );
+  return typeof obj === "object" && obj !== null && "layer" in obj && obj.layer instanceof UILayer;
 }
 
 /**

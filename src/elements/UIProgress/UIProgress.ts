@@ -9,7 +9,6 @@ import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import source from "../../shaders/UIProgress.glsl";
 import { UIElement } from "../UIElement/UIElement";
@@ -39,16 +38,9 @@ export class UIProgress extends UIElement {
    * @param texture - Texture to display
    * @param options - Configuration options
    */
-  constructor(
-    layer: UILayer,
-    texture: Texture,
-    options: Partial<UIProgressOptions> = {},
-  ) {
+  constructor(layer: UILayer, texture: Texture, options: Partial<UIProgressOptions> = {}) {
     if (options.progress !== undefined) {
-      assertValidNumber(
-        options.progress,
-        "UIProgress.constructor.options.progress",
-      );
+      assertValidNumber(options.progress, "UIProgress.constructor.options.progress");
     }
 
     const color = new UIColor(options.color);
@@ -59,14 +51,9 @@ export class UIProgress extends UIElement {
     options.width = options.width ?? textureView.width;
     options.height = options.height ?? textureView.height;
 
-    const progress = MathUtils.clamp(
-      options.progress ?? PROGRESS_DEFAULT_VALUE,
-      0,
-      1,
-    );
+    const progress = MathUtils.clamp(options.progress ?? PROGRESS_DEFAULT_VALUE, 0, 1);
 
-    const maskFunction =
-      options.maskFunction ?? new UIProgressMaskFunctionDirectional();
+    const maskFunction = options.maskFunction ?? new UIProgressMaskFunctionDirectional();
 
     super(
       layer,
@@ -89,10 +76,7 @@ export class UIProgress extends UIElement {
     this.progressInternal = progress;
     this.maskFunctionInternal = maskFunction;
 
-    this.texture.on(
-      UITextureViewEvent.DIMENSIONS_CHANGED,
-      this.onTextureDimensionsChanged,
-    );
+    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -150,9 +134,7 @@ export class UIProgress extends UIElement {
 
     if (this.texture.uvTransformDirty) {
       properties ??= {};
-      properties["textureTransform"] = this.texture.calculateUVTransform(
-        this.textureTransform,
-      );
+      properties["textureTransform"] = this.texture.calculateUVTransform(this.textureTransform);
       this.texture.setUVTransformDirtyFalse();
     }
 
@@ -164,9 +146,7 @@ export class UIProgress extends UIElement {
 
     if (this.textureResolutionDirty) {
       properties ??= {};
-      properties["textureResolution"] = this.texture.getResolution(
-        this.textureResolution,
-      );
+      properties["textureResolution"] = this.texture.getResolution(this.textureResolution);
       this.textureResolutionDirty = false;
     }
 
@@ -220,10 +200,7 @@ export class UIProgress extends UIElement {
     }
   }
 
-  private readonly onTextureDimensionsChanged = (
-    width: number,
-    height: number,
-  ): void => {
+  private readonly onTextureDimensionsChanged = (width: number, height: number): void => {
     if (this.width !== width || this.height !== height) {
       this.width = width;
       this.height = height;
@@ -241,9 +218,7 @@ export class UIProgress extends UIElement {
       this.maskFunctionInternal.source + source,
       {
         texture: this.texture.texture,
-        textureTransform: this.texture.calculateUVTransform(
-          this.textureTransform,
-        ),
+        textureTransform: this.texture.calculateUVTransform(this.textureTransform),
         textureResolution: this.texture.getResolution(this.textureResolution),
         color: this.colorInternal,
         progress: this.progressInternal,

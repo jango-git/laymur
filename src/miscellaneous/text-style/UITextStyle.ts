@@ -29,12 +29,7 @@ export class UITextStyle {
   private fontFamilyInternal?: string;
   private fontSizeInternal?: number;
   private fontStyleInternal?: "normal" | "italic" | "oblique";
-  private fontWeightInternal?:
-    | "normal"
-    | "bold"
-    | "bolder"
-    | "lighter"
-    | number;
+  private fontWeightInternal?: "normal" | "bold" | "bolder" | "lighter" | number;
   private lineHeightInternal?: number;
   private enableShadowInternal?: boolean;
   private shadowOffsetXInternal?: number;
@@ -92,13 +87,7 @@ export class UITextStyle {
   }
 
   /** Font weight */
-  public get fontWeight():
-    | "normal"
-    | "bold"
-    | "bolder"
-    | "lighter"
-    | number
-    | undefined {
+  public get fontWeight(): "normal" | "bold" | "bolder" | "lighter" | number | undefined {
     return this.fontWeightInternal;
   }
 
@@ -194,9 +183,7 @@ export class UITextStyle {
     }
   }
 
-  public set fontWeight(
-    value: "normal" | "bold" | "bolder" | "lighter" | number | undefined,
-  ) {
+  public set fontWeight(value: "normal" | "bold" | "bolder" | "lighter" | number | undefined) {
     if (typeof value === "number") {
       assertValidPositiveNumber(value, "UITextStyle.fontWeight");
     }
@@ -290,33 +277,20 @@ export class UITextStyle {
    * @param fallback Second style to check if primary is undefined
    * @returns Complete style configuration with all defaults applied
    */
-  public static resolve(
-    primary?: UITextStyle,
-    fallback?: UITextStyle,
-  ): UITextStyleConfig {
+  public static resolve(primary?: UITextStyle, fallback?: UITextStyle): UITextStyleConfig {
     const fontSize =
-      primary?.fontSizeInternal ??
-      fallback?.fontSizeInternal ??
-      TEXT_STYLE_DEFAULT_FONT_SIZE;
+      primary?.fontSizeInternal ?? fallback?.fontSizeInternal ?? TEXT_STYLE_DEFAULT_FONT_SIZE;
 
     return {
-      color:
-        primary?.colorInternal ??
-        fallback?.colorInternal ??
-        TEXT_STYLE_DEFAULT_COLOR,
-      align:
-        primary?.alignInternal ??
-        fallback?.alignInternal ??
-        TEXT_STYLE_DEFAULT_ALIGN,
+      color: primary?.colorInternal ?? fallback?.colorInternal ?? TEXT_STYLE_DEFAULT_COLOR,
+      align: primary?.alignInternal ?? fallback?.alignInternal ?? TEXT_STYLE_DEFAULT_ALIGN,
       fontFamily:
         primary?.fontFamilyInternal ??
         fallback?.fontFamilyInternal ??
         TEXT_STYLE_DEFAULT_FONT_FAMILY,
       fontSize,
       fontStyle:
-        primary?.fontStyleInternal ??
-        fallback?.fontStyleInternal ??
-        TEXT_STYLE_DEFAULT_FONT_STYLE,
+        primary?.fontStyleInternal ?? fallback?.fontStyleInternal ?? TEXT_STYLE_DEFAULT_FONT_STYLE,
       fontWeight:
         primary?.fontWeightInternal ??
         fallback?.fontWeightInternal ??
@@ -374,8 +348,7 @@ export class UITextStyle {
       this.fontSizeInternal !== TEXT_STYLE_DEFAULT_FONT_SIZE ||
       this.fontStyleInternal !== TEXT_STYLE_DEFAULT_FONT_STYLE ||
       this.fontWeightInternal !== TEXT_STYLE_DEFAULT_FONT_WEIGHT ||
-      this.lineHeightInternal !==
-        TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT ||
+      this.lineHeightInternal !== TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT ||
       this.enableShadowInternal !== TEXT_STYLE_DEFAULT_ENABLE_SHADOW ||
       this.shadowOffsetXInternal !== TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X ||
       this.shadowOffsetYInternal !== TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y ||
@@ -391,8 +364,7 @@ export class UITextStyle {
       this.fontSizeInternal = TEXT_STYLE_DEFAULT_FONT_SIZE;
       this.fontStyleInternal = TEXT_STYLE_DEFAULT_FONT_STYLE;
       this.fontWeightInternal = TEXT_STYLE_DEFAULT_FONT_WEIGHT;
-      this.lineHeightInternal =
-        TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT;
+      this.lineHeightInternal = TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT;
       this.enableShadowInternal = TEXT_STYLE_DEFAULT_ENABLE_SHADOW;
       this.shadowOffsetXInternal = TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X;
       this.shadowOffsetYInternal = TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y;

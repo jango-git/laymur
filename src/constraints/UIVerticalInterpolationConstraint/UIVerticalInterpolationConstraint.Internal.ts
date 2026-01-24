@@ -4,8 +4,7 @@ export const DEFAULT_ANCHOR = 0.5;
 export const DEFAULT_T = 0.5;
 
 /** Vertical interpolation constraint options */
-export interface UIVerticalInterpolationConstraintOptions
-  extends UISingleParameterConstraintOptions {
+export interface UIVerticalInterpolationConstraintOptions extends UISingleParameterConstraintOptions {
   /** Anchor on element A (0 = bottom, 0.5 = center, 1 = top) */
   anchorA: number;
   /** Anchor on element B (0 = bottom, 0.5 = center, 1 = top) */

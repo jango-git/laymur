@@ -14,14 +14,8 @@ export class UIResizePolicyFit extends UIResizePolicy {
    */
   constructor(rectWidth: number, rectHeight: number) {
     super();
-    assertValidPositiveNumber(
-      rectWidth,
-      "UIResizePolicyFit.constructor.rectWidth",
-    );
-    assertValidPositiveNumber(
-      rectHeight,
-      "UIResizePolicyFit.constructor.rectHeight",
-    );
+    assertValidPositiveNumber(rectWidth, "UIResizePolicyFit.constructor.rectWidth");
+    assertValidPositiveNumber(rectHeight, "UIResizePolicyFit.constructor.rectHeight");
 
     this.rectWidthInternal = rectWidth;
     this.rectHeightInternal = rectHeight;
@@ -57,13 +51,7 @@ export class UIResizePolicyFit extends UIResizePolicy {
 
   public calculateScale(width: number, height: number): number {
     assertValidPositiveNumber(width, "UIResizePolicyFit.calculateScale.width");
-    assertValidPositiveNumber(
-      height,
-      "UIResizePolicyFit.calculateScale.height",
-    );
-    return Math.max(
-      this.rectWidthInternal / width,
-      this.rectHeightInternal / height,
-    );
+    assertValidPositiveNumber(height, "UIResizePolicyFit.calculateScale.height");
+    return Math.max(this.rectWidthInternal / width, this.rectHeightInternal / height);
   }
 }

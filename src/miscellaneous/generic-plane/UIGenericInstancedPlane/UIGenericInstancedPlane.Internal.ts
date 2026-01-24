@@ -34,11 +34,7 @@ export const INITIAL_CAPACITY = 1;
 
 const TEMP_COLOR_VECTOR = new Vector4();
 
-export function writePropertyToArray(
-  value: UIProperty,
-  array: Float32Array,
-  offset: number,
-): void {
+export function writePropertyToArray(value: UIProperty, array: Float32Array, offset: number): void {
   if (value instanceof UIColor) {
     value.toGLSLColor(TEMP_COLOR_VECTOR);
     array[offset] = TEMP_COLOR_VECTOR.x;
@@ -106,9 +102,7 @@ export function buildMaterial(
 
   for (const name in varyingProperties) {
     const { glslTypeInfo } = varyingProperties[name];
-    attributeDeclarations.push(
-      `attribute ${glslTypeInfo.glslTypeName} a_${name};`,
-    );
+    attributeDeclarations.push(`attribute ${glslTypeInfo.glslTypeName} a_${name};`);
     varyingDeclarations.push(`varying ${glslTypeInfo.glslTypeName} p_${name};`);
     vertexAssignments.push(`p_${name} = a_${name};`);
   }
@@ -153,8 +147,7 @@ export function buildMaterial(
     vertexShader,
     fragmentShader,
     transparent: transparency === UITransparencyMode.BLEND,
-    alphaTest:
-      transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0,
+    alphaTest: transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0,
     alphaHash: transparency === UITransparencyMode.HASH,
     depthWrite: transparency !== UITransparencyMode.BLEND,
     depthTest: true,
@@ -176,12 +169,7 @@ export function reconstructValue(
     return new Vector3(array[offset], array[offset + 1], array[offset + 2]);
   }
   if (referenceValue instanceof Vector4) {
-    return new Vector4(
-      array[offset],
-      array[offset + 1],
-      array[offset + 2],
-      array[offset + 3],
-    );
+    return new Vector4(array[offset], array[offset + 1], array[offset + 2], array[offset + 3]);
   }
   if (referenceValue instanceof UIColor) {
     return new UIColor().setGLSLColor(
@@ -201,9 +189,7 @@ export function reconstructValue(
     matrix.fromArray(array, offset);
     return matrix;
   }
-  throw new Error(
-    `reconstructValue.referenceValue: cannot reconstruct value for type`,
-  );
+  throw new Error(`reconstructValue.referenceValue: cannot reconstruct value for type`);
 }
 
 /**

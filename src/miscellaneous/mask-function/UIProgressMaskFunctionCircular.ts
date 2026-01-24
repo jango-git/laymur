@@ -15,10 +15,7 @@ export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {
    * @param inverseDirection - Whether to fill counter-clockwise
    */
   constructor(startAngle = 0, inverseDirection = false) {
-    assertValidNumber(
-      startAngle,
-      "UIProgressMaskFunctionCircular.constructor.startAngle",
-    );
+    assertValidNumber(startAngle, "UIProgressMaskFunctionCircular.constructor.startAngle");
     super(source);
     this.startAngleInternal = startAngle;
     this.inverseDirectionInternal = inverseDirection;

@@ -1,16 +1,6 @@
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import type { UIElementOptions } from "../UIElement/UIElement.Internal";
 
-/** Animation playback events */
-export enum UIAnimatedImageEvent {
-  /** Animation started or resumed */
-  PLAYED = 0,
-  /** Animation paused */
-  PAUSED = 1,
-  /** Animation stopped and reset */
-  STOPPED = 2,
-}
-
 /** Animation loop behavior */
 export enum UIAnimatedImageLoopMode {
   /** No looping, stops at boundary frame */

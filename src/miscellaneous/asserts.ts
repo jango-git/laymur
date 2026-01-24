@@ -26,16 +26,11 @@ export function assertValidNumber(value: number, subject: string): void {
  * @param subject Value name for error messages
  * @throws If value is invalid or below EPSILON
  */
-export function assertValidPositiveNumber(
-  value: number,
-  subject: string,
-): void {
+export function assertValidPositiveNumber(value: number, subject: string): void {
   if (process.env.NODE_ENV !== "production") {
     assertValidNumber(value, subject);
     if (value < EPSILON) {
-      throw new Error(
-        `${subject}: value must be greater than or equal to ${EPSILON}`,
-      );
+      throw new Error(`${subject}: value must be greater than or equal to ${EPSILON}`);
     }
   }
 }
@@ -46,10 +41,7 @@ export function assertValidPositiveNumber(
  * @param subject Value name for error messages
  * @throws If value is invalid or negative
  */
-export function assertValidNonNegativeNumber(
-  value: number,
-  subject: string,
-): void {
+export function assertValidNonNegativeNumber(value: number, subject: string): void {
   if (process.env.NODE_ENV !== "production") {
     assertValidNumber(value, subject);
     if (value < 0) {
@@ -66,11 +58,7 @@ export function assertValidNonNegativeNumber(
  * @returns Common layer for both subjects
  * @throws If subjects are invalid or from different layers
  */
-export function assertValidConstraintArguments(
-  a: unknown,
-  b: unknown,
-  subject: string,
-): UILayer {
+export function assertValidConstraintArguments(a: unknown, b: unknown, subject: string): UILayer {
   if (process.env.NODE_ENV !== "production") {
     if (a instanceof UILayer && b instanceof UILayer) {
       throw new Error(`${subject}: layer cannot be snapped to another layer`);

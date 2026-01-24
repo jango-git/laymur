@@ -52,7 +52,8 @@ function checkOffscreenCanvasSupportInternal(): boolean {
     gl.deleteTexture(texture);
 
     // Check that the read pixel is red (with tolerance)
-    const isRedPixel = pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
+    const isRedPixel =
+      pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
     if (!isRedPixel) {
       return false;
     }
@@ -95,7 +96,17 @@ function checkSRGBSupportInternal(): boolean {
   try {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, extension.SRGB_ALPHA_EXT, 2, 2, 0, extension.SRGB_ALPHA_EXT, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      extension.SRGB_ALPHA_EXT,
+      2,
+      2,
+      0,
+      extension.SRGB_ALPHA_EXT,
+      gl.UNSIGNED_BYTE,
+      null,
+    );
     const errorCode = gl.getError();
     gl.deleteTexture(texture);
     return errorCode === gl.NO_ERROR;

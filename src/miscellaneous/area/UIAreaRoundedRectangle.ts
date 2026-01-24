@@ -24,18 +24,9 @@ export class UIAreaRoundedRectangle extends UIArea {
     super();
     assertValidNonNegativeNumber(x, "UIAreaRoundedRectangle.constructor.x");
     assertValidNonNegativeNumber(y, "UIAreaRoundedRectangle.constructor.y");
-    assertValidNonNegativeNumber(
-      width,
-      "UIAreaRoundedRectangle.constructor.width",
-    );
-    assertValidNonNegativeNumber(
-      height,
-      "UIAreaRoundedRectangle.constructor.height",
-    );
-    assertValidNonNegativeNumber(
-      radius,
-      "UIAreaRoundedRectangle.constructor.radius",
-    );
+    assertValidNonNegativeNumber(width, "UIAreaRoundedRectangle.constructor.width");
+    assertValidNonNegativeNumber(height, "UIAreaRoundedRectangle.constructor.height");
+    assertValidNonNegativeNumber(radius, "UIAreaRoundedRectangle.constructor.radius");
     this.radius = Math.min(radius, Math.min(width, height) / 2);
   }
 

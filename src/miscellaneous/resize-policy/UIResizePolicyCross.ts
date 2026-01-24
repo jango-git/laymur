@@ -56,14 +56,8 @@ export class UIResizePolicyCross extends UIResizePolicy {
   }
 
   public calculateScale(width: number, height: number): number {
-    assertValidPositiveNumber(
-      width,
-      "UIResizePolicyCross.calculateScale.width",
-    );
-    assertValidPositiveNumber(
-      height,
-      "UIResizePolicyCross.calculateScale.height",
-    );
+    assertValidPositiveNumber(width, "UIResizePolicyCross.calculateScale.width");
+    assertValidPositiveNumber(height, "UIResizePolicyCross.calculateScale.height");
     return width > height
       ? this.fixedWidthLandscapeInternal / width
       : this.fixedHeightPortraitInternal / height;

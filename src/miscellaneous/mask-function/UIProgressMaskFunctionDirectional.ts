@@ -1,8 +1,9 @@
 import { Vector2 } from "three";
 import source from "../../shaders/UIProgressMaskFunctionDirectional.glsl";
 import type { UIProperty } from "../generic-plane/shared";
+import type { Vector2Like } from "../math";
+import { EPSILON } from "../math";
 import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
-import { EPSILON, type Vector2Like } from "../math";
 
 /** Linear directional progress fill */
 export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {

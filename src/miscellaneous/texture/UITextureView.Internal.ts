@@ -3,12 +3,6 @@ import { Texture } from "three";
 export const TEXTURE_DEFAULT_TEXTURE = new Texture();
 export const TEXTURE_DEFAULT_SIZE = 2;
 
-/** Events emitted by UITexture */
-export enum UITextureViewEvent {
-  /** Emitted when width or height changes */
-  DIMENSIONS_CHANGED = 0,
-}
-
 /** Rectangle coordinates and dimensions in atlas */
 export interface UITextureRect {
   /** X coordinate in pixels */

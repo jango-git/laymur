@@ -177,10 +177,7 @@ export class UIInsets {
     } else {
       const horizontal = config.horizontal;
       const vertical = config.vertical;
-      assertValidNonNegativeNumber(
-        horizontal,
-        "UIInsets.set.config.horizontal",
-      );
+      assertValidNonNegativeNumber(horizontal, "UIInsets.set.config.horizontal");
       assertValidNonNegativeNumber(vertical, "UIInsets.set.config.vertical");
       this.lInternal = horizontal;
       this.rInternal = horizontal;
@@ -220,12 +217,7 @@ export class UIInsets {
 
   /** Converts to Vector4 (left, right, top, bottom) */
   public toVector4(result = new Vector4()): Vector4 {
-    return result.set(
-      this.lInternal,
-      this.rInternal,
-      this.tInternal,
-      this.bInternal,
-    );
+    return result.set(this.lInternal, this.rInternal, this.tInternal, this.bInternal);
   }
 
   /** Resets all sides to 0 */

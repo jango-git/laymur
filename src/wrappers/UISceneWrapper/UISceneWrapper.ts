@@ -30,13 +30,7 @@ export class UISceneWrapper implements UISceneWrapperInterface {
     visibility: boolean,
     transparency: UITransparencyMode,
   ): number {
-    return this.planeRegistry.createPlane(
-      source,
-      properties,
-      transform,
-      visibility,
-      transparency,
-    );
+    return this.planeRegistry.createPlane(source, properties, transform, visibility, transparency);
   }
 
   public destroyPlane(handler: number): void {
@@ -47,10 +41,7 @@ export class UISceneWrapper implements UISceneWrapperInterface {
     this.planeRegistry.setTransform(handler, transform);
   }
 
-  public setProperties(
-    handler: number,
-    properties: Record<string, UIProperty>,
-  ): void {
+  public setProperties(handler: number, properties: Record<string, UIProperty>): void {
     this.planeRegistry.setProperties(handler, properties);
   }
 
@@ -58,10 +49,7 @@ export class UISceneWrapper implements UISceneWrapperInterface {
     this.planeRegistry.setVisibility(handler, visible);
   }
 
-  public setTransparency(
-    handler: number,
-    transparency: UITransparencyMode,
-  ): void {
+  public setTransparency(handler: number, transparency: UITransparencyMode): void {
     this.planeRegistry.setTransparency(handler, transparency);
   }
 

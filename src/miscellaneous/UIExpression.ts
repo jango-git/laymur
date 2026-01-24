@@ -18,10 +18,7 @@ export class UIExpression {
 
     if (terms) {
       for (let i = 0; i < terms.length; i++) {
-        assertValidNumber(
-          terms[i][1],
-          `UIExpression.constructor.terms[${i}][1]`,
-        );
+        assertValidNumber(terms[i][1], `UIExpression.constructor.terms[${i}][1]`);
       }
     }
   }
@@ -33,10 +30,7 @@ export class UIExpression {
    * @returns Sum of expressions
    */
   public static plus(a: UIExpression, b: UIExpression): UIExpression {
-    const result = new UIExpression(
-      a.constant + b.constant,
-      Array.from(a.terms.entries()),
-    );
+    const result = new UIExpression(a.constant + b.constant, Array.from(a.terms.entries()));
     for (const [variableIndex, coefficient] of b.terms) {
       result.plus(variableIndex, coefficient);
     }
@@ -50,10 +44,7 @@ export class UIExpression {
    * @returns Difference of expressions
    */
   public static minus(a: UIExpression, b: UIExpression): UIExpression {
-    const result = new UIExpression(
-      a.constant - b.constant,
-      Array.from(a.terms.entries()),
-    );
+    const result = new UIExpression(a.constant - b.constant, Array.from(a.terms.entries()));
     for (const [variableIndex, coefficient] of b.terms) {
       result.minus(variableIndex, coefficient);
     }
@@ -68,10 +59,7 @@ export class UIExpression {
    */
   public plus(variableIndex: number, coefficient: number): this {
     assertValidNumber(coefficient, "UIExpression.plus.coefficient");
-    this.terms.set(
-      variableIndex,
-      (this.terms.get(variableIndex) ?? 0) + coefficient,
-    );
+    this.terms.set(variableIndex, (this.terms.get(variableIndex) ?? 0) + coefficient);
     return this;
   }
 

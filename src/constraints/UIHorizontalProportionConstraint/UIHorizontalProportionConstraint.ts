@@ -30,11 +30,7 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
     }
 
     super(
-      assertValidConstraintArguments(
-        a,
-        b,
-        "UIHorizontalProportionConstraint.constructor",
-      ),
+      assertValidConstraintArguments(a, b, "UIHorizontalProportionConstraint.constructor"),
       options,
     );
 
@@ -55,10 +51,7 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
 
   /** Updates proportion multiplier */
   public set proportion(value: number) {
-    assertValidPositiveNumber(
-      value,
-      "UIHorizontalProportionConstraint.proportion",
-    );
+    assertValidPositiveNumber(value, "UIHorizontalProportionConstraint.proportion");
     if (this.proportionInternal !== value) {
       this.proportionInternal = value;
       this.solverWrapper.setConstraintRHS(this.constraint, this.buildRHS());

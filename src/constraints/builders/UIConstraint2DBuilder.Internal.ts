@@ -18,20 +18,14 @@ export type UIType2D<T> = UIType2DObject<T> | [T, T] | T;
  * @param value Object, tuple, or single value
  * @returns Normalized object with h and v properties
  */
-export function normalizeUIType2D<T>(
-  value: UIType2D<T> | undefined,
-): UIType2DObject<T> {
+export function normalizeUIType2D<T>(value: UIType2D<T> | undefined): UIType2DObject<T> {
   if (value === undefined) {
     return {};
   }
   if (Array.isArray(value)) {
     return { h: value[0], v: value[1] };
   }
-  if (
-    typeof value === "object" &&
-    value !== null &&
-    ("h" in value || "v" in value)
-  ) {
+  if (typeof value === "object" && value !== null && ("h" in value || "v" in value)) {
     return value;
   }
   return { h: value as T, v: value as T };
@@ -70,8 +64,7 @@ export interface UIConstraintProportion2DOptions extends UIConstraint2DOptions {
 }
 
 /** 2D interpolation constraint options */
-export interface UIConstraintInterpolation2DOptions
-  extends UIConstraint2DOptions {
+export interface UIConstraintInterpolation2DOptions extends UIConstraint2DOptions {
   /** Anchor on element A for each axis */
   anchorA: UIType2D<number>;
   /** Anchor on element B for each axis */

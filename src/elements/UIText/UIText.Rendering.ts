@@ -61,9 +61,7 @@ export function renderTextLines(
     const line = lines[i];
 
     const firstAlign = line.chunks[0]?.style.align ?? TEXT_STYLE_DEFAULT_ALIGN;
-    const isUniformAlign = line.chunks.every(
-      (c) => c.style.align === firstAlign,
-    );
+    const isUniformAlign = line.chunks.every((c) => c.style.align === firstAlign);
     const lineAlign = isUniformAlign ? firstAlign : TEXT_STYLE_DEFAULT_ALIGN;
 
     let offsetX = 0;

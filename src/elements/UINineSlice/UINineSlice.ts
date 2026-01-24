@@ -9,7 +9,6 @@ import { UIInsets } from "../../miscellaneous/insets/UIInsets";
 import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import { UITextureViewEvent } from "../../miscellaneous/texture/UITextureView.Internal";
 import source from "../../shaders/UINineSlice.glsl";
 import { UIElement } from "../UIElement/UIElement";
 import type { UINineSliceOptions } from "./UINineSlice.Internal";
@@ -48,11 +47,7 @@ export class UINineSlice extends UIElement {
    * @param texture - Texture to display
    * @param options - Configuration options
    */
-  constructor(
-    layer: UILayer,
-    texture: UITextureConfig,
-    options: Partial<UINineSliceOptions> = {},
-  ) {
+  constructor(layer: UILayer, texture: UITextureConfig, options: Partial<UINineSliceOptions> = {}) {
     const color = new UIColor(options.color);
     const textureView = new UITextureView(texture);
     const textureTransform = textureView.calculateUVTransform();
@@ -60,12 +55,8 @@ export class UINineSlice extends UIElement {
     options.width = options.width ?? textureView.width;
     options.height = options.height ?? textureView.height;
 
-    const sliceBorders = new UIInsets(
-      options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER,
-    );
-    const sliceRegions = new UIInsets(
-      options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER,
-    );
+    const sliceBorders = new UIInsets(options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER);
+    const sliceRegions = new UIInsets(options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER);
 
     const regionMode = options.regionMode ?? NINE_SLICE_DEFAULT_REGION_MODE;
 
@@ -98,10 +89,7 @@ export class UINineSlice extends UIElement {
     this.lastElementWidth = this.width;
     this.lastElementHeight = this.height;
 
-    this.texture.on(
-      UITextureViewEvent.DIMENSIONS_CHANGED,
-      this.onTextureDimensionsChanged,
-    );
+    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -149,10 +137,7 @@ export class UINineSlice extends UIElement {
 
   /** Removes nine slice and frees resources */
   public override destroy(): void {
-    this.texture.off(
-      UITextureViewEvent.DIMENSIONS_CHANGED,
-      this.onTextureDimensionsChanged,
-    );
+    this.texture.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
     super.destroy();
   }
 
@@ -160,15 +145,11 @@ export class UINineSlice extends UIElement {
     let properties: Record<string, UIProperty> | undefined;
 
     const sliceBordersDirty =
-      this.textureDimensionsDirty ||
-      this.sliceBordersInternal.dirty ||
-      this.texture.trimDirty;
+      this.textureDimensionsDirty || this.sliceBordersInternal.dirty || this.texture.trimDirty;
 
     if (sliceBordersDirty) {
       properties ??= {};
-      properties["sliceBorders"] = this.calculateSliceBordersForShader(
-        this.sliceBordersVector,
-      );
+      properties["sliceBorders"] = this.calculateSliceBordersForShader(this.sliceBordersVector);
       this.sliceBordersInternal.setDirtyFalse();
       this.textureDimensionsDirty = false;
     }
@@ -181,9 +162,7 @@ export class UINineSlice extends UIElement {
 
     if (sliceRegionsDirty) {
       properties ??= {};
-      properties["sliceRegions"] = this.calculateSliceRegionsForShader(
-        this.sliceRegionsVector,
-      );
+      properties["sliceRegions"] = this.calculateSliceRegionsForShader(this.sliceRegionsVector);
       this.sliceRegionsInternal.setDirtyFalse();
       this.regionModeDirty = false;
       this.setElementDimensionsDirtyFalse();
@@ -203,9 +182,7 @@ export class UINineSlice extends UIElement {
 
     if (this.texture.uvTransformDirty) {
       properties ??= {};
-      properties["textureTransform"] = this.texture.calculateUVTransform(
-        this.textureTransform,
-      );
+      properties["textureTransform"] = this.texture.calculateUVTransform(this.textureTransform);
       this.texture.setUVTransformDirtyFalse();
     }
 
@@ -276,12 +253,7 @@ export class UINineSlice extends UIElement {
     const top = Math.max(0, srcTop - trimNTop) / trimmedHeightNorm;
     const bottom = Math.max(0, srcBottom - trimNBottom) / trimmedHeightNorm;
 
-    return result.set(
-      Math.min(1, left),
-      Math.min(1, right),
-      Math.min(1, top),
-      Math.min(1, bottom),
-    );
+    return result.set(Math.min(1, left), Math.min(1, right), Math.min(1, top), Math.min(1, bottom));
   }
 
   private calculateSliceRegionsForShader(result: Vector4): Vector4 {

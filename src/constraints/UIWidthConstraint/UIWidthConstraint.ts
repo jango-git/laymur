@@ -1,8 +1,5 @@
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import type {
-  UILayerElement,
-  UIPlaneElement,
-} from "../../miscellaneous/shared";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal";
@@ -24,10 +21,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     options: Partial<UIWidthConstraintOptions> = {},
   ) {
     if (options.width !== undefined) {
-      assertValidPositiveNumber(
-        options.width,
-        "UIWidthConstraint.constructor.options.width",
-      );
+      assertValidPositiveNumber(options.width, "UIWidthConstraint.constructor.options.width");
     }
 
     super(element.layer, options);
@@ -52,10 +46,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     assertValidPositiveNumber(value, "UIWidthConstraint.width");
     if (this.widthInternal !== value) {
       this.widthInternal = value;
-      this.solverWrapper.setConstraintRHS(
-        this.constraint,
-        new UIExpression(value),
-      );
+      this.solverWrapper.setConstraintRHS(this.constraint, new UIExpression(value));
     }
   }
 }

@@ -1,8 +1,5 @@
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import type {
-  UILayerElement,
-  UIPlaneElement,
-} from "../../miscellaneous/shared";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
 import { UIExpression } from "../../miscellaneous/UIExpression";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
 import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal";
@@ -24,10 +21,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
     options: Partial<UIAspectConstraintOptions> = {},
   ) {
     if (options.aspect !== undefined) {
-      assertValidPositiveNumber(
-        options.aspect,
-        "UIAspectConstraint.constructor.options.aspect",
-      );
+      assertValidPositiveNumber(options.aspect, "UIAspectConstraint.constructor.options.aspect");
     }
 
     super(element.layer, options);

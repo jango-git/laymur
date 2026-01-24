@@ -1,6 +1,19 @@
 import type { UIArea } from "../../miscellaneous/area/UIArea";
 import { UIMode } from "../../miscellaneous/UIMode";
 import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal";
+import type { UIInputDummy } from "./UIInputDummy";
+
+/** Input event data */
+export interface UIInputEventData {
+  /** X coordinate */
+  x: number;
+  /** Y coordinate */
+  y: number;
+  /** Pointer identifier */
+  identifier: number;
+  /** Element that emitted the event */
+  element: UIInputDummy;
+}
 
 /** Configuration options for UIInputDummy */
 export interface UIInputDummyOptions extends UIAnchorOptions {

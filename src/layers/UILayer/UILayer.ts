@@ -1,4 +1,5 @@
-import { Eventail } from "eventail";
+import type { FerrsignView2, FerrsignView3 } from "ferrsign";
+import { Ferrsign2, Ferrsign3 } from "ferrsign";
 import type { WebGLRenderer } from "three";
 import type { UIPlaneElement } from "../../miscellaneous/shared";
 
@@ -12,20 +13,11 @@ import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper";
 import type { UISceneWrapperInterface } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
 import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper";
 import type { UISolverWrapperInterface } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
-import type {
-  UILayerMode,
-  UILayerOptions,
-  UILayerOrientation,
-} from "./UILayer.Internal";
-import {
-  LAYER_DEFAULT_MODE,
-  LAYER_DEFAULT_NAME,
-  LAYER_DEFAULT_SIZE,
-  UILayerEvent,
-} from "./UILayer.Internal";
+import type { UILayerMode, UILayerOptions, UILayerOrientation } from "./UILayer.Internal";
+import { LAYER_DEFAULT_MODE, LAYER_DEFAULT_NAME, LAYER_DEFAULT_SIZE } from "./UILayer.Internal";
 
 /** Base layer for UI rendering and layout management */
-export abstract class UILayer extends Eventail implements UIPlaneElement {
+export abstract class UILayer implements UIPlaneElement {
   /** Optional layer name */
   public name = "";
   /** Solver variable for x coordinate */
@@ -44,21 +36,17 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
   private modeInternal: UILayerMode;
   private orientationInternal: UILayerOrientation;
 
-  constructor(options: Partial<UILayerOptions>) {
-    super();
+  private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
+  private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
+  private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
 
+  constructor(options: Partial<UILayerOptions>) {
     if (options.width !== undefined) {
-      assertValidPositiveNumber(
-        options.width,
-        "UILayer.constructor.options.width",
-      );
+      assertValidPositiveNumber(options.width, "UILayer.constructor.options.width");
     }
 
     if (options.height !== undefined) {
-      assertValidPositiveNumber(
-        options.height,
-        "UILayer.constructor.options.height",
-      );
+      assertValidPositiveNumber(options.height, "UILayer.constructor.options.height");
     }
 
     const width = options.width ?? LAYER_DEFAULT_SIZE;
@@ -67,25 +55,12 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     this.sceneWrapperInternal = new UISceneWrapper(width, height);
     this.name = options.name ?? LAYER_DEFAULT_NAME;
     this.modeInternal = options.mode ?? LAYER_DEFAULT_MODE;
-    this.orientationInternal =
-      width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+    this.orientationInternal = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
 
-    this.xVariable = this.solverWrapperInternal.createVariable(
-      0,
-      UIPriority.P0,
-    );
-    this.yVariable = this.solverWrapperInternal.createVariable(
-      0,
-      UIPriority.P0,
-    );
-    this.wVariable = this.solverWrapperInternal.createVariable(
-      width,
-      UIPriority.P0,
-    );
-    this.hVariable = this.solverWrapperInternal.createVariable(
-      height,
-      UIPriority.P0,
-    );
+    this.xVariable = this.solverWrapperInternal.createVariable(0, UIPriority.P0);
+    this.yVariable = this.solverWrapperInternal.createVariable(0, UIPriority.P0);
+    this.wVariable = this.solverWrapperInternal.createVariable(width, UIPriority.P0);
+    this.hVariable = this.solverWrapperInternal.createVariable(height, UIPriority.P0);
   }
 
   /** @internal */
@@ -133,11 +108,26 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     return this.orientationInternal;
   }
 
+  /** Signal fired when orientation changes */
+  public get signalOrientationChanged(): FerrsignView2<UILayerOrientation, UILayer> {
+    return this.signalOrientationChangedInternal;
+  }
+
+  /** Signal fired when mode changes */
+  public get signalModeChanged(): FerrsignView2<UILayerMode, UILayer> {
+    return this.signalModeChangedInternal;
+  }
+
+  /** Signal fired during rendering */
+  public get signalRendering(): FerrsignView3<WebGLRenderer, number, UILayer> {
+    return this.signalRenderingInternal;
+  }
+
   /** Updates visibility and interactivity mode */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;
-      this.emit(UILayerEvent.MODE_CHANGED, this.modeInternal, this);
+      this.signalModeChangedInternal.emit(this.modeInternal, this);
     }
   }
 
@@ -146,22 +136,17 @@ export abstract class UILayer extends Eventail implements UIPlaneElement {
     this.solverWrapperInternal.suggestVariableValue(this.hVariable, height);
     this.sceneWrapperInternal.resize(width, height);
 
-    const orientation =
-      width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+    const orientation = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
 
     if (orientation !== this.orientationInternal) {
       this.orientationInternal = orientation;
-      this.emit(
-        UILayerEvent.ORIENTATION_CHANGED,
-        this.orientationInternal,
-        this,
-      );
+      this.signalOrientationChangedInternal.emit(this.orientationInternal, this);
     }
   }
 
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (isUIModeVisible(this.mode)) {
-      this.emit(UILayerEvent.RENDERING, renderer, deltaTime, this);
+      this.signalRenderingInternal.emit(renderer, deltaTime, this);
       this.sceneWrapperInternal.render(renderer);
     }
 

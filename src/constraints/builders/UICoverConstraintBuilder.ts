@@ -1,8 +1,5 @@
 import { assertValidNumber } from "../../miscellaneous/asserts";
-import type {
-  UILayerElement,
-  UIPlaneElement,
-} from "../../miscellaneous/shared";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import { UIRelation } from "../../miscellaneous/UIRelation";
 import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint";
@@ -39,16 +36,10 @@ export class UICoverConstraintBuilder {
     heightConstraint: UIVerticalProportionConstraint;
   } {
     if (options.anchorH !== undefined) {
-      assertValidNumber(
-        options.anchorH,
-        "UICoverConstraintBuilder.build.anchorH",
-      );
+      assertValidNumber(options.anchorH, "UICoverConstraintBuilder.build.anchorH");
     }
     if (options.anchorV !== undefined) {
-      assertValidNumber(
-        options.anchorV,
-        "UICoverConstraintBuilder.build.anchorV",
-      );
+      assertValidNumber(options.anchorV, "UICoverConstraintBuilder.build.anchorV");
     }
 
     let activeAspectConstraint: UIAspectConstraint | undefined;
@@ -70,25 +61,17 @@ export class UICoverConstraintBuilder {
       orientation: options.orientation,
     });
 
-    const widthConstraint = new UIHorizontalProportionConstraint(
-      passive,
-      active,
-      {
-        proportion: 1,
-        relation: UIRelation.GREATER_THAN,
-        orientation: options.orientation,
-      },
-    );
+    const widthConstraint = new UIHorizontalProportionConstraint(passive, active, {
+      proportion: 1,
+      relation: UIRelation.GREATER_THAN,
+      orientation: options.orientation,
+    });
 
-    const heightConstraint = new UIVerticalProportionConstraint(
-      passive,
-      active,
-      {
-        proportion: 1,
-        priority: UIPriority.P1,
-        orientation: options.orientation,
-      },
-    );
+    const heightConstraint = new UIVerticalProportionConstraint(passive, active, {
+      proportion: 1,
+      priority: UIPriority.P1,
+      orientation: options.orientation,
+    });
 
     return {
       activeAspectConstraint,

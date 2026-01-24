@@ -2,12 +2,7 @@ import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
 import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
-import type {
-  UIChunkMetrics,
-  UITextChunk,
-  UITextLine,
-  UITextSize,
-} from "./UIText.Interfaces";
+import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UIText.Interfaces";
 
 /**
  * Splits text into renderable chunks.
@@ -43,9 +38,7 @@ export function measureTextChunk(
 
   const metrics = context.measureText(text);
   const width = Math.ceil(metrics.width);
-  const height = Math.ceil(
-    metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent,
-  );
+  const height = Math.ceil(metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent);
 
   return {
     width,
@@ -61,10 +54,7 @@ export function measureTextChunk(
  * @param textChunks Measured text chunks
  * @returns Array of text lines
  */
-export function buildTextLines(
-  maxWidth: number,
-  textChunks: UITextChunk[],
-): UITextLine[] {
+export function buildTextLines(maxWidth: number, textChunks: UITextChunk[]): UITextLine[] {
   const lines: UITextLine[] = [];
   let currentLine: UITextChunk[] = [];
   let currentWidth = 0;
@@ -91,18 +81,12 @@ export function buildTextLines(
       continue;
     }
 
-    if (
-      currentLine.length === 0 ||
-      currentWidth + textChunk.metrics.width <= maxWidth
-    ) {
+    if (currentLine.length === 0 || currentWidth + textChunk.metrics.width <= maxWidth) {
       currentLine.push(textChunk);
       currentWidth += textChunk.metrics.width;
       currentHeight = Math.max(currentHeight, textChunk.metrics.height);
       currentBaseline = Math.max(currentBaseline, textChunk.metrics.baseline);
-      currentLineHeight = Math.max(
-        currentLineHeight,
-        textChunk.metrics.lineHeight,
-      );
+      currentLineHeight = Math.max(currentLineHeight, textChunk.metrics.lineHeight);
     } else {
       lines.push({
         chunks: currentLine,

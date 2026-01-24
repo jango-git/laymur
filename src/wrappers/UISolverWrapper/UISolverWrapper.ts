@@ -105,16 +105,12 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public removeVariable(index: number): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.removeVariable.index: variable does not exist`,
-      );
+      throw new Error(`UISolverWrapper.removeVariable.index: variable does not exist`);
     }
 
     for (const cDescription of this.constraints.values()) {
       if (cDescription.lhs.hasTerm(index) || cDescription.rhs.hasTerm(index)) {
-        throw new Error(
-          `UISolverWrapper.removeVariable.index: variable is used in constraint`,
-        );
+        throw new Error(`UISolverWrapper.removeVariable.index: variable is used in constraint`);
       }
     }
 
@@ -145,9 +141,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public suggestVariableValue(index: number, value: number): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.suggestVariableValue.index: variable does not exist`,
-      );
+      throw new Error(`UISolverWrapper.suggestVariableValue.index: variable does not exist`);
     }
 
     if (description.value !== value) {
@@ -184,9 +178,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setVariablePriority(index: number, priority: UIPriority): void {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setVariablePriority.index: variable does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setVariablePriority.index: variable does not exist`);
     }
 
     if (priority !== description.priority) {
@@ -239,9 +231,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public readVariableValue(index: number): number {
     const description = this.variables.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.readVariableValue.index: variable does not exist`,
-      );
+      throw new Error(`UISolverWrapper.readVariableValue.index: variable does not exist`);
     }
 
     if (this.solver === undefined) {
@@ -310,9 +300,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public removeConstraint(index: number): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.removeConstraint.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.removeConstraint.index: constraint does not exist`);
     }
 
     if (description.enabled) {
@@ -341,9 +329,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintLHS(index: number, lhs: UIExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setConstraintLHS.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setConstraintLHS.index: constraint does not exist`);
     }
 
     description.lhs.copy(lhs);
@@ -365,9 +351,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintRHS(index: number, rhs: UIExpression): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setConstraintRHS.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setConstraintRHS.index: constraint does not exist`);
     }
 
     description.rhs.copy(rhs);
@@ -389,9 +373,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintRelation(index: number, relation: UIRelation): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setConstraintRelation.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setConstraintRelation.index: constraint does not exist`);
     }
 
     if (description.relation !== relation) {
@@ -415,9 +397,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintPriority(index: number, priority: UIPriority): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setConstraintPriority.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setConstraintPriority.index: constraint does not exist`);
     }
 
     if (description.priority !== priority) {
@@ -441,9 +421,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
   public setConstraintEnabled(index: number, enabled: boolean): void {
     const description = this.constraints.get(index);
     if (description === undefined) {
-      throw new Error(
-        `UISolverWrapper.setConstraintEnabled.index: constraint does not exist`,
-      );
+      throw new Error(`UISolverWrapper.setConstraintEnabled.index: constraint does not exist`);
     }
 
     if (enabled !== description.enabled) {
@@ -467,10 +445,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
    * updates the variable configuration, then rebuilds and re-adds
    * the dependent constraints.
    */
-  private rebuildVariable(
-    index: number,
-    description: VariableDescription,
-  ): void {
+  private rebuildVariable(index: number, description: VariableDescription): void {
     const dependConstraints: ConstraintDescription[] = [];
 
     for (const cDescription of this.constraints.values()) {
@@ -485,10 +460,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
     }
 
     this.solver?.removeEditVariable(description.variable);
-    this.solver?.addEditVariable(
-      description.variable,
-      convertPriority(description.priority),
-    );
+    this.solver?.addEditVariable(description.variable, convertPriority(description.priority));
 
     for (const cDescription of dependConstraints) {
       cDescription.constraint = this.buildConstraint(
@@ -515,9 +487,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
    * Uses different rebuild strategies depending on whether the
    * constraint is currently enabled.
    */
-  private rebuildConstraintByDescription(
-    description: ConstraintDescription,
-  ): void {
+  private rebuildConstraintByDescription(description: ConstraintDescription): void {
     description.constraint = description.enabled
       ? this.rebuildConstraint(
           description.constraint,
@@ -590,17 +560,13 @@ export class UISolverWrapper implements UISolverWrapperInterface {
    */
   private convertExpression(expression: UIExpression): Expression {
     return new Expression(
-      ...expression
-        .prepareTerms()
-        .map(([variableIndex, coefficient]): [number, Variable] => {
-          const description = this.variables.get(variableIndex);
-          if (description === undefined) {
-            throw new Error(
-              `UISolverWrapper.convertExpression.expression: variable does not exist`,
-            );
-          }
-          return [coefficient, description.variable];
-        }),
+      ...expression.prepareTerms().map(([variableIndex, coefficient]): [number, Variable] => {
+        const description = this.variables.get(variableIndex);
+        if (description === undefined) {
+          throw new Error(`UISolverWrapper.convertExpression.expression: variable does not exist`);
+        }
+        return [coefficient, description.variable];
+      }),
       expression.constant,
     );
   }
@@ -622,10 +588,7 @@ export class UISolverWrapper implements UISolverWrapperInterface {
       if (description.constraint) {
         this.solver.addConstraint(description.constraint);
       } else {
-        this.solver.addEditVariable(
-          description.variable,
-          convertPriority(description.priority),
-        );
+        this.solver.addEditVariable(description.variable, convertPriority(description.priority));
         this.solver.suggestValue(description.variable, description.value);
       }
     }

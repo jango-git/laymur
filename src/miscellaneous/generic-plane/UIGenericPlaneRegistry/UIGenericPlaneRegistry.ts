@@ -8,10 +8,7 @@ import {
   extractZIndex,
 } from "../shared";
 import { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane";
-import type {
-  PlaneDescriptor,
-  PlaneState,
-} from "./UIGenericPlaneRegistry.Internal";
+import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Internal";
 
 /**
  * Manages shader plane instances with automatic batching based on zIndex order.
@@ -32,8 +29,7 @@ export class UIPlaneRegistry {
 
   // GPU representation
   private readonly orderedMeshes: UIGenericInstancedPlane[] = [];
-  private readonly handlerToDescriptor: Map<number, PlaneDescriptor> =
-    new Map();
+  private readonly handlerToDescriptor: Map<number, PlaneDescriptor> = new Map();
 
   // Dirty tracking
   private readonly pendingCreate: Set<number> = new Set();
@@ -59,9 +55,7 @@ export class UIPlaneRegistry {
     transparency: UITransparencyMode,
   ): number {
     const handler = this.lastHandler++;
-    const glProperties = convertUIPropertiesToGLProperties(
-      cloneProperties(properties),
-    );
+    const glProperties = convertUIPropertiesToGLProperties(cloneProperties(properties));
     const zIndex = extractZIndex(transform);
 
     const state: PlaneState = {
@@ -85,9 +79,7 @@ export class UIPlaneRegistry {
    */
   public destroyPlane(handler: number): void {
     if (!this.handlerToState.has(handler)) {
-      throw new Error(
-        `UIPlaneRegistry.destroyPlane: handler ${handler} not found`,
-      );
+      throw new Error(`UIPlaneRegistry.destroyPlane: handler ${handler} not found`);
     }
 
     this.handlerToState.delete(handler);
@@ -112,10 +104,7 @@ export class UIPlaneRegistry {
    * If texture changes, element will be relocated on flush().
    * Instantiable properties are applied immediately.
    */
-  public setProperties(
-    handler: number,
-    properties: Record<string, UIProperty>,
-  ): void {
+  public setProperties(handler: number, properties: Record<string, UIProperty>): void {
     const state = this.resolveState(handler);
     const glProperties = convertUIPropertiesToGLProperties(properties);
 
@@ -194,10 +183,7 @@ export class UIPlaneRegistry {
    * Updates plane transparency mode.
    * Element will be relocated on flush() if transparency changes.
    */
-  public setTransparency(
-    handler: number,
-    transparency: UITransparencyMode,
-  ): void {
+  public setTransparency(handler: number, transparency: UITransparencyMode): void {
     const state = this.resolveState(handler);
 
     if (state.transparency === transparency) {
@@ -300,8 +286,7 @@ export class UIPlaneRegistry {
   }
 
   private insertSingleElement(handler: number, state: PlaneState): void {
-    const { source, properties, transform, visibility, transparency, zIndex } =
-      state;
+    const { source, properties, transform, visibility, transparency, zIndex } = state;
 
     // Find compatible mesh
     let candidateMesh: UIGenericInstancedPlane | null = null;
@@ -339,11 +324,7 @@ export class UIPlaneRegistry {
       // Create new mesh
       const meshIndex = this.findMeshIndexForZIndex(zIndex);
 
-      const mesh = new UIGenericInstancedPlane(
-        source,
-        cloneGLProperties(properties),
-        transparency,
-      );
+      const mesh = new UIGenericInstancedPlane(source, cloneGLProperties(properties), transparency);
       mesh.insertAt(0, properties, transform, visibility);
 
       this.orderedMeshes.splice(meshIndex, 0, mesh);
@@ -370,11 +351,7 @@ export class UIPlaneRegistry {
       // Check if they can be merged (non-overlapping zIndex ranges and compatible)
       if (
         leftMaxZ < rightMinZ &&
-        left.isCompatibleWith(
-          right.source,
-          right.getProperties(),
-          right.transparency,
-        )
+        left.isCompatibleWith(right.source, right.getProperties(), right.transparency)
       ) {
         const indexOffset = left.instancesCount;
         left.merge(right);
@@ -406,9 +383,7 @@ export class UIPlaneRegistry {
   private resolveState(handler: number): PlaneState {
     const state = this.handlerToState.get(handler);
     if (!state) {
-      throw new Error(
-        `UIPlaneRegistry.resolveState: handler ${handler} not found`,
-      );
+      throw new Error(`UIPlaneRegistry.resolveState: handler ${handler} not found`);
     }
     return state;
   }
@@ -423,10 +398,7 @@ export class UIPlaneRegistry {
     return this.orderedMeshes.length;
   }
 
-  private findInstanceIndexInMesh(
-    mesh: UIGenericInstancedPlane,
-    zIndex: number,
-  ): number {
+  private findInstanceIndexInMesh(mesh: UIGenericInstancedPlane, zIndex: number): number {
     for (let i = 0; i < mesh.instancesCount; i++) {
       if (mesh.getZIndexAt(i) > zIndex) {
         return i;
