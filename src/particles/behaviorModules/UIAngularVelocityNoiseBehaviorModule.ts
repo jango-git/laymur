@@ -35,10 +35,8 @@ export class UIAngularVelocityNoiseBehaviorModule extends UIBehaviorModule<{
       const x = position.array[posOffset];
       const y = position.array[posOffset + 1];
 
-      // Simple noise based on position
       const noise = this.noise2D(x * this.scale, y * this.scale);
 
-      // Apply noise force
       const force = noise * this.strength;
 
       angularVelocity.array[avOffset] += force * deltaTime;
@@ -47,9 +45,7 @@ export class UIAngularVelocityNoiseBehaviorModule extends UIBehaviorModule<{
     angularVelocity.needsUpdate = true;
   }
 
-  // Simple 2D noise function (Perlin-like)
   private noise2D(x: number, y: number): number {
-    // Simple hash-based noise
     const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123;
     return (n - Math.floor(n)) * 2 - 1;
   }

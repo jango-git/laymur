@@ -3,9 +3,9 @@ import { MathUtils } from "three";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIVelocityDampingBehaviorModule extends UIBehaviorModule<{
-  velocity: "Vector2";
+  linearVelocity: "Vector2";
 }> {
-  public readonly requiredProperties = { velocity: "Vector2" } as const;
+  public readonly requiredProperties = { linearVelocity: "Vector2" } as const;
 
   constructor(
     private readonly damping: { min: number; max: number },
@@ -15,17 +15,17 @@ export class UIVelocityDampingBehaviorModule extends UIBehaviorModule<{
   }
 
   public update(
-    properties: { velocity: InstancedBufferAttribute },
+    properties: { linearVelocity: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const velocity = properties.velocity;
+    const linearVelocity = properties.linearVelocity;
     const thresholdSquared = this.threshold * this.threshold;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * velocity.itemSize;
-      let vx = velocity.array[offset];
-      let vy = velocity.array[offset + 1];
+      const offset = i * linearVelocity.itemSize;
+      let vx = linearVelocity.array[offset];
+      let vy = linearVelocity.array[offset + 1];
 
       const dampingValue = MathUtils.randFloat(this.damping.min, this.damping.max);
       const dampingFactor = Math.pow(1 - dampingValue, deltaTime);
@@ -39,10 +39,10 @@ export class UIVelocityDampingBehaviorModule extends UIBehaviorModule<{
         vy = 0;
       }
 
-      velocity.array[offset] = vx;
-      velocity.array[offset + 1] = vy;
+      linearVelocity.array[offset] = vx;
+      linearVelocity.array[offset + 1] = vy;
     }
 
-    velocity.needsUpdate = true;
+    linearVelocity.needsUpdate = true;
   }
 }

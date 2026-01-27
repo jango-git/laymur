@@ -36,7 +36,14 @@ export class UIEmitter extends UIAnchor {
   ) {
     super(layer);
 
-    const collectedProperties: Record<string, UIParticlePropertyName> = {};
+    const collectedProperties: Record<string, UIParticlePropertyName> = {
+      position: "Vector2",
+      linearVelocity: "Vector2",
+      rotation: "number",
+      angularVelocity: "number",
+      scale: "Vector2",
+      lifetime: "Vector2",
+    };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
     collectProperties(
       collectedProperties,
@@ -148,6 +155,44 @@ export class UIEmitter extends UIAnchor {
 
     for (const module of this.behaviorSequence) {
       module.update(this.mesh.propertyBuffers, this.mesh.instanceCount, deltaTime);
+    }
+
+    {
+      const position = this.mesh.propertyBuffers.position;
+      const linearVelocity = this.mesh.propertyBuffers.linearVelocity;
+
+      for (let i = 0; i < this.mesh.instanceCount; i++) {
+        const offset = i * position.itemSize;
+        position.array[offset] += linearVelocity.array[offset] * deltaTime;
+        position.array[offset + 1] += linearVelocity.array[offset + 1] * deltaTime;
+      }
+
+      position.needsUpdate = true;
+    }
+
+    {
+      const rotation = this.mesh.propertyBuffers.rotation;
+      const angularVelocity = this.mesh.propertyBuffers.angularVelocity;
+
+      for (let i = 0; i < this.mesh.instanceCount; i++) {
+        const rotationOffset = i * rotation.itemSize;
+        const angularVelocityOffset = i * angularVelocity.itemSize;
+
+        rotation.array[rotationOffset] += angularVelocity.array[angularVelocityOffset] * deltaTime;
+      }
+
+      rotation.needsUpdate = true;
+    }
+
+    {
+      const lifetime = this.mesh.propertyBuffers.lifetime;
+
+      for (let i = 0; i < this.mesh.instanceCount; i++) {
+        const offset = i * lifetime.itemSize;
+        lifetime.array[offset + 1] += deltaTime;
+      }
+
+      lifetime.needsUpdate = true;
     }
 
     this.mesh.removeDeadParticles();

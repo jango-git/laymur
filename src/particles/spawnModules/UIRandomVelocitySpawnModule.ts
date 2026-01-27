@@ -1,8 +1,8 @@
 import { MathUtils, Vector2 } from "three";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UIRandomVelocitySpawnModule extends UISpawnModule<{ velocity: "Vector2" }> {
-  public readonly requiredProperties = { velocity: "Vector2" } as const;
+export class UIRandomVelocitySpawnModule extends UISpawnModule<{ linearVelocity: "Vector2" }> {
+  public readonly requiredProperties = { linearVelocity: "Vector2" } as const;
 
   constructor(
     private readonly angle: { min: number; max: number },
@@ -11,9 +11,11 @@ export class UIRandomVelocitySpawnModule extends UISpawnModule<{ velocity: "Vect
     super();
   }
 
-  public spawn(): { velocity: Vector2 } {
+  public spawn(): { linearVelocity: Vector2 } {
     const angle = MathUtils.randFloat(this.angle.min, this.angle.max);
     const magnitude = MathUtils.randFloat(this.magnitude.min, this.magnitude.max);
-    return { velocity: new Vector2(Math.cos(angle) * magnitude, Math.sin(angle) * magnitude) };
+    return {
+      linearVelocity: new Vector2(Math.cos(angle) * magnitude, Math.sin(angle) * magnitude),
+    };
   }
 }
