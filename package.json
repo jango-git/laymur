@@ -2,34 +2,6 @@
   "name": "laymur",
   "version": "0.16.0",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
-  "scripts": {
-    "clean": "rm -rf dist",
-    "build": "npm run clean && rollup -c",
-    "build:prod": "npm run clean && NODE_ENV=production rollup -c",
-    "prepublishOnly": "npm run build:prod"
-  },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "development": "./dist/index.js",
-        "production": "./dist/index.min.js",
-        "default": "./dist/index.min.js"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.min.js"
-      }
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "sideEffects": false,
   "keywords": [
     "ui",
     "three.js",
@@ -46,13 +18,29 @@
     "url": "git+https://github.com/jango-git/laymur.git"
   },
   "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./particles": {
+      "import": "./dist/particles/index.js",
+      "types": "./dist/particles/index.d.ts"
+    }
+  },
   "peerDependencies": {
-    "three": ">=0.157.0 <0.180.0"
+    "three": ">=0.157.0 <0.180.0",
+    "@lume/kiwi": "^0.4.4",
+    "ferrsign": "^0.0.4"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-replace": "^6.0.3",
-    "@rollup/plugin-terser": "^0.4.4",
     "@types/node": "^25.0.2",
     "@types/three": "^0.157.0",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
@@ -63,9 +51,5 @@
     "rollup-plugin-typescript2": "^0.36.0",
     "ts-transformer-minify-privates": "^1.0.0",
     "typescript": "^5.8.3"
-  },
-  "dependencies": {
-    "@lume/kiwi": "^0.4.4",
-    "ferrsign": "^0.0.4"
   }
 }
