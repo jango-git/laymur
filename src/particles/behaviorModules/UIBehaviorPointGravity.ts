@@ -2,27 +2,29 @@ import type { InstancedBufferAttribute } from "three";
 import type { Vector2Like } from "../../core/miscellaneous/math";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIPointGravityBehaviorModule extends UIBehaviorModule<{
+export class UIBehaviorPointGravity extends UIBehaviorModule<{
   position: "Vector2";
-  linearVelocity: "Vector2";
+  velocity: "Vector2";
 }> {
-  public readonly requiredProperties = { position: "Vector2", linearVelocity: "Vector2" } as const;
+  /** @internal */
+  public readonly requiredProperties = { position: "Vector2", velocity: "Vector2" } as const;
 
   constructor(
-    private readonly center: Vector2Like,
-    private readonly strength: number,
-    private readonly exponent = 2,
+    public readonly center: Vector2Like,
+    public strength: number,
+    public exponent = 2,
   ) {
     super();
   }
 
+  /** @internal */
   public update(
-    properties: { position: InstancedBufferAttribute; linearVelocity: InstancedBufferAttribute },
+    properties: { position: InstancedBufferAttribute; velocity: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
     const position = properties.position;
-    const linearVelocity = properties.linearVelocity;
+    const velocity = properties.velocity;
 
     for (let i = 0; i < instanceCount; i++) {
       const offset = i * position.itemSize;
@@ -48,10 +50,10 @@ export class UIPointGravityBehaviorModule extends UIBehaviorModule<{
       const accelerationX = dirX * forceMagnitude;
       const accelerationY = dirY * forceMagnitude;
 
-      linearVelocity.array[offset] += accelerationX * deltaTime;
-      linearVelocity.array[offset + 1] += accelerationY * deltaTime;
+      velocity.array[offset] += accelerationX * deltaTime;
+      velocity.array[offset + 1] += accelerationY * deltaTime;
     }
 
-    linearVelocity.needsUpdate = true;
+    velocity.needsUpdate = true;
   }
 }

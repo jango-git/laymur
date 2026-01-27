@@ -5,7 +5,9 @@ import source from "../shaders/UITextureRenderingModule.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
 export class UITextureRenderingModule extends UIRenderingModule {
+  /** @internal */
   public readonly requiredUniforms: Record<string, UIParticleProperty>;
+  /** @internal */
   public readonly source = source;
 
   constructor(config: UITextureConfig) {

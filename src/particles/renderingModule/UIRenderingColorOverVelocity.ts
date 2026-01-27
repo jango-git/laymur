@@ -9,27 +9,35 @@ import {
 } from "three";
 import type { UIColor } from "../../core";
 import type { UIParticleProperty, UIParticlePropertyName } from "../instancedParticle/shared";
-import source from "../shaders/UIColorOverLifeRenderingModule.glsl";
+import source from "../shaders/UIColorOverVelocityRenderingModule.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
-export class UIColorOverLifeRenderingModule extends UIRenderingModule {
+export class UIRenderingColorOverVelocity extends UIRenderingModule {
+  /** @internal */
   public override readonly requiredProperties: Record<string, UIParticlePropertyName> = {
-    lifetime: "Vector2",
+    velocity: "Vector2",
   } as const;
+  /** @internal */
   public readonly requiredUniforms: Record<string, UIParticleProperty>;
+  /** @internal */
   public readonly source = source;
 
-  constructor(colors: UIColor[]) {
+  constructor(colors: UIColor[], maxVelocity: number) {
     super();
 
     if (colors.length === 0) {
-      throw new Error("UIColorOverLifeRenderingModule: colors array cannot be empty");
+      throw new Error("UIColorOverVelocityRenderingModule: colors array cannot be empty");
+    }
+
+    if (maxVelocity <= 0) {
+      throw new Error("UIColorOverVelocityRenderingModule: maxVelocity must be greater than 0");
     }
 
     const texture = this.createGradientTexture(colors);
 
     this.requiredUniforms = {
-      colorOverLifeTexture: texture,
+      colorOverVelocityTexture: texture,
+      colorOverVelocityMax: maxVelocity,
     };
   }
 

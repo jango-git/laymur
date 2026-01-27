@@ -1,12 +1,11 @@
 import type { InstancedBufferGeometry, ShaderMaterial, Vector2 } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
-import type { GLProperty, GLTypeInfo, UIParticleProperty } from "./shared";
+import type { GLProperty, GLTypeInfo } from "./shared";
 import { resolvePropertyUniform } from "./shared";
 import {
   buildMaterial,
   CAPACITY_STEP,
   INSTANCED_PLANE_GEOMETRY,
-  writePropertyToArray,
 } from "./UIGenericInstancedParticle.Internal";
 
 export class UIGenericInstancedParticle extends Mesh {
@@ -76,24 +75,23 @@ export class UIGenericInstancedParticle extends Mesh {
     return this.instancedGeometry.instanceCount;
   }
 
-  public createInstances(instances: Record<string, UIParticleProperty>[]): void {
+  public createInstances(count: number): void {
     const index = this.instancedGeometry.instanceCount;
+    this.ensureCapacity(index + count);
+    this.instancedGeometry.instanceCount += count;
 
-    this.ensureCapacity(index + instances.length);
-    this.instancedGeometry.instanceCount += instances.length;
-
-    for (let i = 0; i < instances.length; i++) {
-      const instance = instances[i];
-      for (const name in this.propertyBuffers) {
-        const bufferAttribute = this.propertyBuffers[name];
-        writePropertyToArray(
-          instance[name],
-          bufferAttribute.array as Float32Array,
-          (index + i) * bufferAttribute.itemSize,
-        );
-        bufferAttribute.needsUpdate = true;
-      }
-    }
+    // for (let i = 0; i < instances.length; i++) {
+    //   const instance = instances[i];
+    //   for (const name in this.propertyBuffers) {
+    //     const bufferAttribute = this.propertyBuffers[name];
+    //     writePropertyToArray(
+    //       instance[name],
+    //       bufferAttribute.array as Float32Array,
+    //       (index + i) * bufferAttribute.itemSize,
+    //     );
+    //     bufferAttribute.needsUpdate = true;
+    //   }
+    // }
   }
 
   public destroyInstance(index: number): void {

@@ -1,36 +1,38 @@
 import type { InstancedBufferAttribute } from "three";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIAngularVelocityNoiseBehaviorModule extends UIBehaviorModule<{
+export class UIBehaviorTorqueNoise extends UIBehaviorModule<{
   position: "Vector2";
-  angularVelocity: "number";
+  torque: "number";
 }> {
+  /** @internal */
   public readonly requiredProperties = {
     position: "Vector2",
-    angularVelocity: "number",
+    torque: "number",
   } as const;
 
   constructor(
-    private readonly scale: number,
-    private readonly strength: number,
+    public readonly scale: number,
+    public readonly strength: number,
   ) {
     super();
   }
 
+  /** @internal */
   public update(
     properties: {
       position: InstancedBufferAttribute;
-      angularVelocity: InstancedBufferAttribute;
+      torque: InstancedBufferAttribute;
     },
     instanceCount: number,
     deltaTime: number,
   ): void {
     const position = properties.position;
-    const angularVelocity = properties.angularVelocity;
+    const torque = properties.torque;
 
     for (let i = 0; i < instanceCount; i++) {
       const posOffset = i * position.itemSize;
-      const avOffset = i * angularVelocity.itemSize;
+      const avOffset = i * torque.itemSize;
 
       const x = position.array[posOffset];
       const y = position.array[posOffset + 1];
@@ -39,10 +41,10 @@ export class UIAngularVelocityNoiseBehaviorModule extends UIBehaviorModule<{
 
       const force = noise * this.strength;
 
-      angularVelocity.array[avOffset] += force * deltaTime;
+      torque.array[avOffset] += force * deltaTime;
     }
 
-    angularVelocity.needsUpdate = true;
+    torque.needsUpdate = true;
   }
 
   private noise2D(x: number, y: number): number {

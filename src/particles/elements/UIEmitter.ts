@@ -5,7 +5,6 @@ import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor";
 import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule";
 import {
   callbackPlaceholder,
-  cloneProperties,
   collectProperties,
   collectUniforms,
   convertUIPropertiesToGLProperties,
@@ -37,12 +36,12 @@ export class UIEmitter extends UIAnchor {
     super(layer);
 
     const collectedProperties: Record<string, UIParticlePropertyName> = {
-      position: "Vector2",
-      linearVelocity: "Vector2",
+      position: "Vector2", // x, y
+      velocity: "Vector2", // x, y
       rotation: "number",
-      angularVelocity: "number",
-      scale: "Vector2",
-      lifetime: "Vector2",
+      torque: "number",
+      scale: "Vector2", // x, y
+      lifetime: "Vector2", // lifetime, age
     };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
     collectProperties(
@@ -96,19 +95,12 @@ export class UIEmitter extends UIAnchor {
   }
 
   public burst(particleCount: number): void {
-    const properties: Record<string, UIParticleProperty>[] = [];
+    const instanceOffset = this.mesh.instanceCount;
+    this.mesh.createInstances(particleCount);
 
-    for (let i = 0; i < particleCount; i++) {
-      let initialProperties = cloneProperties(this.defaultProperties);
-
-      for (const spawnModule of this.spawnSequence) {
-        initialProperties = { ...initialProperties, ...spawnModule.spawn() };
-      }
-
-      properties.push(initialProperties);
+    for (const spawnModule of this.spawnSequence) {
+      spawnModule.spawn(this.mesh.propertyBuffers, instanceOffset, this.mesh.instanceCount);
     }
-
-    this.mesh.createInstances(properties);
   }
 
   public startEmission(particlesPerSecond: number, duration = Infinity): void {
@@ -159,12 +151,12 @@ export class UIEmitter extends UIAnchor {
 
     {
       const position = this.mesh.propertyBuffers.position;
-      const linearVelocity = this.mesh.propertyBuffers.linearVelocity;
+      const velocity = this.mesh.propertyBuffers.velocity;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
         const offset = i * position.itemSize;
-        position.array[offset] += linearVelocity.array[offset] * deltaTime;
-        position.array[offset + 1] += linearVelocity.array[offset + 1] * deltaTime;
+        position.array[offset] += velocity.array[offset] * deltaTime;
+        position.array[offset + 1] += velocity.array[offset + 1] * deltaTime;
       }
 
       position.needsUpdate = true;
@@ -172,13 +164,13 @@ export class UIEmitter extends UIAnchor {
 
     {
       const rotation = this.mesh.propertyBuffers.rotation;
-      const angularVelocity = this.mesh.propertyBuffers.angularVelocity;
+      const torque = this.mesh.propertyBuffers.torque;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
         const rotationOffset = i * rotation.itemSize;
-        const angularVelocityOffset = i * angularVelocity.itemSize;
+        const torqueOffset = i * torque.itemSize;
 
-        rotation.array[rotationOffset] += angularVelocity.array[angularVelocityOffset] * deltaTime;
+        rotation.array[rotationOffset] += torque.array[torqueOffset] * deltaTime;
       }
 
       rotation.needsUpdate = true;
