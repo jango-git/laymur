@@ -1,18 +1,34 @@
+import type { Vector2Tuple } from "three";
+import type { Vector2Like } from "../../core/miscellaneous/math";
+
 export interface UIRange {
   min: number;
   max: number;
 }
 
 export type UIRangeConfig = UIRange | [number, number] | number;
+export type UIVector2Config = Vector2Like | Vector2Tuple | number;
 
-export function resolveUIRangeParameter(parameter: UIRangeConfig): UIRange {
-  if (typeof parameter === "number") {
-    return { min: parameter, max: parameter };
+export function resolveUIRangeConfig(config: UIRangeConfig): UIRange {
+  if (typeof config === "number") {
+    return { min: config, max: config };
   }
 
-  if (Array.isArray(parameter)) {
-    return { min: parameter[0], max: parameter[1] };
+  if (Array.isArray(config)) {
+    return { min: config[0], max: config[1] };
   }
 
-  return parameter;
+  return config;
+}
+
+export function resolveUIVector2Config(config: UIVector2Config): Vector2Like {
+  if (typeof config === "number") {
+    return { x: config, y: config };
+  }
+
+  if (Array.isArray(config)) {
+    return { x: config[0], y: config[1] };
+  }
+
+  return config;
 }

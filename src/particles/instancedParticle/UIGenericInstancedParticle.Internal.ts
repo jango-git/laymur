@@ -1,18 +1,9 @@
-import {
-  InstancedBufferGeometry,
-  Matrix3,
-  Matrix4,
-  PlaneGeometry,
-  ShaderMaterial,
-  Vector2,
-  Vector3,
-  Vector4,
-} from "three";
+import { InstancedBufferGeometry, PlaneGeometry, ShaderMaterial } from "three";
 import { UIColor } from "../../core";
-import type { GLProperty, GLTypeInfo, UIParticleProperty } from "./shared";
-import { buildGenericPlaneFragmentShader } from "./shared";
+import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
+import { buildParticleFragmentShader } from "./shared";
 
-export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
+export const INSTANCED_PARTICLE_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const planeGeometry = new PlaneGeometry(1, 1);
   const geometry = new InstancedBufferGeometry();
   geometry.index = planeGeometry.index;
@@ -21,42 +12,6 @@ export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   planeGeometry.dispose();
   return geometry;
 })();
-
-export const CAPACITY_STEP = 32;
-const TEMP_COLOR_VECTOR = new Vector4();
-
-export function writePropertyToArray(
-  value: UIParticleProperty,
-  array: Float32Array,
-  offset: number,
-): void {
-  if (value instanceof UIColor) {
-    value.toGLSLColor(TEMP_COLOR_VECTOR);
-    array[offset] = TEMP_COLOR_VECTOR.x;
-    array[offset + 1] = TEMP_COLOR_VECTOR.y;
-    array[offset + 2] = TEMP_COLOR_VECTOR.z;
-    array[offset + 3] = TEMP_COLOR_VECTOR.w;
-  } else if (value instanceof Vector2) {
-    array[offset] = value.x;
-    array[offset + 1] = value.y;
-  } else if (value instanceof Vector3) {
-    array[offset] = value.x;
-    array[offset + 1] = value.y;
-    array[offset + 2] = value.z;
-  } else if (value instanceof Vector4) {
-    array[offset] = value.x;
-    array[offset + 1] = value.y;
-    array[offset + 2] = value.z;
-    array[offset + 3] = value.w;
-  } else if (value instanceof Matrix3 || value instanceof Matrix4) {
-    const elements = value.elements;
-    for (let j = 0; j < elements.length; j++) {
-      array[offset + j] = elements[j];
-    }
-  } else if (typeof value === "number") {
-    array[offset] = value;
-  }
-}
 
 export function buildMaterial(
   sources: string[],
@@ -120,7 +75,7 @@ export function buildMaterial(
     }
   `;
 
-  const fragmentShader = buildGenericPlaneFragmentShader(
+  const fragmentShader = buildParticleFragmentShader(
     uniformDeclarations,
     varyingDeclarations,
     sources,

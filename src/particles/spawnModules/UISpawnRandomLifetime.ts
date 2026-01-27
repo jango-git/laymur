@@ -1,7 +1,7 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
-import { resolveUIRangeParameter } from "../miscellaneous/miscellaneous";
+import { resolveUIRangeConfig } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
 export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }> {
@@ -11,15 +11,15 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }
 
   constructor(scale: UIRangeConfig = { min: 4, max: 8 }) {
     super();
-    this.lifetimeInternal = resolveUIRangeParameter(scale);
+    this.lifetimeInternal = resolveUIRangeConfig(scale);
   }
 
   public get lifetime(): UIRange {
     return this.lifetimeInternal;
   }
 
-  public set lifetime(scale: UIRangeConfig) {
-    this.lifetimeInternal = resolveUIRangeParameter(scale);
+  public set lifetime(value: UIRangeConfig) {
+    this.lifetimeInternal = resolveUIRangeConfig(value);
   }
 
   /** @internal */
@@ -32,7 +32,10 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }
 
     for (let i = instanceOffset; i < instanceCount; i++) {
       const itemOffset = i * lifetimeBuffer.itemSize;
-      lifetimeBuffer.array[itemOffset] = MathUtils.randFloat(this.lifetime.min, this.lifetime.max);
+      lifetimeBuffer.array[itemOffset] = MathUtils.randFloat(
+        this.lifetimeInternal.min,
+        this.lifetimeInternal.max,
+      );
       lifetimeBuffer.array[itemOffset + 1] = 0;
     }
 

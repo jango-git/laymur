@@ -1,8 +1,8 @@
 import type { InstancedBufferAttribute } from "three";
-import type { UIParticlePropertyName } from "../instancedParticle/shared";
+import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
 
 export abstract class UIBehaviorModule<
-  T extends Record<string, UIParticlePropertyName> = Record<string, UIParticlePropertyName>,
+  T extends Record<string, UIPropertyName> = Record<string, UIPropertyName>,
 > {
   public abstract readonly requiredProperties: T;
   public abstract update(

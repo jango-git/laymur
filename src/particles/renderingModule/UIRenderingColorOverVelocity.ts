@@ -8,17 +8,17 @@ import {
   UVMapping,
 } from "three";
 import type { UIColor } from "../../core";
-import type { UIParticleProperty, UIParticlePropertyName } from "../instancedParticle/shared";
-import source from "../shaders/UIColorOverVelocityRenderingModule.glsl";
+import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
+import source from "../shaders/UIRenderingColorOverVelocity.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
 export class UIRenderingColorOverVelocity extends UIRenderingModule {
   /** @internal */
-  public override readonly requiredProperties: Record<string, UIParticlePropertyName> = {
+  public override readonly requiredProperties: Record<string, UIPropertyName> = {
     velocity: "Vector2",
   } as const;
   /** @internal */
-  public readonly requiredUniforms: Record<string, UIParticleProperty>;
+  public readonly requiredUniforms: Record<string, UIProperty>;
   /** @internal */
   public readonly source = source;
 

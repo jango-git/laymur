@@ -1,17 +1,41 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import type { UIRange } from "../miscellaneous/miscellaneous";
+import {
+  resolveUIRangeConfig,
+  type UIRange,
+  type UIRangeConfig,
+} from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
 export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }> {
   /** @internal */
   public readonly requiredProperties = { velocity: "Vector2" } as const;
+  private angleInternal: UIRange;
+  private magnitudeInternal: UIRange;
 
   constructor(
-    public readonly angle: UIRange = { min: -Math.PI, max: Math.PI },
-    public readonly magnitude: UIRange = { min: -50, max: 50 },
+    angle: UIRangeConfig = { min: -Math.PI, max: Math.PI },
+    magnitude: UIRangeConfig = { min: -50, max: 50 },
   ) {
     super();
+    this.angleInternal = resolveUIRangeConfig(angle);
+    this.magnitudeInternal = resolveUIRangeConfig(magnitude);
+  }
+
+  public get angle(): UIRange {
+    return this.angleInternal;
+  }
+
+  public get magnitude(): UIRange {
+    return this.magnitudeInternal;
+  }
+
+  public set angle(value: UIRangeConfig) {
+    this.angleInternal = resolveUIRangeConfig(value);
+  }
+
+  public set magnitude(value: UIRangeConfig) {
+    this.magnitudeInternal = resolveUIRangeConfig(value);
   }
 
   /** @internal */
@@ -20,8 +44,8 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
     instanceOffset: number,
     instanceCount: number,
   ): void {
-    const angle = MathUtils.randFloat(this.angle.min, this.angle.max);
-    const magnitude = MathUtils.randFloat(this.magnitude.min, this.magnitude.max);
+    const angle = MathUtils.randFloat(this.angleInternal.min, this.angleInternal.max);
+    const magnitude = MathUtils.randFloat(this.magnitudeInternal.min, this.magnitudeInternal.max);
     const velocityBuffer = properties.velocity;
 
     for (let i = instanceOffset; i < instanceCount; i++) {

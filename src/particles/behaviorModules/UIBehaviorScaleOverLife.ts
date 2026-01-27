@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
-import { MathUtils } from "three";
+import { MathUtils, Texture } from "three";
+import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
@@ -11,15 +12,38 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
     scale: "Vector2",
     lifetime: "Vector2",
   } as const;
+  private aspectInternal: number;
 
   constructor(
     private readonly scales: number[],
-    public aspect = 1,
+    aspect: number | UITextureConfig = 1,
   ) {
     super();
 
     if (scales.length < 2) {
       throw new Error("UIBehaviorScaleOverLife.scales");
+    }
+
+    if (typeof aspect === "number") {
+      this.aspectInternal = aspect;
+    } else if (aspect instanceof Texture) {
+      this.aspectInternal = aspect.image.naturalWidth / aspect.image.naturalHeight;
+    } else {
+      this.aspectInternal = aspect.sourceSize.w / aspect.sourceSize.h;
+    }
+  }
+
+  public get aspect(): number {
+    return this.aspectInternal;
+  }
+
+  public set aspect(value: number | UITextureConfig) {
+    if (typeof value === "number") {
+      this.aspectInternal = value;
+    } else if (value instanceof Texture) {
+      this.aspectInternal = value.image.naturalWidth / value.image.naturalHeight;
+    } else {
+      this.aspectInternal = value.sourceSize.w / value.sourceSize.h;
     }
   }
 
@@ -56,7 +80,7 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
       }
 
       const itemOffset = i * scaleBuffer.itemSize;
-      scaleBuffer.array[itemOffset] = interpolatedScale * this.aspect;
+      scaleBuffer.array[itemOffset] = interpolatedScale * this.aspectInternal;
       scaleBuffer.array[itemOffset + 1] = interpolatedScale;
     }
 

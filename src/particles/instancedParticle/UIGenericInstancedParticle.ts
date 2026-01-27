@@ -1,11 +1,13 @@
 import type { InstancedBufferGeometry, ShaderMaterial, Vector2 } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
-import type { GLProperty, GLTypeInfo } from "./shared";
-import { resolvePropertyUniform } from "./shared";
+import {
+  resolvePropertyUniform,
+  type GLProperty,
+  type GLTypeInfo,
+} from "../../core/miscellaneous/generic-plane/shared";
 import {
   buildMaterial,
-  CAPACITY_STEP,
-  INSTANCED_PLANE_GEOMETRY,
+  INSTANCED_PARTICLE_PLANE_GEOMETRY,
 } from "./UIGenericInstancedParticle.Internal";
 
 export class UIGenericInstancedParticle extends Mesh {
@@ -19,19 +21,14 @@ export class UIGenericInstancedParticle extends Mesh {
   constructor(
     public readonly sources: string[],
     uniforms: Record<string, GLProperty>,
-    varyings: Record<string, GLProperty>,
-    initialCapacity: number = CAPACITY_STEP,
+    varyings: Record<string, GLTypeInfo>,
+    initialCapacity: number,
+    private readonly capacityStep: number,
   ) {
     const uniformProperties: Record<string, GLProperty> = uniforms;
-    const varyingProperties: Record<string, GLTypeInfo> = {};
 
-    for (const name in varyings) {
-      const descriptor = varyings[name];
-      varyingProperties[name] = descriptor.glslTypeInfo;
-    }
-
-    const instancedGeometry = INSTANCED_PLANE_GEOMETRY.clone();
-    const shaderMaterial = buildMaterial(sources, uniformProperties, varyingProperties);
+    const instancedGeometry = INSTANCED_PARTICLE_PLANE_GEOMETRY.clone();
+    const shaderMaterial = buildMaterial(sources, uniformProperties, varyings);
 
     super(instancedGeometry, shaderMaterial);
 
@@ -44,13 +41,13 @@ export class UIGenericInstancedParticle extends Mesh {
 
     this.shaderMaterial = shaderMaterial;
     this.capacity = Math.max(
-      Math.ceil(initialCapacity / CAPACITY_STEP) * CAPACITY_STEP,
-      CAPACITY_STEP,
+      Math.ceil(initialCapacity / this.capacityStep) * this.capacityStep,
+      this.capacityStep,
     );
 
     {
-      for (const name in varyingProperties) {
-        const { bufferSize } = varyingProperties[name];
+      for (const name in varyings) {
+        const { bufferSize } = varyings[name];
         const attribute = new InstancedBufferAttribute(
           new Float32Array(this.capacity * bufferSize),
           bufferSize,
@@ -79,19 +76,6 @@ export class UIGenericInstancedParticle extends Mesh {
     const index = this.instancedGeometry.instanceCount;
     this.ensureCapacity(index + count);
     this.instancedGeometry.instanceCount += count;
-
-    // for (let i = 0; i < instances.length; i++) {
-    //   const instance = instances[i];
-    //   for (const name in this.propertyBuffers) {
-    //     const bufferAttribute = this.propertyBuffers[name];
-    //     writePropertyToArray(
-    //       instance[name],
-    //       bufferAttribute.array as Float32Array,
-    //       (index + i) * bufferAttribute.itemSize,
-    //     );
-    //     bufferAttribute.needsUpdate = true;
-    //   }
-    // }
   }
 
   public destroyInstance(index: number): void {
@@ -108,14 +92,14 @@ export class UIGenericInstancedParticle extends Mesh {
     (uniform.value as Vector2).set(x, y);
   }
 
-  public removeDeadParticles(): number {
+  public removeDeadParticles(): void {
     const lifetimeBuffer = this.propertyBuffers.lifetime as InstancedBufferAttribute | undefined;
     if (lifetimeBuffer === undefined) {
-      return 0;
+      return;
     }
 
     const lifetimeArray = lifetimeBuffer.array as Float32Array;
-    const itemSize = lifetimeBuffer.itemSize; // должно быть 2: [lifetime, age]
+    const itemSize = lifetimeBuffer.itemSize;
     const instanceCount = this.instancedGeometry.instanceCount;
 
     let writeIndex = 0;
@@ -129,7 +113,6 @@ export class UIGenericInstancedParticle extends Mesh {
 
       if (isAlive) {
         if (writeIndex !== readIndex) {
-          // Копируем данные для всех property buffers
           for (const name in this.propertyBuffers) {
             const attribute = this.propertyBuffers[name];
             const array = attribute.array as Float32Array;
@@ -149,10 +132,7 @@ export class UIGenericInstancedParticle extends Mesh {
       }
     }
 
-    const removedCount = instanceCount - writeIndex;
     this.instancedGeometry.instanceCount = writeIndex;
-
-    return removedCount;
   }
 
   public destroy(): void {
@@ -165,7 +145,7 @@ export class UIGenericInstancedParticle extends Mesh {
       return;
     }
 
-    const newCapacity = Math.ceil(requiredCapacity / CAPACITY_STEP) * CAPACITY_STEP;
+    const newCapacity = Math.ceil(requiredCapacity / this.capacityStep) * this.capacityStep;
 
     for (const name in this.propertyBuffers) {
       const oldAttribute = this.propertyBuffers[name];

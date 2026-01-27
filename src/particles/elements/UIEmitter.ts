@@ -2,25 +2,29 @@ import type { WebGLRenderer } from "three";
 import { Vector2 } from "three";
 import type { UILayer } from "../../core";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor";
+import {
+  resolveGLSLTypeInfo,
+  type GLProperty,
+  type GLTypeInfo,
+} from "../../core/miscellaneous/generic-plane/shared";
 import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule";
 import {
   callbackPlaceholder,
   collectProperties,
   collectUniforms,
-  convertUIPropertiesToGLProperties,
-  createDefaultProperties,
-  resolveGLSLTypeInfo,
-  type UIParticleProperty,
-  type UIParticlePropertyName,
 } from "../instancedParticle/shared";
 import { UIGenericInstancedParticle } from "../instancedParticle/UIGenericInstancedParticle";
 import type { UIRenderingModule } from "../renderingModule/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
 
+export interface UIEmitterOptions {
+  initialCapacity: number;
+  capacityStep: number;
+}
+
 export class UIEmitter extends UIAnchor {
   private readonly mesh: UIGenericInstancedParticle;
   private readonly catcherHandler: number;
-  private readonly defaultProperties: Record<string, UIParticleProperty>;
   private isEmitting = false;
   private emissionRate = 0;
   private emissionAccumulator = 0;
@@ -32,16 +36,17 @@ export class UIEmitter extends UIAnchor {
     private readonly spawnSequence: UISpawnModule[],
     private readonly behaviorSequence: readonly UIBehaviorModule[],
     private readonly renderingSequence: readonly UIRenderingModule[],
+    options: Partial<UIEmitterOptions> = {},
   ) {
     super(layer);
 
-    const collectedProperties: Record<string, UIParticlePropertyName> = {
-      position: "Vector2", // x, y
-      velocity: "Vector2", // x, y
-      rotation: "number",
-      torque: "number",
-      scale: "Vector2", // x, y
-      lifetime: "Vector2", // lifetime, age
+    const collectedProperties: Record<string, GLTypeInfo> = {
+      position: resolveGLSLTypeInfo("Vector2"), // x, y
+      velocity: resolveGLSLTypeInfo("Vector2"), // x, y
+      rotation: resolveGLSLTypeInfo("number"),
+      torque: resolveGLSLTypeInfo("number"),
+      scale: resolveGLSLTypeInfo("Vector2"), // x, y
+      lifetime: resolveGLSLTypeInfo("Vector2"), // lifetime, age
     };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
     collectProperties(
@@ -55,9 +60,9 @@ export class UIEmitter extends UIAnchor {
       "UIEmitter.constructor.renderingSequence",
     );
 
-    this.defaultProperties = createDefaultProperties(collectedProperties);
-
-    const collectedUniforms: Record<string, UIParticleProperty> = {};
+    const collectedUniforms: Record<string, GLProperty> = {
+      origin: { value: new Vector2(), glslTypeInfo: resolveGLSLTypeInfo("Vector2") },
+    };
     collectUniforms(
       collectedUniforms,
       renderingSequence,
@@ -74,11 +79,10 @@ export class UIEmitter extends UIAnchor {
 
     this.mesh = new UIGenericInstancedParticle(
       this.renderingSequence.map((module) => module.source),
-      {
-        origin: { value: new Vector2(0, 0), glslTypeInfo: resolveGLSLTypeInfo("Vector2") },
-        ...convertUIPropertiesToGLProperties(collectedUniforms),
-      },
-      convertUIPropertiesToGLProperties(this.defaultProperties),
+      collectedUniforms,
+      collectedProperties,
+      options.initialCapacity ?? 32,
+      options.capacityStep ?? 32,
     );
     this.mesh.renderOrder = zIndex;
 
@@ -126,9 +130,6 @@ export class UIEmitter extends UIAnchor {
   }
 
   private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
-    this.mesh.renderOrder = this.zIndex;
-    this.mesh.setOrigin(this.x, this.y);
-
     if (this.isEmitting && this.emissionRate > 0) {
       this.emissionElapsed += deltaTime;
 
@@ -144,6 +145,13 @@ export class UIEmitter extends UIAnchor {
         }
       }
     }
+
+    if (this.mesh.instanceCount === 0) {
+      return;
+    }
+
+    this.mesh.renderOrder = this.zIndex;
+    this.mesh.setOrigin(this.x, this.y);
 
     for (const module of this.behaviorSequence) {
       module.update(this.mesh.propertyBuffers, this.mesh.instanceCount, deltaTime);

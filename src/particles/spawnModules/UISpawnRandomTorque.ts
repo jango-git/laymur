@@ -1,6 +1,10 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import type { UIRange } from "../miscellaneous/miscellaneous";
+import {
+  resolveUIRangeConfig,
+  type UIRange,
+  type UIRangeConfig,
+} from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
 export class UISpawnRandomTorque extends UISpawnModule<{
@@ -8,9 +12,19 @@ export class UISpawnRandomTorque extends UISpawnModule<{
 }> {
   /** @internal */
   public readonly requiredProperties = { torque: "number" } as const;
+  private torqueInternal: UIRange;
 
-  constructor(public readonly torque: UIRange = { min: -Math.PI, max: Math.PI }) {
+  constructor(torque: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
     super();
+    this.torqueInternal = resolveUIRangeConfig(torque);
+  }
+
+  public get torque(): UIRange {
+    return this.torqueInternal;
+  }
+
+  public set torque(value: UIRangeConfig) {
+    this.torqueInternal = resolveUIRangeConfig(value);
   }
 
   /** @internal */
@@ -23,7 +37,10 @@ export class UISpawnRandomTorque extends UISpawnModule<{
 
     for (let i = instanceOffset; i < instanceCount; i++) {
       const itemOffset = i * torqueBuffer.itemSize;
-      torqueBuffer.array[itemOffset] = MathUtils.randFloat(this.torque.min, this.torque.max);
+      torqueBuffer.array[itemOffset] = MathUtils.randFloat(
+        this.torqueInternal.min,
+        this.torqueInternal.max,
+      );
     }
 
     torqueBuffer.needsUpdate = true;

@@ -50,9 +50,3 @@ export default {
   external: ["three", "@lume/kiwi", "ferrsign"],
   plugins: sharedPlugins,
 };
-
-// typescript({
-//   declaration: true,
-//   declarationDir: "dist",
-//   rootDir: "src",
-// }),
