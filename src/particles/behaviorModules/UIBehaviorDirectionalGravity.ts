@@ -16,17 +16,18 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ velocity: "
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const velocity = properties.velocity;
+    const { velocity: velocityAttribute } = properties;
 
     const offsetX = this.direction.x * deltaTime;
     const offsetY = this.direction.y * deltaTime;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * velocity.itemSize;
-      velocity.array[offset] += offsetX;
-      velocity.array[offset + 1] += offsetY;
+      const offset = i * velocityAttribute.itemSize;
+      const { array: velocityArray } = velocityAttribute;
+      velocityArray[offset] += offsetX;
+      velocityArray[offset + 1] += offsetY;
     }
 
-    velocity.needsUpdate = true;
+    velocityAttribute.needsUpdate = true;
   }
 }

@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+import { generateNoise2D } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorVelocityNoise extends UIBehaviorModule<{
@@ -20,39 +21,28 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{
 
   /** @internal */
   public update(
-    properties: {
-      position: InstancedBufferAttribute;
-      velocity: InstancedBufferAttribute;
-    },
+    properties: { position: InstancedBufferAttribute; velocity: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const position = properties.position;
-    const velocity = properties.velocity;
+    const { position: positionAttribute, velocity: velocityAttribute } = properties;
 
     for (let i = 0; i < instanceCount; i++) {
-      const posOffset = i * position.itemSize;
-      const velOffset = i * velocity.itemSize;
+      const positionOffset = i * positionAttribute.itemSize;
+      const velocityOffset = i * velocityAttribute.itemSize;
+      const { array: positionArray } = positionAttribute;
+      const { array: velocityArray } = velocityAttribute;
 
-      const x = position.array[posOffset];
-      const y = position.array[posOffset + 1];
+      const x = positionArray[positionOffset];
+      const y = positionArray[positionOffset + 1];
 
-      const noiseX = this.noise2D(x * this.scale, y * this.scale);
-      const noiseY = this.noise2D((x + 100) * this.scale, (y + 100) * this.scale);
+      const noiseX = generateNoise2D(x * this.scale, y * this.scale);
+      const noiseY = generateNoise2D((x + 100) * this.scale, (y + 100) * this.scale);
 
-      const forceX = noiseX * this.strength;
-      const forceY = noiseY * this.strength;
-
-      velocity.array[velOffset] += forceX * deltaTime;
-      velocity.array[velOffset + 1] += forceY * deltaTime;
+      velocityArray[velocityOffset] += noiseX * this.strength * deltaTime;
+      velocityArray[velocityOffset + 1] += noiseY * this.strength * deltaTime;
     }
 
-    velocity.needsUpdate = true;
-  }
-
-  /** @internal */
-  private noise2D(x: number, y: number): number {
-    const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123;
-    return (n - Math.floor(n)) * 2 - 1;
+    velocityAttribute.needsUpdate = true;
   }
 }

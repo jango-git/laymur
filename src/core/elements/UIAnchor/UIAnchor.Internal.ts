@@ -4,7 +4,10 @@ export interface UIAnchorOptions {
   x: number;
   /** Y coordinate in world units */
   y: number;
+  /** Identifier for debugging */
+  name: string;
 }
 
 export const ANCHOR_DEFAULT_X = 0;
 export const ANCHOR_DEFAULT_Y = 0;
+export const ANCHOR_DEFAULT_NAME = "";

@@ -10,4 +10,6 @@ export abstract class UIBehaviorModule<
     instanceCount: number,
     deltaTime: number,
   ): void;
+
+  public destroy?(): void;
 }

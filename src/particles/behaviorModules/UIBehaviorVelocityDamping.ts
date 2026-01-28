@@ -21,13 +21,15 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const velocity = properties.velocity;
+    const { velocity: velocityAttribute } = properties;
     const thresholdSquared = this.threshold * this.threshold;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * velocity.itemSize;
-      let vx = velocity.array[offset];
-      let vy = velocity.array[offset + 1];
+      const offset = i * velocityAttribute.itemSize;
+      const { array: velocityArray } = velocityAttribute;
+
+      let vx = velocityArray[offset];
+      let vy = velocityArray[offset + 1];
 
       const dampingValue = MathUtils.randFloat(this.damping.min, this.damping.max);
       const dampingFactor = Math.pow(1 - dampingValue, deltaTime);
@@ -41,10 +43,10 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{
         vy = 0;
       }
 
-      velocity.array[offset] = vx;
-      velocity.array[offset + 1] = vy;
+      velocityArray[offset] = vx;
+      velocityArray[offset + 1] = vy;
     }
 
-    velocity.needsUpdate = true;
+    velocityAttribute.needsUpdate = true;
   }
 }

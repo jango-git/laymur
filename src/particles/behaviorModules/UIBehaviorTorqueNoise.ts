@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+import { generateNoise2D } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorTorqueNoise extends UIBehaviorModule<{
@@ -27,28 +28,21 @@ export class UIBehaviorTorqueNoise extends UIBehaviorModule<{
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const position = properties.position;
-    const torque = properties.torque;
+    const { position: positionAttribute, torque: torqueAttribute } = properties;
 
     for (let i = 0; i < instanceCount; i++) {
-      const posOffset = i * position.itemSize;
-      const avOffset = i * torque.itemSize;
+      const positionOffset = i * positionAttribute.itemSize;
+      const torqueOffset = i * torqueAttribute.itemSize;
+      const { array: positionArray } = positionAttribute;
 
-      const x = position.array[posOffset];
-      const y = position.array[posOffset + 1];
-
-      const noise = this.noise2D(x * this.scale, y * this.scale);
-
+      const noise = generateNoise2D(
+        positionArray[positionOffset] * this.scale,
+        positionArray[positionOffset + 1] * this.scale,
+      );
       const force = noise * this.strength;
-
-      torque.array[avOffset] += force * deltaTime;
+      torqueAttribute.array[torqueOffset] += force * deltaTime;
     }
 
-    torque.needsUpdate = true;
-  }
-
-  private noise2D(x: number, y: number): number {
-    const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123;
-    return (n - Math.floor(n)) * 2 - 1;
+    torqueAttribute.needsUpdate = true;
   }
 }

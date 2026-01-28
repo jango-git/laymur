@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
   resolveUIRangeConfig,
   type UIRange,
@@ -17,6 +18,8 @@ export class UISpawnRandomTorque extends UISpawnModule<{
   constructor(torque: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
     super();
     this.torqueInternal = resolveUIRangeConfig(torque);
+    assertValidNumber(this.torqueInternal.min, "UISpawnRandomTorque.constructor.torque.min");
+    assertValidNumber(this.torqueInternal.max, "UISpawnRandomTorque.constructor.torque.max");
   }
 
   public get torque(): UIRange {
@@ -25,6 +28,8 @@ export class UISpawnRandomTorque extends UISpawnModule<{
 
   public set torque(value: UIRangeConfig) {
     this.torqueInternal = resolveUIRangeConfig(value);
+    assertValidNumber(this.torqueInternal.min, "UISpawnRandomTorque.torque.min");
+    assertValidNumber(this.torqueInternal.max, "UISpawnRandomTorque.torque.max");
   }
 
   /** @internal */
@@ -33,16 +38,15 @@ export class UISpawnRandomTorque extends UISpawnModule<{
     instanceOffset: number,
     instanceCount: number,
   ): void {
-    const torqueBuffer = properties.torque;
+    const { torque: torqueAttribute } = properties;
+    const { itemSize: torqueItemSize, array: torqueArray } = torqueAttribute;
+    const { min: torqueMin, max: torqueMax } = this.torqueInternal;
 
     for (let i = instanceOffset; i < instanceCount; i++) {
-      const itemOffset = i * torqueBuffer.itemSize;
-      torqueBuffer.array[itemOffset] = MathUtils.randFloat(
-        this.torqueInternal.min,
-        this.torqueInternal.max,
-      );
+      const itemOffset = i * torqueItemSize;
+      torqueArray[itemOffset] = MathUtils.randFloat(torqueMin, torqueMax);
     }
 
-    torqueBuffer.needsUpdate = true;
+    torqueAttribute.needsUpdate = true;
   }
 }

@@ -9,13 +9,14 @@ export class UITextureRenderingModule extends UIRenderingModule {
   public readonly requiredUniforms: Record<string, UIProperty>;
   /** @internal */
   public readonly source = source;
+  private readonly texture: UITextureView;
 
   constructor(config: UITextureConfig) {
     super();
-    const texture = new UITextureView(config);
+    this.texture = new UITextureView(config);
     this.requiredUniforms = {
-      texture: texture.texture,
-      textureTransform: texture.calculateUVTransform(),
+      texture: this.texture.texture,
+      textureTransform: this.texture.calculateUVTransform(),
     };
   }
 }

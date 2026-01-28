@@ -1,10 +1,11 @@
 import {
+  Float32BufferAttribute,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Matrix3,
   Matrix4,
-  PlaneGeometry,
   ShaderMaterial,
+  Uint16BufferAttribute,
   Vector2,
   Vector3,
   Vector4,
@@ -19,13 +20,17 @@ import {
 } from "../shared";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
-  const planeGeometry = new PlaneGeometry(1, 1);
-  planeGeometry.translate(0.5, 0.5, 0);
   const geometry = new InstancedBufferGeometry();
-  geometry.index = planeGeometry.index;
-  geometry.setAttribute("position", planeGeometry.attributes["position"]);
-  geometry.setAttribute("uv", planeGeometry.attributes["uv"]);
-  planeGeometry.dispose();
+
+  const indices = new Uint16Array([0, 2, 1, 2, 3, 1]);
+  geometry.setIndex(new Uint16BufferAttribute(indices, 1));
+
+  const positions = new Float32Array([0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0]);
+  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
+
+  const uvs = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0]);
+  geometry.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+
   return geometry;
 })();
 

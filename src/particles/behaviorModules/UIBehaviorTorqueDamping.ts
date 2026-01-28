@@ -10,7 +10,7 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
 
   constructor(
     public readonly damping: { min: number; max: number },
-    public readonly threshold = 0,
+    public readonly threshold = 0.001,
   ) {
     super();
   }
@@ -21,25 +21,24 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const torqueBuffer = properties.torque;
+    const { torque: torqueAttribute } = properties;
     const absThreshold = Math.abs(this.threshold);
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * torqueBuffer.itemSize;
-      let torque = torqueBuffer.array[offset];
+      const offset = i * torqueAttribute.itemSize;
+      const { array: torqueArray } = torqueAttribute;
 
       const dampingValue = MathUtils.randFloat(this.damping.min, this.damping.max);
       const dampingFactor = Math.pow(1 - dampingValue, deltaTime);
 
-      torque *= dampingFactor;
-
-      if (Math.abs(torque) < absThreshold) {
-        torque = 0;
+      let newTorque = torqueArray[offset] * dampingFactor;
+      if (Math.abs(newTorque) < absThreshold) {
+        newTorque = 0;
       }
 
-      torqueBuffer.array[offset] = torque;
+      torqueArray[offset] = newTorque;
     }
 
-    torqueBuffer.needsUpdate = true;
+    torqueAttribute.needsUpdate = true;
   }
 }

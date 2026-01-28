@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
   resolveUIRangeConfig,
   type UIRange,
@@ -15,6 +16,8 @@ export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }>
   constructor(rotation: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
     super();
     this.rotationInternal = resolveUIRangeConfig(rotation);
+    assertValidNumber(this.rotationInternal.min, "UISpawnRandomRotation.constructor.rotation.min");
+    assertValidNumber(this.rotationInternal.max, "UISpawnRandomRotation.constructor.rotation.max");
   }
 
   public get rotation(): UIRange {
@@ -23,6 +26,8 @@ export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }>
 
   public set rotation(value: UIRangeConfig) {
     this.rotationInternal = resolveUIRangeConfig(value);
+    assertValidNumber(this.rotationInternal.min, "UISpawnRandomRotation.rotation.min");
+    assertValidNumber(this.rotationInternal.max, "UISpawnRandomRotation.rotation.max");
   }
 
   /** @internal */
@@ -31,16 +36,15 @@ export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }>
     instanceOffset: number,
     instanceCount: number,
   ): void {
-    const rotationBuffer = properties.rotation;
+    const { rotation: rotationAttribute } = properties;
+    const { itemSize: rotationItemSize, array: rotationArray } = rotationAttribute;
+    const { min: rotationMin, max: rotationMax } = this.rotationInternal;
 
     for (let i = instanceOffset; i < instanceCount; i++) {
-      const itemOffset = i * rotationBuffer.itemSize;
-      rotationBuffer.array[itemOffset] = MathUtils.randFloat(
-        this.rotationInternal.min,
-        this.rotationInternal.max,
-      );
+      const itemOffset = i * rotationItemSize;
+      rotationArray[itemOffset] = MathUtils.randFloat(rotationMin, rotationMax);
     }
 
-    rotationBuffer.needsUpdate = true;
+    rotationAttribute.needsUpdate = true;
   }
 }

@@ -1,10 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
 import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
-import type { PropertyTypeMap } from "../instancedParticle/shared";
-
-export type ResolveProperties<T extends Record<string, UIPropertyName>> = {
-  [K in keyof T]: PropertyTypeMap[T[K]];
-};
 
 export abstract class UISpawnModule<
   T extends Record<string, UIPropertyName> = Record<string, UIPropertyName>,
@@ -17,4 +12,6 @@ export abstract class UISpawnModule<
     instanceOffset: number,
     instanceCount: number,
   ): void;
+
+  public destroy?(): void;
 }

@@ -7,4 +7,6 @@ export abstract class UIRenderingModule {
   public abstract readonly requiredUniforms: Record<string, UIProperty>;
   /** @internal */
   public abstract readonly source: string;
+
+  public destroy?(): void;
 }

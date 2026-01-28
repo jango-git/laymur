@@ -23,37 +23,34 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const position = properties.position;
-    const velocity = properties.velocity;
+    const { position: positionAttribute, velocity: velocityAttribute } = properties;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * position.itemSize;
+      const offset = i * positionAttribute.itemSize;
+      const { array: positionArray } = positionAttribute;
 
-      const px = position.array[offset];
-      const py = position.array[offset + 1];
-
-      const dx = this.center.x - px;
-      const dy = this.center.y - py;
+      const dx = this.center.x - positionArray[offset];
+      const dy = this.center.y - positionArray[offset + 1];
 
       const distanceSquared = dx * dx + dy * dy;
-      const distance = Math.sqrt(distanceSquared);
-
-      if (distance < 1) {
+      if (distanceSquared < 1) {
         continue;
       }
 
+      const distance = Math.sqrt(distanceSquared);
       const forceMagnitude = this.strength / Math.pow(distance, this.exponent);
 
-      const dirX = dx / distance;
-      const dirY = dy / distance;
+      const directionX = dx / distance;
+      const directionY = dy / distance;
 
-      const accelerationX = dirX * forceMagnitude;
-      const accelerationY = dirY * forceMagnitude;
+      const accelerationX = directionX * forceMagnitude;
+      const accelerationY = directionY * forceMagnitude;
 
-      velocity.array[offset] += accelerationX * deltaTime;
-      velocity.array[offset + 1] += accelerationY * deltaTime;
+      const { array: velocityArray } = velocityAttribute;
+      velocityArray[offset] += accelerationX * deltaTime;
+      velocityArray[offset + 1] += accelerationY * deltaTime;
     }
 
-    velocity.needsUpdate = true;
+    velocityAttribute.needsUpdate = true;
   }
 }

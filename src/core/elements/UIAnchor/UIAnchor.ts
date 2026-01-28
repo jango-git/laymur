@@ -4,12 +4,12 @@ import type { UILayerElement, UIPointElement } from "../../miscellaneous/shared"
 import { UIPriority } from "../../miscellaneous/UIPriority";
 import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
 import type { UIAnchorOptions } from "./UIAnchor.Internal";
-import { ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
+import { ANCHOR_DEFAULT_NAME, ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
 
 /** Point in 2D space with constraint-based positioning */
 export class UIAnchor implements UILayerElement, UIPointElement {
-  /** Optional identifier for debugging */
-  public name = "";
+  /** Identifier for debugging */
+  public name: string;
 
   /** Solver variable for x coordinate */
   public readonly xVariable: number;
@@ -37,6 +37,7 @@ export class UIAnchor implements UILayerElement, UIPointElement {
     this.solverWrapper = this.layer.solverWrapper;
     this.xVariable = this.solverWrapper.createVariable(x, UIPriority.P7);
     this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);
+    this.name = options?.name ?? ANCHOR_DEFAULT_NAME;
   }
 
   /** X coordinate relative to layer origin (bottom-left) */

@@ -1,6 +1,7 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils, Texture } from "three";
 import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal";
+import type { UIAspectConfig } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
@@ -16,7 +17,7 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
 
   constructor(
     private readonly scales: number[],
-    aspect: number | UITextureConfig = 1,
+    aspect: UIAspectConfig = 1,
   ) {
     super();
 
@@ -52,15 +53,13 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
     properties: { scale: InstancedBufferAttribute; lifetime: InstancedBufferAttribute },
     instanceCount: number,
   ): void {
-    const scaleBuffer = properties.scale;
-    const lifetime = properties.lifetime;
+    const { scale: scaleAttribute, lifetime: lifetimeAttribute } = properties;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * lifetime.itemSize;
-      const maxLifetime = lifetime.array[offset];
-      const currentLifetime = lifetime.array[offset + 1];
+      const offset = i * lifetimeAttribute.itemSize;
+      const { array: lifetimeArray } = lifetimeAttribute;
 
-      const t = MathUtils.clamp(currentLifetime / maxLifetime, 0, 1);
+      const t = MathUtils.clamp(lifetimeArray[offset + 1] / lifetimeArray[offset], 0, 1);
       let interpolatedScale = 0;
 
       if (t === 0) {
@@ -79,11 +78,12 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
         interpolatedScale = scale0 + (scale1 - scale0) * localT;
       }
 
-      const itemOffset = i * scaleBuffer.itemSize;
-      scaleBuffer.array[itemOffset] = interpolatedScale * this.aspectInternal;
-      scaleBuffer.array[itemOffset + 1] = interpolatedScale;
+      const itemOffset = i * scaleAttribute.itemSize;
+      const { array: scaleArray } = scaleAttribute;
+      scaleArray[itemOffset] = interpolatedScale * this.aspectInternal;
+      scaleArray[itemOffset + 1] = interpolatedScale;
     }
 
-    scaleBuffer.needsUpdate = true;
+    scaleAttribute.needsUpdate = true;
   }
 }

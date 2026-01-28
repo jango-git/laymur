@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
   resolveUIRangeConfig,
   type UIRange,
@@ -20,6 +21,16 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
     super();
     this.angleInternal = resolveUIRangeConfig(angle);
     this.magnitudeInternal = resolveUIRangeConfig(magnitude);
+    assertValidNumber(this.angleInternal.min, "UISpawnRandomVelocity.constructor.angle.min");
+    assertValidNumber(this.angleInternal.max, "UISpawnRandomVelocity.constructor.angle.max");
+    assertValidNumber(
+      this.magnitudeInternal.min,
+      "UISpawnRandomVelocity.constructor.magnitude.min",
+    );
+    assertValidNumber(
+      this.magnitudeInternal.max,
+      "UISpawnRandomVelocity.constructor.magnitude.max",
+    );
   }
 
   public get angle(): UIRange {
@@ -32,10 +43,14 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
 
   public set angle(value: UIRangeConfig) {
     this.angleInternal = resolveUIRangeConfig(value);
+    assertValidNumber(this.angleInternal.min, "UISpawnRandomVelocity.angle.min");
+    assertValidNumber(this.angleInternal.max, "UISpawnRandomVelocity.angle.max");
   }
 
   public set magnitude(value: UIRangeConfig) {
     this.magnitudeInternal = resolveUIRangeConfig(value);
+    assertValidNumber(this.magnitudeInternal.min, "UISpawnRandomVelocity.magnitude.min");
+    assertValidNumber(this.magnitudeInternal.max, "UISpawnRandomVelocity.magnitude.max");
   }
 
   /** @internal */
@@ -44,16 +59,19 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
     instanceOffset: number,
     instanceCount: number,
   ): void {
-    const angle = MathUtils.randFloat(this.angleInternal.min, this.angleInternal.max);
-    const magnitude = MathUtils.randFloat(this.magnitudeInternal.min, this.magnitudeInternal.max);
-    const velocityBuffer = properties.velocity;
+    const { velocity: velocityAttribute } = properties;
+    const { itemSize: velocityItemSize, array: velocityArray } = velocityAttribute;
+    const { min: angleMin, max: angleMax } = this.angleInternal;
+    const { min: magnitudeMin, max: magnitudeMax } = this.magnitudeInternal;
 
     for (let i = instanceOffset; i < instanceCount; i++) {
-      const itemOffset = i * velocityBuffer.itemSize;
-      velocityBuffer.array[itemOffset] = Math.cos(angle) * magnitude;
-      velocityBuffer.array[itemOffset + 1] = Math.sin(angle) * magnitude;
+      const itemOffset = i * velocityItemSize;
+      const angle = MathUtils.randFloat(angleMin, angleMax);
+      const magnitude = MathUtils.randFloat(magnitudeMin, magnitudeMax);
+      velocityArray[itemOffset] = Math.cos(angle) * magnitude;
+      velocityArray[itemOffset + 1] = Math.sin(angle) * magnitude;
     }
 
-    velocityBuffer.needsUpdate = true;
+    velocityAttribute.needsUpdate = true;
   }
 }

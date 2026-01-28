@@ -2,34 +2,49 @@ import type { WebGLRenderer } from "three";
 import { Vector2 } from "three";
 import type { UILayer } from "../../core";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor";
+import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal";
 import {
   resolveGLSLTypeInfo,
   type GLProperty,
   type GLTypeInfo,
 } from "../../core/miscellaneous/generic-plane/shared";
+import { isUIModeVisible } from "../../core/miscellaneous/UIMode";
 import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule";
+import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle";
 import {
-  callbackPlaceholder,
   collectProperties,
   collectUniforms,
-} from "../instancedParticle/shared";
-import { UIGenericInstancedParticle } from "../instancedParticle/UIGenericInstancedParticle";
+} from "../instancedParticle/UIInstancedParticle.Internal";
 import type { UIRenderingModule } from "../renderingModule/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
+import {
+  EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
+  EMITTER_DEFAULT_CAPACITY_STEP,
+  EMITTER_DEFAULT_EXPECTED_CAPACITY,
+  EMITTER_DEFAULT_MODE,
+  ignoreInput,
+  type UIEmitterMode,
+} from "./UIEmitter.Internal";
 
-export interface UIEmitterOptions {
-  initialCapacity: number;
+export interface UIEmitterOptions extends UIAnchorOptions {
+  mode: UIEmitterMode;
+  expectedCapacity: number;
   capacityStep: number;
+  automaticallyDestroyModules: boolean;
 }
 
 export class UIEmitter extends UIAnchor {
-  private readonly mesh: UIGenericInstancedParticle;
+  public automaticallyDestroyModules: boolean;
+
+  private readonly mesh: UIInstancedParticle;
   private readonly catcherHandler: number;
-  private isEmitting = false;
+
   private emissionRate = 0;
   private emissionAccumulator = 0;
   private emissionDuration = Infinity;
   private emissionElapsed = 0;
+
+  private modeInternal: UIEmitterMode;
 
   constructor(
     layer: UILayer,
@@ -38,7 +53,7 @@ export class UIEmitter extends UIAnchor {
     private readonly renderingSequence: readonly UIRenderingModule[],
     options: Partial<UIEmitterOptions> = {},
   ) {
-    super(layer);
+    super(layer, options);
 
     const collectedProperties: Record<string, GLTypeInfo> = {
       position: resolveGLSLTypeInfo("Vector2"), // x, y
@@ -71,70 +86,108 @@ export class UIEmitter extends UIAnchor {
 
     const zIndex = 0;
     this.catcherHandler = this.layer.inputWrapper.createInputCatcher(
-      callbackPlaceholder,
-      callbackPlaceholder,
-      callbackPlaceholder,
+      ignoreInput,
+      ignoreInput,
+      ignoreInput,
       zIndex,
     );
 
-    this.mesh = new UIGenericInstancedParticle(
+    this.mesh = new UIInstancedParticle(
       this.renderingSequence.map((module) => module.source),
       collectedUniforms,
       collectedProperties,
-      options.initialCapacity ?? 32,
-      options.capacityStep ?? 32,
+      options.expectedCapacity ?? EMITTER_DEFAULT_EXPECTED_CAPACITY,
+      options.capacityStep ?? EMITTER_DEFAULT_CAPACITY_STEP,
     );
     this.mesh.renderOrder = zIndex;
 
     this.layer.signalRendering.on(this.onRendering);
     this.layer.sceneWrapper.insertCustomObject(this.mesh);
+
+    this.automaticallyDestroyModules =
+      options.automaticallyDestroyModules ?? EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES;
+    this.modeInternal = options.mode ?? EMITTER_DEFAULT_MODE;
+  }
+
+  public get mode(): UIEmitterMode {
+    return this.modeInternal;
   }
 
   public get zIndex(): number {
     return this.layer.inputWrapper.getZIndex(this.catcherHandler);
   }
 
+  public set mode(value: UIEmitterMode) {
+    if (this.modeInternal !== value) {
+      this.modeInternal = value;
+      this.mesh.visible = isUIModeVisible(value);
+    }
+  }
+
   public set zIndex(value: number) {
     this.layer.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
-  public burst(particleCount: number): void {
+  public override destroy(): void {
+    this.layer.signalRendering.off(this.onRendering);
+    this.layer.sceneWrapper.removeCustomObject(this.mesh);
+
+    if (this.automaticallyDestroyModules) {
+      for (const module of this.spawnSequence) {
+        module.destroy?.();
+      }
+      for (const module of this.behaviorSequence) {
+        module.destroy?.();
+      }
+      for (const module of this.renderingSequence) {
+        module.destroy?.();
+      }
+    }
+
+    super.destroy();
+  }
+
+  public burst(count: number): void {
     const instanceOffset = this.mesh.instanceCount;
-    this.mesh.createInstances(particleCount);
+    this.mesh.createInstances(count);
 
     for (const spawnModule of this.spawnSequence) {
       spawnModule.spawn(this.mesh.propertyBuffers, instanceOffset, this.mesh.instanceCount);
     }
   }
 
-  public startEmission(particlesPerSecond: number, duration = Infinity): void {
-    this.isEmitting = true;
-    this.emissionRate = particlesPerSecond;
+  public play(rate: number, duration = Infinity): void {
+    this.emissionRate = rate;
     this.emissionAccumulator = 0;
     this.emissionDuration = duration;
     this.emissionElapsed = 0;
   }
 
-  public stopEmission(): void {
-    this.isEmitting = false;
+  public stop(): void {
     this.emissionRate = 0;
     this.emissionAccumulator = 0;
     this.emissionDuration = Infinity;
     this.emissionElapsed = 0;
   }
 
-  public override destroy(): void {
-    this.layer.signalRendering.off(this.onRendering);
-    this.layer.sceneWrapper.removeCustomObject(this.mesh);
-    super.destroy();
-  }
-
   private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
-    if (this.isEmitting && this.emissionRate > 0) {
+    {
+      const { lifetime } = this.mesh.propertyBuffers;
+      const { itemSize, array } = lifetime;
+
+      for (let i = 0; i < this.mesh.instanceCount; i++) {
+        array[i * itemSize + 1] += deltaTime;
+      }
+
+      lifetime.needsUpdate = true;
+      this.mesh.removeDeadParticles();
+    }
+
+    if (this.emissionRate > 0) {
       this.emissionElapsed += deltaTime;
 
       if (this.emissionElapsed >= this.emissionDuration) {
-        this.stopEmission();
+        this.stop();
       } else {
         this.emissionAccumulator += this.emissionRate * deltaTime;
 
@@ -158,43 +211,29 @@ export class UIEmitter extends UIAnchor {
     }
 
     {
-      const position = this.mesh.propertyBuffers.position;
-      const velocity = this.mesh.propertyBuffers.velocity;
+      const { position, velocity } = this.mesh.propertyBuffers;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
         const offset = i * position.itemSize;
-        position.array[offset] += velocity.array[offset] * deltaTime;
-        position.array[offset + 1] += velocity.array[offset + 1] * deltaTime;
+        const { array: positionArray } = position;
+        const { array: velocityArray } = velocity;
+        positionArray[offset] += velocityArray[offset] * deltaTime;
+        positionArray[offset + 1] += velocityArray[offset + 1] * deltaTime;
       }
 
       position.needsUpdate = true;
     }
 
     {
-      const rotation = this.mesh.propertyBuffers.rotation;
-      const torque = this.mesh.propertyBuffers.torque;
+      const { rotation, torque } = this.mesh.propertyBuffers;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
         const rotationOffset = i * rotation.itemSize;
         const torqueOffset = i * torque.itemSize;
-
         rotation.array[rotationOffset] += torque.array[torqueOffset] * deltaTime;
       }
 
       rotation.needsUpdate = true;
     }
-
-    {
-      const lifetime = this.mesh.propertyBuffers.lifetime;
-
-      for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const offset = i * lifetime.itemSize;
-        lifetime.array[offset + 1] += deltaTime;
-      }
-
-      lifetime.needsUpdate = true;
-    }
-
-    this.mesh.removeDeadParticles();
   };
 }

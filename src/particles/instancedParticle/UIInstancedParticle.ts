@@ -5,30 +5,24 @@ import {
   type GLProperty,
   type GLTypeInfo,
 } from "../../core/miscellaneous/generic-plane/shared";
-import {
-  buildMaterial,
-  INSTANCED_PARTICLE_PLANE_GEOMETRY,
-} from "./UIGenericInstancedParticle.Internal";
+import { buildParticleMaterial, INSTANCED_PARTICLE_GEOMETRY } from "./UIInstancedParticle.Internal";
 
-export class UIGenericInstancedParticle extends Mesh {
+export class UIInstancedParticle extends Mesh {
   public readonly propertyBuffers: Record<string, InstancedBufferAttribute> = {};
 
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
-
   private capacity: number;
 
   constructor(
-    public readonly sources: string[],
+    sources: string[],
     uniforms: Record<string, GLProperty>,
     varyings: Record<string, GLTypeInfo>,
-    initialCapacity: number,
+    expectedCapacity: number,
     private readonly capacityStep: number,
   ) {
-    const uniformProperties: Record<string, GLProperty> = uniforms;
-
-    const instancedGeometry = INSTANCED_PARTICLE_PLANE_GEOMETRY.clone();
-    const shaderMaterial = buildMaterial(sources, uniformProperties, varyings);
+    const instancedGeometry = INSTANCED_PARTICLE_GEOMETRY.clone();
+    const shaderMaterial = buildParticleMaterial(sources, uniforms, varyings);
 
     super(instancedGeometry, shaderMaterial);
 
@@ -41,30 +35,19 @@ export class UIGenericInstancedParticle extends Mesh {
 
     this.shaderMaterial = shaderMaterial;
     this.capacity = Math.max(
-      Math.ceil(initialCapacity / this.capacityStep) * this.capacityStep,
+      Math.ceil(expectedCapacity / this.capacityStep) * this.capacityStep,
       this.capacityStep,
     );
 
-    {
-      for (const name in varyings) {
-        const { bufferSize } = varyings[name];
-        const attribute = new InstancedBufferAttribute(
-          new Float32Array(this.capacity * bufferSize),
-          bufferSize,
-        );
-        attribute.setUsage(StreamDrawUsage);
-        this.instancedGeometry.setAttribute(`a_${name}`, attribute);
-        this.propertyBuffers[name] = attribute;
-      }
-    }
-
-    {
-      for (const name in uniformProperties) {
-        const { value } = uniformProperties[name];
-        const uniform = resolvePropertyUniform(name, this.shaderMaterial);
-        uniform.value = value;
-      }
-      this.shaderMaterial.uniformsNeedUpdate = true;
+    for (const name in varyings) {
+      const { bufferSize } = varyings[name];
+      const attribute = new InstancedBufferAttribute(
+        new Float32Array(this.capacity * bufferSize),
+        bufferSize,
+      );
+      attribute.setUsage(StreamDrawUsage);
+      this.instancedGeometry.setAttribute(`a_${name}`, attribute);
+      this.propertyBuffers[name] = attribute;
     }
   }
 
@@ -73,18 +56,9 @@ export class UIGenericInstancedParticle extends Mesh {
   }
 
   public createInstances(count: number): void {
-    const index = this.instancedGeometry.instanceCount;
-    this.ensureCapacity(index + count);
+    const currentInstanceCount = this.instancedGeometry.instanceCount;
+    this.ensureCapacity(currentInstanceCount + count);
     this.instancedGeometry.instanceCount += count;
-  }
-
-  public destroyInstance(index: number): void {
-    const lastIndex = this.instancedGeometry.instanceCount - 1;
-    if (index < lastIndex) {
-      this.moveInstanceData(lastIndex, index);
-    }
-
-    this.instancedGeometry.instanceCount--;
   }
 
   public setOrigin(x: number, y: number): void {
@@ -98,36 +72,30 @@ export class UIGenericInstancedParticle extends Mesh {
       return;
     }
 
-    const lifetimeArray = lifetimeBuffer.array as Float32Array;
-    const itemSize = lifetimeBuffer.itemSize;
-    const instanceCount = this.instancedGeometry.instanceCount;
+    const { array: lifetimeArray, itemSize: lifetimeItemSize } = lifetimeBuffer;
+    const { instanceCount } = this.instancedGeometry;
 
     let writeIndex = 0;
 
     for (let readIndex = 0; readIndex < instanceCount; readIndex++) {
-      const offset = readIndex * itemSize;
+      const offset = readIndex * lifetimeItemSize;
       const lifetime = lifetimeArray[offset];
       const age = lifetimeArray[offset + 1];
 
-      const isAlive = age < lifetime;
-
-      if (isAlive) {
+      if (age < lifetime) {
         if (writeIndex !== readIndex) {
           for (const name in this.propertyBuffers) {
             const attribute = this.propertyBuffers[name];
-            const array = attribute.array as Float32Array;
-            const size = attribute.itemSize;
+            const { itemSize: dataItemSize, array: dataArray } = attribute;
 
-            const srcOffset = readIndex * size;
-            const dstOffset = writeIndex * size;
+            const srcOffset = readIndex * dataItemSize;
+            const dstOffset = writeIndex * dataItemSize;
 
-            for (let i = 0; i < size; i++) {
-              array[dstOffset + i] = array[srcOffset + i];
-            }
-
+            dataArray.copyWithin(dstOffset, srcOffset, srcOffset + dataItemSize);
             attribute.needsUpdate = true;
           }
         }
+
         writeIndex++;
       }
     }
@@ -148,13 +116,12 @@ export class UIGenericInstancedParticle extends Mesh {
     const newCapacity = Math.ceil(requiredCapacity / this.capacityStep) * this.capacityStep;
 
     for (const name in this.propertyBuffers) {
-      const oldAttribute = this.propertyBuffers[name];
-      const itemSize = oldAttribute.itemSize;
+      const { itemSize, array, usage } = this.propertyBuffers[name];
       const newArray = new Float32Array(newCapacity * itemSize);
-      newArray.set(oldAttribute.array as Float32Array);
+      newArray.set(array as Float32Array);
 
       const newAttribute = new InstancedBufferAttribute(newArray, itemSize);
-      newAttribute.setUsage(oldAttribute.usage);
+      newAttribute.setUsage(usage);
       this.instancedGeometry.setAttribute(`a_${name}`, newAttribute);
       this.propertyBuffers[name] = newAttribute;
     }
@@ -162,22 +129,5 @@ export class UIGenericInstancedParticle extends Mesh {
     this.capacity = newCapacity;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- old three.js compatibility fix
     (this.instancedGeometry as any)._maxInstanceCount = newCapacity;
-  }
-
-  private moveInstanceData(sourceIndex: number, targetIndex: number): void {
-    for (const name in this.propertyBuffers) {
-      const attribute = this.propertyBuffers[name];
-      const array = attribute.array as Float32Array;
-      const itemSize = attribute.itemSize;
-
-      const srcOffset = sourceIndex * itemSize;
-      const dstOffset = targetIndex * itemSize;
-
-      for (let i = 0; i < itemSize; i++) {
-        array[dstOffset + i] = array[srcOffset + i];
-      }
-
-      attribute.needsUpdate = true;
-    }
   }
 }
