@@ -44,15 +44,15 @@ export class UISpawnRectangle extends UISpawnModule<{ position: "Vector2" }> {
   /** @internal */
   public spawn(
     properties: { position: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { position: positionAttribute } = properties;
     const { itemSize: positionItemSize, array: positionArray } = positionAttribute;
     const { x: minX, y: minY } = this.minInternal;
     const { x: maxX, y: maxY } = this.maxInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * positionItemSize;
       positionArray[itemOffset] = MathUtils.randFloat(minX, maxX);
       positionArray[itemOffset + 1] = MathUtils.randFloat(minY, maxY);

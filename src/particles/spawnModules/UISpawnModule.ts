@@ -9,8 +9,8 @@ export abstract class UISpawnModule<
   /** @internal */
   public abstract spawn(
     properties: { [K in keyof T]: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void;
 
   public destroy?(): void;

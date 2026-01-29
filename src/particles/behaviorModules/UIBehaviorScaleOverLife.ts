@@ -1,7 +1,7 @@
 import type { InstancedBufferAttribute } from "three";
-import { MathUtils, Texture } from "three";
-import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal";
-import type { UIAspectConfig } from "../miscellaneous/miscellaneous";
+import { MathUtils } from "three";
+import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts";
+import { resolveAspect, type UIAspectConfig } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
@@ -16,36 +16,32 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
   private aspectInternal: number;
 
   constructor(
-    private readonly scales: number[],
+    private readonly scales: readonly number[],
     aspect: UIAspectConfig = 1,
   ) {
     super();
 
     if (scales.length < 2) {
-      throw new Error("UIBehaviorScaleOverLife.scales");
+      throw new Error(
+        "UIBehaviorScaleOverLife.scales: the number of scale anchors must be more than two",
+      );
     }
 
-    if (typeof aspect === "number") {
-      this.aspectInternal = aspect;
-    } else if (aspect instanceof Texture) {
-      this.aspectInternal = aspect.image.naturalWidth / aspect.image.naturalHeight;
-    } else {
-      this.aspectInternal = aspect.sourceSize.w / aspect.sourceSize.h;
+    for (let i = 0; i < scales.length; i++) {
+      assertValidPositiveNumber(scales[i], `UIBehaviorScaleOverLife.constructor.scales[${i}]`);
     }
+
+    this.aspectInternal = resolveAspect(aspect);
+    assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.constructor.aspect");
   }
 
   public get aspect(): number {
     return this.aspectInternal;
   }
 
-  public set aspect(value: number | UITextureConfig) {
-    if (typeof value === "number") {
-      this.aspectInternal = value;
-    } else if (value instanceof Texture) {
-      this.aspectInternal = value.image.naturalWidth / value.image.naturalHeight;
-    } else {
-      this.aspectInternal = value.sourceSize.w / value.sourceSize.h;
-    }
+  public set aspect(value: UIAspectConfig) {
+    this.aspectInternal = resolveAspect(value);
+    assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.aspect");
   }
 
   /** @internal */
@@ -54,32 +50,23 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
     instanceCount: number,
   ): void {
     const { scale: scaleAttribute, lifetime: lifetimeAttribute } = properties;
+    const { array: scaleArray, itemSize: scaleItemSize } = scaleAttribute;
+    const { array: lifetimeArray, itemSize: lifetimeItemSize } = lifetimeAttribute;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * lifetimeAttribute.itemSize;
-      const { array: lifetimeArray } = lifetimeAttribute;
-
+      const offset = i * lifetimeItemSize;
       const t = MathUtils.clamp(lifetimeArray[offset + 1] / lifetimeArray[offset], 0, 1);
-      let interpolatedScale = 0;
 
-      if (t === 0) {
-        interpolatedScale = this.scales[0];
-      } else if (t === 1) {
-        const lastElementIndex = this.scales.length - 1;
-        interpolatedScale = this.scales[lastElementIndex];
-      } else {
-        const segment = (this.scales.length - 1) * t;
-        const index = Math.floor(segment);
+      const segment = (this.scales.length - 1) * t;
+      const index = Math.floor(segment);
 
-        const localT = segment - index;
-        const scale0 = this.scales[index];
-        const scale1 = this.scales[index + 1];
+      const localT = segment - index;
+      const scale0 = this.scales[index];
+      const scale1 = this.scales[index + 1];
 
-        interpolatedScale = scale0 + (scale1 - scale0) * localT;
-      }
+      const interpolatedScale = scale0 + (scale1 - scale0) * localT;
 
-      const itemOffset = i * scaleAttribute.itemSize;
-      const { array: scaleArray } = scaleAttribute;
+      const itemOffset = i * scaleItemSize;
       scaleArray[itemOffset] = interpolatedScale * this.aspectInternal;
       scaleArray[itemOffset + 1] = interpolatedScale;
     }

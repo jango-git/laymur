@@ -35,14 +35,14 @@ export class UISpawnRandomTorque extends UISpawnModule<{
   /** @internal */
   public spawn(
     properties: { torque: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { torque: torqueAttribute } = properties;
     const { itemSize: torqueItemSize, array: torqueArray } = torqueAttribute;
     const { min: torqueMin, max: torqueMax } = this.torqueInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * torqueItemSize;
       torqueArray[itemOffset] = MathUtils.randFloat(torqueMin, torqueMax);
     }

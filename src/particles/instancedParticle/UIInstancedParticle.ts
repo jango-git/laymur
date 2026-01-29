@@ -79,10 +79,8 @@ export class UIInstancedParticle extends Mesh {
 
     for (let readIndex = 0; readIndex < instanceCount; readIndex++) {
       const offset = readIndex * lifetimeItemSize;
-      const lifetime = lifetimeArray[offset];
-      const age = lifetimeArray[offset + 1];
 
-      if (age < lifetime) {
+      if (lifetimeArray[offset + 1] < lifetimeArray[offset]) {
         if (writeIndex !== readIndex) {
           for (const name in this.propertyBuffers) {
             const attribute = this.propertyBuffers[name];
@@ -118,7 +116,7 @@ export class UIInstancedParticle extends Mesh {
     for (const name in this.propertyBuffers) {
       const { itemSize, array, usage } = this.propertyBuffers[name];
       const newArray = new Float32Array(newCapacity * itemSize);
-      newArray.set(array as Float32Array);
+      newArray.set(array);
 
       const newAttribute = new InstancedBufferAttribute(newArray, itemSize);
       newAttribute.setUsage(usage);

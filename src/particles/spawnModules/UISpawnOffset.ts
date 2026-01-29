@@ -29,14 +29,14 @@ export class UISpawnOffset extends UISpawnModule<{ position: "Vector2" }> {
   /** @internal */
   public spawn(
     properties: { position: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { position: positionAttribute } = properties;
     const { itemSize: positionItemSize, array: positionArray } = positionAttribute;
     const { x: offsetX, y: offsetY } = this.offsetInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * positionItemSize;
       positionArray[itemOffset] = offsetX;
       positionArray[itemOffset + 1] = offsetY;

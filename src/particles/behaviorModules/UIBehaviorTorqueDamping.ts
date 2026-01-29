@@ -1,5 +1,4 @@
 import type { InstancedBufferAttribute } from "three";
-import { MathUtils } from "three";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
@@ -9,8 +8,8 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
   public readonly requiredProperties = { torque: "number" } as const;
 
   constructor(
-    public readonly damping: { min: number; max: number },
-    public readonly threshold = 0.001,
+    public damping: number,
+    public threshold = 0.001,
   ) {
     super();
   }
@@ -28,8 +27,7 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
       const offset = i * torqueAttribute.itemSize;
       const { array: torqueArray } = torqueAttribute;
 
-      const dampingValue = MathUtils.randFloat(this.damping.min, this.damping.max);
-      const dampingFactor = Math.pow(1 - dampingValue, deltaTime);
+      const dampingFactor = Math.pow(1 - this.damping, deltaTime);
 
       let newTorque = torqueArray[offset] * dampingFactor;
       if (Math.abs(newTorque) < absThreshold) {

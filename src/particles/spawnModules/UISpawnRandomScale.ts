@@ -47,14 +47,14 @@ export class UISpawnRandomScale extends UISpawnModule<{ scale: "Vector2" }> {
   /** @internal */
   public spawn(
     properties: { scale: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { scale: scaleAttribute } = properties;
     const { itemSize: scaleItemSize, array: scaleArray } = scaleAttribute;
     const { min: scaleMin, max: scaleMax } = this.scaleInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * scaleItemSize;
       const randomScale = MathUtils.randFloat(scaleMin, scaleMax);
       scaleArray[itemOffset] = randomScale * this.aspectInternal;

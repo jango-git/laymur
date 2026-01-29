@@ -36,14 +36,14 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }
   /** @internal */
   public spawn(
     properties: { lifetime: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { lifetime: lifetimeAttribute } = properties;
     const { itemSize: lifetimeItemSize, array: lifetimeArray } = lifetimeAttribute;
     const { min: lifetimeMin, max: lifetimeMax } = this.lifetimeInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * lifetimeItemSize;
       lifetimeArray[itemOffset] = MathUtils.randFloat(lifetimeMin, lifetimeMax);
       lifetimeArray[itemOffset + 1] = 0;

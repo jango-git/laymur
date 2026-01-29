@@ -33,14 +33,14 @@ export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }>
   /** @internal */
   public spawn(
     properties: { rotation: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { rotation: rotationAttribute } = properties;
     const { itemSize: rotationItemSize, array: rotationArray } = rotationAttribute;
     const { min: rotationMin, max: rotationMax } = this.rotationInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * rotationItemSize;
       rotationArray[itemOffset] = MathUtils.randFloat(rotationMin, rotationMax);
     }

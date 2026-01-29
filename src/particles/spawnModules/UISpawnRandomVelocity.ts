@@ -56,15 +56,15 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
   /** @internal */
   public spawn(
     properties: { velocity: InstancedBufferAttribute },
-    instanceOffset: number,
-    instanceCount: number,
+    instanceBegin: number,
+    instanceEnd: number,
   ): void {
     const { velocity: velocityAttribute } = properties;
     const { itemSize: velocityItemSize, array: velocityArray } = velocityAttribute;
     const { min: angleMin, max: angleMax } = this.angleInternal;
     const { min: magnitudeMin, max: magnitudeMax } = this.magnitudeInternal;
 
-    for (let i = instanceOffset; i < instanceCount; i++) {
+    for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * velocityItemSize;
       const angle = MathUtils.randFloat(angleMin, angleMax);
       const magnitude = MathUtils.randFloat(magnitudeMin, magnitudeMax);

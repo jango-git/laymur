@@ -43,7 +43,7 @@ export class UICoverConstraintBuilder {
     }
 
     let activeAspectConstraint: UIAspectConstraint | undefined;
-    if (options.keepActiveAspect === true) {
+    if (options.keepActiveAspect !== false) {
       activeAspectConstraint = new UIAspectConstraint(active, {
         orientation: options.orientation,
       });

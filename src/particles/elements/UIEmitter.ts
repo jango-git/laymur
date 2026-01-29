@@ -24,6 +24,7 @@ import {
   EMITTER_DEFAULT_MODE,
   ignoreInput,
   type UIEmitterMode,
+  type UIEmitterPlayOptions,
 } from "./UIEmitter.Internal";
 
 export interface UIEmitterOptions extends UIAnchorOptions {
@@ -148,18 +149,18 @@ export class UIEmitter extends UIAnchor {
   }
 
   public burst(count: number): void {
-    const instanceOffset = this.mesh.instanceCount;
+    const instanceBegin = this.mesh.instanceCount;
     this.mesh.createInstances(count);
 
     for (const spawnModule of this.spawnSequence) {
-      spawnModule.spawn(this.mesh.propertyBuffers, instanceOffset, this.mesh.instanceCount);
+      spawnModule.spawn(this.mesh.propertyBuffers, instanceBegin, this.mesh.instanceCount);
     }
   }
 
-  public play(rate: number, duration = Infinity): void {
+  public play(rate: number, options: Partial<UIEmitterPlayOptions> = {}): void {
     this.emissionRate = rate;
     this.emissionAccumulator = 0;
-    this.emissionDuration = duration;
+    this.emissionDuration = options.duration ?? Infinity;
     this.emissionElapsed = 0;
   }
 
@@ -206,19 +207,24 @@ export class UIEmitter extends UIAnchor {
     this.mesh.renderOrder = this.zIndex;
     this.mesh.setOrigin(this.x, this.y);
 
-    for (const module of this.behaviorSequence) {
-      module.update(this.mesh.propertyBuffers, this.mesh.instanceCount, deltaTime);
+    {
+      const { propertyBuffers, instanceCount } = this.mesh;
+
+      for (const module of this.behaviorSequence) {
+        module.update(propertyBuffers, instanceCount, deltaTime);
+      }
     }
 
     {
       const { position, velocity } = this.mesh.propertyBuffers;
+      const { array: positionArray, itemSize: positionItemSize } = position;
+      const { array: velocityArray, itemSize: velocityItemSize } = velocity;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const offset = i * position.itemSize;
-        const { array: positionArray } = position;
-        const { array: velocityArray } = velocity;
-        positionArray[offset] += velocityArray[offset] * deltaTime;
-        positionArray[offset + 1] += velocityArray[offset + 1] * deltaTime;
+        const positionOffset = i * positionItemSize;
+        const velocityOffset = i * velocityItemSize;
+        positionArray[positionOffset] += velocityArray[velocityOffset] * deltaTime;
+        positionArray[positionOffset + 1] += velocityArray[velocityOffset + 1] * deltaTime;
       }
 
       position.needsUpdate = true;
@@ -226,11 +232,13 @@ export class UIEmitter extends UIAnchor {
 
     {
       const { rotation, torque } = this.mesh.propertyBuffers;
+      const { array: rotationArray, itemSize: rotationItemSize } = rotation;
+      const { array: torqueArray, itemSize: torqueItemSize } = torque;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const rotationOffset = i * rotation.itemSize;
-        const torqueOffset = i * torque.itemSize;
-        rotation.array[rotationOffset] += torque.array[torqueOffset] * deltaTime;
+        const rotationOffset = i * rotationItemSize;
+        const torqueOffset = i * torqueItemSize;
+        rotationArray[rotationOffset] += torqueArray[torqueOffset] * deltaTime;
       }
 
       rotation.needsUpdate = true;

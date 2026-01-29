@@ -6,6 +6,10 @@ export interface UIEmitterOptions extends UIAnchorOptions {
   capacityStep: number;
 }
 
+export interface UIEmitterPlayOptions {
+  duration: number;
+}
+
 export function ignoreInput(): boolean {
   return false;
 }
