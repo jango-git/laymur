@@ -9,6 +9,11 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Assigns random angular velocity to particles.
+ *
+ * Torque (rotation speed) is chosen uniformly from the specified range.
+ */
 export class UISpawnRandomTorque extends UISpawnModule<{
   builtin: "Matrix4";
 }> {
@@ -16,6 +21,9 @@ export class UISpawnRandomTorque extends UISpawnModule<{
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private torqueInternal: UIRange;
 
+  /**
+   * @param torque - Angular velocity range in radians/second. Accepts number, tuple, or range object
+   */
   constructor(torque: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
     super();
     this.torqueInternal = resolveUIRangeConfig(torque);
@@ -23,10 +31,12 @@ export class UISpawnRandomTorque extends UISpawnModule<{
     assertValidNumber(this.torqueInternal.max, "UISpawnRandomTorque.constructor.torque.max");
   }
 
+  /** Angular velocity range in radians/second */
   public get torque(): UIRange {
     return this.torqueInternal;
   }
 
+  /** Angular velocity range in radians/second */
   public set torque(value: UIRangeConfig) {
     this.torqueInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.torqueInternal.min, "UISpawnRandomTorque.torque.min");

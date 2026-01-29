@@ -17,12 +17,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Applies noise-based acceleration to particles.
+ *
+ * Uses 2D noise based on particle position. Higher scale means finer noise detail.
+ */
 export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private strengthInternal: UIRange;
 
+  /**
+   * @param scale - Noise frequency range. Accepts number, tuple, or range object
+   * @param strength - Force multiplier range. Accepts number, tuple, or range object
+   */
   constructor(scale = 100, strength = 500) {
     super();
     this.scaleInternal = resolveUIRangeConfig(scale);
@@ -46,20 +55,24 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
     );
   }
 
+  /** Noise frequency range */
   public get scale(): UIRange {
     return this.scaleInternal;
   }
 
+  /** Force multiplier range */
   public get strength(): UIRange {
     return this.strengthInternal;
   }
 
+  /** Noise frequency range */
   public set scale(value: UIRangeConfig) {
     this.scaleInternal = resolveUIRangeConfig(value);
     assertValidPositiveNumber(this.scaleInternal.min, `UIBehaviorVelocityNoise.scale.min`);
     assertValidPositiveNumber(this.scaleInternal.max, `UIBehaviorVelocityNoise.scale.max`);
   }
 
+  /** Force multiplier range */
   public set strength(value: UIRangeConfig) {
     this.strengthInternal = resolveUIRangeConfig(value);
     assertValidNonNegativeNumber(this.strengthInternal.min, `UIBehaviorVelocityNoise.strength.min`);

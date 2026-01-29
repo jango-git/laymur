@@ -10,12 +10,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Spawns particles at random positions within a rectangle.
+ *
+ * Position is chosen uniformly within the bounds defined by min and max.
+ */
 export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private minInternal: Vector2Like;
   private maxInternal: Vector2Like;
 
+  /**
+   * @param min - Bottom-left corner of spawn area
+   * @param max - Top-right corner of spawn area
+   */
   constructor(min: UIVector2Config = { x: -50, y: -50 }, max: UIVector2Config = { x: 50, y: 50 }) {
     super();
     this.minInternal = resolveUIVector2Config(min);
@@ -26,20 +35,24 @@ export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidNumber(this.maxInternal.y, "UISpawnRectangle.constructor.max.y");
   }
 
+  /** Bottom-left corner of spawn area */
   public get min(): Vector2Like {
     return this.minInternal;
   }
 
+  /** Top-right corner of spawn area */
   public get max(): Vector2Like {
     return this.maxInternal;
   }
 
+  /** Bottom-left corner of spawn area */
   public set min(value: UIVector2Config) {
     this.minInternal = resolveUIVector2Config(value);
     assertValidNumber(this.minInternal.x, "UISpawnRectangle.min.x");
     assertValidNumber(this.minInternal.y, "UISpawnRectangle.min.y");
   }
 
+  /** Top-right corner of spawn area */
   public set max(value: UIVector2Config) {
     this.maxInternal = resolveUIVector2Config(value);
     assertValidNumber(this.maxInternal.x, "UISpawnRectangle.max.x");

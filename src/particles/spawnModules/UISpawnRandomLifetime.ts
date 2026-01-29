@@ -9,11 +9,19 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Assigns random lifetime to particles.
+ *
+ * Lifetime is chosen uniformly from the specified range. Age is set to 0.
+ */
 export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private lifetimeInternal: UIRange;
 
+  /**
+   * @param lifetime - Lifetime range in seconds. Accepts number, tuple, or range object
+   */
   constructor(lifetime: UIRangeConfig = { min: 4, max: 8 }) {
     super();
     this.lifetimeInternal = resolveUIRangeConfig(lifetime);
@@ -27,10 +35,12 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }>
     );
   }
 
+  /** Lifetime range in seconds */
   public get lifetime(): UIRange {
     return this.lifetimeInternal;
   }
 
+  /** Lifetime range in seconds */
   public set lifetime(value: UIRangeConfig) {
     this.lifetimeInternal = resolveUIRangeConfig(value);
     assertValidPositiveNumber(this.lifetimeInternal.min, "UISpawnRandomLifetime.lifetime.min");

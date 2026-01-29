@@ -1,32 +1,25 @@
 <p align="center">
+  <img src="./assets/logotype.png" width="200" alt="Laymur logo"><br/>
   <h1 align="center">Laymur</h1>
   <p align="center">
-      A constraint-based UI library for Three.js mobile advertisements
+    Constraint-based UI library and particle system for Three.js.<br/>
+    Optimized for high-performance mobile advertisements (playable ads).
   </p>
 </p>
-
 <p align="center">
-<a href="https://www.npmjs.com/package/laymur"><img src="https://img.shields.io/npm/v/laymur.svg" alt="npm version"></a>
-<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-<a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-%5E5.8.0-blue" alt="TypeScript"></a>
-<a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-0.157.0--0.180.0-green" alt="Three.js"></a>
+  <a href="https://www.npmjs.com/package/laymur"><img src="https://img.shields.io/npm/v/laymur.svg" alt="npm version"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-%5E5.8.0-blue" alt="TypeScript"></a>
+  <a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-0.157.0--0.180.0-green" alt="Three.js"></a>
 </p>
 
-⚠️ **Early Alpha / Work in Progress** ⚠️
+## Features
 
-This library is in early development. APIs may change.
-
-## What it does
-
-A compact UI library designed for Three.js mobile advertisements where bundle size matters. Uses constraint-based positioning to handle responsive layouts across different screen sizes and orientations.
-
-- 📱 Constraint-based layout system
-- 🖼️ Basic UI elements (images, text, progress bars)
-- 📐 Responsive design for mobile ads
-- 🎯 Lightweight animations
-- 📦 TypeScript support
-
-Originally built for mobile ad development scenarios where you need to keep the bundle small while supporting various screen configurations.
+* **Cassowary solver** — constraint-based layouts via `@lume/kiwi`
+* **Orientation-aware** — define portrait and landscape rules in one layout, solver toggles automatically
+* **Micro-transforms** — visual-only transforms (scale, rotation, offset) that bypass the solver
+* **Resize policies** — Cover, Fit, FixedHeight, FixedWidth, Cross strategies
+* **Modular particles** — separate `laymur/particles` entry point, import only if needed
 
 ## Installation
 
@@ -34,235 +27,144 @@ Originally built for mobile ad development scenarios where you need to keep the 
 npm install laymur
 ```
 
-Requires Three.js >=0.175.0 <0.180.0 as a peer dependency.
+Peer Dependencies:
 
-## Quick Example
+* `three` (>=0.157.0 <0.180.0)
+* `@lume/kiwi` (^0.4.4)
+* `ferrsign` (^0.0.4)
+
+## Core Concepts
+
+### 1. Layers & Elements
+
+`UIFullscreenLayer` manages coordinate system, canvas scaling, and input. All UI elements attach to a layer.
 
 ```typescript
-import { UIFullscreenLayer, UIImage, UIText } from "laymur";
-import { WebGLRenderer, TextureLoader, Clock } from "three";
+import { UIFullscreenLayer, UIImage, UIMode, UIResizePolicyFixedHeight } from 'laymur';
 
-const renderer = new WebGLRenderer();
-const layer = new UIFullscreenLayer();
-const clock = new Clock();
-
-const texture = new TextureLoader().load("background.jpg");
-const background = new UIImage(layer, texture, { x: 0, y: 0 });
-const title = new UIText(layer, "Mobile Ad Title", {
-  x: 100,
-  y: 100,
-  maxLineWidth: 800,
+const layer = new UIFullscreenLayer({ 
+  name: "MainHUD", 
+  mode: UIMode.VISIBLE,
+  resizePolicy: new UIResizePolicyFixedHeight(1080, 1920)
 });
-
-function animate() {
-  layer.render(renderer, clock.getDelta());
-  requestAnimationFrame(animate);
-}
-
-animate();
 ```
 
-## Basic Components
+### 2. Constraint System
 
-### Layers
+Cassowary-based constraint solver. Supports priorities, element relationships, orientation-specific rules, and inequality relations.
 
-- **UIFullscreenLayer** - Handles browser window scaling
+```typescript
+import { 
+  UIHorizontalDistanceConstraint, 
+  UIVerticalProportionConstraint,
+  UIAspectConstraint,
+  UIOrientation, 
+  UIPriority,
+  UIRelation 
+} from 'laymur';
+
+// Lock aspect ratio
+new UIAspectConstraint(element);
+
+// Position relative to layer center
+new UIHorizontalDistanceConstraint(layer, element, {
+  anchorA: 0.5,
+  anchorB: 0.5,
+});
+
+// Size as proportion of layer, landscape only
+new UIVerticalProportionConstraint(layer, element, {
+  proportion: 0.4,
+  orientation: UIOrientation.HORIZONTAL,
+  priority: UIPriority.P1,
+});
+
+// Max width constraint
+new UIHorizontalProportionConstraint(layer, element, {
+  proportion: 0.8,
+  relation: UIRelation.LESS_THAN,
+});
+```
+
+### 3. Micro-transforms
+
+For animations, use `.micro` — updates visual matrix without triggering the solver.
+
+```typescript
+element.micro.scaleX = Math.sin(Date.now() * 0.001) + 1;
+element.micro.rotation += 0.01;
+```
+
+### 4. Particle System
+
+Modular pipeline: Spawn → Behavior → Rendering.
+
+```typescript
+import { UIEmitter, UISpawnRectangle, UIBehaviorDirectionalGravity, UIRenderingTexture } from 'laymur/particles';
+
+const emitter = new UIEmitter(
+  layer,
+  [new UISpawnRectangle([-500, 0], [500, 0])],
+  [new UIBehaviorDirectionalGravity({ x: 0, y: 100 })],
+  [new UIRenderingTexture(particleTexture)],
+  { expectedCapacity: 1024 } // Pre-allocation hint, not a hard limit
+);
+
+emitter.play(60); // particles/sec
+```
+
+## API Summary
+
+Key exports:
 
 ### Elements
 
-- **UIImage** - Display textures
-- **UIAnimatedImage** - Animated texture sequences
-- **UIText** - Text rendering with word wrapping and styled spans
-- **UIGraphics** - Vector graphics and shapes
-- **UIScene** - Embed 3D scenes
-- **UIProgress** - Progress bars
-- **UINineSlice** - Scalable UI panels with border preservation
-- **UIAnchor** - Positioning points
+UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIScene, UIGraphics, UIDummy, UIAnchor
+
+### Layers
+
+UILayer, UIFullscreenLayer
 
 ### Constraints
 
-- **UIWidthConstraint** / **UIHeightConstraint** - Fixed sizes
-- **UIAspectConstraint** - Maintain aspect ratios
-- **UIHorizontalDistanceConstraint** / **UIVerticalDistanceConstraint** - Spacing between elements
-- **UIHorizontalProportionConstraint** / **UIVerticalProportionConstraint** - Proportional sizing
-- **UIHorizontalInterpolationConstraint** / **UIVerticalInterpolationConstraint** - Position element between two anchors
-- **UICustomConstraint** - Custom constraint expressions
-- **UIFitConstraintBuilder** - Fit element inside container (like CSS object-fit: contain)
-- **UICoverConstraintBuilder** - Cover container with element (like CSS object-fit: cover)
+* **Builders**: UIConstraint2DBuilder, UIFitConstraintBuilder, UICoverConstraintBuilder
+* **Core**: UIAspectConstraint, UIWidthConstraint, UIHeightConstraint, UICustomConstraint
+* **Distance**: UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
+* **Proportion**: UIHorizontalProportionConstraint, UIVerticalProportionConstraint
+* **Interpolation**: UIHorizontalInterpolationConstraint, UIVerticalInterpolationConstraint
 
-## Constraint Layout
+### Resize Policies
 
-The constraint system automatically calculates positions and sizes based on relationships you define:
+UIResizePolicyCover, UIResizePolicyFit, UIResizePolicyFixedHeight, UIResizePolicyFixedWidth, UIResizePolicyCross, UIResizePolicyCrossInverted
 
-```typescript
-import { UIImage, UIHorizontalDistanceConstraint, UIWidthConstraint } from "laymur";
+### Utilities
 
-const sidebar = new UIImage(layer, sidebarTexture, { x: 0, y: 0 });
-const content = new UIImage(layer, contentTexture, { x: 0, y: 0 });
+UIColor, UITextSpan, UITextStyle, UIInsets, UITextureView, UIProgressMaskFunctionCircular, UIProgressMaskFunctionDirectional
 
-// Fixed sidebar width
-new UIWidthConstraint(sidebar, { width: 300 });
+### Areas (hit testing)
 
-// 20px spacing between sidebar and content
-new UIHorizontalDistanceConstraint(sidebar, content, {
-  distance: 20,
-  anchorA: 1.0, // Right edge of sidebar
-  anchorB: 0.0, // Left edge of content
-});
+UIAreaCircle, UIAreaPolygon, UIAreaRectangle, UIAreaRoundedRectangle
+
+### Enums
+
+UIMode, UIOrientation, UIPriority, UIRelation, UITransparencyMode
+
+### Particles (laymur/particles)
+
+* **Spawn**: UISpawnRectangle, UISpawnRandomLifetime, UISpawnRandomVelocity, UISpawnRandomRotation, UISpawnRandomScale, UISpawnRandomTorque, UISpawnOffset
+* **Behavior**: UIBehaviorDirectionalGravity, UIBehaviorPointGravity, UIBehaviorVelocityDamping, UIBehaviorVelocityNoise, UIBehaviorTorqueDamping, UIBehaviorTorqueNoise, UIBehaviorScaleOverLife
+* **Rendering**: UIRenderingTexture, UIRenderingColorOverLife, UIRenderingColorOverVelocity
+
+## Entry Points
+
+```json
+// package.json
+"exports": {
+  ".": "./dist/index.js",
+  "./particles": "./dist/particles/index.js"
+}
 ```
-
-## Text Rendering
-
-Text supports styled spans with different fonts, sizes, and colors:
-
-```typescript
-import { UIText } from "laymur";
-
-const text = new UIText(
-  layer,
-  [
-    { text: "Download ", style: { fontSize: 24, color: "#333333" } },
-    { text: "Now!", style: { fontSize: 32, color: "#ff0000", fontWeight: "bold" } },
-  ],
-  {
-    x: 100,
-    y: 100,
-    maxLineWidth: 600,
-  },
-);
-```
-
-## Transformations
-
-Apply visual transformations without affecting the constraint layout:
-
-```typescript
-const element = new UIImage(layer, texture, { x: 0, y: 0 });
-
-// Apply transformations for animations
-element.micro.x = 10;
-element.micro.scaleX = 1.2;
-element.micro.rotation = 0.1;
-element.micro.anchorX = 0.5; // Transform origin (0 = left/bottom, 0.5 = center, 1 = right/top)
-
-// Reset all transformations
-element.micro.reset();
-```
-
-## Event Handling
-
-UI elements and layers use type-safe signals for event handling via [Ferrsign](https://github.com/jango-git/ferrsign).
-
-### Element Input Events
-
-Elements with area (width and height) can emit input events:
-
-```typescript
-import { UIMode } from "laymur";
-import type { UIInputEventData } from "laymur";
-
-const button = new UIImage(layer, buttonTexture, {
-  x: 0,
-  y: 0,
-  mode: UIMode.INTERACTIVE,
-});
-
-button.signalPressed.on((data: UIInputEventData) => {
-  console.log("Button pressed at", data.x, data.y);
-  console.log("Element:", data.element);
-});
-
-button.signalReleased.on((data: UIInputEventData) => {
-  console.log("Button released");
-});
-
-button.signalEntered.on((data: UIInputEventData) => {
-  console.log("Pointer entered button");
-});
-
-button.signalLeft.on((data: UIInputEventData) => {
-  console.log("Pointer left button");
-});
-
-button.signalMoved.on((data: UIInputEventData) => {
-  console.log("Pointer moved inside button");
-});
-```
-
-### Layer Events
-
-Fullscreen layers emit input events:
-
-```typescript
-import type { UIFullscreenLayerInputEventData } from "laymur";
-
-layer.signalPointerPressed.on((data: UIFullscreenLayerInputEventData) => {
-  console.log("Layer pressed at", data.x, data.y);
-  console.log("Layer:", data.layer);
-});
-
-layer.signalPointerMoved.on((data: UIFullscreenLayerInputEventData) => {
-  console.log("Pointer moved to", data.x, data.y);
-});
-
-layer.signalPointerReleased.on((data: UIFullscreenLayerInputEventData) => {
-  console.log("Pointer released");
-});
-```
-
-### Animation Events
-
-Animated images emit playback events:
-
-```typescript
-const animation = new UIAnimatedImage(layer, frames);
-
-animation.signalPlayed.on(() => {
-  console.log("Animation started or resumed");
-});
-
-animation.signalPaused.on(() => {
-  console.log("Animation paused");
-});
-
-animation.signalStopped.on(() => {
-  console.log("Animation stopped and reset");
-});
-```
-
-### Unsubscribing from Events
-
-```typescript
-const handler = (data: UIInputEventData) => {
-  console.log("Pressed!");
-};
-
-button.signalPressed.on(handler);
-button.signalPressed.off(handler); // Unsubscribe
-```
-
-## Live Examples
-
-🎮 **[Live Examples](https://jango-git.github.io/laymur/)** - See constraint-based layouts and responsive components in action.
-
-## Addons
-
-### laymur-animations
-
-Animation library built on GSAP for common UI effects:
-
-- **GitHub**: [https://github.com/jango-git/laymur-animations](https://github.com/jango-git/laymur-animations)
-- **NPM**: [https://www.npmjs.com/package/laymur-animations](https://www.npmjs.com/package/laymur-animations)
-
-## Notes
-
-- This was built specifically for mobile ad development where bundle size is important
-- The constraint solver is based on Cassowary algorithm via Kiwi.js
-- Currently in alpha - expect API changes
-- Works best for relatively simple UI layouts
 
 ## License
 
-MIT © [jango](https://github.com/jango-git)
-
-Uses [Kiwi.js](https://github.com/lume/kiwi) (BSD-3-Clause) for constraint solving and [Three.js](https://threejs.org/) (MIT) for 3D rendering.
+MIT © jango

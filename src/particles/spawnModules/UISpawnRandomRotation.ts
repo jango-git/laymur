@@ -9,11 +9,19 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Assigns random rotation to particles.
+ *
+ * Initial rotation is chosen uniformly from the specified range.
+ */
 export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public requiredProperties = { builtin: "Matrix4" } as const;
   private rotationInternal: UIRange;
 
+  /**
+   * @param rotation - Rotation range in radians. Accepts number, tuple, or range object
+   */
   constructor(rotation: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
     super();
     this.rotationInternal = resolveUIRangeConfig(rotation);
@@ -21,10 +29,12 @@ export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }>
     assertValidNumber(this.rotationInternal.max, "UISpawnRandomRotation.constructor.rotation.max");
   }
 
+  /** Rotation range in radians */
   public get rotation(): UIRange {
     return this.rotationInternal;
   }
 
+  /** Rotation range in radians */
   public set rotation(value: UIRangeConfig) {
     this.rotationInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.rotationInternal.min, "UISpawnRandomRotation.rotation.min");

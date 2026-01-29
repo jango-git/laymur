@@ -4,6 +4,11 @@ import type { UITextureConfig } from "../../core/miscellaneous/texture/UITexture
 import source from "../shaders/UIRenderingTexture.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
+/**
+ * Renders particles with a texture.
+ *
+ * Samples the texture using particle UV coordinates.
+ */
 export class UITextureRenderingModule extends UIRenderingModule {
   /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
@@ -11,6 +16,9 @@ export class UITextureRenderingModule extends UIRenderingModule {
   public readonly source = source;
   private readonly texture: UITextureView;
 
+  /**
+   * @param config - Texture configuration
+   */
   constructor(config: UITextureConfig) {
     super();
     this.texture = new UITextureView(config);

@@ -9,11 +9,19 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Sets particle spawn position offset.
+ *
+ * All particles spawned with this module start at the specified position.
+ */
 export class UISpawnOffset extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private offsetInternal: Vector2Like;
 
+  /**
+   * @param offset - Initial particle position offset
+   */
   constructor(offset: UIVector2Config = { x: 0, y: 0 }) {
     super();
     this.offsetInternal = resolveUIVector2Config(offset);
@@ -21,10 +29,12 @@ export class UISpawnOffset extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidNumber(this.offsetInternal.y, "UISpawnOffset.constructor.offset.y");
   }
 
+  /** Particle position offset */
   public get offset(): Vector2Like {
     return this.offsetInternal;
   }
 
+  /** Particle position offset */
   public set offset(value: UIVector2Config) {
     this.offsetInternal = resolveUIVector2Config(value);
     assertValidNumber(this.offsetInternal.x, "UISpawnOffset.offset.x");

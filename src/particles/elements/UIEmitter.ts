@@ -49,7 +49,13 @@ export interface UIEmitterOptions extends UIAnchorOptions {
   automaticallyDestroyModules: boolean;
 }
 
+/**
+ * Particle emitter element.
+ *
+ * Spawns, updates, and renders particles using modular spawn/behavior/rendering pipeline.
+ */
 export class UIEmitter extends UIAnchor {
+  /** Whether to call destroy() on all modules when emitter is destroyed */
   public automaticallyDestroyModules: boolean;
 
   private readonly mesh: UIInstancedParticle;
@@ -62,6 +68,13 @@ export class UIEmitter extends UIAnchor {
 
   private modeInternal: UIEmitterMode;
 
+  /**
+   * @param layer - Layer containing this emitter
+   * @param spawnSequence - Modules that initialize new particles
+   * @param behaviorSequence - Modules that update particles each frame
+   * @param renderingSequence - Modules that control particle appearance
+   * @param options - Configuration options
+   */
   constructor(
     layer: UILayer,
     private readonly spawnSequence: UISpawnModule[],
@@ -127,14 +140,17 @@ export class UIEmitter extends UIAnchor {
     this.modeInternal = options.mode ?? EMITTER_DEFAULT_MODE;
   }
 
+  /** Visibility mode */
   public get mode(): UIEmitterMode {
     return this.modeInternal;
   }
 
+  /** Rendering order. Higher values draw on top */
   public get zIndex(): number {
     return this.layer.inputWrapper.getZIndex(this.catcherHandler);
   }
 
+  /** Visibility mode */
   public set mode(value: UIEmitterMode) {
     if (this.modeInternal !== value) {
       this.modeInternal = value;
@@ -142,10 +158,12 @@ export class UIEmitter extends UIAnchor {
     }
   }
 
+  /** Rendering order. Higher values draw on top */
   public set zIndex(value: number) {
     this.layer.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
+  /** Removes emitter and optionally destroys modules */
   public override destroy(): void {
     this.layer.signalRendering.off(this.onRendering);
     this.layer.sceneWrapper.removeCustomObject(this.mesh);
@@ -165,6 +183,11 @@ export class UIEmitter extends UIAnchor {
     super.destroy();
   }
 
+  /**
+   * Spawns a specific number of particles immediately.
+   *
+   * @param count - Number of particles to create
+   */
   public burst(count: number): void {
     const instanceBegin = this.mesh.instanceCount;
     this.mesh.createInstances(count);
@@ -192,10 +215,17 @@ export class UIEmitter extends UIAnchor {
     }
   }
 
+  /** Removes all active particles */
   public clear(): void {
     this.mesh.drop();
   }
 
+  /**
+   * Starts continuous particle emission.
+   *
+   * @param rate - Particles per second
+   * @param options - Emission duration and other settings
+   */
   public play(rate: number, options: Partial<UIEmitterPlayOptions> = {}): void {
     this.emissionRate = rate;
     this.emissionAccumulator = 0;
@@ -203,6 +233,7 @@ export class UIEmitter extends UIAnchor {
     this.emissionElapsed = 0;
   }
 
+  /** Stops continuous particle emission */
   public stop(): void {
     this.emissionRate = 0;
     this.emissionAccumulator = 0;

@@ -16,12 +16,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Applies noise-based angular acceleration to particles.
+ *
+ * Uses 2D noise based on particle position. Higher scale means finer noise detail.
+ */
 export class UIBehaviorTorqueNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private strengthInternal: UIRange;
 
+  /**
+   * @param scale - Noise frequency range. Accepts number, tuple, or range object
+   * @param strength - Force multiplier range. Accepts number, tuple, or range object
+   */
   constructor(scale: number, strength: number) {
     super();
     this.scaleInternal = resolveUIRangeConfig(scale);
@@ -45,20 +54,24 @@ export class UIBehaviorTorqueNoise extends UIBehaviorModule<{ builtin: "Matrix4"
     );
   }
 
+  /** Noise frequency range */
   public get scale(): UIRange {
     return this.scaleInternal;
   }
 
+  /** Force multiplier range */
   public get strength(): UIRange {
     return this.strengthInternal;
   }
 
+  /** Noise frequency range */
   public set scale(value: UIRangeConfig) {
     this.scaleInternal = resolveUIRangeConfig(value);
     assertValidPositiveNumber(this.scaleInternal.min, `UIBehaviorTorqueNoise.scale.min`);
     assertValidPositiveNumber(this.scaleInternal.max, `UIBehaviorTorqueNoise.scale.max`);
   }
 
+  /** Force multiplier range */
   public set strength(value: UIRangeConfig) {
     this.strengthInternal = resolveUIRangeConfig(value);
     assertValidNonNegativeNumber(this.strengthInternal.min, `UIBehaviorTorqueNoise.strength.min`);

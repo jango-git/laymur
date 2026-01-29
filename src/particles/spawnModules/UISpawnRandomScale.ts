@@ -12,12 +12,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Assigns random scale to particles.
+ *
+ * Base scale is chosen uniformly from the range. Aspect ratio is applied to X scale.
+ */
 export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private aspectInternal: number;
 
+  /**
+   * @param scale - Base scale range. Accepts number, tuple, or range object
+   * @param aspect - Width/height ratio. Accepts number or texture
+   */
   constructor(scale: UIRangeConfig = { min: 50, max: 100 }, aspect: UIAspectConfig = 1) {
     super();
     this.scaleInternal = resolveUIRangeConfig(scale);
@@ -27,20 +36,24 @@ export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidPositiveNumber(this.aspectInternal, "UISpawnRandomScale.constructor.aspect");
   }
 
+  /** Base scale range */
   public get scale(): UIRange {
     return this.scaleInternal;
   }
 
+  /** Width/height aspect ratio */
   public get aspect(): number {
     return this.aspectInternal;
   }
 
+  /** Base scale range */
   public set scale(value: UIRangeConfig) {
     this.scaleInternal = resolveUIRangeConfig(value);
     assertValidPositiveNumber(this.scaleInternal.min, "UISpawnRandomScale.scale.min");
     assertValidPositiveNumber(this.scaleInternal.max, "UISpawnRandomScale.scale.max");
   }
 
+  /** Width/height aspect ratio */
   public set aspect(value: UIAspectConfig) {
     this.aspectInternal = resolveAspect(value);
     assertValidPositiveNumber(this.aspectInternal, "UISpawnRandomScale.aspect");

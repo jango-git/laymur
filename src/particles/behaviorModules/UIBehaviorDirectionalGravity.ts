@@ -9,11 +9,19 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Applies constant acceleration to all particles.
+ *
+ * Adds the direction vector to particle velocity each frame.
+ */
 export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private directionInternal: Vector2Like;
 
+  /**
+   * @param direction - Acceleration vector in units/second²
+   */
   constructor(direction: Vector2Like) {
     super();
     this.directionInternal = resolveUIVector2Config(direction);
@@ -27,10 +35,12 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "M
     );
   }
 
+  /** Acceleration vector in units/second² */
   public get direction(): Vector2Like {
     return this.directionInternal;
   }
 
+  /** Acceleration vector in units/second² */
   public set direction(value: UIVector2Config) {
     this.directionInternal = resolveUIVector2Config(value);
     assertValidNumber(this.directionInternal.x, "UIBehaviorDirectionalGravity.direction.x");

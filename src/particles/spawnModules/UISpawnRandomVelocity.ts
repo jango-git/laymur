@@ -10,12 +10,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
+/**
+ * Assigns random velocity to particles.
+ *
+ * Direction and magnitude are chosen independently from their respective ranges.
+ */
 export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private angleInternal: UIRange;
   private magnitudeInternal: UIRange;
 
+  /**
+   * @param angle - Direction range in radians. Accepts number, tuple, or range object
+   * @param magnitude - Speed range in units/second. Accepts number, tuple, or range object
+   */
   constructor(
     angle: UIRangeConfig = { min: -Math.PI, max: Math.PI },
     magnitude: UIRangeConfig = { min: -50, max: 50 },
@@ -35,20 +44,24 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }>
     );
   }
 
+  /** Direction range in radians */
   public get angle(): UIRange {
     return this.angleInternal;
   }
 
+  /** Speed range in units/second */
   public get magnitude(): UIRange {
     return this.magnitudeInternal;
   }
 
+  /** Direction range in radians */
   public set angle(value: UIRangeConfig) {
     this.angleInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.angleInternal.min, "UISpawnRandomVelocity.angle.min");
     assertValidNumber(this.angleInternal.max, "UISpawnRandomVelocity.angle.max");
   }
 
+  /** Speed range in units/second */
   public set magnitude(value: UIRangeConfig) {
     this.magnitudeInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.magnitudeInternal.min, "UISpawnRandomVelocity.magnitude.min");

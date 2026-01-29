@@ -17,12 +17,21 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Animates particle scale over lifetime.
+ *
+ * Interpolates between scale anchors based on particle age. Requires at least 2 anchors.
+ */
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private readonly scales: UIRange[] = [];
   private aspectInternal: number;
 
+  /**
+   * @param scales - Scale anchor points. Each accepts number, tuple, or range object
+   * @param aspect - Width/height ratio. Accepts number or texture
+   */
   constructor(scales: UIRangeConfig[], aspect: UIAspectConfig = 1) {
     super();
 
@@ -49,10 +58,12 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.constructor.aspect");
   }
 
+  /** Width/height aspect ratio */
   public get aspect(): number {
     return this.aspectInternal;
   }
 
+  /** Width/height aspect ratio */
   public set aspect(value: UIAspectConfig) {
     this.aspectInternal = resolveAspect(value);
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.aspect");

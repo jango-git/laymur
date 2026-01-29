@@ -9,6 +9,11 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Reduces particle angular velocity over time.
+ *
+ * Applies exponential decay to torque. Damping of 0 means no effect, 1 means instant stop.
+ */
 export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
   builtin: "Matrix4";
 }> {
@@ -16,6 +21,9 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private dampingInternal: UIRange;
 
+  /**
+   * @param damping - Damping coefficient range (0-1). Accepts number, tuple, or range object
+   */
   constructor(damping: number) {
     super();
     this.dampingInternal = resolveUIRangeConfig(damping);
@@ -29,10 +37,12 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
     );
   }
 
+  /** Damping coefficient range (0-1) */
   public get damping(): UIRange {
     return this.dampingInternal;
   }
 
+  /** Damping coefficient range (0-1) */
   public set damping(value: UIRangeConfig) {
     this.dampingInternal = resolveUIRangeConfig(value);
     assertValidNonNegativeNumber(this.dampingInternal.min, `UIBehaviorTorqueDamping.damping.min`);

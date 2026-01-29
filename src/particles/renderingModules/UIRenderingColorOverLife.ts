@@ -5,6 +5,11 @@ import { buildGradientTexture } from "../miscellaneous/miscellaneous";
 import source from "../shaders/UIRenderingColorOverLife.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
+/**
+ * Colors particles based on lifetime progression.
+ *
+ * Interpolates through color gradient as particles age from birth to death.
+ */
 export class UIRenderingColorOverLife extends UIRenderingModule {
   /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
@@ -15,6 +20,9 @@ export class UIRenderingColorOverLife extends UIRenderingModule {
   /** @internal */
   public readonly source = source;
 
+  /**
+   * @param colors - Color gradient stops from birth to death
+   */
   constructor(colors: UIColor[]) {
     super();
 

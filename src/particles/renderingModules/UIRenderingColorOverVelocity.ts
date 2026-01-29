@@ -5,6 +5,11 @@ import { buildGradientTexture } from "../miscellaneous/miscellaneous";
 import source from "../shaders/UIRenderingColorOverVelocity.glsl";
 import { UIRenderingModule } from "./UIRenderingModule";
 
+/**
+ * Colors particles based on velocity magnitude.
+ *
+ * Maps velocity from 0 to maxVelocity across the color gradient.
+ */
 export class UIRenderingColorOverVelocity extends UIRenderingModule {
   /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
@@ -15,6 +20,10 @@ export class UIRenderingColorOverVelocity extends UIRenderingModule {
   /** @internal */
   public readonly source = source;
 
+  /**
+   * @param colors - Color gradient from slow to fast
+   * @param maxVelocity - Velocity mapped to final color
+   */
   constructor(colors: UIColor[], maxVelocity: number) {
     super();
 

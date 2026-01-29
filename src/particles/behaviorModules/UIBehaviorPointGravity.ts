@@ -17,6 +17,11 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
+/**
+ * Applies gravity attraction toward a point.
+ *
+ * Force follows inverse power law: strength / distance^exponent. Particles closer than threshold are unaffected.
+ */
 export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
@@ -25,6 +30,12 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
   private exponentInternal: UIRange;
   private thresholdInternal: UIRange;
 
+  /**
+   * @param center - Gravity center position
+   * @param strength - Force multiplier range. Accepts number, tuple, or range object
+   * @param exponent - Distance power exponent range. Accepts number, tuple, or range object
+   * @param threshold - Minimum distance range. Accepts number, tuple, or range object
+   */
   constructor(
     center: Vector2Like,
     strength: UIRangeConfig,
@@ -55,40 +66,48 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
     );
   }
 
+  /** Gravity center position */
   public get center(): Vector2Like {
     return this.centerInternal;
   }
 
+  /** Force multiplier range */
   public get strength(): UIRange {
     return this.strengthInternal;
   }
 
+  /** Distance power exponent range */
   public get exponent(): UIRange {
     return this.exponentInternal;
   }
 
+  /** Minimum distance range */
   public get threshold(): UIRange {
     return this.thresholdInternal;
   }
 
+  /** Gravity center position */
   public set center(value: UIVector2Config) {
     this.centerInternal = resolveUIVector2Config(value);
     assertValidNumber(this.centerInternal.x, "UIBehaviorPointGravity.center.x");
     assertValidNumber(this.centerInternal.y, "UIBehaviorPointGravity.center.y");
   }
 
+  /** Force multiplier range */
   public set strength(value: UIRangeConfig) {
     this.strengthInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.strengthInternal.min, "UIBehaviorPointGravity.strength.min");
     assertValidNumber(this.strengthInternal.max, "UIBehaviorPointGravity.strength.max");
   }
 
+  /** Distance power exponent range */
   public set exponent(value: UIRangeConfig) {
     this.exponentInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.exponentInternal.min, "UIBehaviorPointGravity.exponent.min");
     assertValidNumber(this.exponentInternal.max, "UIBehaviorPointGravity.exponent.max");
   }
 
+  /** Minimum distance range */
   public set threshold(value: UIRangeConfig) {
     this.thresholdInternal = resolveUIRangeConfig(value);
     assertValidNumber(this.thresholdInternal.min, "UIBehaviorPointGravity.threshold.min");
