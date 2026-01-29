@@ -2,8 +2,8 @@
   <img src="./assets/logotype.png" width="200" alt="Laymur logo"><br/>
   <h1 align="center">Laymur</h1>
   <p align="center">
-    Constraint-based UI library and particle system for Three.js.<br/>
-    Optimized for high-performance mobile advertisements (playable ads).
+    Constraint-based UI library for Three.js.<br/>
+    Primarily built for mobile advertisements (playable ads).
   </p>
 </p>
 <p align="center">
@@ -113,47 +113,21 @@ const emitter = new UIEmitter(
 emitter.play(60); // particles/sec
 ```
 
-## API Summary
+## API Overview
 
-Key exports:
+Most commonly used exports (not exhaustive):
 
-### Elements
+### Core
 
-UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIScene, UIGraphics, UIDummy, UIAnchor
-
-### Layers
-
-UILayer, UIFullscreenLayer
+UIFullscreenLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress
 
 ### Constraints
 
-* **Builders**: UIConstraint2DBuilder, UIFitConstraintBuilder, UICoverConstraintBuilder
-* **Core**: UIAspectConstraint, UIWidthConstraint, UIHeightConstraint, UICustomConstraint
-* **Distance**: UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
-* **Proportion**: UIHorizontalProportionConstraint, UIVerticalProportionConstraint
-* **Interpolation**: UIHorizontalInterpolationConstraint, UIVerticalInterpolationConstraint
-
-### Resize Policies
-
-UIResizePolicyCover, UIResizePolicyFit, UIResizePolicyFixedHeight, UIResizePolicyFixedWidth, UIResizePolicyCross, UIResizePolicyCrossInverted
-
-### Utilities
-
-UIColor, UITextSpan, UITextStyle, UIInsets, UITextureView, UIProgressMaskFunctionCircular, UIProgressMaskFunctionDirectional
-
-### Areas (hit testing)
-
-UIAreaCircle, UIAreaPolygon, UIAreaRectangle, UIAreaRoundedRectangle
-
-### Enums
-
-UIMode, UIOrientation, UIPriority, UIRelation, UITransparencyMode
+UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint, UIHorizontalProportionConstraint, UIVerticalProportionConstraint, UICoverConstraintBuilder, UIFitConstraintBuilder
 
 ### Particles (laymur/particles)
 
-* **Spawn**: UISpawnRectangle, UISpawnRandomLifetime, UISpawnRandomVelocity, UISpawnRandomRotation, UISpawnRandomScale, UISpawnRandomTorque, UISpawnOffset
-* **Behavior**: UIBehaviorDirectionalGravity, UIBehaviorPointGravity, UIBehaviorVelocityDamping, UIBehaviorVelocityNoise, UIBehaviorTorqueDamping, UIBehaviorTorqueNoise, UIBehaviorScaleOverLife
-* **Rendering**: UIRenderingTexture, UIRenderingColorOverLife, UIRenderingColorOverVelocity
+UIEmitter, UISpawnRectangle, UISpawnRandomLifetime, UIBehaviorDirectionalGravity, UIBehaviorVelocityDamping, UIRenderingTexture, UIRenderingColorOverLife
 
 ## Entry Points
 
