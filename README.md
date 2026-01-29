@@ -33,6 +33,11 @@ Peer Dependencies:
 * `@lume/kiwi` (^0.4.4)
 * `ferrsign` (^0.0.4)
 
+## Live Examples
+
+Check out interactive examples and demos at:  
+**[https://jango-git.github.io/laymur/](https://jango-git.github.io/laymur/)**
+
 ## Core Concepts
 
 ### 1. Layers & Elements
