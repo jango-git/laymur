@@ -8,7 +8,7 @@ import { UIRenderingModule } from "./UIRenderingModule";
 export class UIRenderingColorOverLife extends UIRenderingModule {
   /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
-    lifetime: "Vector2",
+    builtin: "Matrix4",
   } as const;
   /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;

@@ -2,6 +2,7 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
+  BUILTIN_OFFSET_TORQUE,
   resolveUIRangeConfig,
   type UIRange,
   type UIRangeConfig,
@@ -9,10 +10,10 @@ import {
 import { UISpawnModule } from "./UISpawnModule";
 
 export class UISpawnRandomTorque extends UISpawnModule<{
-  torque: "number";
+  builtin: "Matrix4";
 }> {
   /** @internal */
-  public readonly requiredProperties = { torque: "number" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private torqueInternal: UIRange;
 
   constructor(torque: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
@@ -34,19 +35,18 @@ export class UISpawnRandomTorque extends UISpawnModule<{
 
   /** @internal */
   public spawn(
-    properties: { torque: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { torque: torqueAttribute } = properties;
-    const { itemSize: torqueItemSize, array: torqueArray } = torqueAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { min: torqueMin, max: torqueMax } = this.torqueInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * torqueItemSize;
-      torqueArray[itemOffset] = MathUtils.randFloat(torqueMin, torqueMax);
+      array[i * itemSize + BUILTIN_OFFSET_TORQUE] = MathUtils.randFloat(torqueMin, torqueMax);
     }
 
-    torqueAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

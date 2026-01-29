@@ -96,3 +96,20 @@ export function buildGradientTexture(colors: UIColor[]): DataTexture {
   texture.needsUpdate = true;
   return texture;
 }
+
+export const BUILTIN_OFFSET_POSITION_X = 0;
+export const BUILTIN_OFFSET_POSITION_Y = 1;
+export const BUILTIN_OFFSET_VELOCITY_X = 2;
+export const BUILTIN_OFFSET_VELOCITY_Y = 3;
+export const BUILTIN_OFFSET_SCALE_X = 4;
+export const BUILTIN_OFFSET_SCALE_Y = 5;
+export const BUILTIN_OFFSET_ROTATION = 6;
+export const BUILTIN_OFFSET_TORQUE = 7;
+export const BUILTIN_OFFSET_LIFETIME = 8;
+export const BUILTIN_OFFSET_AGE = 9;
+export const BUILTIN_OFFSET_RANDOM_X = 10;
+export const BUILTIN_OFFSET_RANDOM_Y = 11;
+export const BUILTIN_OFFSET_RANDOM_Z = 12;
+export const BUILTIN_OFFSET_RESERVED_X = 13;
+export const BUILTIN_OFFSET_RESERVED_Y = 14;
+export const BUILTIN_OFFSET_RESERVED_Z = 15;

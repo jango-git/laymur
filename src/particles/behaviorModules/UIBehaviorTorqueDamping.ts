@@ -1,42 +1,31 @@
 import type { InstancedBufferAttribute } from "three";
+import { BUILTIN_OFFSET_TORQUE } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
-  torque: "number";
+  builtin: "Matrix4";
 }> {
   /** @internal */
-  public readonly requiredProperties = { torque: "number" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
 
-  constructor(
-    public damping: number,
-    public threshold = 0.001,
-  ) {
+  constructor(public damping: number) {
     super();
   }
 
   /** @internal */
   public update(
-    properties: { torque: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const { torque: torqueAttribute } = properties;
-    const absThreshold = Math.abs(this.threshold);
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
+    const invertedDamping = Math.max(1 - this.damping, 0);
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * torqueAttribute.itemSize;
-      const { array: torqueArray } = torqueAttribute;
-
-      const dampingFactor = Math.pow(1 - this.damping, deltaTime);
-
-      let newTorque = torqueArray[offset] * dampingFactor;
-      if (Math.abs(newTorque) < absThreshold) {
-        newTorque = 0;
-      }
-
-      torqueArray[offset] = newTorque;
+      array[i * itemSize + BUILTIN_OFFSET_TORQUE] *= Math.pow(invertedDamping, deltaTime);
     }
 
-    torqueAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

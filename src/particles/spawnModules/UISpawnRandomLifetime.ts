@@ -2,12 +2,16 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
-import { resolveUIRangeConfig } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_AGE,
+  BUILTIN_OFFSET_LIFETIME,
+  resolveUIRangeConfig,
+} from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }> {
+export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public override requiredProperties = { lifetime: "Vector2" } as const;
+  public override requiredProperties = { builtin: "Matrix4" } as const;
   private lifetimeInternal: UIRange;
 
   constructor(lifetime: UIRangeConfig = { min: 4, max: 8 }) {
@@ -35,20 +39,20 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ lifetime: "Vector2" }
 
   /** @internal */
   public spawn(
-    properties: { lifetime: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { lifetime: lifetimeAttribute } = properties;
-    const { itemSize: lifetimeItemSize, array: lifetimeArray } = lifetimeAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { min: lifetimeMin, max: lifetimeMax } = this.lifetimeInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * lifetimeItemSize;
-      lifetimeArray[itemOffset] = MathUtils.randFloat(lifetimeMin, lifetimeMax);
-      lifetimeArray[itemOffset + 1] = 0;
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_LIFETIME] = MathUtils.randFloat(lifetimeMin, lifetimeMax);
+      array[itemOffset + BUILTIN_OFFSET_AGE] = 0;
     }
 
-    lifetimeAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

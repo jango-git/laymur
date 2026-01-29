@@ -5,6 +5,7 @@ import {
   type GLProperty,
   type GLTypeInfo,
 } from "../../core/miscellaneous/generic-plane/shared";
+import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_LIFETIME } from "../miscellaneous/miscellaneous";
 import { buildParticleMaterial, INSTANCED_PARTICLE_GEOMETRY } from "./UIInstancedParticle.Internal";
 
 export class UIInstancedParticle extends Mesh {
@@ -67,20 +68,22 @@ export class UIInstancedParticle extends Mesh {
   }
 
   public removeDeadParticles(): void {
-    const lifetimeBuffer = this.propertyBuffers.lifetime as InstancedBufferAttribute | undefined;
-    if (lifetimeBuffer === undefined) {
+    const builtinBuffer = this.propertyBuffers.builtin as InstancedBufferAttribute | undefined;
+    if (builtinBuffer === undefined) {
       return;
     }
 
-    const { array: lifetimeArray, itemSize: lifetimeItemSize } = lifetimeBuffer;
+    const { array: builtinArray, itemSize: builtinItemSize } = builtinBuffer;
     const { instanceCount } = this.instancedGeometry;
 
     let writeIndex = 0;
 
     for (let readIndex = 0; readIndex < instanceCount; readIndex++) {
-      const offset = readIndex * lifetimeItemSize;
+      const offset = readIndex * builtinItemSize;
 
-      if (lifetimeArray[offset + 1] < lifetimeArray[offset]) {
+      if (
+        builtinArray[offset + BUILTIN_OFFSET_AGE] < builtinArray[offset + BUILTIN_OFFSET_LIFETIME]
+      ) {
         if (writeIndex !== readIndex) {
           for (const name in this.propertyBuffers) {
             const attribute = this.propertyBuffers[name];

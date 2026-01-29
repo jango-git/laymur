@@ -15,6 +15,7 @@ import {
   collectProperties,
   collectUniforms,
 } from "../instancedParticle/UIInstancedParticle.Internal";
+import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_TORQUE } from "../miscellaneous/miscellaneous";
 import type { UIRenderingModule } from "../renderingModule/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
 import {
@@ -57,12 +58,17 @@ export class UIEmitter extends UIAnchor {
     super(layer, options);
 
     const collectedProperties: Record<string, GLTypeInfo> = {
+      builtin: resolveGLSLTypeInfo("Matrix4"),
+      // 0, 1   positionX, positionY
+      // 2, 3   velocityX, velocityY
+      // 4, 5   scaleX, scaleY
+      // 6, 7   rotation, torque
+      // 8, 9   lifetime, age
+      // 10, 11, 12   randomX, randomY, randomZ
       position: resolveGLSLTypeInfo("Vector2"), // x, y
       velocity: resolveGLSLTypeInfo("Vector2"), // x, y
       rotation: resolveGLSLTypeInfo("number"),
-      torque: resolveGLSLTypeInfo("number"),
       scale: resolveGLSLTypeInfo("Vector2"), // x, y
-      lifetime: resolveGLSLTypeInfo("Vector2"), // lifetime, age
     };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
     collectProperties(
@@ -173,14 +179,14 @@ export class UIEmitter extends UIAnchor {
 
   private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
     {
-      const { lifetime } = this.mesh.propertyBuffers;
-      const { itemSize, array } = lifetime;
+      const { builtin: builtinAttribute } = this.mesh.propertyBuffers;
+      const { itemSize: builtinItemSize, array: builtinArray } = builtinAttribute;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        array[i * itemSize + 1] += deltaTime;
+        builtinArray[i * builtinItemSize + BUILTIN_OFFSET_AGE] += deltaTime;
       }
 
-      lifetime.needsUpdate = true;
+      builtinAttribute.needsUpdate = true;
       this.mesh.removeDeadParticles();
     }
 
@@ -231,14 +237,13 @@ export class UIEmitter extends UIAnchor {
     }
 
     {
-      const { rotation, torque } = this.mesh.propertyBuffers;
+      const { rotation, builtin } = this.mesh.propertyBuffers;
       const { array: rotationArray, itemSize: rotationItemSize } = rotation;
-      const { array: torqueArray, itemSize: torqueItemSize } = torque;
+      const { array, itemSize } = builtin;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const rotationOffset = i * rotationItemSize;
-        const torqueOffset = i * torqueItemSize;
-        rotationArray[rotationOffset] += torqueArray[torqueOffset] * deltaTime;
+        rotationArray[i * rotationItemSize] +=
+          array[i * itemSize + BUILTIN_OFFSET_TORQUE] * deltaTime;
       }
 
       rotation.needsUpdate = true;

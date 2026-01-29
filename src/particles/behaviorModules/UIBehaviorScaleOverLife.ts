@@ -1,17 +1,24 @@
 import type { InstancedBufferAttribute } from "three";
-import { MathUtils } from "three";
-import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts";
-import { resolveAspect, type UIAspectConfig } from "../miscellaneous/miscellaneous";
+import {
+  assertValidNonNegativeNumber,
+  assertValidPositiveNumber,
+} from "../../core/miscellaneous/asserts";
+import {
+  BUILTIN_OFFSET_AGE,
+  BUILTIN_OFFSET_LIFETIME,
+  resolveAspect,
+  type UIAspectConfig,
+} from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
   scale: "Vector2";
-  lifetime: "Vector2";
+  builtin: "Matrix4";
 }> {
   /** @internal */
   public readonly requiredProperties = {
     scale: "Vector2",
-    lifetime: "Vector2",
+    builtin: "Matrix4",
   } as const;
   private aspectInternal: number;
 
@@ -28,7 +35,7 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
     }
 
     for (let i = 0; i < scales.length; i++) {
-      assertValidPositiveNumber(scales[i], `UIBehaviorScaleOverLife.constructor.scales[${i}]`);
+      assertValidNonNegativeNumber(scales[i], `UIBehaviorScaleOverLife.constructor.scales[${i}]`);
     }
 
     this.aspectInternal = resolveAspect(aspect);
@@ -46,18 +53,21 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
 
   /** @internal */
   public update(
-    properties: { scale: InstancedBufferAttribute; lifetime: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute; scale: InstancedBufferAttribute },
     instanceCount: number,
   ): void {
-    const { scale: scaleAttribute, lifetime: lifetimeAttribute } = properties;
+    const { builtin, scale: scaleAttribute } = properties;
+    const { array, itemSize } = builtin;
     const { array: scaleArray, itemSize: scaleItemSize } = scaleAttribute;
-    const { array: lifetimeArray, itemSize: lifetimeItemSize } = lifetimeAttribute;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * lifetimeItemSize;
-      const t = MathUtils.clamp(lifetimeArray[offset + 1] / lifetimeArray[offset], 0, 1);
+      const itemOffset = i * itemSize;
+      const lifeT = Math.min(
+        array[itemOffset + BUILTIN_OFFSET_AGE] / array[itemOffset + BUILTIN_OFFSET_LIFETIME],
+        1,
+      );
 
-      const segment = (this.scales.length - 1) * t;
+      const segment = (this.scales.length - 1) * lifeT;
       const index = Math.floor(segment);
 
       const localT = segment - index;
@@ -66,9 +76,9 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
 
       const interpolatedScale = scale0 + (scale1 - scale0) * localT;
 
-      const itemOffset = i * scaleItemSize;
-      scaleArray[itemOffset] = interpolatedScale * this.aspectInternal;
-      scaleArray[itemOffset + 1] = interpolatedScale;
+      const scaleOffset = i * scaleItemSize;
+      scaleArray[scaleOffset] = interpolatedScale * this.aspectInternal;
+      scaleArray[scaleOffset + 1] = interpolatedScale;
     }
 
     scaleAttribute.needsUpdate = true;
