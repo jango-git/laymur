@@ -9,7 +9,7 @@ import {
   UIVerticalProportionConstraint,
   UIRelation,
   UIOrientation,
-} from "https://esm.sh/laymur@latest?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.17.1?deps=three@0.157";
 import { BaseScene } from "./base-scene.js";
 
 let baseScene;
@@ -30,7 +30,9 @@ async function buildScene() {
   baseScene.initRenderer();
 
   // Create UI layer
-  layer = new UIFullscreenLayer(new UIResizePolicyFixedHeight(1920, 1920));
+  layer = new UIFullscreenLayer({
+    resizePolicy: new UIResizePolicyFixedHeight(1920, 1920),
+  });
 
   {
     const character = new UIImage(
@@ -128,19 +130,32 @@ async function buildScene() {
   animate();
 }
 
-function animate() {
+let lastTime = 0;
+let accumulator = 0;
+const targetFPS = 60;
+const fixedTimeStep = 1000 / targetFPS;
+
+function animate(currentTime = 0) {
   requestAnimationFrame(animate);
 
-  // Update camera sway
-  baseScene.updateCameraSway();
+  if (lastTime === 0) {
+    lastTime = currentTime;
+    return;
+  }
 
-  // Render scene
-  baseScene.render();
+  const deltaTime = currentTime - lastTime;
+  lastTime = currentTime;
+  accumulator += deltaTime;
 
-  // Render UI layer
-  if (layer && baseScene.renderer) {
-    const deltaTime = baseScene.getDeltaTime();
-    layer.render(baseScene.renderer, deltaTime);
+  while (accumulator >= fixedTimeStep) {
+    baseScene.updateCameraSway();
+    baseScene.render();
+
+    if (layer && baseScene.renderer) {
+      layer.render(baseScene.renderer, fixedTimeStep / 1000);
+    }
+
+    accumulator -= fixedTimeStep;
   }
 }
 

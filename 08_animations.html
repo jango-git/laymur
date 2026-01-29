@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur UI Demo - Basic Layer</title>
+        <title>Laymur UI Demo - Animations</title>
         <link rel="stylesheet" href="shared-styles.css" />
         <link
             rel="stylesheet"
@@ -11,6 +11,7 @@
         />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
         <script src="resize-handler.js"></script>
     </head>
     <body>
@@ -19,10 +20,7 @@
                 <div class="demo-area" id="demoArea">
                     <iframe
                         id="demoFrame"
-                        src="00_basic_layer_content.html"
-                        title="Laymur Basic Layer Demo"
-                        sandbox="allow-scripts allow-same-origin"
-                        loading="lazy"
+                        src="08_animations_content.html"
                     ></iframe>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
@@ -32,37 +30,46 @@
                 <h2>What's happening here?</h2>
 
                 <p>
-                    This example demonstrates the basics: a layer with an image
-                    displayed on it. This is the fundamental setup for working
-                    with UI elements in Laymur.
+                    This example demonstrates
+                    <span class="highlight">laymur-animations</span> addon.
+                    Common UI animations like fade-in, slide-in, appear,
+                    disappear, call to action.
                 </p>
 
-                <pre><code class="language-javascript">// Create the layer
-const layer = new UIFullscreenLayer({
-  resizePolicy: new UIResizePolicyFixedHeight(1920, 1920)
+                <pre><code class="language-javascript">// Animate logotype appearing from bottom-left
+UIAppearAnimator.appear(logotype, {
+  xFrom: -100,
+  yFrom: 100,
+  delay: 0.25,
+  duration: 0.5,
 });
 
-// Add an image to the layer
-new UIImage(layer, downloadButtonTexture, {
-  x: 50,
-  y: 50,
-});
-
-// Render the layer
-layer.render(baseScene.renderer, deltaTime);</code></pre>
+// Animate multiple elements together
+UIAppearAnimator.appear([text, bubble], {
+  xFrom: -100,
+  yFrom: -50,
+  delay: 1.0,
+  duration: 0.5,
+});</code></pre>
 
                 <div class="warning">
-                    <strong>💡 Coordinate Origin:</strong> All UI elements are
-                    positioned relative to the bottom-left corner (origin
-                    point).
+                    <strong>⚙️ GSAP Dependency:</strong> laymur-animations uses
+                    GSAP, which is not part of the addon. GSAP must be installed
+                    separately and has its own
+                    <a
+                        href="https://greensock.com/licensing/"
+                        target="_blank"
+                        style="color: #4a9eff"
+                        >GSAP licensing</a
+                    >
                 </div>
 
                 <div class="navigation">
-                    <a href="index.html" class="nav-button disabled">
+                    <a href="07_particle_system.html" class="nav-button">
                         <span class="arrow">←</span>
                         <span>Previous Lesson</span>
                     </a>
-                    <a href="01_snapping.html" class="nav-button">
+                    <a href="index.html" class="nav-button disabled">
                         <span>Next Lesson</span>
                         <span class="arrow">→</span>
                     </a>
@@ -76,7 +83,7 @@ layer.render(baseScene.renderer, deltaTime);</code></pre>
                         <span>🏠 Home</span>
                     </a>
                     <a
-                        href="https://github.com/jango-git/laymur/blob/gh-pages/00_basic_layer_content.js"
+                        href="https://github.com/jango-git/laymur/blob/gh-pages/08_animations_content.js"
                         target="_blank"
                         class="nav-button nav-button-accent"
                     >

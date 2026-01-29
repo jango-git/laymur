@@ -13,12 +13,26 @@ import {
   UIRelation,
   UIOrientation,
   UIMode,
-  UIColor,
   UIConstraint2DBuilder,
   UICoverConstraintBuilder,
   UIProgressMaskFunctionDirectional,
+  UIColor,
 } from "https://esm.sh/laymur@0.17.1?deps=three@0.157";
-import { gsap } from "https://esm.sh/gsap@3.12.2&min";
+import {
+  UIEmitter,
+  UISpawnRectangle,
+  UISpawnRandomRotation,
+  UISpawnRandomTorque,
+  UISpawnRandomScale,
+  UISpawnRandomLifetime,
+  UIBehaviorDirectionalGravity,
+  UIBehaviorVelocityNoise,
+  UIBehaviorVelocityDamping,
+  UIBehaviorTorqueNoise,
+  UIBehaviorTorqueDamping,
+  UITextureRenderingModule,
+  UIRenderingColorOverLife,
+} from "https://esm.sh/laymur@0.17.1/particles?deps=three@0.157";
 import { BaseScene } from "./base-scene.js";
 
 let baseScene;
@@ -28,27 +42,60 @@ async function buildScene() {
   await document.fonts.load('16px "Chewy"');
   baseScene = new BaseScene();
 
-  // Load textures specific to this example
   await baseScene.loadTextures([
     "assets/T_Battle.webp",
     "assets/T_Bubble.webp",
     "assets/T_Character.webp",
     "assets/T_Download.webp",
     "assets/T_Logotype.webp",
+    "assets/T_Dust.webp",
     "assets/T_Vignette.webp",
     "assets/T_Progress_Background.webp",
     "assets/T_Progress_Foreground.webp",
   ]);
 
-  // Initialize scene and renderer
   await baseScene.initScene();
   baseScene.initRenderer();
 
-  // Create UI layer
   layer = new UIFullscreenLayer({
     resizePolicy: new UIResizePolicyFixedHeight(1920, 1920),
     mode: UIMode.INTERACTIVE,
   });
+
+  {
+    const emitter = new UIEmitter(
+      layer,
+      [
+        new UISpawnRectangle([-960, 0], [960, 0]),
+        new UISpawnRandomRotation([-Math.PI, Math.PI]),
+        new UISpawnRandomTorque([-Math.PI, Math.PI]),
+        new UISpawnRandomScale([5, 20]),
+        new UISpawnRandomLifetime([10, 20]),
+      ],
+      [
+        new UIBehaviorDirectionalGravity({ x: 0, y: 50 }),
+        new UIBehaviorVelocityNoise(1, 200),
+        new UIBehaviorVelocityDamping({ min: 0.25, max: 0.75 }),
+        new UIBehaviorTorqueNoise(1, 100),
+        new UIBehaviorTorqueDamping(0.25),
+      ],
+      [
+        new UITextureRenderingModule(baseScene.loadedTextures["T_Dust"]),
+        new UIRenderingColorOverLife([
+          new UIColor(0x8031a7, 1),
+          new UIColor(0x24d2f4, 0),
+        ]),
+      ],
+      { expectedCapacity: 1024 },
+    );
+
+    UIConstraint2DBuilder.distance(layer, emitter, {
+      anchorA: [0.5, 0],
+      anchorB: [0.5, 0.5],
+    });
+
+    emitter.play(16);
+  }
 
   let character;
   {
@@ -92,7 +139,7 @@ async function buildScene() {
     new UIVerticalDistanceConstraint(character, bubble, {
       anchorA: 1,
       anchorB: 0,
-      distance: 150,
+      distance: 50,
       orientation: UIOrientation.VERTICAL,
     });
 
@@ -135,11 +182,7 @@ async function buildScene() {
   }
 
   {
-    const logotype = new UIImage(
-      layer,
-      baseScene.loadedTextures["T_Logotype"],
-      { mode: UIMode.INTERACTIVE },
-    );
+    const logotype = new UIImage(layer, baseScene.loadedTextures["T_Logotype"]);
 
     new UIAspectConstraint(logotype);
 
@@ -159,23 +202,6 @@ async function buildScene() {
       proportion: 0.15,
       relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
-    });
-
-    logotype.signalPointerPressed.on(() => {
-      gsap
-        .timeline()
-        .to(logotype.micro, {
-          scaleX: 1.25,
-          scaleY: 1.25,
-          duration: 0.125,
-          ease: "power1.inOut",
-        })
-        .to(logotype.micro, {
-          scaleX: 1,
-          scaleY: 1,
-          duration: 0.5,
-          ease: "power1.inOut",
-        });
     });
   }
 
@@ -205,24 +231,6 @@ async function buildScene() {
       relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
-
-    // Add click animation
-    download.signalPointerPressed.on(() => {
-      gsap
-        .timeline()
-        .to(download.micro, {
-          scaleX: 0.75,
-          scaleY: 0.75,
-          duration: 0.125,
-          ease: "power1.out",
-        })
-        .to(download.micro, {
-          scaleX: 1,
-          scaleY: 1,
-          duration: 0.25,
-          ease: "power1.out",
-        });
-    });
   }
 
   {
@@ -249,38 +257,17 @@ async function buildScene() {
       relation: UIRelation.LESS_THAN,
       orientation: UIOrientation.HORIZONTAL,
     });
-
-    // Add click animation
-    battle.signalPointerPressed.on(() => {
-      gsap
-        .timeline()
-        .to(battle.micro, {
-          y: -35,
-          scaleX: 0.85,
-          duration: 0.125,
-          ease: "power1.out",
-        })
-        .to(battle.micro, {
-          y: 0,
-          scaleX: 1,
-          duration: 0.25,
-          ease: "back.out",
-        });
-    });
   }
 
   {
-    // Create nine-slice vignette overlay
     const vignette = new UINineSlice(
       layer,
       baseScene.loadedTextures["T_Vignette"],
       { sliceBorders: 0.2, sliceRegions: 100 },
     );
 
-    // Configure appearance
     vignette.color.setHexRGB(0xffa500, 0.75);
 
-    // Use cover constraints to fill the entire layer
     UICoverConstraintBuilder.build(layer, vignette, {
       keepActiveAspect: false,
     });

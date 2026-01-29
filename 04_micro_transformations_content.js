@@ -12,8 +12,7 @@ import {
   UIOrientation,
   UIMode,
   UIConstraint2DBuilder,
-  UIInputEvent,
-} from "https://esm.sh/laymur@latest?deps=three@0.175&min";
+} from "https://esm.sh/laymur@0.17.1?deps=three@0.157";
 import { gsap } from "https://esm.sh/gsap@3.12.2&min";
 import { BaseScene } from "./base-scene.js";
 
@@ -38,10 +37,10 @@ async function buildScene() {
   baseScene.initRenderer();
 
   // Create UI layer
-  layer = new UIFullscreenLayer(
-    new UIResizePolicyFixedHeight(1920, 1920),
-    UIMode.INTERACTIVE,
-  );
+  layer = new UIFullscreenLayer({
+    resizePolicy: new UIResizePolicyFixedHeight(1920, 1920),
+    mode: UIMode.INTERACTIVE,
+  });
 
   let character;
   {
@@ -50,15 +49,15 @@ async function buildScene() {
     new UIAspectConstraint(character);
 
     UIConstraint2DBuilder.distance(layer, character, {
-      anchorA: { h: 0, v: 0 },
-      anchorB: { h: 0, v: 0 },
-      distance: { h: 25, v: 0 },
+      anchorA: [0, 0],
+      anchorB: [0, 0],
+      distance: [25, 0],
     });
 
     UIConstraint2DBuilder.proportion(layer, character, {
-      proportion: { h: 0.45, v: 0.75 },
-      relation: { h: UIRelation.LESS_THAN, v: UIRelation.LESS_THAN },
-      orientation: { h: UIOrientation.VERTICAL, v: UIOrientation.HORIZONTAL },
+      proportion: [0.45, 0.75],
+      relation: [UIRelation.LESS_THAN, UIRelation.LESS_THAN],
+      orientation: [UIOrientation.VERTICAL, UIOrientation.HORIZONTAL],
     });
   }
 
@@ -69,10 +68,10 @@ async function buildScene() {
     new UIAspectConstraint(bubble);
 
     UIConstraint2DBuilder.distance(character, bubble, {
-      anchorA: { h: 1, v: 0.45 },
-      anchorB: { h: 0, v: 0 },
-      distance: { h: 0, v: 0 },
-      orientation: { h: UIOrientation.HORIZONTAL, v: UIOrientation.HORIZONTAL },
+      anchorA: [1, 0.45],
+      anchorB: [0, 0],
+      distance: [0, 0],
+      orientation: [UIOrientation.HORIZONTAL, UIOrientation.HORIZONTAL],
     });
 
     new UIHorizontalDistanceConstraint(layer, bubble, {
@@ -116,9 +115,9 @@ async function buildScene() {
     });
 
     UIConstraint2DBuilder.distance(bubble, text, {
-      anchorA: { h: 0.5, v: 0.525 },
-      anchorB: { h: 0.5, v: 0.5 },
-      distance: { h: 0, v: 0 },
+      anchorA: [0.5, 0.525],
+      anchorB: [0.5, 0.5],
+      distance: [0, 0],
     });
 
     new UIHorizontalProportionConstraint(bubble, text, {
@@ -136,9 +135,9 @@ async function buildScene() {
     new UIAspectConstraint(logotype);
 
     UIConstraint2DBuilder.distance(layer, logotype, {
-      anchorA: { h: 0, v: 1 },
-      anchorB: { h: 0, v: 1 },
-      distance: { h: 50, v: -50 },
+      anchorA: [0, 1],
+      anchorB: [0, 1],
+      distance: [50, -50],
     });
 
     new UIHorizontalProportionConstraint(layer, logotype, {
@@ -153,7 +152,7 @@ async function buildScene() {
       orientation: UIOrientation.HORIZONTAL,
     });
 
-    logotype.on(UIInputEvent.PRESSED, () => {
+    logotype.signalPointerPressed.on(() => {
       gsap
         .timeline()
         .to(logotype.micro, {
@@ -181,9 +180,9 @@ async function buildScene() {
     new UIAspectConstraint(download);
 
     UIConstraint2DBuilder.distance(layer, download, {
-      anchorA: { h: 1, v: 1 },
-      anchorB: { h: 1, v: 1 },
-      distance: { h: -50, v: -50 },
+      anchorA: [1, 1],
+      anchorB: [1, 1],
+      distance: [-50, -50],
     });
 
     new UIHorizontalProportionConstraint(layer, download, {
@@ -199,7 +198,7 @@ async function buildScene() {
     });
 
     // Add click animation
-    download.on(UIInputEvent.PRESSED, () => {
+    download.signalPointerPressed.on(() => {
       gsap
         .timeline()
         .to(download.micro, {
@@ -225,9 +224,9 @@ async function buildScene() {
     new UIAspectConstraint(battle);
 
     UIConstraint2DBuilder.distance(layer, battle, {
-      anchorA: { h: 1, v: 0 },
-      anchorB: { h: 1, v: 0 },
-      distance: { h: -50, v: 50 },
+      anchorA: [1, 0],
+      anchorB: [1, 0],
+      distance: [-50, 50],
     });
 
     new UIHorizontalProportionConstraint(layer, battle, {
@@ -243,7 +242,7 @@ async function buildScene() {
     });
 
     // Add click animation
-    battle.on(UIInputEvent.PRESSED, () => {
+    battle.signalPointerPressed.on(() => {
       gsap
         .timeline()
         .to(battle.micro, {
@@ -264,19 +263,32 @@ async function buildScene() {
   animate();
 }
 
-function animate() {
+let lastTime = 0;
+let accumulator = 0;
+const targetFPS = 60;
+const fixedTimeStep = 1000 / targetFPS;
+
+function animate(currentTime = 0) {
   requestAnimationFrame(animate);
 
-  // Update camera sway
-  baseScene.updateCameraSway();
+  if (lastTime === 0) {
+    lastTime = currentTime;
+    return;
+  }
 
-  // Render scene
-  baseScene.render();
+  const deltaTime = currentTime - lastTime;
+  lastTime = currentTime;
+  accumulator += deltaTime;
 
-  // Render UI layer
-  if (layer && baseScene.renderer) {
-    const deltaTime = baseScene.getDeltaTime();
-    layer.render(baseScene.renderer, deltaTime);
+  while (accumulator >= fixedTimeStep) {
+    baseScene.updateCameraSway();
+    baseScene.render();
+
+    if (layer && baseScene.renderer) {
+      layer.render(baseScene.renderer, fixedTimeStep / 1000);
+    }
+
+    accumulator -= fixedTimeStep;
   }
 }
 

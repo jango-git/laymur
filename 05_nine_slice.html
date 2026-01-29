@@ -48,7 +48,9 @@ const vignette = new UINineSlice(
 vignette.color.setHexRGB(0xffa500, 0.75);
 
 // Use cover constraints to fill the entire layer
-UICoverConstraintBuilder.build(layer, vignette);</code></pre>
+UICoverConstraintBuilder.build(layer, vignette, {
+  keepActiveAspect: false,
+});</code></pre>
 
                 <div class="warning">
                     <strong>🎨 Slice Modes:</strong> Nine-slice has two modes:

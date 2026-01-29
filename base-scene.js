@@ -6,10 +6,10 @@ import {
   MeshLambertMaterial,
   SRGBColorSpace,
   EquirectangularReflectionMapping,
-} from "https://esm.sh/three@0.175?min";
-import { GLTFLoader } from "https://esm.sh/three@0.175/examples/jsm/loaders/GLTFLoader";
-import { DRACOLoader } from "https://esm.sh/three@0.175.0/examples/jsm/loaders/DRACOLoader.js";
-import { RGBELoader } from "https://esm.sh/three@0.175/examples/jsm/loaders/RGBELoader";
+} from "https://esm.sh/three@0.157?min";
+import { GLTFLoader } from "https://esm.sh/three@0.157/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "https://esm.sh/three@0.157/examples/jsm/loaders/DRACOLoader";
+import { RGBELoader } from "https://esm.sh/three@0.157/examples/jsm/loaders/RGBELoader";
 
 export class BaseScene {
   constructor() {
@@ -108,12 +108,9 @@ export class BaseScene {
 
     // Set environment as scene background
     {
-      const rotation = Math.PI * 0.5;
       const texture = this.loadedTextures["T_Environment"];
       this.scene.background = texture;
-      this.scene.backgroundRotation.y = rotation;
       this.scene.environment = texture;
-      this.scene.environmentRotation.y = rotation;
     }
   }
 
