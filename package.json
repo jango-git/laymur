@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "keywords": [
     "ui",
@@ -24,6 +24,13 @@
     "build": "npm run clean && rollup -c",
     "prepublishOnly": "npm run build"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.js",
