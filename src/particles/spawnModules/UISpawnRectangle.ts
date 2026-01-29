@@ -52,8 +52,8 @@ export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { builtin: builtin } = properties;
-    const { itemSize, array } = builtin;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { x: minX, y: minY } = this.minInternal;
     const { x: maxX, y: maxY } = this.maxInternal;
 

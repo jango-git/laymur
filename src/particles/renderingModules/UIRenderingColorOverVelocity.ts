@@ -13,17 +13,17 @@ export class UIRenderingColorOverVelocity extends UIRenderingModule {
   /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
   /** @internal */
-  public readonly source: string;
+  public readonly source = source;
 
   constructor(colors: UIColor[], maxVelocity: number) {
     super();
 
     if (colors.length === 0) {
-      throw new Error("UIColorOverVelocityRenderingModule: colors array cannot be empty");
+      throw new Error("UIRenderingColorOverVelocity: colors array cannot be empty");
     }
 
     if (maxVelocity <= 0) {
-      throw new Error("UIColorOverVelocityRenderingModule: maxVelocity must be greater than 0");
+      throw new Error("UIRenderingColorOverVelocity: maxVelocity must be greater than 0");
     }
 
     this.source = source.replace(

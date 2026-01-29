@@ -19,7 +19,7 @@ export class UIRenderingColorOverLife extends UIRenderingModule {
     super();
 
     if (colors.length === 0) {
-      throw new Error("UIColorOverLifeRenderingModule: colors array cannot be empty");
+      throw new Error("UIRenderingColorOverLife: colors array cannot be empty");
     }
 
     this.requiredUniforms = { colorOverLifeTexture: buildGradientTexture(colors) };

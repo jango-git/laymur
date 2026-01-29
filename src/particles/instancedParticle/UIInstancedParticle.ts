@@ -104,6 +104,10 @@ export class UIInstancedParticle extends Mesh {
     this.instancedGeometry.instanceCount = writeIndex;
   }
 
+  public drop(): void {
+    this.instancedGeometry.instanceCount = 0;
+  }
+
   public destroy(): void {
     this.instancedGeometry.dispose();
     this.shaderMaterial.dispose();

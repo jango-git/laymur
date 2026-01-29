@@ -1,17 +1,42 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+import { assertValidNonNegativeNumber } from "../../core/miscellaneous/asserts";
 import {
+  BUILTIN_OFFSET_RANDOM_B,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
+  resolveUIRangeConfig,
+  type UIRange,
+  type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
+  private dampingInternal: UIRange;
 
-  constructor(public readonly damping: { min: number; max: number }) {
+  constructor(damping: UIRangeConfig) {
     super();
+    this.dampingInternal = resolveUIRangeConfig(damping);
+    assertValidNonNegativeNumber(
+      this.dampingInternal.min,
+      `UIBehaviorVelocityDamping.constructor.damping.min`,
+    );
+    assertValidNonNegativeNumber(
+      this.dampingInternal.max,
+      `UIBehaviorVelocityDamping.constructor.damping.max`,
+    );
+  }
+
+  public get damping(): UIRange {
+    return this.dampingInternal;
+  }
+
+  public set damping(value: UIRangeConfig) {
+    this.dampingInternal = resolveUIRangeConfig(value);
+    assertValidNonNegativeNumber(this.dampingInternal.min, `UIBehaviorVelocityDamping.damping.min`);
+    assertValidNonNegativeNumber(this.dampingInternal.max, `UIBehaviorVelocityDamping.damping.max`);
   }
 
   /** @internal */
@@ -26,8 +51,12 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matr
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      const dampingValue = MathUtils.randFloat(this.damping.min, this.damping.max);
-      const dampingFactor = Math.pow(1 - dampingValue, deltaTime);
+      // Constant over the life of a particle but different for each particle
+      const dampingT = array[itemOffset + BUILTIN_OFFSET_RANDOM_B];
+      const dampingFactor = Math.pow(
+        1 - MathUtils.lerp(this.dampingInternal.min, this.dampingInternal.max, dampingT),
+        deltaTime,
+      );
 
       array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] *= dampingFactor;
       array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] *= dampingFactor;

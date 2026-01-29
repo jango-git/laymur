@@ -96,13 +96,12 @@ export function buildParticleVertexShader(
     #define PARTICLE_LIFETIME a_builtin[2][0]
     #define PARTICLE_AGE a_builtin[2][1]
 
-    #define PARTICLE_RANDOM_X a_builtin[2][2]
-    #define PARTICLE_RANDOM_Y a_builtin[2][3]
-    #define PARTICLE_RANDOM_Z a_builtin[3][0]
-
-    #define PARTICLE_RESERVED_X a_builtin[3][1]
-    #define PARTICLE_RESERVED_Y a_builtin[3][2]
-    #define PARTICLE_RESERVED_Z a_builtin[3][3]
+    #define PARTICLE_RANDOM_A a_builtin[2][2]
+    #define PARTICLE_RANDOM_B a_builtin[2][3]
+    #define PARTICLE_RANDOM_C a_builtin[3][0]
+    #define PARTICLE_RANDOM_D a_builtin[3][1]
+    #define PARTICLE_RANDOM_E a_builtin[3][2]
+    #define PARTICLE_RANDOM_F a_builtin[3][3]
 
     // User attributes
     ${attributeDeclarations.join("\n")}
@@ -177,13 +176,12 @@ export function buildParticleFragmentShader(
     #define PARTICLE_LIFETIME p_builtin[2][0]
     #define PARTICLE_AGE p_builtin[2][1]
 
-    #define PARTICLE_RANDOM_X p_builtin[2][2]
-    #define PARTICLE_RANDOM_Y p_builtin[2][3]
-    #define PARTICLE_RANDOM_Z p_builtin[3][0]
-
-    #define PARTICLE_RESERVED_X p_builtin[3][1]
-    #define PARTICLE_RESERVED_Y p_builtin[3][2]
-    #define PARTICLE_RESERVED_Z p_builtin[3][3]
+    #define PARTICLE_RANDOM_A p_builtin[2][2]
+    #define PARTICLE_RANDOM_B p_builtin[2][3]
+    #define PARTICLE_RANDOM_C p_builtin[3][0]
+    #define PARTICLE_RANDOM_D p_builtin[3][1]
+    #define PARTICLE_RANDOM_E p_builtin[3][2]
+    #define PARTICLE_RANDOM_F p_builtin[3][3]
 
     // Uniforms
     ${uniformDeclarations.join("\n")}

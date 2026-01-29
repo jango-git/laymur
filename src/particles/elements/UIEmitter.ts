@@ -19,15 +19,18 @@ import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
-  BUILTIN_OFFSET_RANDOM_X,
-  BUILTIN_OFFSET_RANDOM_Y,
-  BUILTIN_OFFSET_RANDOM_Z,
+  BUILTIN_OFFSET_RANDOM_A,
+  BUILTIN_OFFSET_RANDOM_B,
+  BUILTIN_OFFSET_RANDOM_C,
+  BUILTIN_OFFSET_RANDOM_D,
+  BUILTIN_OFFSET_RANDOM_E,
+  BUILTIN_OFFSET_RANDOM_F,
   BUILTIN_OFFSET_ROTATION,
   BUILTIN_OFFSET_TORQUE,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
 } from "../miscellaneous/miscellaneous";
-import type { UIRenderingModule } from "../renderingModule/UIRenderingModule";
+import type { UIRenderingModule } from "../renderingModules/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
 import {
   EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
@@ -173,9 +176,12 @@ export class UIEmitter extends UIAnchor {
 
       for (let i = instanceBegin; i < instanceEnd; i++) {
         const itemOffset = i * itemSize;
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_X] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_Y] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_Z] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_A] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_B] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_C] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_D] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_E] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_F] = Math.random();
       }
 
       builtin.needsUpdate = true;
@@ -184,6 +190,10 @@ export class UIEmitter extends UIAnchor {
     for (const spawnModule of this.spawnSequence) {
       spawnModule.spawn(this.mesh.propertyBuffers, instanceBegin, instanceEnd);
     }
+  }
+
+  public clear(): void {
+    this.mesh.drop();
   }
 
   public play(rate: number, options: Partial<UIEmitterPlayOptions> = {}): void {

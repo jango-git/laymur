@@ -1,4 +1,4 @@
-import type { InstancedBufferAttribute } from "three";
+import { MathUtils, type InstancedBufferAttribute } from "three";
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
@@ -6,22 +6,24 @@ import {
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
+  BUILTIN_OFFSET_RANDOM_D,
   BUILTIN_OFFSET_SCALE_X,
   BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
+  resolveUIRangeConfig,
   type UIAspectConfig,
+  type UIRange,
+  type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
+  private readonly scales: UIRange[] = [];
   private aspectInternal: number;
 
-  constructor(
-    private readonly scales: readonly number[],
-    aspect: UIAspectConfig = 1,
-  ) {
+  constructor(scales: UIRangeConfig[], aspect: UIAspectConfig = 1) {
     super();
 
     if (scales.length < 2) {
@@ -31,7 +33,16 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
     }
 
     for (let i = 0; i < scales.length; i++) {
-      assertValidNonNegativeNumber(scales[i], `UIBehaviorScaleOverLife.constructor.scales[${i}]`);
+      const scale = resolveUIRangeConfig(scales[i]);
+      assertValidNonNegativeNumber(
+        scale.min,
+        `UIBehaviorScaleOverLife.constructor.scales[${i}].min`,
+      );
+      assertValidNonNegativeNumber(
+        scale.max,
+        `UIBehaviorScaleOverLife.constructor.scales[${i}].max`,
+      );
+      this.scales.push(scale);
     }
 
     this.aspectInternal = resolveAspect(aspect);
@@ -62,9 +73,14 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
       const segment = (this.scales.length - 1) * lifeT;
       const index = Math.floor(segment);
 
+      // Constant over the life of a particle but different for each particle
+      const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_D];
+
       const localT = segment - index;
-      const scale0 = this.scales[index];
-      const scale1 = this.scales[index + 1];
+      const scaleRange0 = this.scales[index];
+      const scaleRange1 = this.scales[index + 1];
+      const scale0 = MathUtils.lerp(scaleRange0.min, scaleRange0.max, scaleT);
+      const scale1 = MathUtils.lerp(scaleRange1.min, scaleRange1.max, scaleT);
 
       const interpolatedScale = scale0 + (scale1 - scale0) * localT;
 

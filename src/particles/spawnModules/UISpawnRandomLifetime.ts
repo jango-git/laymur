@@ -11,7 +11,7 @@ import { UISpawnModule } from "./UISpawnModule";
 
 export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public override requiredProperties = { builtin: "Matrix4" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private lifetimeInternal: UIRange;
 
   constructor(lifetime: UIRangeConfig = { min: 4, max: 8 }) {
