@@ -80,6 +80,30 @@ export function buildParticleVertexShader(
   vertexAssignments: string[],
 ): string {
   return `
+
+    #define PARTICLE_POSITION_X a_builtin[0][0]
+    #define PARTICLE_POSITION_Y a_builtin[0][1]
+
+    #define PARTICLE_VELOCITY_X a_builtin[0][2]
+    #define PARTICLE_VELOCITY_Y a_builtin[0][3]
+
+    #define PARTICLE_SCALE_X a_builtin[1][0]
+    #define PARTICLE_SCALE_Y a_builtin[1][1]
+
+    #define PARTICLE_ROTATION a_builtin[1][2]
+    #define PARTICLE_TORQUE a_builtin[1][3]
+
+    #define PARTICLE_LIFETIME a_builtin[2][0]
+    #define PARTICLE_AGE a_builtin[2][1]
+
+    #define PARTICLE_RANDOM_X a_builtin[2][2]
+    #define PARTICLE_RANDOM_Y a_builtin[2][3]
+    #define PARTICLE_RANDOM_Z a_builtin[3][0]
+
+    #define PARTICLE_RESERVED_X a_builtin[3][1]
+    #define PARTICLE_RESERVED_Y a_builtin[3][2]
+    #define PARTICLE_RESERVED_Z a_builtin[3][3]
+
     // User attributes
     ${attributeDeclarations.join("\n")}
 
@@ -98,18 +122,21 @@ export function buildParticleVertexShader(
       p_uv = uv;
 
       vec2 transformedPosition = position.xy;
-      transformedPosition *= a_scale;
+      transformedPosition.x *= PARTICLE_SCALE_X;
+      transformedPosition.y *= PARTICLE_SCALE_Y;
 
-      float cosR = cos(a_rotation);
-      float sinR = sin(a_rotation);
+      float cosR = cos(PARTICLE_ROTATION);
+      float sinR = sin(PARTICLE_ROTATION);
+
       transformedPosition = vec2(
         transformedPosition.x * cosR - transformedPosition.y * sinR,
         transformedPosition.x * sinR + transformedPosition.y * cosR
       );
 
-      transformedPosition += a_position;
-      transformedPosition += p_origin;
+      transformedPosition.x += PARTICLE_POSITION_X;
+      transformedPosition.y += PARTICLE_POSITION_Y;
 
+      transformedPosition += p_origin;
       gl_Position = projectionMatrix * vec4(transformedPosition, position.z, 1.0);
     }
   `;

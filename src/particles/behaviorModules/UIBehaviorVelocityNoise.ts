@@ -1,16 +1,16 @@
 import type { InstancedBufferAttribute } from "three";
-import { generateNoise2D } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
+  generateNoise2D,
+} from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIBehaviorVelocityNoise extends UIBehaviorModule<{
-  position: "Vector2";
-  velocity: "Vector2";
-}> {
+export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = {
-    position: "Vector2",
-    velocity: "Vector2",
-  } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
 
   constructor(
     public scale = 100,
@@ -21,28 +21,26 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{
 
   /** @internal */
   public update(
-    properties: { position: InstancedBufferAttribute; velocity: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const { position: positionAttribute, velocity: velocityAttribute } = properties;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
 
     for (let i = 0; i < instanceCount; i++) {
-      const positionOffset = i * positionAttribute.itemSize;
-      const velocityOffset = i * velocityAttribute.itemSize;
-      const { array: positionArray } = positionAttribute;
-      const { array: velocityArray } = velocityAttribute;
+      const itemOffset = i * itemSize;
 
-      const x = positionArray[positionOffset];
-      const y = positionArray[positionOffset + 1];
+      const x = array[itemOffset + BUILTIN_OFFSET_POSITION_X];
+      const y = array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
       const noiseX = generateNoise2D(x * this.scale, y * this.scale);
       const noiseY = generateNoise2D((x + 100) * this.scale, (y + 100) * this.scale);
 
-      velocityArray[velocityOffset] += noiseX * this.strength * deltaTime;
-      velocityArray[velocityOffset + 1] += noiseY * this.strength * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] += noiseX * this.strength * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] += noiseY * this.strength * deltaTime;
     }
 
-    velocityAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

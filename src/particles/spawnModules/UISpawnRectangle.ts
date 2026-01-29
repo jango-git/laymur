@@ -2,12 +2,17 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import type { Vector2Like } from "../../core/miscellaneous/math";
-import { resolveUIVector2Config, type UIVector2Config } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  resolveUIVector2Config,
+  type UIVector2Config,
+} from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UISpawnRectangle extends UISpawnModule<{ position: "Vector2" }> {
+export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = { position: "Vector2" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private minInternal: Vector2Like;
   private maxInternal: Vector2Like;
 
@@ -43,21 +48,21 @@ export class UISpawnRectangle extends UISpawnModule<{ position: "Vector2" }> {
 
   /** @internal */
   public spawn(
-    properties: { position: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { position: positionAttribute } = properties;
-    const { itemSize: positionItemSize, array: positionArray } = positionAttribute;
+    const { builtin: builtin } = properties;
+    const { itemSize, array } = builtin;
     const { x: minX, y: minY } = this.minInternal;
     const { x: maxX, y: maxY } = this.maxInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * positionItemSize;
-      positionArray[itemOffset] = MathUtils.randFloat(minX, maxX);
-      positionArray[itemOffset + 1] = MathUtils.randFloat(minY, maxY);
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_POSITION_X] = MathUtils.randFloat(minX, maxX);
+      array[itemOffset + BUILTIN_OFFSET_POSITION_Y] = MathUtils.randFloat(minY, maxY);
     }
 
-    positionAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

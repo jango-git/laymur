@@ -2,6 +2,8 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts";
 import {
+  BUILTIN_OFFSET_SCALE_X,
+  BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
   resolveUIRangeConfig,
   type UIAspectConfig,
@@ -10,9 +12,9 @@ import {
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UISpawnRandomScale extends UISpawnModule<{ scale: "Vector2" }> {
+export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public requiredProperties = { scale: "Vector2" } as const;
+  public requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private aspectInternal: number;
 
@@ -46,21 +48,21 @@ export class UISpawnRandomScale extends UISpawnModule<{ scale: "Vector2" }> {
 
   /** @internal */
   public spawn(
-    properties: { scale: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { scale: scaleAttribute } = properties;
-    const { itemSize: scaleItemSize, array: scaleArray } = scaleAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { min: scaleMin, max: scaleMax } = this.scaleInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * scaleItemSize;
+      const itemOffset = i * itemSize;
       const randomScale = MathUtils.randFloat(scaleMin, scaleMax);
-      scaleArray[itemOffset] = randomScale * this.aspectInternal;
-      scaleArray[itemOffset + 1] = randomScale;
+      array[itemOffset + BUILTIN_OFFSET_SCALE_X] = randomScale * this.aspectInternal;
+      array[itemOffset + BUILTIN_OFFSET_SCALE_Y] = randomScale;
     }
 
-    scaleAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

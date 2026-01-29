@@ -1,16 +1,15 @@
 import type { InstancedBufferAttribute } from "three";
-import { BUILTIN_OFFSET_TORQUE, generateNoise2D } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  BUILTIN_OFFSET_TORQUE,
+  generateNoise2D,
+} from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIBehaviorTorqueNoise extends UIBehaviorModule<{
-  position: "Vector2";
-  builtin: "Matrix4";
-}> {
+export class UIBehaviorTorqueNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = {
-    position: "Vector2",
-    builtin: "Matrix4",
-  } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
 
   constructor(
     public readonly scale: number,
@@ -21,24 +20,20 @@ export class UIBehaviorTorqueNoise extends UIBehaviorModule<{
 
   /** @internal */
   public update(
-    properties: {
-      position: InstancedBufferAttribute;
-      builtin: InstancedBufferAttribute;
-    },
+    properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const { builtin, position: positionAttribute } = properties;
+    const { builtin } = properties;
     const { array, itemSize } = builtin;
-    const { array: positionArray, itemSize: positionItemSize } = positionAttribute;
 
     for (let i = 0; i < instanceCount; i++) {
-      const positionOffset = i * positionItemSize;
+      const itemOffset = i * itemSize;
       const noise = generateNoise2D(
-        positionArray[positionOffset] * this.scale,
-        positionArray[positionOffset + 1] * this.scale,
+        array[itemOffset + BUILTIN_OFFSET_POSITION_X] * this.scale,
+        array[itemOffset + BUILTIN_OFFSET_POSITION_Y] * this.scale,
       );
-      array[i * itemSize + BUILTIN_OFFSET_TORQUE] += noise * this.strength * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_TORQUE] += noise * this.strength * deltaTime;
     }
 
     builtin.needsUpdate = true;

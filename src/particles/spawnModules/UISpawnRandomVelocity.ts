@@ -2,15 +2,17 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
   resolveUIRangeConfig,
   type UIRange,
   type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }> {
+export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = { velocity: "Vector2" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private angleInternal: UIRange;
   private magnitudeInternal: UIRange;
 
@@ -55,23 +57,23 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ velocity: "Vector2" }
 
   /** @internal */
   public spawn(
-    properties: { velocity: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { velocity: velocityAttribute } = properties;
-    const { itemSize: velocityItemSize, array: velocityArray } = velocityAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { min: angleMin, max: angleMax } = this.angleInternal;
     const { min: magnitudeMin, max: magnitudeMax } = this.magnitudeInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * velocityItemSize;
+      const itemOffset = i * itemSize;
       const angle = MathUtils.randFloat(angleMin, angleMax);
       const magnitude = MathUtils.randFloat(magnitudeMin, magnitudeMax);
-      velocityArray[itemOffset] = Math.cos(angle) * magnitude;
-      velocityArray[itemOffset + 1] = Math.sin(angle) * magnitude;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] = Math.cos(angle) * magnitude;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] = Math.sin(angle) * magnitude;
     }
 
-    velocityAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

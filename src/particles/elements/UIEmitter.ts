@@ -15,7 +15,18 @@ import {
   collectProperties,
   collectUniforms,
 } from "../instancedParticle/UIInstancedParticle.Internal";
-import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_TORQUE } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_AGE,
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  BUILTIN_OFFSET_RANDOM_X,
+  BUILTIN_OFFSET_RANDOM_Y,
+  BUILTIN_OFFSET_RANDOM_Z,
+  BUILTIN_OFFSET_ROTATION,
+  BUILTIN_OFFSET_TORQUE,
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
+} from "../miscellaneous/miscellaneous";
 import type { UIRenderingModule } from "../renderingModule/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
 import {
@@ -65,10 +76,7 @@ export class UIEmitter extends UIAnchor {
       // 6, 7   rotation, torque
       // 8, 9   lifetime, age
       // 10, 11, 12   randomX, randomY, randomZ
-      position: resolveGLSLTypeInfo("Vector2"), // x, y
-      velocity: resolveGLSLTypeInfo("Vector2"), // x, y
-      rotation: resolveGLSLTypeInfo("number"),
-      scale: resolveGLSLTypeInfo("Vector2"), // x, y
+      // 13, 14, 16   reservedX, reservedY, reservedZ
     };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
     collectProperties(
@@ -157,9 +165,24 @@ export class UIEmitter extends UIAnchor {
   public burst(count: number): void {
     const instanceBegin = this.mesh.instanceCount;
     this.mesh.createInstances(count);
+    const instanceEnd = this.mesh.instanceCount;
+
+    {
+      const { builtin } = this.mesh.propertyBuffers;
+      const { array, itemSize } = builtin;
+
+      for (let i = instanceBegin; i < instanceEnd; i++) {
+        const itemOffset = i * itemSize;
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_X] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_Y] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_RANDOM_Z] = Math.random();
+      }
+
+      builtin.needsUpdate = true;
+    }
 
     for (const spawnModule of this.spawnSequence) {
-      spawnModule.spawn(this.mesh.propertyBuffers, instanceBegin, this.mesh.instanceCount);
+      spawnModule.spawn(this.mesh.propertyBuffers, instanceBegin, instanceEnd);
     }
   }
 
@@ -179,14 +202,14 @@ export class UIEmitter extends UIAnchor {
 
   private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
     {
-      const { builtin: builtinAttribute } = this.mesh.propertyBuffers;
-      const { itemSize: builtinItemSize, array: builtinArray } = builtinAttribute;
+      const { builtin } = this.mesh.propertyBuffers;
+      const { array, itemSize } = builtin;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        builtinArray[i * builtinItemSize + BUILTIN_OFFSET_AGE] += deltaTime;
+        array[i * itemSize + BUILTIN_OFFSET_AGE] += deltaTime;
       }
 
-      builtinAttribute.needsUpdate = true;
+      builtin.needsUpdate = true;
       this.mesh.removeDeadParticles();
     }
 
@@ -221,32 +244,29 @@ export class UIEmitter extends UIAnchor {
       }
     }
 
-    {
-      const { position, velocity } = this.mesh.propertyBuffers;
-      const { array: positionArray, itemSize: positionItemSize } = position;
-      const { array: velocityArray, itemSize: velocityItemSize } = velocity;
+    const { builtin } = this.mesh.propertyBuffers;
+    const { array, itemSize } = builtin;
 
+    {
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const positionOffset = i * positionItemSize;
-        const velocityOffset = i * velocityItemSize;
-        positionArray[positionOffset] += velocityArray[velocityOffset] * deltaTime;
-        positionArray[positionOffset + 1] += velocityArray[velocityOffset + 1] * deltaTime;
+        const itemOffset = i * itemSize;
+        array[itemOffset + BUILTIN_OFFSET_POSITION_X] +=
+          array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] * deltaTime;
+        array[itemOffset + BUILTIN_OFFSET_POSITION_Y] +=
+          array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] * deltaTime;
       }
 
-      position.needsUpdate = true;
+      builtin.needsUpdate = true;
     }
 
     {
-      const { rotation, builtin } = this.mesh.propertyBuffers;
-      const { array: rotationArray, itemSize: rotationItemSize } = rotation;
-      const { array, itemSize } = builtin;
-
       for (let i = 0; i < this.mesh.instanceCount; i++) {
-        rotationArray[i * rotationItemSize] +=
-          array[i * itemSize + BUILTIN_OFFSET_TORQUE] * deltaTime;
+        const itemOffset = i * itemSize;
+        array[itemOffset + BUILTIN_OFFSET_ROTATION] +=
+          array[itemOffset + BUILTIN_OFFSET_TORQUE] * deltaTime;
       }
 
-      rotation.needsUpdate = true;
+      builtin.needsUpdate = true;
     }
   };
 }

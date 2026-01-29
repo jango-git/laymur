@@ -2,15 +2,16 @@ import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import {
+  BUILTIN_OFFSET_ROTATION,
   resolveUIRangeConfig,
   type UIRange,
   type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 
-export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }> {
+export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public requiredProperties = { rotation: "number" } as const;
+  public requiredProperties = { builtin: "Matrix4" } as const;
   private rotationInternal: UIRange;
 
   constructor(rotation: UIRangeConfig = { min: -Math.PI, max: Math.PI }) {
@@ -32,19 +33,18 @@ export class UISpawnRandomRotation extends UISpawnModule<{ rotation: "number" }>
 
   /** @internal */
   public spawn(
-    properties: { rotation: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
   ): void {
-    const { rotation: rotationAttribute } = properties;
-    const { itemSize: rotationItemSize, array: rotationArray } = rotationAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const { min: rotationMin, max: rotationMax } = this.rotationInternal;
 
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      const itemOffset = i * rotationItemSize;
-      rotationArray[itemOffset] = MathUtils.randFloat(rotationMin, rotationMax);
+      array[i * itemSize + BUILTIN_OFFSET_ROTATION] = MathUtils.randFloat(rotationMin, rotationMax);
     }
 
-    rotationAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

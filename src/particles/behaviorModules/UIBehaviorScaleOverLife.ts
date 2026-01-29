@@ -6,20 +6,16 @@ import {
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
+  BUILTIN_OFFSET_SCALE_X,
+  BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
   type UIAspectConfig,
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
-  scale: "Vector2";
-  builtin: "Matrix4";
-}> {
+export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = {
-    scale: "Vector2",
-    builtin: "Matrix4",
-  } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private aspectInternal: number;
 
   constructor(
@@ -52,13 +48,9 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
   }
 
   /** @internal */
-  public update(
-    properties: { builtin: InstancedBufferAttribute; scale: InstancedBufferAttribute },
-    instanceCount: number,
-  ): void {
-    const { builtin, scale: scaleAttribute } = properties;
+  public update(properties: { builtin: InstancedBufferAttribute }, instanceCount: number): void {
+    const { builtin } = properties;
     const { array, itemSize } = builtin;
-    const { array: scaleArray, itemSize: scaleItemSize } = scaleAttribute;
 
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
@@ -76,11 +68,10 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{
 
       const interpolatedScale = scale0 + (scale1 - scale0) * localT;
 
-      const scaleOffset = i * scaleItemSize;
-      scaleArray[scaleOffset] = interpolatedScale * this.aspectInternal;
-      scaleArray[scaleOffset + 1] = interpolatedScale;
+      array[itemOffset + BUILTIN_OFFSET_SCALE_X] = interpolatedScale * this.aspectInternal;
+      array[itemOffset + BUILTIN_OFFSET_SCALE_Y] = interpolatedScale;
     }
 
-    scaleAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

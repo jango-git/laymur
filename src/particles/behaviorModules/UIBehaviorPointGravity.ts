@@ -1,15 +1,19 @@
 import type { InstancedBufferAttribute } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import type { Vector2Like } from "../../core/miscellaneous/math";
-import { resolveUIVector2Config, type UIVector2Config } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
+  resolveUIVector2Config,
+  type UIVector2Config,
+} from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIBehaviorPointGravity extends UIBehaviorModule<{
-  position: "Vector2";
-  velocity: "Vector2";
-}> {
+export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = { position: "Vector2", velocity: "Vector2" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private centerInternal: Vector2Like;
 
   constructor(
@@ -36,20 +40,19 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{
 
   /** @internal */
   public update(
-    properties: { position: InstancedBufferAttribute; velocity: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const { position: positionAttribute, velocity: velocityAttribute } = properties;
-    const { array: positionArray, itemSize: positionItemSize } = positionAttribute;
-    const { array: velocityArray, itemSize: velocityItemSize } = velocityAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
     const thresholdSquared = this.threshold * this.threshold;
 
     for (let i = 0; i < instanceCount; i++) {
-      const positionOffset = i * positionItemSize;
+      const itemOffset = i * itemSize;
 
-      const dx = this.centerInternal.x - positionArray[positionOffset];
-      const dy = this.centerInternal.y - positionArray[positionOffset + 1];
+      const dx = this.centerInternal.x - array[itemOffset + BUILTIN_OFFSET_POSITION_X];
+      const dy = this.centerInternal.y - array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
       const distanceSquared = dx * dx + dy * dy;
       if (distanceSquared < thresholdSquared) {
@@ -65,11 +68,10 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{
       const accelerationX = directionX * forceMagnitude;
       const accelerationY = directionY * forceMagnitude;
 
-      const velocityOffset = i * velocityItemSize;
-      velocityArray[velocityOffset] += accelerationX * deltaTime;
-      velocityArray[velocityOffset + 1] += accelerationY * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] += accelerationX * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] += accelerationY * deltaTime;
     }
 
-    velocityAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

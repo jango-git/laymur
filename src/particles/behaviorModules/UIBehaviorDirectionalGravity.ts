@@ -1,12 +1,17 @@
 import type { InstancedBufferAttribute } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import type { Vector2Like } from "../../core/miscellaneous/math";
-import { resolveUIVector2Config, type UIVector2Config } from "../miscellaneous/miscellaneous";
+import {
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
+  resolveUIVector2Config,
+  type UIVector2Config,
+} from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 
-export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ velocity: "Vector2" }> {
+export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   /** @internal */
-  public readonly requiredProperties = { velocity: "Vector2" } as const;
+  public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private directionInternal: Vector2Like;
 
   constructor(direction: Vector2Like) {
@@ -34,22 +39,22 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ velocity: "
 
   /** @internal */
   public update(
-    properties: { velocity: InstancedBufferAttribute },
+    properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
   ): void {
-    const { velocity: velocityAttribute } = properties;
-    const { array: velocityArray, itemSize: velocityItemSize } = velocityAttribute;
+    const { builtin } = properties;
+    const { array, itemSize } = builtin;
 
     const offsetX = this.directionInternal.x * deltaTime;
     const offsetY = this.directionInternal.y * deltaTime;
 
     for (let i = 0; i < instanceCount; i++) {
-      const offset = i * velocityItemSize;
-      velocityArray[offset] += offsetX;
-      velocityArray[offset + 1] += offsetY;
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] += offsetX;
+      array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] += offsetY;
     }
 
-    velocityAttribute.needsUpdate = true;
+    builtin.needsUpdate = true;
   }
 }

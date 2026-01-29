@@ -8,7 +8,7 @@ import { UIRenderingModule } from "./UIRenderingModule";
 export class UIRenderingColorOverVelocity extends UIRenderingModule {
   /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
-    velocity: "Vector2",
+    builtin: "Matrix4",
   } as const;
   /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
