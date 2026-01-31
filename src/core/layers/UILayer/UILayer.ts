@@ -39,6 +39,7 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
   private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
+  private readonly signalResizedInternal = new Ferrsign3<number, number, UILayer>();
 
   constructor(options: Partial<UILayerOptions>) {
     if (options.width !== undefined) {
@@ -123,6 +124,11 @@ export abstract class UILayer implements UIPlaneElement {
     return this.signalRenderingInternal;
   }
 
+  /** Signal fired when layer resized */
+  public get signalResized(): FerrsignView3<number, number, UILayer> {
+    return this.signalResizedInternal;
+  }
+
   /** Updates visibility and interactivity mode */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
@@ -135,6 +141,7 @@ export abstract class UILayer implements UIPlaneElement {
     this.solverWrapperInternal.suggestVariableValue(this.wVariable, width);
     this.solverWrapperInternal.suggestVariableValue(this.hVariable, height);
     this.sceneWrapperInternal.resize(width, height);
+    this.signalResizedInternal.emit(width, height, this);
 
     const orientation = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
 
