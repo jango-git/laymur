@@ -1,6 +1,8 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
 import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
+import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import { UIColor } from "../../miscellaneous/color/UIColor";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
@@ -10,8 +12,6 @@ import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
-import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
-import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {
@@ -67,11 +67,16 @@ export class UIText extends UIElement {
     texture.needsUpdate = true;
     const color = new UIColor(options.color);
 
-    super(layer, source, {
-      texture: texture,
-      textureTransform: new Matrix3(),
-      color,
-    });
+    super(
+      layer,
+      source,
+      {
+        texture: texture,
+        textureTransform: new Matrix3(),
+        color,
+      },
+      options,
+    );
 
     this.colorInternal = color;
     this.paddingInternal = new UIInsets(options.padding);
