@@ -16,6 +16,7 @@ export { UIAnchor } from "./elements/UIAnchor/UIAnchor";
 export { UIAnimatedImage } from "./elements/UIAnimatedImage/UIAnimatedImage";
 export { UIAnimatedImageLoopMode } from "./elements/UIAnimatedImage/UIAnimatedImage.Internal";
 export { UIDummy } from "./elements/UIDummy/UIDummy";
+export type { UIInputEventData } from "./elements/UIDummy/UIDummy.Internal";
 export { UIGraphics } from "./elements/UIGraphics/UIGraphics";
 export { UIImage } from "./elements/UIImage/UIImage";
 export { UINineSlice } from "./elements/UINineSlice/UINineSlice";
