@@ -1,4 +1,5 @@
 import {
+  DoubleSide,
   Float32BufferAttribute,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
@@ -156,6 +157,8 @@ export function buildMaterial(
     alphaHash: transparency === UITransparencyMode.HASH,
     depthWrite: transparency !== UITransparencyMode.BLEND,
     depthTest: true,
+    side: DoubleSide,
+    forceSinglePass: true,
   });
 }
 
