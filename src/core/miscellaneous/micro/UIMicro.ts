@@ -169,6 +169,26 @@ export class UIMicro {
     }
   }
 
+  /** Sets the same scale for X and Y */
+  public setUnifiedScale(scale: number): void {
+    assertValidNumber(scale, "UIMicro.setUnifiedScale.scale");
+    if (scale !== this.scaleXInternal || scale !== this.scaleYInternal) {
+      this.scaleXInternal = scale;
+      this.scaleYInternal = scale;
+      this.dirtyInternal = true;
+    }
+  }
+
+  /** Sets the same anchor for X and Y */
+  public setUnifiedAnchor(anchor: number): void {
+    assertValidNumber(anchor, "UIMicro.setUnifiedAnchor.anchor");
+    if (anchor !== this.anchorXInternal || anchor !== this.anchorYInternal) {
+      this.anchorXInternal = anchor;
+      this.anchorYInternal = anchor;
+      this.dirtyInternal = true;
+    }
+  }
+
   /** @internal */
   public setDirtyFalse(): void {
     this.dirtyInternal = false;
