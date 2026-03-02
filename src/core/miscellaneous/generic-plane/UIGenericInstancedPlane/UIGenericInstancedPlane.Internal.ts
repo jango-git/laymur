@@ -14,11 +14,7 @@ import {
 import { UIColor } from "../../color/UIColor";
 import { UITransparencyMode } from "../../UITransparencyMode";
 import type { GLProperty, UIProperty } from "../shared";
-import {
-  buildGenericPlaneFragmentShader,
-  DEFAULT_ALPHA_TEST,
-  resolveGLSLTypeInfo,
-} from "../shared";
+import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const geometry = new InstancedBufferGeometry();
@@ -142,10 +138,12 @@ export function buildMaterial(
     }
   `;
 
+  const alphaTestValue = 1 / 255;
   const fragmentShader = buildGenericPlaneFragmentShader(
     uniformDeclarations,
     varyingDeclarations,
     source,
+    alphaTestValue,
   );
 
   return new ShaderMaterial({
@@ -153,10 +151,10 @@ export function buildMaterial(
     vertexShader,
     fragmentShader,
     transparent: transparency === UITransparencyMode.BLEND,
-    alphaTest: transparency === UITransparencyMode.CLIP ? DEFAULT_ALPHA_TEST : 0.0,
+    alphaTest: alphaTestValue,
     alphaHash: transparency === UITransparencyMode.HASH,
-    depthWrite: transparency !== UITransparencyMode.BLEND,
-    depthTest: true,
+    depthWrite: false,
+    depthTest: false,
     side: DoubleSide,
     forceSinglePass: true,
   });

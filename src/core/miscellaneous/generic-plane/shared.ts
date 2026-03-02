@@ -57,8 +57,6 @@ export interface PlaneData {
   transparency: UITransparencyMode;
 }
 
-export const DEFAULT_ALPHA_TEST = 0.5;
-
 const GLSL_TYPE_INFO_FLOAT: GLTypeInfo = Object.freeze({
   glslTypeName: "float",
   bufferSize: 1,
@@ -275,6 +273,7 @@ export function buildGenericPlaneFragmentShader(
   uniformDeclarations: string[],
   varyingDeclarations: string[],
   source: string,
+  alphaTestValue: number,
 ): string {
   return `
     // Defines
@@ -307,11 +306,9 @@ export function buildGenericPlaneFragmentShader(
     ${source}
     void main() {
       vec4 diffuseColor = draw();
-      #ifdef USE_ALPHATEST
-        if (diffuseColor.a < ${DEFAULT_ALPHA_TEST.toFixed(2)}) {
-          discard;
-        }
-      #endif
+      if (diffuseColor.a <= ${alphaTestValue.toFixed(8)}) {
+        discard;
+      }
       #ifdef USE_ALPHAHASH
         if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
           discard;
