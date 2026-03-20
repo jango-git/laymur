@@ -274,6 +274,7 @@ export function buildGenericPlaneFragmentShader(
   varyingDeclarations: string[],
   source: string,
   alphaTestValue: number,
+  usePremultipliedAlpha: boolean,
 ): string {
   return `
     // Defines
@@ -314,7 +315,9 @@ export function buildGenericPlaneFragmentShader(
           discard;
         }
       #endif
+
       gl_FragColor = linearToOutputTexel(diffuseColor);
+      gl_FragColor = ${usePremultipliedAlpha ? "vec4(gl_FragColor.rgb * gl_FragColor.a, gl_FragColor.a)" : "gl_FragColor"};
     }
   `;
 }

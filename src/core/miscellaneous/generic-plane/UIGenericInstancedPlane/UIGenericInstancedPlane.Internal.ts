@@ -138,12 +138,15 @@ export function buildMaterial(
     }
   `;
 
-  const alphaTestValue = 1 / 255;
+  const alphaTestValue = 0.0075;
+  const premultipliedAlpha = transparency === UITransparencyMode.BLEND;
+
   const fragmentShader = buildGenericPlaneFragmentShader(
     uniformDeclarations,
     varyingDeclarations,
     source,
     alphaTestValue,
+    premultipliedAlpha,
   );
 
   return new ShaderMaterial({
@@ -157,6 +160,7 @@ export function buildMaterial(
     depthTest: false,
     side: DoubleSide,
     forceSinglePass: true,
+    premultipliedAlpha,
   });
 }
 
