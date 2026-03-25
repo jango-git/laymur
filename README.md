@@ -33,9 +33,9 @@ Peer Dependencies:
 * `@lume/kiwi` (^0.4.4)
 * `ferrsign` (^0.0.4)
 
-## Live Examples
+## Visual Editor & Live Examples
 
-Check out interactive examples and demos at:  
+Check out visual editor and interactive examples at:  
 **[https://jango-git.github.io/laymur/](https://jango-git.github.io/laymur/)**
 
 ## Core Concepts
