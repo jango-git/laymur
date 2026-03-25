@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur UI Demo - Particle System</title>
+    <link rel="stylesheet" href="shared-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="resize-handler.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="demo-section">
+        <div class="demo-area" id="demoArea">
+          <iframe
+            id="demoFrame"
+            src="/examples/07_particle_system_content.html"
+            title="Laymur Particle System Demo"
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy"
+          ></iframe>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h2>What's happening here?</h2>
+
+        <p>
+          This example demonstrates the
+          <span class="highlight">particle system</span> with UIEmitter. Particles rise from the
+          bottom of the screen with physics-based behaviors including gravity, velocity damping, and
+          rotation.
+        </p>
+
+        <pre><code class="language-javascript">const emitter = new UIEmitter(
+  layer,
+  [
+    new UISpawnRectangle([-960, 0], [960, 0]),
+    new UISpawnRandomRotation([-Math.PI, Math.PI]),
+    new UISpawnRandomTorque([-Math.PI, Math.PI]),
+    new UISpawnRandomScale([1, 10]),
+    new UISpawnRandomLifetime([10, 20]),
+  ],
+  [
+    new UIBehaviorDirectionalGravity({ x: 0, y: 50 }),
+    new UIBehaviorVelocityNoise(1, 200),
+    new UIBehaviorVelocityDamping({ min: 0.25, max: 0.75 }),
+    new UIBehaviorTorqueNoise(1, 100),
+    new UIBehaviorTorqueDamping(0.25),
+  ],
+  [
+    new UITextureRenderingModule(dustTexture),
+    new UIRenderingColorOverLife([
+      new UIColor(0xfc9337, 0.25),
+      new UIColor(0xb77a59, 0.25),
+      new UIColor(0xb77a59, 0),
+    ]),
+  ],
+  { expectedCapacity: 1024 }
+);
+
+emitter.play(16);</code></pre>
+
+        <div class="navigation">
+          <a href="/examples/06_progress_bars.html" class="nav-button">
+            <span class="arrow">←</span>
+            <span>Previous Lesson</span>
+          </a>
+          <a href="/examples/08_animations.html" class="nav-button">
+            <span>Next Lesson</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="additional-actions">
+          <a href="index.html" class="nav-button nav-button-secondary">
+            <span>🏠 Home</span>
+          </a>
+          <a
+            href="https://github.com/jango-git/laymur/blob/gh-pages/examples/07_particle_system_content.js"
+            target="_blank"
+            class="nav-button nav-button-accent"
+          >
+            <span>📝 Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>

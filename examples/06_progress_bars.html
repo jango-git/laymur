@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur UI Demo - Progress Bars</title>
+    <link rel="stylesheet" href="shared-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="resize-handler.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="demo-section">
+        <div class="demo-area" id="demoArea">
+          <iframe id="demoFrame" src="/examples/06_progress_bars_content.html"></iframe>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h2>What's happening here?</h2>
+
+        <p>
+          This example demonstrates
+          <span class="highlight">UIProgress elements</span> for creating dynamic progress bars and
+          health indicators. A health bar is positioned above the character showing real-time
+          progress updates, along with all previous UI elements and a vignette overlay.
+        </p>
+
+        <pre><code class="language-javascript">const direction = { x: 1, y: 0.5 };
+
+// Create progress bar
+const bar = new UIProgress(
+  layer,
+  baseScene.loadedTextures["T_Progress_Foreground"],
+  {
+    color: UIColor.orange,
+    progress: 0.8,
+    maskFunction:
+      new UIProgressMaskFunctionDirectional(direction),
+  },
+);</code></pre>
+
+        <div class="warning">
+          <strong>📊 Mask Functions:</strong> UIProgress supports different UIProgressMaskFunction
+          implementations. By default, UIProgressMaskFunctionDirectional is used for directional
+          progress filling.
+        </div>
+
+        <div class="navigation">
+          <a href="/examples/05_nine_slice.html" class="nav-button">
+            <span class="arrow">←</span>
+            <span>Previous Lesson</span>
+          </a>
+          <a href="/examples/07_particle_system.html" class="nav-button">
+            <span>Next Lesson</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="additional-actions">
+          <a href="index.html" class="nav-button nav-button-secondary">
+            <span>🏠 Home</span>
+          </a>
+          <a
+            href="https://github.com/jango-git/laymur/blob/gh-pages/examples/06_progress_bars_content.js"
+            target="_blank"
+            class="nav-button nav-button-accent"
+          >
+            <span>📝 Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur Editor</title>
+    <link rel="stylesheet" href="/editor/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="preview-panel">
+        <div id="preview-toolbar">
+          <div id="preview-presets">
+            <button class="preset-btn" data-w="0" data-h="0">Fill</button>
+            <button class="preset-btn active" data-w="390" data-h="844">Phone</button>
+            <button class="preset-btn" data-w="768" data-h="1024">Tablet</button>
+          </div>
+          <span id="preview-size-label"></span>
+        </div>
+        <div id="preview-stage">
+          <div id="preview-iframe-wrapper">
+            <iframe id="preview-frame" src="/editor/preview.html"></iframe>
+            <div id="preview-resize-handle"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sidebar">
+        <div id="tabs">
+          <button class="tab-button active" data-tab="assets">Assets</button>
+          <button class="tab-button" data-tab="layer">Layer</button>
+          <button class="tab-button" data-tab="elements">Elements</button>
+          <button class="tab-button" data-tab="constraints">Constraints</button>
+          <button class="tab-button" data-tab="export">Export</button>
+        </div>
+
+        <div id="tab-content">
+          <!-- Assets tab -->
+          <div id="tab-assets" class="tab-panel active">
+            <div class="tab-scroll-area">
+              <div id="assets-grid"></div>
+            </div>
+            <div class="tab-footer">
+              <button id="button-add-asset" class="button-primary button-full">+ Add Texture</button>
+              <input type="file" id="input-asset-file" accept="image/*" multiple hidden />
+            </div>
+          </div>
+
+          <!-- Layer tab -->
+          <div id="tab-layer" class="tab-panel">
+            <div class="tab-scroll-area">
+              <div id="layers-list"></div>
+            </div>
+            <div class="tab-footer">
+              <div id="add-layer-row"></div>
+            </div>
+          </div>
+
+          <!-- Elements tab -->
+          <div id="tab-elements" class="tab-panel">
+            <div class="tab-scroll-area">
+              <div id="elements-list"></div>
+            </div>
+            <div class="tab-footer">
+              <div id="add-element-row">
+                <div class="add-field-row">
+                  <span class="add-field-label">Type</span>
+                  <select id="element-type-select" class="param-select"></select>
+                </div>
+                <div class="add-field-row">
+                  <span class="add-field-label">Name</span>
+                  <input id="element-name-input" type="text" class="param-input" placeholder="element name" />
+                </div>
+                <div id="add-element-fields"></div>
+                <button id="add-element-button" class="button-primary button-full">+ Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Constraints tab -->
+          <div id="tab-constraints" class="tab-panel">
+            <div class="tab-scroll-area">
+              <div id="constraints-list"></div>
+            </div>
+            <div class="tab-footer">
+              <div id="add-constraint-row">
+                <div class="add-field-row">
+                  <span class="add-field-label">Type</span>
+                  <select id="constraint-type-select" class="param-select"></select>
+                </div>
+                <div class="add-field-row">
+                  <span class="add-field-label">Name</span>
+                  <input id="constraint-name-input" type="text" class="param-input" placeholder="optional" />
+                </div>
+                <div id="add-constraint-fields"></div>
+                <button id="add-constraint-button" class="button-primary button-full">+ Add</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export tab -->
+          <div id="tab-export" class="tab-panel">
+            <div class="tab-scroll-area">
+              <div id="export-content"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/editor/js/main.js"></script>
+  </body>
+</html>

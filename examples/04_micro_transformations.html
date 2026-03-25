@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur UI Demo - Micro Transformations</title>
+    <link rel="stylesheet" href="shared-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="resize-handler.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="demo-section">
+        <div class="demo-area" id="demoArea">
+          <iframe id="demoFrame" src="/examples/04_micro_transformations_content.html"></iframe>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h2>What's happening here?</h2>
+
+        <p>
+          This example demonstrates
+          <span class="highlight">UIMicro transformations</span> and interactive animations. UI
+          elements can be animated independently of constraints using micro transformations.
+        </p>
+
+        <pre><code class="language-javascript">// Make layer and button interactive
+layer.mode = UIMode.INTERACTIVE;
+button.mode = UIMode.INTERACTIVE;
+
+// Add click animation using micro transformations
+button.signalPointerPressed.on(() => {
+  // Micro transformations are independent of constraints
+  // They allow animations without affecting layout
+  gsap
+    .timeline()
+    .to(battle.micro, {
+      y: -35,
+      scaleX: 0.85,
+      duration: 0.125,
+      ease: "power1.out",
+    })
+    .to(battle.micro, {
+      y: 0,
+      scaleX: 1,
+      duration: 0.25,
+      ease: "back.out",
+    });
+});</code></pre>
+
+        <div class="warning">
+          <strong>💡 Interactive Animations:</strong> Click on the buttons to see micro
+          transformations in action. These animations are independent of the constraint system.
+        </div>
+
+        <div class="warning">
+          <strong>📦 Third-party Library:</strong> This demo uses GSAP for animations. GSAP is not
+          part of Laymur and can be installed separately. GSAP has its own license - please check
+          <a href="https://greensock.com/licensing/" target="_blank" style="color: #4a9eff"
+            >GSAP licensing</a
+          >
+          for commercial use.
+        </div>
+
+        <div class="navigation">
+          <a href="/examples/03_text_elements.html" class="nav-button">
+            <span class="arrow">←</span>
+            <span>Previous Lesson</span>
+          </a>
+          <a href="/examples/05_nine_slice.html" class="nav-button">
+            <span>Next Lesson</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="additional-actions">
+          <a href="index.html" class="nav-button nav-button-secondary">
+            <span>🏠 Home</span>
+          </a>
+          <a
+            href="https://github.com/jango-git/laymur/blob/gh-pages/examples/04_micro_transformations_content.js"
+            target="_blank"
+            class="nav-button nav-button-accent"
+          >
+            <span>📝 Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>

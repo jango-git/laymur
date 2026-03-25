@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur UI Demo - Nine Slice Elements</title>
+    <link rel="stylesheet" href="shared-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="resize-handler.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="demo-section">
+        <div class="demo-area" id="demoArea">
+          <iframe id="demoFrame" src="/examples/05_nine_slice_content.html"></iframe>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h2>What's happening here?</h2>
+
+        <p>
+          This example demonstrates
+          <span class="highlight">UINineSlice elements</span> for creating scalable UI components
+          with preserved border regions. A vignette overlay is created using nine-slice scaling.
+        </p>
+
+        <pre><code class="language-javascript">// Create nine-slice element with 15% border
+const vignette = new UINineSlice(
+  layer,
+  baseScene.loadedTextures["T_Vignette"],
+  { sliceBorders: 0.2, sliceRegions: 100 },
+);
+
+// Configure appearance
+vignette.color.setHexRGB(0xffa500, 0.75);
+
+// Use cover constraints to fill the entire layer
+UICoverConstraintBuilder.build(layer, vignette, {
+  keepActiveAspect: false,
+});</code></pre>
+
+        <div class="warning">
+          <strong>🎨 Slice Modes:</strong> Nine-slice has two modes: one uses world coordinates for
+          sliceRegions, the other uses normalized values (0-1) as fractions of the UI element size.
+        </div>
+
+        <div class="navigation">
+          <a href="/examples/04_micro_transformations.html" class="nav-button">
+            <span class="arrow">←</span>
+            <span>Previous Lesson</span>
+          </a>
+          <a href="/examples/06_progress_bars.html" class="nav-button">
+            <span>Next Lesson</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="additional-actions">
+          <a href="index.html" class="nav-button nav-button-secondary">
+            <span>🏠 Home</span>
+          </a>
+          <a
+            href="https://github.com/jango-git/laymur/blob/gh-pages/examples/05_nine_slice_content.js"
+            target="_blank"
+            class="nav-button nav-button-accent"
+          >
+            <span>📝 Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>

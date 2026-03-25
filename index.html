@@ -1,377 +1,88 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Laymur Examples</title>
-        <style>
-            :root {
-                --primary-color: #e5c07b;
-                --primary-hover: #d4af69;
-                --secondary-color: #98c379;
-                --secondary-hover: #86b365;
-                --accent-color: #e06c75;
-                --bg-dark: #1a1a1a;
-                --bg-panel: rgba(255, 255, 255, 0.05);
-                --text-primary: #ffffff;
-                --text-secondary: #e0e0e0;
-                --text-muted: #c0c0c0;
-                --border-color: rgba(255, 255, 255, 0.1);
-                --card-border: #e5c07b;
-            }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur</title>
 
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Oxygen, Ubuntu, Cantarell, sans-serif;
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 2rem;
-                line-height: 1.6;
-                background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-                color: var(--text-secondary);
-            }
-            h1 {
-                color: var(--primary-color);
-                border-bottom: 3px solid var(--primary-color);
-                padding-bottom: 0.5rem;
-                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            }
-            .description {
-                background: var(--bg-panel);
-                backdrop-filter: blur(10px);
-                padding: 1.5rem;
-                border-radius: 12px;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-                margin-bottom: 2rem;
-                border: 1px solid var(--border-color);
-            }
-            .examples-grid {
-                display: grid;
-                gap: 1rem;
-                margin-top: 2rem;
-            }
-            .example-card {
-                background: var(--bg-panel);
-                backdrop-filter: blur(10px);
-                border-radius: 12px;
-                padding: 1.5rem;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-                transition:
-                    transform 0.2s ease,
-                    box-shadow 0.2s ease;
-                border-left: 4px solid var(--card-border);
-                border: 1px solid var(--border-color);
-            }
-            .example-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-                border-left-color: var(--primary-color);
-                background: rgba(255, 255, 255, 0.08);
-            }
-            .example-title {
-                font-size: 1.2rem;
-                font-weight: 600;
-                color: var(--primary-color);
-                margin-bottom: 0.5rem;
-            }
-            .example-description {
-                color: var(--text-muted);
-                margin-bottom: 1rem;
-                line-height: 1.5;
-            }
-            .example-link {
-                display: inline-block;
-                background: var(--primary-color);
-                color: white;
-                text-decoration: none;
-                padding: 0.6rem 1.2rem;
-                border-radius: 6px;
-                font-weight: 500;
-                transition: all 0.2s ease;
-                box-shadow: 0 2px 8px rgba(229, 192, 123, 0.3);
-            }
-            .example-link:hover {
-                background: var(--primary-hover);
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(229, 192, 123, 0.4);
-            }
-            .tech-stack {
-                background: rgba(255, 255, 255, 0.05);
-                padding: 0.3rem 0.6rem;
-                border-radius: 6px;
-                font-size: 0.85rem;
-                color: var(--text-muted);
-                display: inline-block;
-                margin-right: 0.5rem;
-                margin-top: 0.5rem;
-                border: 1px solid var(--border-color);
-                font-weight: 500;
-            }
-            .github-link {
-                text-align: center;
-                margin-top: 3rem;
-                padding-top: 2rem;
-                border-top: 1px solid var(--border-color);
-            }
-            .github-link a {
-                color: var(--primary-color);
-                text-decoration: none;
-                font-weight: 500;
-                transition: color 0.2s ease;
-            }
-            .github-link a:hover {
-                color: var(--primary-hover);
-                text-decoration: underline;
-            }
-            .warning-note {
-                font-size: 14px;
-                color: #d19a66;
-                margin-top: 16px;
-                background: rgba(209, 154, 102, 0.1);
-                padding: 12px 16px;
-                border-radius: 8px;
-                border-left: 3px solid #d19a66;
-                border: 1px solid rgba(209, 154, 102, 0.2);
-            }
-        </style>
-    </head>
-    <body>
-        <h1>📐 Laymur Examples</h1>
+    <style>
+      :root {
+        --bg: #141414;
+        --card: #252525;
+        --card-hover: #2e2e2e;
+        --border: rgba(255, 255, 255, 0.07);
+        --text: #cccccc;
+        --text-muted: #666666;
+        --accent: #4d9fff;
+        --radius: 6px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
 
-        <div class="description">
-            <p>
-                <strong>Laymur</strong> is a TypeScript Three.js UI layout
-                library with constraint-based positioning and rendering.
-            </p>
-            <p>
-                The library provides powerful constraint solving for flexible
-                layouts, rich UI elements like images and text, responsive
-                design with orientation awareness, and micro-transformations for
-                animations.
-            </p>
-            <p>
-                Explore the examples below to see how to integrate Laymur into
-                your Three.js projects for creating sophisticated user
-                interfaces.
-            </p>
-            <p>
-</p>                🌅 HDRI environment map courtesy of
-                <a
-                    href="https://polyhaven.com/a/qwantani_dusk_2_puresky"
-                    target="_blank"
-                    style="color: var(--primary-color); text-decoration: none;"
-                    >Poly Haven</a
-                >.
-            </p>
-            <p class="warning-note">
-                ⚠️ <strong>Early Alpha / Work in Progress:</strong> This library
-                is in very early development stage. APIs may change
-                significantly. Documentation is actively being developed and
-                will be expanded with more examples and detailed guides.
-            </p>
-        </div>
+      * {
+        box-sizing: border-box;
+      }
 
-        <div class="examples-grid">
-            <div class="example-card">
-                <div class="example-title">00. Basic UI Layer</div>
-                <div class="example-description">
-                    Introduction to the fundamental UIFullscreenLayer concept.
-                    Shows the minimal setup required to display UI elements in
-                    Laymur - just a layer and a single image without any
-                    constraints, demonstrating the basic building blocks.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UIFullscreenLayer</span>
-                    <span class="tech-stack">UIImage</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="00_basic_layer.html" class="example-link">View Example</a>
-            </div>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        font-family: var(--font);
+        color: var(--text);
+      }
 
-            <div class="example-card">
-                <div class="example-title">01. Distance Constraints</div>
-                <div class="example-description">
-                    Demonstrates positioning UI elements using distance
-                    constraints to maintain fixed pixel distances from container
-                    edges. A logotype is positioned in the top-left corner and a
-                    download button in the top-right corner, both with 50px
-                    margins from the edges.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">Distance Constraints</span>
-                    <span class="tech-stack">UIImage</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="01_snapping.html" class="example-link">View Example</a>
-            </div>
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        width: 260px;
+      }
 
-            <div class="example-card">
-                <div class="example-title">
-                    02. Aspect & Proportion Constraints
-                </div>
-                <div class="example-description">
-                    Interactive demonstration of aspect ratio and proportional
-                    constraints. A character, logotype, and download button are
-                    positioned using aspect and proportion constraints for
-                    responsive, adaptive layouts that scale with container size.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">Aspect Constraints</span>
-                    <span class="tech-stack">Proportions</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="02_proportions.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
+      .card {
+        display: block;
+        text-decoration: none;
+        padding: 28px 20px;
+        border-radius: var(--radius);
+        background: var(--card);
+        border: 1px solid var(--border);
+        text-align: center;
+        transition: 0.15s ease;
+        color: var(--text);
+      }
 
-            <div class="example-card">
-                <div class="example-title">03. Text Elements</div>
-                <div class="example-description">
-                    Introduction to UIText elements in constraint-based layouts.
-                    Shows how to create, style, and position text alongside
-                    images using the same constraint system. Demonstrates
-                    typography integration within the Laymur UI framework.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UIText</span>
-                    <span class="tech-stack">Typography</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="03_text_elements.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
+      .card:hover {
+        background: var(--card-hover);
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
 
-            <div class="example-card">
-                <div class="example-title">04. Micro Transformations</div>
-                <div class="example-description">
-                    Demonstrates UIMicro transformations and interactive
-                    animations. UI elements can be animated independently of
-                    constraints using micro transformations. Click interactions
-                    trigger GSAP-powered scale animations for engaging user
-                    feedback.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UIMicro</span>
-                    <span class="tech-stack">GSAP</span>
-                    <span class="tech-stack">Interactions</span>
-                </div>
-                <br /><br />
-                <a href="04_micro_transformations.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 1px;
+      }
 
-            <div class="example-card">
-                <div class="example-title">05. Nine Slice Elements</div>
-                <div class="example-description">
-                    Introduction to UINineSlice elements for creating scalable
-                    UI components with preserved border regions. A vignette
-                    overlay demonstrates nine-slice scaling that covers the
-                    entire layer while maintaining border quality at any size.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UINineSlice</span>
-                    <span class="tech-stack">Cover Constraints</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="05_nine_slice.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
+      .subtitle {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
 
-            <div class="example-card">
-                <div class="example-title">06. Progress Bars</div>
-                <div class="example-description">
-                    Introduction to UIProgress elements for creating dynamic
-                    progress bars and health indicators. A health bar is
-                    positioned above the character showing real-time progress
-                    updates, demonstrating foreground/background textures and
-                    color tinting.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UIProgress</span>
-                    <span class="tech-stack">Health Bars</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="06_progress_bars.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
+  <body>
+    <div class="container">
+      <a href="./editor/index.html" class="card">
+        <div class="title">EDITOR</div>
+        <div class="subtitle">Visual editor</div>
+      </a>
 
-            <div class="example-card">
-                <div class="example-title">07. Particle System</div>
-                <div class="example-description">
-                    Introduction to UIEmitter for creating particle effects.
-                    Particles rise from the bottom of the screen with
-                    physics-based behaviors including directional gravity,
-                    velocity damping, and rotation. Demonstrates spawn modules
-                    and rendering with color fade over particle lifetime.
-                </div>
-                <div>
-                    <span class="tech-stack">Three.js</span>
-                    <span class="tech-stack">UIEmitter</span>
-                    <span class="tech-stack">Particles</span>
-                    <span class="tech-stack">Laymur</span>
-                </div>
-                <br /><br />
-                <a href="07_particle_system.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
-        </div>
-
-        <h2 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--primary-color); border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem;">🧩 Addons</h2>
-
-        <div class="examples-grid">
-            <div class="example-card">
-                <div class="example-title">08. Animations</div>
-                <div class="example-description">
-                    Introduction to laymur-animations addon providing common UI
-                    animation patterns. Features entrance animations like
-                    fade-in, slide-in, and appear effects using UIAppearAnimator
-                    for smooth element transitions. A collection of ready-to-use
-                    animation patterns built on GSAP.
-                </div>
-                <div>
-                    <span class="tech-stack">laymur-animations</span>
-                    <span class="tech-stack">UIAppearAnimator</span>
-                    <span class="tech-stack">Entrance Effects</span>
-                    <span class="tech-stack">Addon</span>
-                </div>
-                <br /><br />
-                <a href="08_animations.html" class="example-link"
-                    >View Example</a
-                >
-            </div>
-        </div>
-
-        <div class="github-link">
-            <p>
-                📚
-                <a href="https://github.com/jango-git/laymur" target="_blank"
-                    >View Source on GitHub</a
-                >
-                | 📦
-                <a href="https://www.npmjs.com/package/laymur" target="_blank"
-                    >NPM Package</a
-                >
-            </p>
-        </div>
-    </body>
+      <a href="./examples/index.html" class="card">
+        <div class="title">EXAMPLES</div>
+        <div class="subtitle">Docs & usage</div>
+      </a>
+    </div>
+  </body>
 </html>

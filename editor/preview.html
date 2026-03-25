@@ -1,0 +1,520 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1a1a1a;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.157",
+          "@lume/kiwi": "https://esm.sh/@lume/kiwi@0.4.4",
+          "ferrsign": "https://esm.sh/ferrsign@0.0.4",
+          "laymur": "https://esm.sh/laymur@0.18.1?external=three"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <script type="module">
+      import { WebGLRenderer, TextureLoader, Clock, SRGBColorSpace } from "three";
+      import {
+        UIFullscreenLayer,
+        UIImage,
+        UIResizePolicyNone,
+        UIResizePolicyCover,
+        UIResizePolicyFit,
+        UIResizePolicyCross,
+        UIResizePolicyCrossInverted,
+        UIResizePolicyFixedWidth,
+        UIResizePolicyFixedHeight,
+        UIHorizontalDistanceConstraint,
+        UIVerticalDistanceConstraint,
+        UIAspectConstraint,
+        UIWidthConstraint,
+        UIHeightConstraint,
+        UIHorizontalProportionConstraint,
+        UIVerticalProportionConstraint,
+      } from "laymur";
+
+      /**
+       * PREVIEW_CONSTRAINT_REGISTRY
+       *
+       * Each entry handles one editor-level constraint type and maps it to one or more
+       * library constraint instances (compound handle pattern).
+       *
+       * Interface per entry:
+       *   resolveElements(fieldValues, elementMap, layer) : array of resolved elements, or null
+       *   create(...resolvedElements, fieldValues) : CompoundConstraintHandle
+       *
+       * CompoundConstraintHandle:
+       *   { instances, update(fieldValues), destroy() }
+       *
+       * To add a compound/procedural type: add an entry here + add the descriptor in
+       * js/constraint-registry.js. No other file needs to change.
+       */
+      const PREVIEW_CONSTRAINT_REGISTRY = {
+        horizontal: {
+          resolveElements({ elementA, elementB }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const inst = new UIHorizontalDistanceConstraint(a, b, {
+              distance: fv.distance,
+              anchorA: fv.anchorA,
+              anchorB: fv.anchorB,
+            });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.distance = p.distance;
+                inst.anchorA = p.anchorA;
+                inst.anchorB = p.anchorB;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        vertical: {
+          resolveElements({ elementA, elementB }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const inst = new UIVerticalDistanceConstraint(a, b, {
+              distance: fv.distance,
+              anchorA: fv.anchorA,
+              anchorB: fv.anchorB,
+            });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.distance = p.distance;
+                inst.anchorA = p.anchorA;
+                inst.anchorB = p.anchorB;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        aspect: {
+          resolveElements({ elementA }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            return a ? [a] : null;
+          },
+          create(a, fv) {
+            const inst = new UIAspectConstraint(a, { aspect: fv.value });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.aspect = p.value;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        width: {
+          resolveElements({ elementA }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            return a ? [a] : null;
+          },
+          create(a, fv) {
+            const inst = new UIWidthConstraint(a, { width: fv.value });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.width = p.value;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        height: {
+          resolveElements({ elementA }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            return a ? [a] : null;
+          },
+          create(a, fv) {
+            const inst = new UIHeightConstraint(a, { height: fv.value });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.height = p.value;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        horizontalProportion: {
+          resolveElements({ elementA, elementB }, elementMap) {
+            const a = elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const inst = new UIHorizontalProportionConstraint(a, b, { proportion: fv.value });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.proportion = p.value;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        verticalProportion: {
+          resolveElements({ elementA, elementB }, elementMap) {
+            const a = elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const inst = new UIVerticalProportionConstraint(a, b, { proportion: fv.value });
+            return {
+              instances: [inst],
+              update(p) {
+                inst.proportion = p.value;
+              },
+              destroy() {
+                inst.destroy();
+              },
+            };
+          },
+        },
+        size2d: {
+          resolveElements({ elementA }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            return a ? [a] : null;
+          },
+          create(a, fv) {
+            const instW = new UIWidthConstraint(a, { width: fv.width });
+            const instH = new UIHeightConstraint(a, { height: fv.height });
+            return {
+              instances: [instW, instH],
+              update(p) {
+                instW.width = p.width;
+                instH.height = p.height;
+              },
+              destroy() {
+                instW.destroy();
+                instH.destroy();
+              },
+            };
+          },
+        },
+        distance2d: {
+          resolveElements({ elementA, elementB }, elementMap, layer) {
+            const a = elementA === "layer" ? layer : elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const h = new UIHorizontalDistanceConstraint(a, b, {
+              distance: fv.hDistance,
+              anchorA: fv.hAnchorA,
+              anchorB: fv.hAnchorB,
+            });
+
+            const v = new UIVerticalDistanceConstraint(a, b, {
+              distance: fv.vDistance,
+              anchorA: fv.vAnchorA,
+              anchorB: fv.vAnchorB,
+            });
+
+            return {
+              instances: [h, v],
+              update(p) {
+                h.distance = p.hDistance;
+                h.anchorA = p.hAnchorA;
+                h.anchorB = p.hAnchorB;
+
+                v.distance = p.vDistance;
+                v.anchorA = p.vAnchorA;
+                v.anchorB = p.vAnchorB;
+              },
+              destroy() {
+                h.destroy();
+                v.destroy();
+              },
+            };
+          },
+        },
+
+        proportion2d: {
+          resolveElements({ elementA, elementB }, elementMap) {
+            const a = elementMap.get(elementA)?.element;
+            const b = elementMap.get(elementB)?.element;
+            return a && b ? [a, b] : null;
+          },
+          create(a, b, fv) {
+            const h = new UIHorizontalProportionConstraint(a, b, {
+              proportion: fv.hProportion,
+            });
+
+            const v = new UIVerticalProportionConstraint(a, b, {
+              proportion: fv.vProportion,
+            });
+
+            return {
+              instances: [h, v],
+              update(p) {
+                h.proportion = p.hProportion;
+                v.proportion = p.vProportion;
+              },
+              destroy() {
+                h.destroy();
+                v.destroy();
+              },
+            };
+          },
+        },
+      };
+
+      const canvas = document.getElementById("canvas");
+
+      const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const clock = new Clock();
+
+      /**
+       * layerMap: layerId : { layer, elementMap, constraintMap }
+       * @type {Map<string, {
+       *   layer: UIFullscreenLayer,
+       *   elementMap: Map<string, { element: UIImage, texture: import("three").Texture }>,
+       *   constraintMap: Map<string, { instances: object[], update: Function, destroy: Function }>
+       * }>}
+       */
+      const layerMap = new Map();
+      let activeLayerId = null;
+
+      /**
+       * Constraints whose elements weren't loaded yet when ADD_CONSTRAINT arrived.
+       * Retried after every ADD_IMAGE completes.
+       */
+      const pendingConstraints = [];
+
+      function _tryApplyPendingConstraints() {
+        const retry = [];
+        for (const item of pendingConstraints) {
+          const ctx = layerMap.get(item.layerId);
+          if (!ctx) continue;
+          const def = PREVIEW_CONSTRAINT_REGISTRY[item.constraintType];
+          if (!def) continue;
+          const resolved = def.resolveElements(item.fieldValues, ctx.elementMap, ctx.layer);
+          if (!resolved) {
+            retry.push(item);
+            continue;
+          }
+          ctx.constraintMap.set(item.id, def.create(...resolved, item.fieldValues));
+        }
+        pendingConstraints.length = 0;
+        pendingConstraints.push(...retry);
+      }
+
+      window.addEventListener("resize", () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const ctx = layerMap.get(activeLayerId);
+        if (ctx) ctx.layer.render(renderer, clock.getDelta());
+      }
+      animate();
+
+      function loadTexture(dataURL) {
+        return new Promise((resolve) => {
+          new TextureLoader().load(dataURL, (texture) => {
+            texture.colorSpace = SRGBColorSpace;
+            resolve(texture);
+          });
+        });
+      }
+
+      function buildPolicy(policyType, policyParams) {
+        switch (policyType) {
+          case "cover":
+            return new UIResizePolicyCover(policyParams.rectWidth, policyParams.rectHeight);
+          case "fit":
+            return new UIResizePolicyFit(policyParams.rectWidth, policyParams.rectHeight);
+          case "cross":
+            return new UIResizePolicyCross();
+          case "crossInverted":
+            return new UIResizePolicyCrossInverted();
+          case "fixedWidth":
+            return new UIResizePolicyFixedWidth(
+              policyParams.fixedWidthLandscape,
+              policyParams.fixedWidthPortrait,
+            );
+          case "fixedHeight":
+            return new UIResizePolicyFixedHeight(
+              policyParams.fixedHeightLandscape,
+              policyParams.fixedHeightPortrait,
+            );
+          case "none":
+          default:
+            return new UIResizePolicyNone();
+        }
+      }
+
+      window.addEventListener("message", async (event) => {
+        const { type, id, layerId, dataURL } = event.data;
+
+        if (type === "RESET_SCENE") {
+          for (const [, ctx] of layerMap) {
+            for (const [, handle] of ctx.constraintMap) handle.destroy();
+            for (const [, entry] of ctx.elementMap) {
+              entry.element.destroy();
+              entry.texture.dispose();
+            }
+          }
+          layerMap.clear();
+          activeLayerId = null;
+        }
+
+        if (type === "ADD_LAYER") {
+          const { name, policyType, policyParams } = event.data;
+          const layer = new UIFullscreenLayer();
+          layer.name = name;
+          layer.resizePolicy = buildPolicy(policyType, policyParams);
+          layerMap.set(layerId, {
+            layer,
+            elementMap: new Map(),
+            constraintMap: new Map(),
+          });
+        }
+
+        if (type === "SET_ACTIVE_LAYER") {
+          activeLayerId = layerId;
+        }
+
+        if (type === "REMOVE_LAYER") {
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          for (const [, handle] of ctx.constraintMap) handle.destroy();
+          for (const [, entry] of ctx.elementMap) {
+            entry.element.destroy();
+            entry.texture.dispose();
+          }
+          layerMap.delete(layerId);
+        }
+
+        if (type === "SET_LAYER_CONFIG") {
+          const { name, policyType, policyParams } = event.data;
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          ctx.layer.name = name;
+          ctx.layer.resizePolicy = buildPolicy(policyType, policyParams);
+        }
+
+        if (type === "ADD_IMAGE") {
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const texture = await loadTexture(dataURL);
+          const image = new UIImage(ctx.layer, texture);
+          ctx.elementMap.set(id, { element: image, texture });
+          _tryApplyPendingConstraints();
+        }
+
+        if (type === "REMOVE_ELEMENT") {
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const entry = ctx.elementMap.get(id);
+          if (entry) {
+            entry.element.destroy();
+            entry.texture.dispose();
+            ctx.elementMap.delete(id);
+          }
+        }
+
+        if (type === "ADD_CONSTRAINT") {
+          const { constraintType, fieldValues } = event.data;
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const def = PREVIEW_CONSTRAINT_REGISTRY[constraintType];
+          if (!def) return;
+          const resolved = def.resolveElements(fieldValues, ctx.elementMap, ctx.layer);
+          if (!resolved) {
+            pendingConstraints.push({ id, layerId, constraintType, fieldValues });
+            return;
+          }
+          ctx.constraintMap.set(id, def.create(...resolved, fieldValues));
+        }
+
+        if (type === "UPDATE_CONSTRAINT") {
+          const { fieldValues } = event.data;
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const handle = ctx.constraintMap.get(id);
+          if (handle) handle.update(fieldValues);
+        }
+
+        if (type === "REMOVE_CONSTRAINT") {
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const handle = ctx.constraintMap.get(id);
+          if (handle) {
+            handle.destroy();
+            ctx.constraintMap.delete(id);
+          }
+        }
+
+        if (type === "REORDER_ELEMENTS") {
+          const { orderedIds } = event.data;
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          orderedIds.forEach((elId, index) => {
+            const entry = ctx.elementMap.get(elId);
+            if (entry) entry.element.zIndex = index;
+          });
+        }
+
+        if (type === "SET_ELEMENT_TEXTURE") {
+          const ctx = layerMap.get(layerId);
+          if (!ctx) return;
+          const entry = ctx.elementMap.get(id);
+          if (!entry) return;
+          const newTexture = await loadTexture(event.data.dataURL);
+          entry.element.texture.set(newTexture);
+          entry.texture.dispose();
+          entry.texture = newTexture;
+        }
+      });
+    </script>
+  </body>
+</html>

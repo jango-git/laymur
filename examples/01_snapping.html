@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Laymur UI Demo - Distance Constraints</title>
+    <link rel="stylesheet" href="shared-styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="resize-handler.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="demo-section">
+        <div class="demo-area" id="demoArea">
+          <iframe
+            id="demoFrame"
+            src="/examples/01_snapping_content.html"
+            title="Laymur Proportions Demo"
+            sandbox="allow-scripts allow-same-origin"
+            loading="lazy"
+          ></iframe>
+          <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <h2>What's happening here?</h2>
+
+        <p>
+          This example demonstrates positioning UI elements using
+          <span class="highlight">distance constraints</span> to maintain fixed pixel distances from
+          container edges. A logotype is positioned in the top-left corner and a download button in
+          the top-right corner, both with 50px margins.
+        </p>
+
+        <pre><code class="language-javascript">// Create horizontal constraint
+// Logotype 50px from left edge of layer
+new UIHorizontalDistanceConstraint(layer, logotype, {
+  anchorA: 0,
+  anchorB: 0,
+  distance: 50,
+});
+
+// Create vertical constraint
+// Logotype 50px from top edge of layer
+new UIVerticalDistanceConstraint(layer, logotype, {
+  anchorA: 1,
+  anchorB: 1,
+  distance: -50,
+});</code></pre>
+
+        <div class="warning">
+          <strong>💡 Interactive:</strong> Use the resize handle to see how constraints maintain
+          element positioning as the viewport changes.
+        </div>
+
+        <div class="navigation">
+          <a href="/examples/00_basic_layer.html" class="nav-button">
+            <span class="arrow">←</span>
+            <span>Previous Lesson</span>
+          </a>
+          <a href="/examples/02_proportions.html" class="nav-button">
+            <span>Next Lesson</span>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+
+        <div class="additional-actions">
+          <a href="index.html" class="nav-button nav-button-secondary">
+            <span>🏠 Home</span>
+          </a>
+          <a
+            href="https://github.com/jango-git/laymur/blob/gh-pages/examples/01_snapping_content.js"
+            target="_blank"
+            class="nav-button nav-button-accent"
+          >
+            <span>📝 Source Code</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+  </body>
+</html>
