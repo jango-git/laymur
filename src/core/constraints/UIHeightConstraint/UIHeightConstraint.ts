@@ -17,7 +17,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
    * @param options Height configuration. Defaults to element's current height.
    */
   constructor(
-    private readonly element: UIPlaneElement & UILayerElement,
+    public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIHeightConstraintOptions> = {},
   ) {
     if (options.height !== undefined) {

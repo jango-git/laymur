@@ -71,9 +71,10 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
   }
 
   /** Removes constraint from solver and cleans up listeners */
-  public destroy(): void {
+  public override destroy(): void {
     this.layer.signalOrientationChanged.off(this.onOrientationChange);
     this.solverWrapper.removeConstraint(this.constraint);
+    super.destroy();
   }
 
   /**

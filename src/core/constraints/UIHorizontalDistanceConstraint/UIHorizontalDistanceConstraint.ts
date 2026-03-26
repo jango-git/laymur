@@ -24,8 +24,8 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
    * @param options Distance configuration
    */
   constructor(
-    private readonly a: UIPointElement | UIPlaneElement,
-    private readonly b: UIPointElement | UIPlaneElement,
+    public readonly a: UIPointElement | UIPlaneElement,
+    public readonly b: UIPointElement | UIPlaneElement,
     options: Partial<UIHorizontalDistanceConstraintOptions> = {},
   ) {
     if (options.anchorA !== undefined) {

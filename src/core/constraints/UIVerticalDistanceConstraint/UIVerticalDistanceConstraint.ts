@@ -20,8 +20,8 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
    * @param options Distance configuration
    */
   constructor(
-    private readonly a: UIPointElement | UIPlaneElement,
-    private readonly b: UIPointElement | UIPlaneElement,
+    public readonly a: UIPointElement | UIPlaneElement,
+    public readonly b: UIPointElement | UIPlaneElement,
     options: Partial<UIVerticalDistanceConstraintOptions> = {},
   ) {
     if (options.anchorA !== undefined) {

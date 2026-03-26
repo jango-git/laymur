@@ -3,6 +3,7 @@ import { Ferrsign2, Ferrsign3 } from "ferrsign";
 import type { WebGLRenderer } from "three";
 import type { UIPlaneElement } from "../../miscellaneous/shared";
 
+import type { UIConstraint } from "../../constraints/UIConstraint";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import { UIOrientation } from "../../miscellaneous/UIOrientation";
@@ -40,6 +41,11 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
   private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
   private readonly signalResizedInternal = new Ferrsign3<number, number, UILayer>();
+
+  private readonly signalConstraintAddedInternal = new Ferrsign2<UILayer, UIConstraint>();
+  private readonly signalConstraintRemovedInternal = new Ferrsign2<UILayer, UIConstraint>();
+
+  private readonly constraintRegistryInternal: UIConstraint[] = [];
 
   constructor(options: Partial<UILayerOptions>) {
     if (options.width !== undefined) {
@@ -99,6 +105,26 @@ export abstract class UILayer implements UIPlaneElement {
     return this.solverWrapperInternal.readVariableValue(this.hVariable);
   }
 
+  /** X coordinate of right edge */
+  public get oppositeX(): number {
+    return this.x + this.width;
+  }
+
+  /** Y coordinate of top edge */
+  public get oppositeY(): number {
+    return this.y + this.height;
+  }
+
+  /** X coordinate of horizontal center */
+  public get centerX(): number {
+    return this.x + this.width / 2;
+  }
+
+  /** Y coordinate of vertical center */
+  public get centerY(): number {
+    return this.y + this.height / 2;
+  }
+
   /** Current visibility and interactivity mode */
   public get mode(): UILayerMode {
     return this.modeInternal;
@@ -129,12 +155,46 @@ export abstract class UILayer implements UIPlaneElement {
     return this.signalResizedInternal;
   }
 
+  /** Signal fired when a constraint is added */
+  public get signalConstraintAdded(): FerrsignView2<UILayer, UIConstraint> {
+    return this.signalConstraintAddedInternal;
+  }
+
+  /** Signal fired when a constraint is removed */
+  public get signalConstraintRemoved(): FerrsignView2<UILayer, UIConstraint> {
+    return this.signalConstraintRemovedInternal;
+  }
+
+  /** Constraint registry */
+  public get constraintRegistry(): readonly UIConstraint[] {
+    return this.constraintRegistryInternal;
+  }
+
   /** Updates visibility and interactivity mode */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;
       this.signalModeChangedInternal.emit(this.modeInternal, this);
     }
+  }
+
+  /** @internal */
+  public addConstraint(constraint: UIConstraint): void {
+    if (this.constraintRegistryInternal.includes(constraint)) {
+      throw new Error(`UILayer.addConstraint: constraint is already added to this layer`);
+    }
+    this.constraintRegistryInternal.push(constraint);
+    this.signalConstraintAddedInternal.emit(this, constraint);
+  }
+
+  /** @internal */
+  public removeConstraint(constraint: UIConstraint): void {
+    const index = this.constraintRegistryInternal.indexOf(constraint);
+    if (index === -1) {
+      throw new Error(`UILayer.removeConstraint: constraint is not found in this layer`);
+    }
+    this.constraintRegistryInternal.splice(index, 1);
+    this.signalConstraintRemovedInternal.emit(this, constraint);
   }
 
   protected resizeInternal(width: number, height: number): void {
@@ -144,7 +204,6 @@ export abstract class UILayer implements UIPlaneElement {
     this.signalResizedInternal.emit(width, height, this);
 
     const orientation = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
-
     if (orientation !== this.orientationInternal) {
       this.orientationInternal = orientation;
       this.signalOrientationChangedInternal.emit(this.orientationInternal, this);

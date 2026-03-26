@@ -30,9 +30,9 @@ export class UIVerticalInterpolationConstraint extends UISingleParameterConstrai
    * @param options Interpolation configuration
    */
   constructor(
-    private readonly a: UIPointElement | UIPlaneElement,
-    private readonly b: UIPointElement | UIPlaneElement,
-    private readonly c: UIPointElement | UIPlaneElement,
+    public readonly a: UIPointElement | UIPlaneElement,
+    public readonly b: UIPointElement | UIPlaneElement,
+    public readonly c: UIPointElement | UIPlaneElement,
     options: Partial<UIVerticalInterpolationConstraintOptions> = {},
   ) {
     if (options.anchorA !== undefined) {

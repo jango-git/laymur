@@ -17,7 +17,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
    * @param options Aspect configuration. Defaults to element's current ratio.
    */
   constructor(
-    private readonly element: UIPlaneElement & UILayerElement,
+    public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIAspectConstraintOptions> = {},
   ) {
     if (options.aspect !== undefined) {

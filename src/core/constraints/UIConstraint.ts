@@ -16,5 +16,10 @@ export abstract class UIConstraint {
   ) {
     this.solverWrapper = this.layer.solverWrapper;
     this.name = name ?? "";
+    this.layer.addConstraint(this);
+  }
+
+  public destroy(): void {
+    this.layer.removeConstraint(this);
   }
 }

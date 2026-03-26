@@ -18,8 +18,8 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
    * @param options Proportion configuration
    */
   constructor(
-    private readonly a: UIPlaneElement,
-    private readonly b: UIPlaneElement,
+    public readonly a: UIPlaneElement,
+    public readonly b: UIPlaneElement,
     options: Partial<UIHorizontalProportionConstraintOptions> = {},
   ) {
     if (options.proportion !== undefined) {

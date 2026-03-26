@@ -40,6 +40,7 @@ export default {
   input: {
     index: "src/core/index.ts",
     "particles/index": "src/particles/index.ts",
+    "debug/index": "src/debug/index.ts",
   },
   output: {
     dir: "dist",

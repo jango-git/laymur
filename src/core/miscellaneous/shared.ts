@@ -30,6 +30,16 @@ export interface UIPlaneElement extends UIPointElement {
   readonly width: number;
   /** Height in world units */
   readonly height: number;
+
+  /** Opposite X coordinate in world units */
+  readonly oppositeX: number;
+  /** Opposite Y coordinate in world units */
+  readonly oppositeY: number;
+
+  /** Center X coordinate in world units */
+  readonly centerX: number;
+  /** Center Y coordinate in world units */
+  readonly centerY: number;
 }
 
 /**

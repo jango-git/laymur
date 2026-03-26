@@ -17,7 +17,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
    * @param options Width configuration. Defaults to element's current width.
    */
   constructor(
-    private readonly element: UIPlaneElement & UILayerElement,
+    public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIWidthConstraintOptions> = {},
   ) {
     if (options.width !== undefined) {
