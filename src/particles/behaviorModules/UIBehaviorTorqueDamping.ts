@@ -1,11 +1,11 @@
-import { MathUtils, type InstancedBufferAttribute } from "three";
+import type { InstancedBufferAttribute } from "three";
+import { MathUtils } from "three";
 import { assertValidNonNegativeNumber } from "../../core/miscellaneous/asserts";
+import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
 import {
   BUILTIN_OFFSET_RANDOM_E,
   BUILTIN_OFFSET_TORQUE,
   resolveUIRangeConfig,
-  type UIRange,
-  type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 

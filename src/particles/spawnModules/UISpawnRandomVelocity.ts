@@ -1,12 +1,11 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
+import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
 import {
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
   resolveUIRangeConfig,
-  type UIRange,
-  type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 

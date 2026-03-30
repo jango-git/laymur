@@ -1,3 +1,4 @@
+import type { UILayer } from "../core";
 import {
   UIAspectConstraint,
   UIHeightConstraint,
@@ -6,7 +7,6 @@ import {
   UIVerticalDistanceConstraint,
   UIVerticalInterpolationConstraint,
   UIWidthConstraint,
-  type UILayer,
 } from "../core";
 import type { UIConstraint } from "../core/constraints/UIConstraint";
 import { UIAspectDebug } from "./UIAspectDebug";

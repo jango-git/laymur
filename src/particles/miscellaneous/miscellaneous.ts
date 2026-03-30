@@ -1,3 +1,4 @@
+import type { Vector2Tuple } from "three";
 import {
   ClampToEdgeWrapping,
   DataTexture,
@@ -7,7 +8,6 @@ import {
   Texture,
   UnsignedByteType,
   UVMapping,
-  type Vector2Tuple,
 } from "three";
 import type { UIColor } from "../../core";
 import type { Vector2Like } from "../../core/miscellaneous/math";

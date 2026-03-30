@@ -1,8 +1,10 @@
-import { MathUtils, type InstancedBufferAttribute } from "three";
+import type { InstancedBufferAttribute } from "three";
+import { MathUtils } from "three";
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
 } from "../../core/miscellaneous/asserts";
+import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
@@ -11,9 +13,6 @@ import {
   BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
   resolveUIRangeConfig,
-  type UIAspectConfig,
-  type UIRange,
-  type UIRangeConfig,
 } from "../miscellaneous/miscellaneous";
 import { UIBehaviorModule } from "./UIBehaviorModule";
 

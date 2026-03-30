@@ -5,12 +5,13 @@ import {
   ShaderMaterial,
 } from "three";
 import { UIColor } from "../../core";
-import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
-import {
-  resolveGLSLTypeInfo,
-  type UIProperty,
-  type UIPropertyName,
+import type {
+  GLProperty,
+  GLTypeInfo,
+  UIProperty,
+  UIPropertyName,
 } from "../../core/miscellaneous/generic-plane/shared";
+import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
 import { checkSRGBSupport } from "../../core/miscellaneous/webglCapabilities";
 
 export const INSTANCED_PARTICLE_GEOMETRY = ((): InstancedBufferGeometry => {

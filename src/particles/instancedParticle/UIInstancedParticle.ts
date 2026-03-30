@@ -1,10 +1,7 @@
 import type { InstancedBufferGeometry, ShaderMaterial, Vector2 } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
-import {
-  resolvePropertyUniform,
-  type GLProperty,
-  type GLTypeInfo,
-} from "../../core/miscellaneous/generic-plane/shared";
+import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
+import { resolvePropertyUniform } from "../../core/miscellaneous/generic-plane/shared";
 import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_LIFETIME } from "../miscellaneous/miscellaneous";
 import { buildParticleMaterial, INSTANCED_PARTICLE_GEOMETRY } from "./UIInstancedParticle.Internal";
 

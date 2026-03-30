@@ -15,11 +15,12 @@
 
 ## Features
 
-* **Cassowary solver** — constraint-based layouts via `@lume/kiwi`
-* **Orientation-aware** — define portrait and landscape rules in one layout, solver toggles automatically
-* **Micro-transforms** — visual-only transforms (scale, rotation, offset) that bypass the solver
-* **Resize policies** — Cover, Fit, FixedHeight, FixedWidth, Cross strategies
-* **Modular particles** — separate `laymur/particles` entry point, import only if needed
+* **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
+* **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
+* **Micro-transforms** - visual-only transforms (scale, rotation, offset) that bypass the solver
+* **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
+* **Modular particles** - separate `laymur/particles` entry point, import only if needed
+* **Debug overlay** - separate `laymur/debug` entry point, constraint visualization
 
 ## Installation
 
@@ -93,7 +94,7 @@ new UIHorizontalProportionConstraint(layer, element, {
 
 ### 3. Micro-transforms
 
-For animations, use `.micro` — updates visual matrix without triggering the solver.
+For animations, use `.micro` - updates visual matrix without triggering the solver.
 
 ```typescript
 element.micro.scaleX = Math.sin(Date.now() * 0.001) + 1;
@@ -118,6 +119,34 @@ const emitter = new UIEmitter(
 emitter.play(60); // particles/sec
 ```
 
+### 5. Debug Overlay
+
+`laymur/debug` renders visual overlays for constraints - useful during development to inspect layout relationships.
+
+`UILayerDebug` automatically tracks all constraints on a layer and creates the corresponding overlays. Individual constraint types can be toggled on/off.
+
+```typescript
+import { UILayerDebug } from 'laymur/debug';
+
+const debug = new UILayerDebug(layer, {
+  showAspect: true,
+  showWidth: true,
+  showHeight: true,
+  showHorizontalDistance: true,
+  showVerticalDistance: true,
+  showHorizontalInterpolation: false,
+  showVerticalInterpolation: false,
+});
+
+// Toggle a category at runtime
+debug.showAspect = false;
+
+// Clean up
+debug.destroy();
+```
+
+Overlays respect orientation - they hide automatically when their constraint's orientation is inactive.
+
 ## API Overview
 
 Most commonly used exports (not exhaustive):
@@ -134,13 +163,18 @@ UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
 
 UIEmitter, UISpawnRectangle, UISpawnRandomLifetime, UIBehaviorDirectionalGravity, UIBehaviorVelocityDamping, UIRenderingTexture, UIRenderingColorOverLife
 
+### Debug (laymur/debug)
+
+UILayerDebug, UIAspectDebug, UIHeightDebug, UIWidthDebug, UIHorizontalDistanceDebug, UIVerticalDistanceDebug, UIHorizontalInterpolationDebug, UIVerticalInterpolationDebug
+
 ## Entry Points
 
 ```json
 // package.json
 "exports": {
   ".": "./dist/index.js",
-  "./particles": "./dist/particles/index.js"
+  "./particles": "./dist/particles/index.js",
+  "./debug": "./dist/debug/index.js"
 }
 ```
 

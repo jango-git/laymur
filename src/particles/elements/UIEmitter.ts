@@ -3,11 +3,8 @@ import { Vector2 } from "three";
 import type { UILayer } from "../../core";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor";
 import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal";
-import {
-  resolveGLSLTypeInfo,
-  type GLProperty,
-  type GLTypeInfo,
-} from "../../core/miscellaneous/generic-plane/shared";
+import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
+import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
 import { isUIModeVisible } from "../../core/miscellaneous/UIMode";
 import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule";
 import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle";
@@ -32,14 +29,13 @@ import {
 } from "../miscellaneous/miscellaneous";
 import type { UIRenderingModule } from "../renderingModules/UIRenderingModule";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule";
+import type { UIEmitterMode, UIEmitterPlayOptions } from "./UIEmitter.Internal";
 import {
   EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
   EMITTER_DEFAULT_CAPACITY_STEP,
   EMITTER_DEFAULT_EXPECTED_CAPACITY,
   EMITTER_DEFAULT_MODE,
   ignoreInput,
-  type UIEmitterMode,
-  type UIEmitterPlayOptions,
 } from "./UIEmitter.Internal";
 
 export interface UIEmitterOptions extends UIAnchorOptions {

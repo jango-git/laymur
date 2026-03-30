@@ -1,11 +1,5 @@
-import {
-  CanvasTexture,
-  Object3D,
-  Sprite,
-  SpriteMaterial,
-  Vector3,
-  type WebGLRenderer,
-} from "three";
+import type { WebGLRenderer } from "three";
+import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three";
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
@@ -27,7 +21,6 @@ export class UIVerticalInterpolationDebug implements UIConstraintDebug {
   public readonly tint: UIColor = new UIColor("cyan");
 
   private readonly container: Object3D = new Object3D();
-
   private readonly baseLineMaterial: LineMaterial = new LineMaterial({
     linewidth: DEBUG_LINE_WIDTH,
     transparent: true,

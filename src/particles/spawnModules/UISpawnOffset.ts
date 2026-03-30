@@ -1,11 +1,11 @@
 import type { InstancedBufferAttribute } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import type { Vector2Like } from "../../core/miscellaneous/math";
+import type { UIVector2Config } from "../miscellaneous/miscellaneous";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
   resolveUIVector2Config,
-  type UIVector2Config,
 } from "../miscellaneous/miscellaneous";
 import { UISpawnModule } from "./UISpawnModule";
 

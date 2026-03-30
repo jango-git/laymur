@@ -1,4 +1,5 @@
-import { MathUtils, type InstancedBufferAttribute } from "three";
+import type { InstancedBufferAttribute } from "three";
+import { MathUtils } from "three";
 import { assertValidNumber } from "../../core/miscellaneous/asserts";
 import type { Vector2Like } from "../../core/miscellaneous/math";
 import {
