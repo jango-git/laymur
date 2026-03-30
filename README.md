@@ -36,8 +36,9 @@ Peer Dependencies:
 
 ## Visual Editor & Live Examples
 
-Check out visual editor and interactive examples at:  
-**[https://jango-git.github.io/laymur/](https://jango-git.github.io/laymur/)**
+Check out visual editor and interactive examples at:
+**[EDITOR](https://jango-git.github.io/laymur-docs/editor/index.html)**
+**[EXAMPLES](https://jango-git.github.io/laymur/examples/index.html)**
 
 ## Core Concepts
 
