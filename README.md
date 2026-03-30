@@ -37,8 +37,11 @@ Peer Dependencies:
 ## Visual Editor & Live Examples
 
 Check out visual editor and interactive examples at:
+
 **[EDITOR](https://jango-git.github.io/laymur-docs/editor/index.html)**
+
 **[EXAMPLES](https://jango-git.github.io/laymur/examples/index.html)**
+
 
 ## Core Concepts
 
@@ -167,17 +170,6 @@ UIEmitter, UISpawnRectangle, UISpawnRandomLifetime, UIBehaviorDirectionalGravity
 ### Debug (laymur/debug)
 
 UILayerDebug, UIAspectDebug, UIHeightDebug, UIWidthDebug, UIHorizontalDistanceDebug, UIVerticalDistanceDebug, UIHorizontalInterpolationDebug, UIVerticalInterpolationDebug
-
-## Entry Points
-
-```json
-// package.json
-"exports": {
-  ".": "./dist/index.js",
-  "./particles": "./dist/particles/index.js",
-  "./debug": "./dist/debug/index.js"
-}
-```
 
 ## License
 
