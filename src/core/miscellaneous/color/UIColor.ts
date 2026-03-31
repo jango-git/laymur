@@ -530,10 +530,10 @@ export class UIColor {
   public setHexRGBA(hex: number): this {
     assertValidNumber(hex, "UIColor.setHexRGBA.hex");
     this.ensureRGBUpdatedFromHSL();
-    const r = ((hex >> 16) & 0xff) / 255;
-    const g = ((hex >> 8) & 0xff) / 255;
-    const b = (hex & 0xff) / 255;
-    const a = ((hex >> 24) & 0xff) / 255;
+    const r = ((hex >> 24) & 0xff) / 255;
+    const g = ((hex >> 16) & 0xff) / 255;
+    const b = ((hex >> 8) & 0xff) / 255;
+    const a = (hex & 0xff) / 255;
     if (
       r !== this.rInternal ||
       g !== this.gInternal ||
