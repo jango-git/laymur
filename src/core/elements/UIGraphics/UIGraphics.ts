@@ -130,7 +130,7 @@ export class UIGraphics extends UIElement {
    * @param points - Array of [x, y] pairs
    * @param lineWidth - Line width in pixels
    */
-  public drawPolyline(points: [number, number][], color: UIColor, lineWidth = 1): this {
+  public drawPolyline(points: [number, number][], color: UIColorConfig, lineWidth = 1): this {
     if (points.length < 2) {
       return this;
     }
