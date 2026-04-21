@@ -1,4 +1,4 @@
-import type { Matrix3, Texture, Vector2 } from "three";
+import type { Matrix3, Vector2 } from "three";
 import { MathUtils } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer";
 import { assertValidNumber } from "../../miscellaneous/asserts";
@@ -9,6 +9,7 @@ import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import source from "../../shaders/UIProgress.glsl";
 import { UIElement } from "../UIElement/UIElement";
@@ -38,7 +39,7 @@ export class UIProgress extends UIElement {
    * @param texture - Texture to display
    * @param options - Configuration options
    */
-  constructor(layer: UILayer, texture: Texture, options: Partial<UIProgressOptions> = {}) {
+  constructor(layer: UILayer, texture: UITextureConfig, options: Partial<UIProgressOptions> = {}) {
     if (options.progress !== undefined) {
       assertValidNumber(options.progress, "UIProgress.constructor.options.progress");
     }
