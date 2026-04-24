@@ -8,7 +8,7 @@ export { UIBehaviorVelocityNoise } from "./behaviorModules/UIBehaviorVelocityNoi
 export { UIEmitter } from "./elements/UIEmitter";
 export { UIRenderingColorOverLife } from "./renderingModules/UIRenderingColorOverLife";
 export { UIRenderingColorOverVelocity } from "./renderingModules/UIRenderingColorOverVelocity";
-export { UITextureRenderingModule } from "./renderingModules/UIRenderingTexture";
+export { UIRenderingTexture } from "./renderingModules/UIRenderingTexture";
 export { UISpawnOffset } from "./spawnModules/UISpawnOffset";
 export { UISpawnRandomLifetime } from "./spawnModules/UISpawnRandomLifetime";
 export { UISpawnRandomRotation } from "./spawnModules/UISpawnRandomRotation";
