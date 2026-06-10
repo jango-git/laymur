@@ -34,6 +34,8 @@ export class UIInputWrapper implements UIInputWrapperView {
       throw new Error("UIInputWrapper.destroyInputCatcher.handler: handler not found");
     }
     this.catchers.splice(index, 1);
+    this.zIndicesDirty = true;
+    this.dirty = true;
   }
 
   public getZIndex(handler: number): number {

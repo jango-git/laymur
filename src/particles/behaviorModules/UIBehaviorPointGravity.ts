@@ -130,7 +130,6 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
       const dx = this.centerInternal.x - array[itemOffset + BUILTIN_OFFSET_POSITION_X];
       const dy = this.centerInternal.y - array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
-      // Constant over the life of a particle but different for each particle
       const thresholdT = array[itemOffset + BUILTIN_OFFSET_RANDOM_A];
       const threshold = MathUtils.lerp(this.threshold.min, this.threshold.max, thresholdT);
 
@@ -140,7 +139,6 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
         continue;
       }
 
-      // Constant over the life of a particle but different for each particle
       const strengthT = array[itemOffset + BUILTIN_OFFSET_RANDOM_B];
       const strength = MathUtils.lerp(
         this.strengthInternal.min,
@@ -148,7 +146,6 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
         strengthT,
       );
 
-      // Constant over the life of a particle but different for each particle
       const exponentT = array[itemOffset + BUILTIN_OFFSET_RANDOM_C];
       const exponent = MathUtils.lerp(
         this.exponentInternal.min,

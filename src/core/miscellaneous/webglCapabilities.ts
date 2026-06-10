@@ -51,7 +51,6 @@ function checkOffscreenCanvasSupportInternal(): boolean {
     gl.deleteFramebuffer(framebuffer);
     gl.deleteTexture(texture);
 
-    // Check that the read pixel is red (with tolerance)
     const isRedPixel =
       pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
     if (!isRedPixel) {

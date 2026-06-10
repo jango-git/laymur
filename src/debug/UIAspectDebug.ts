@@ -132,7 +132,7 @@ export class UIAspectDebug implements UIConstraintDebug {
     ]);
 
     const nextText: string =
-      this.constraint.aspect.toFixed(2) + " (" + width.toFixed(0) + "×" + height.toFixed(0) + ")";
+      this.constraint.aspect.toFixed(2) + " (" + width.toFixed(0) + "x" + height.toFixed(0) + ")";
 
     if (nextText !== this.lastRenderedText || tintDirty) {
       this.drawText(nextText);

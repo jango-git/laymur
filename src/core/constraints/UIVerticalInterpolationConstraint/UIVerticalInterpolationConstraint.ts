@@ -181,7 +181,6 @@ export class UIVerticalInterpolationConstraint extends UISingleParameterConstrai
       throw new Error("UIVerticalInterpolationConstraint.buildLHS.c: invalid element type");
     }
 
-    // C - A*(1-t) - B*t = 0
     const aScaled = aExpression.clone().multiply(1 - this.tInternal);
     const bScaled = bExpression.clone().multiply(this.tInternal);
     return UIExpression.minus(UIExpression.minus(cExpression, aScaled), bScaled);

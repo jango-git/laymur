@@ -51,3 +51,4 @@ export { UIOrientation } from "./miscellaneous/UIOrientation";
 export { UIPriority } from "./miscellaneous/UIPriority";
 export { UIRelation } from "./miscellaneous/UIRelation";
 export { UITransparencyMode } from "./miscellaneous/UITransparencyMode";
+export { UIBlendMode } from "./miscellaneous/UIBlendMode";

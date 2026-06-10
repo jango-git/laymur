@@ -18,6 +18,7 @@
 * **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
 * **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
 * **Micro-transforms** - visual-only transforms (scale, rotation, offset) that bypass the solver
+* **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
 * **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
 * **Modular particles** - separate `laymur/particles` entry point, import only if needed
 * **Debug overlay** - separate `laymur/debug` entry point, constraint visualization
@@ -33,6 +34,7 @@ Peer Dependencies:
 * `three` (>=0.157.0 <0.180.0)
 * `@lume/kiwi` (^0.4.4)
 * `ferrsign` (^0.0.4)
+* `fast-simplex-noise` (^4.0.0) - only required when using `laymur/particles`
 
 ## Visual Editor & Live Examples
 
@@ -105,9 +107,24 @@ element.micro.scaleX = Math.sin(Date.now() * 0.001) + 1;
 element.micro.rotation += 0.01;
 ```
 
-### 4. Particle System
+### 4. Color Adjustment
 
-Modular pipeline: Spawn → Behavior → Rendering.
+Every element supports per-element color tweaks that run in the shader, independent of the layout solver.
+
+```typescript
+import { UIBlendMode } from 'laymur';
+
+element.hue = 180;        // hue shift in degrees
+element.saturation = 0.5; // multiplier (1 = unchanged, 0 = grayscale)
+element.lightness = 0.1;  // offset (0 = unchanged)
+
+// Additive blending (light accumulation), only affects BLEND transparency
+element.blendMode = UIBlendMode.ADDITIVE;
+```
+
+### 5. Particle System
+
+Modular pipeline: Spawn -> Behavior -> Rendering.
 
 ```typescript
 import { UIEmitter, UISpawnRectangle, UIBehaviorDirectionalGravity, UIRenderingTexture } from 'laymur/particles';
@@ -123,7 +140,7 @@ const emitter = new UIEmitter(
 emitter.play(60); // particles/sec
 ```
 
-### 5. Debug Overlay
+### 6. Debug Overlay
 
 `laymur/debug` renders visual overlays for constraints - useful during development to inspect layout relationships.
 

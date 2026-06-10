@@ -60,7 +60,6 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matr
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      // Constant over the life of a particle but different for each particle
       const dampingT = array[itemOffset + BUILTIN_OFFSET_RANDOM_B];
       const dampingFactor = Math.pow(
         1 - MathUtils.lerp(this.dampingInternal.min, this.dampingInternal.max, dampingT),

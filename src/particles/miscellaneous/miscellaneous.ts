@@ -1,3 +1,4 @@
+import { makeNoise2D } from "fast-simplex-noise";
 import type { Vector2Tuple } from "three";
 import {
   ClampToEdgeWrapping,
@@ -58,10 +59,7 @@ export function resolveAspect(config: number | UITextureConfig): number {
   return config.sourceSize.w / config.sourceSize.h;
 }
 
-export function generateNoise2D(x: number, y: number): number {
-  const noise = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453123;
-  return (noise - Math.floor(noise)) * 2 - 1;
-}
+export const generateNoise2D = makeNoise2D();
 
 export function buildGradientTexture(colors: UIColor[]): DataTexture {
   const width = colors.length;

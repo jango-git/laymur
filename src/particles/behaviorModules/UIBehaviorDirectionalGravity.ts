@@ -20,7 +20,7 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "M
   private directionInternal: Vector2Like;
 
   /**
-   * @param direction - Acceleration vector in units/second²
+   * @param direction - Acceleration vector in units/second^2
    */
   constructor(direction: Vector2Like) {
     super();
@@ -35,12 +35,12 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "M
     );
   }
 
-  /** Acceleration vector in units/second² */
+  /** Acceleration vector in units/second^2 */
   public get direction(): Vector2Like {
     return this.directionInternal;
   }
 
-  /** Acceleration vector in units/second² */
+  /** Acceleration vector in units/second^2 */
   public set direction(value: UIVector2Config) {
     this.directionInternal = resolveUIVector2Config(value);
     assertValidNumber(this.directionInternal.x, "UIBehaviorDirectionalGravity.direction.x");

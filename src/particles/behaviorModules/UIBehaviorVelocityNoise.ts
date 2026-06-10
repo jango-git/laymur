@@ -95,14 +95,12 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
       const x = array[itemOffset + BUILTIN_OFFSET_POSITION_X];
       const y = array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
-      // Constant over the life of a particle but different for each particle
       const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_C];
       const scale = MathUtils.lerp(this.scaleInternal.min, this.scaleInternal.max, scaleT);
 
       const noiseX = generateNoise2D(x * scale, y * scale);
       const noiseY = generateNoise2D((x + 100) * scale, (y + 100) * scale);
 
-      // Constant over the life of a particle but different for each particle
       const strengthT = array[itemOffset + BUILTIN_OFFSET_RANDOM_D];
       const strength = MathUtils.lerp(
         this.strengthInternal.min,

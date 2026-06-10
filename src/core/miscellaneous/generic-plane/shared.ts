@@ -57,6 +57,16 @@ export interface PlaneData {
   transparency: UITransparencyMode;
 }
 
+/** Per-instance HSL adjustment in shader space (matches the instanceHSL attribute). */
+export interface HSLAdjustment {
+  /** Hue shift in turns (degrees / 360); wrapped with fract() in the shader. */
+  h: number;
+  /** Saturation multiplier. */
+  s: number;
+  /** Lightness offset. */
+  l: number;
+}
+
 const GLSL_TYPE_INFO_FLOAT: GLTypeInfo = Object.freeze({
   glslTypeName: "float",
   bufferSize: 1,
@@ -205,7 +215,6 @@ export function arePropertiesPartiallyCompatible(
       return false;
     }
 
-    // Non-instantiable (textures) must match by reference
     if (!infoFull.instantiable && full[key].value !== partial[key].value) {
       return false;
     }
@@ -303,10 +312,75 @@ export function buildGenericPlaneFragmentShader(
       #endif
     }
 
+    // HSL adjustment helpers.
+    // p_instanceHSL = (hue in turns, saturation multiplier, lightness offset).
+    vec3 rgbToHsl(vec3 color) {
+      float maxChannel = max(color.r, max(color.g, color.b));
+      float minChannel = min(color.r, min(color.g, color.b));
+      float chroma = maxChannel - minChannel;
+      float lightness = (maxChannel + minChannel) * 0.5;
+      float hue = 0.0;
+      float saturation = 0.0;
+      if (chroma > 0.0) {
+        saturation = lightness > 0.5
+          ? chroma / (2.0 - maxChannel - minChannel)
+          : chroma / (maxChannel + minChannel);
+        if (maxChannel == color.r) {
+          hue = (color.g - color.b) / chroma + (color.g < color.b ? 6.0 : 0.0);
+        } else if (maxChannel == color.g) {
+          hue = (color.b - color.r) / chroma + 2.0;
+        } else {
+          hue = (color.r - color.g) / chroma + 4.0;
+        }
+        hue /= 6.0;
+      }
+      return vec3(hue, saturation, lightness);
+    }
+
+    float hueToRgbChannel(float low, float high, float hue) {
+      hue = fract(hue);
+      if (hue < 1.0 / 6.0) return low + (high - low) * 6.0 * hue;
+      if (hue < 1.0 / 2.0) return high;
+      if (hue < 2.0 / 3.0) return low + (high - low) * (2.0 / 3.0 - hue) * 6.0;
+      return low;
+    }
+
+    vec3 hslToRgb(vec3 hsl) {
+      float hue = hsl.x;
+      float saturation = hsl.y;
+      float lightness = hsl.z;
+      if (saturation <= 0.0) {
+        return vec3(lightness);
+      }
+      float high = lightness < 0.5
+        ? lightness * (1.0 + saturation)
+        : lightness + saturation - lightness * saturation;
+      float low = 2.0 * lightness - high;
+      return vec3(
+        hueToRgbChannel(low, high, hue + 1.0 / 3.0),
+        hueToRgbChannel(low, high, hue),
+        hueToRgbChannel(low, high, hue - 1.0 / 3.0)
+      );
+    }
+
+    vec3 applyInstanceHSL(vec3 color) {
+      vec3 hsl = rgbToHsl(color);
+      hsl.x = fract(hsl.x + p_instanceHSL.x);
+      hsl.y = clamp(hsl.y * p_instanceHSL.y, 0.0, 1.0);
+      hsl.z = clamp(hsl.z + p_instanceHSL.z, 0.0, 1.0);
+      return hslToRgb(hsl);
+    }
+
     // Source must define vec4 draw() function
     ${source}
     void main() {
       vec4 diffuseColor = draw();
+
+      // Skip the HSL roundtrip entirely for the default (identity) case.
+      if (p_instanceHSL != vec3(0.0, 1.0, 0.0)) {
+        diffuseColor.rgb = applyInstanceHSL(diffuseColor.rgb);
+      }
+
       if (diffuseColor.a <= ${alphaTestValue.toFixed(8)}) {
         discard;
       }
@@ -317,7 +391,7 @@ export function buildGenericPlaneFragmentShader(
       #endif
 
       gl_FragColor = linearToOutputTexel(diffuseColor);
-      gl_FragColor = ${usePremultipliedAlpha ? "vec4(gl_FragColor.rgb * gl_FragColor.a, gl_FragColor.a)" : "gl_FragColor"};
+      gl_FragColor = ${usePremultipliedAlpha ? "vec4(gl_FragColor.rgb * gl_FragColor.a, gl_FragColor.a * p_instanceBlend)" : "gl_FragColor"};
     }
   `;
 }

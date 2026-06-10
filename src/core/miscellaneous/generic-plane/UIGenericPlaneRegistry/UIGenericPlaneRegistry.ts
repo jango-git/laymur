@@ -1,6 +1,6 @@
 import type { Matrix4, Scene } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode";
-import type { UIProperty } from "../shared";
+import type { HSLAdjustment, UIProperty } from "../shared";
 import {
   cloneGLProperties,
   cloneProperties,
@@ -23,15 +23,12 @@ import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Inter
 export class UIPlaneRegistry {
   private readonly scene: Scene;
 
-  // Source of truth
   private readonly handlerToState: Map<number, PlaneState> = new Map();
   private lastHandler = 0;
 
-  // GPU representation
   private readonly orderedMeshes: UIGenericInstancedPlane[] = [];
   private readonly handlerToDescriptor: Map<number, PlaneDescriptor> = new Map();
 
-  // Dirty tracking
   private readonly pendingCreate: Set<number> = new Set();
   private readonly pendingDelete: Set<number> = new Set();
   private readonly pendingRelocate: Set<number> = new Set();
@@ -53,6 +50,8 @@ export class UIPlaneRegistry {
     transform: Matrix4,
     visibility: boolean,
     transparency: UITransparencyMode,
+    blend: number,
+    hsl: HSLAdjustment,
   ): number {
     const handler = this.lastHandler++;
     const glProperties = convertUIPropertiesToGLProperties(cloneProperties(properties));
@@ -64,6 +63,8 @@ export class UIPlaneRegistry {
       transform: transform.clone(),
       visibility,
       transparency,
+      blend,
+      hsl: { h: hsl.h, s: hsl.s, l: hsl.l },
       zIndex,
     };
 
@@ -84,16 +85,13 @@ export class UIPlaneRegistry {
 
     this.handlerToState.delete(handler);
 
-    // If was pending create, just remove from there
     if (this.pendingCreate.has(handler)) {
       this.pendingCreate.delete(handler);
       return;
     }
 
-    // Remove from relocate if was there
     this.pendingRelocate.delete(handler);
 
-    // Mark for deletion
     this.pendingDelete.add(handler);
     this.needsFlush = true;
   }
@@ -108,7 +106,6 @@ export class UIPlaneRegistry {
     const state = this.resolveState(handler);
     const glProperties = convertUIPropertiesToGLProperties(properties);
 
-    // Check if any non-instantiable (texture) changed
     let textureChanged = false;
     for (const name in glProperties) {
       const newProp = glProperties[name];
@@ -120,7 +117,6 @@ export class UIPlaneRegistry {
         }
       }
 
-      // Update state
       state.properties[name] = {
         value: newProp.value,
         glslTypeInfo: newProp.glslTypeInfo,
@@ -131,7 +127,6 @@ export class UIPlaneRegistry {
       this.pendingRelocate.add(handler);
       this.needsFlush = true;
     } else {
-      // Apply immediately if already in mesh and no texture change
       const descriptor = this.handlerToDescriptor.get(handler);
       if (descriptor) {
         descriptor.mesh.setPropertiesAt(descriptor.instanceIndex, glProperties);
@@ -156,7 +151,6 @@ export class UIPlaneRegistry {
       this.pendingRelocate.add(handler);
       this.needsFlush = true;
     } else {
-      // Apply immediately if already in mesh and zIndex unchanged
       const descriptor = this.handlerToDescriptor.get(handler);
       if (descriptor) {
         descriptor.mesh.setTransformAt(descriptor.instanceIndex, transform);
@@ -172,10 +166,39 @@ export class UIPlaneRegistry {
     const state = this.resolveState(handler);
     state.visibility = visibility;
 
-    // Apply immediately if already in a mesh
     const descriptor = this.handlerToDescriptor.get(handler);
     if (descriptor) {
       descriptor.mesh.setVisibilityAt(descriptor.instanceIndex, visibility);
+    }
+  }
+
+  /**
+   * Updates plane blend factor (1 = normal over, 0 = additive).
+   * This is applied immediately (doesn't affect batching structure).
+   */
+  public setBlend(handler: number, blend: number): void {
+    const state = this.resolveState(handler);
+    state.blend = blend;
+
+    const descriptor = this.handlerToDescriptor.get(handler);
+    if (descriptor) {
+      descriptor.mesh.setBlendAt(descriptor.instanceIndex, blend);
+    }
+  }
+
+  /**
+   * Updates plane HSL adjustment (hue in turns, saturation multiplier, lightness offset).
+   * This is applied immediately (doesn't affect batching structure).
+   */
+  public setHSL(handler: number, hsl: HSLAdjustment): void {
+    const state = this.resolveState(handler);
+    state.hsl.h = hsl.h;
+    state.hsl.s = hsl.s;
+    state.hsl.l = hsl.l;
+
+    const descriptor = this.handlerToDescriptor.get(handler);
+    if (descriptor) {
+      descriptor.mesh.setHSLAt(descriptor.instanceIndex, hsl);
     }
   }
 
@@ -224,7 +247,7 @@ export class UIPlaneRegistry {
     for (const handler of this.pendingDelete) {
       const descriptor = this.handlerToDescriptor.get(handler);
       if (!descriptor) {
-        continue; // Already removed
+        continue;
       }
 
       const { mesh, instanceIndex } = descriptor;
@@ -239,7 +262,7 @@ export class UIPlaneRegistry {
     for (const handler of this.pendingRelocate) {
       const descriptor = this.handlerToDescriptor.get(handler);
       if (!descriptor) {
-        continue; // Not in mesh yet
+        continue;
       }
 
       const { mesh, instanceIndex } = descriptor;
@@ -248,7 +271,6 @@ export class UIPlaneRegistry {
       this.shiftHandlerIndices(mesh, instanceIndex + 1, -1);
       this.handlerToDescriptor.delete(handler);
 
-      // Will be re-inserted in processCreates
       this.pendingCreate.add(handler);
     }
   }
@@ -258,7 +280,6 @@ export class UIPlaneRegistry {
       return;
     }
 
-    // Collect and sort by zIndex
     const toCreate: { handler: number; state: PlaneState }[] = [];
     for (const handler of this.pendingCreate) {
       const state = this.handlerToState.get(handler);
@@ -269,7 +290,6 @@ export class UIPlaneRegistry {
 
     toCreate.sort((a, b) => a.state.zIndex - b.state.zIndex);
 
-    // Check for duplicate zIndex
     for (let i = 1; i < toCreate.length; i++) {
       if (toCreate[i].state.zIndex === toCreate[i - 1].state.zIndex) {
         throw new Error(
@@ -279,59 +299,81 @@ export class UIPlaneRegistry {
       }
     }
 
-    // Insert each element
     for (const { handler, state } of toCreate) {
       this.insertSingleElement(handler, state);
     }
   }
 
   private insertSingleElement(handler: number, state: PlaneState): void {
-    const { source, properties, transform, visibility, transparency, zIndex } = state;
+    const { source, properties, transform, visibility, transparency, blend, hsl, zIndex } = state;
 
-    // Find compatible mesh
-    let candidateMesh: UIGenericInstancedPlane | null = null;
+    let newMeshIndex = this.orderedMeshes.length;
 
-    for (const mesh of this.orderedMeshes) {
-      if (!mesh.isCompatibleWith(source, properties, transparency)) {
-        continue;
-      }
-
+    for (let i = 0; i < this.orderedMeshes.length; i++) {
+      const mesh = this.orderedMeshes[i];
       if (mesh.instancesCount === 0) {
-        candidateMesh = mesh;
-        break;
+        continue;
       }
 
       const meshMinZ = mesh.getZIndexAt(0);
       const meshMaxZ = mesh.getZIndexAt(mesh.instancesCount - 1);
 
-      // Can insert if zIndex fits within or extends the range
-      if (zIndex >= meshMinZ - 1 && zIndex <= meshMaxZ + 1) {
-        candidateMesh = mesh;
+      if (zIndex < meshMinZ) {
+        newMeshIndex = i;
         break;
+      }
+
+      if (zIndex <= meshMaxZ) {
+        if (mesh.isCompatibleWith(source, properties, transparency)) {
+          const instanceIndex = this.findInstanceIndexInMesh(mesh, zIndex);
+          mesh.insertAt(instanceIndex, properties, transform, visibility, blend, hsl);
+          this.shiftHandlerIndices(mesh, instanceIndex, 1);
+          this.handlerToDescriptor.set(handler, { mesh, instanceIndex });
+          return;
+        }
+
+        const splitIndex = this.findInstanceIndexInMesh(mesh, zIndex);
+
+        if (splitIndex === 0) {
+          newMeshIndex = i;
+        } else if (splitIndex >= mesh.instancesCount) {
+          newMeshIndex = i + 1;
+        } else {
+          this.splitMeshAt(i, mesh, splitIndex);
+          newMeshIndex = i + 1;
+        }
+        break;
+      }
+
+      newMeshIndex = i + 1;
+    }
+
+    const mesh = new UIGenericInstancedPlane(source, cloneGLProperties(properties), transparency);
+    mesh.insertAt(0, properties, transform, visibility, blend, hsl);
+
+    this.orderedMeshes.splice(newMeshIndex, 0, mesh);
+    this.scene.add(mesh);
+
+    this.handlerToDescriptor.set(handler, { mesh, instanceIndex: 0 });
+  }
+
+  /**
+   * Split an existing mesh at the given instance index, inserting the tail half as a
+   * new mesh immediately after it in render order. Descriptors are remapped to follow
+   * their instances into the new mesh.
+   */
+  private splitMeshAt(meshIndex: number, mesh: UIGenericInstancedPlane, splitIndex: number): void {
+    const tail = mesh.split(splitIndex);
+
+    for (const descriptor of this.handlerToDescriptor.values()) {
+      if (descriptor.mesh === mesh && descriptor.instanceIndex >= splitIndex) {
+        descriptor.mesh = tail;
+        descriptor.instanceIndex -= splitIndex;
       }
     }
 
-    if (candidateMesh) {
-      const instanceIndex = this.findInstanceIndexInMesh(candidateMesh, zIndex);
-
-      candidateMesh.insertAt(instanceIndex, properties, transform, visibility);
-      this.shiftHandlerIndices(candidateMesh, instanceIndex, 1);
-      this.handlerToDescriptor.set(handler, {
-        mesh: candidateMesh,
-        instanceIndex,
-      });
-    } else {
-      // Create new mesh
-      const meshIndex = this.findMeshIndexForZIndex(zIndex);
-
-      const mesh = new UIGenericInstancedPlane(source, cloneGLProperties(properties), transparency);
-      mesh.insertAt(0, properties, transform, visibility);
-
-      this.orderedMeshes.splice(meshIndex, 0, mesh);
-      this.scene.add(mesh);
-
-      this.handlerToDescriptor.set(handler, { mesh, instanceIndex: 0 });
-    }
+    this.orderedMeshes.splice(meshIndex + 1, 0, tail);
+    this.scene.add(tail);
   }
 
   private mergeCompatibleNeighbors(): void {
@@ -348,7 +390,6 @@ export class UIPlaneRegistry {
       const leftMaxZ = left.getZIndexAt(left.instancesCount - 1);
       const rightMinZ = right.getZIndexAt(0);
 
-      // Check if they can be merged (non-overlapping zIndex ranges and compatible)
       if (
         leftMaxZ < rightMinZ &&
         left.isCompatibleWith(right.source, right.getProperties(), right.transparency)
@@ -361,7 +402,6 @@ export class UIPlaneRegistry {
         right.destroy();
         this.orderedMeshes.splice(i + 1, 1);
 
-        // Don't increment i, check if we can merge again
         continue;
       }
 
@@ -386,16 +426,6 @@ export class UIPlaneRegistry {
       throw new Error(`UIPlaneRegistry.resolveState: handler ${handler} not found`);
     }
     return state;
-  }
-
-  private findMeshIndexForZIndex(zIndex: number): number {
-    for (let i = 0; i < this.orderedMeshes.length; i++) {
-      const mesh = this.orderedMeshes[i];
-      if (mesh.instancesCount > 0 && mesh.getZIndexAt(0) > zIndex) {
-        return i;
-      }
-    }
-    return this.orderedMeshes.length;
   }
 
   private findInstanceIndexInMesh(mesh: UIGenericInstancedPlane, zIndex: number): number {
@@ -433,14 +463,12 @@ export class UIPlaneRegistry {
   }
 
   private syncSceneOrder(): void {
-    // Sort meshes by their minimum zIndex
     this.orderedMeshes.sort((a, b) => {
       const aZ = a.instancesCount > 0 ? a.getZIndexAt(0) : 0;
       const bZ = b.instancesCount > 0 ? b.getZIndexAt(0) : 0;
       return aZ - bZ;
     });
 
-    // Update render order
     for (let i = 0; i < this.orderedMeshes.length; i++) {
       this.orderedMeshes[i].renderOrder = i;
     }

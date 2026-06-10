@@ -1,7 +1,7 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
-import { InstancedBufferAttribute, Matrix4, Mesh } from "three";
+import { InstancedBufferAttribute, Matrix4, Mesh, Vector3 } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode";
-import type { GLProperty, PlaneData } from "../shared";
+import type { GLProperty, HSLAdjustment, PlaneData } from "../shared";
 import {
   arePropertiesPartiallyCompatible,
   cloneGLProperties,
@@ -25,7 +25,7 @@ import {
 /**
  * Instanced shader plane mesh for batched rendering.
  *
- * Operates on indices, not handlers. Registry manages handler→index mapping.
+ * Operates on indices, not handlers. Registry manages handler->index mapping.
  * Elements are ordered by zIndex (ascending) within the buffer.
  *
  * @internal
@@ -58,6 +58,14 @@ export class UIGenericInstancedPlane extends Mesh {
       instanceTransform: {
         value: new Matrix4().identity(),
         glslTypeInfo: resolveGLSLTypeInfo("Matrix4"),
+      },
+      instanceBlend: {
+        value: 1,
+        glslTypeInfo: resolveGLSLTypeInfo("number"),
+      },
+      instanceHSL: {
+        value: new Vector3(0, 1, 0),
+        glslTypeInfo: resolveGLSLTypeInfo("Vector3"),
       },
     };
 
@@ -127,6 +135,8 @@ export class UIGenericInstancedPlane extends Mesh {
     properties: Record<string, GLProperty>,
     transform: Matrix4,
     visibility: boolean,
+    blend: number,
+    hsl: HSLAdjustment,
   ): void {
     if (index < 0 || index > this.instancesCountInternal) {
       throw new Error(
@@ -140,7 +150,7 @@ export class UIGenericInstancedPlane extends Mesh {
       this.shiftBuffersRight(index, 1);
     }
 
-    this.writeToBuffers(index, properties, transform, visibility);
+    this.writeToBuffers(index, properties, transform, visibility, blend, hsl);
 
     this.instancesCountInternal++;
     this.instancedGeometry.instanceCount = this.instancesCountInternal;
@@ -221,6 +231,37 @@ export class UIGenericInstancedPlane extends Mesh {
     attribute.needsUpdate = true;
   }
 
+  /** Update blend factor at given index (1 = normal over, 0 = additive) */
+  public setBlendAt(index: number, blend: number): void {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.setBlendAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
+
+    const attribute = this.resolveAttribute("instanceBlend");
+    const array = attribute.array as Float32Array;
+    array[index] = blend;
+    attribute.needsUpdate = true;
+  }
+
+  /** Update HSL adjustment at given index (hue in turns, saturation multiplier, lightness offset) */
+  public setHSLAt(index: number, hsl: HSLAdjustment): void {
+    if (index < 0 || index >= this.instancesCountInternal) {
+      throw new Error(
+        `UIGenericInstancedPlane.setHSLAt.index: out of bounds (index=${index}, count=${this.instancesCountInternal})`,
+      );
+    }
+
+    const attribute = this.resolveAttribute("instanceHSL");
+    const array = attribute.array as Float32Array;
+    const offset = index * 3;
+    array[offset] = hsl.h;
+    array[offset + 1] = hsl.s;
+    array[offset + 2] = hsl.l;
+    attribute.needsUpdate = true;
+  }
+
   /**
    * Extract complete instance data at given index.
    * Returns cloned data safe for external use.
@@ -243,7 +284,12 @@ export class UIGenericInstancedPlane extends Mesh {
     }
 
     for (const name in this.varyingProperties) {
-      if (name === "instanceVisibility" || name === "instanceTransform") {
+      if (
+        name === "instanceVisibility" ||
+        name === "instanceTransform" ||
+        name === "instanceBlend" ||
+        name === "instanceHSL"
+      ) {
         continue;
       }
 
@@ -482,10 +528,24 @@ export class UIGenericInstancedPlane extends Mesh {
     properties: Record<string, GLProperty>,
     transform: Matrix4,
     visibility: boolean,
+    blend: number,
+    hsl: HSLAdjustment,
   ): void {
     const visibilityAttribute = this.resolveAttribute("instanceVisibility");
     (visibilityAttribute.array as Float32Array)[index] = visibility ? 1 : 0;
     visibilityAttribute.needsUpdate = true;
+
+    const blendAttribute = this.resolveAttribute("instanceBlend");
+    (blendAttribute.array as Float32Array)[index] = blend;
+    blendAttribute.needsUpdate = true;
+
+    const hslAttribute = this.resolveAttribute("instanceHSL");
+    const hslArray = hslAttribute.array as Float32Array;
+    const hslOffset = index * 3;
+    hslArray[hslOffset] = hsl.h;
+    hslArray[hslOffset + 1] = hsl.s;
+    hslArray[hslOffset + 2] = hsl.l;
+    hslAttribute.needsUpdate = true;
 
     const transformAttribute = this.resolveAttribute("instanceTransform");
     const transformArray = transformAttribute.array as Float32Array;

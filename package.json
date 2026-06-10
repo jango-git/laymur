@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "keywords": [
     "ui",
@@ -46,11 +46,13 @@
     }
   },
   "peerDependencies": {
-    "three": ">=0.157.0 <0.180.0",
     "@lume/kiwi": "^0.4.4",
-    "ferrsign": "^0.0.4"
+    "fast-simplex-noise": "^4.0.0",
+    "ferrsign": "^0.0.4",
+    "three": ">=0.157.0 <0.180.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/node": "^25.0.2",
     "@types/three": "^0.157.0",

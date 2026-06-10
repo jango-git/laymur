@@ -1,6 +1,6 @@
 import type { Matrix4 } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode";
-import type { GLProperty } from "../shared";
+import type { GLProperty, HSLAdjustment } from "../shared";
 import type { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane";
 
 export interface PlaneDescriptor {
@@ -14,5 +14,7 @@ export interface PlaneState {
   transform: Matrix4;
   visibility: boolean;
   transparency: UITransparencyMode;
+  blend: number;
+  hsl: HSLAdjustment;
   zIndex: number;
 }

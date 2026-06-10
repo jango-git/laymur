@@ -83,7 +83,6 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
       const segment = (this.scales.length - 1) * lifeT;
       const index = Math.floor(segment);
 
-      // Constant over the life of a particle but different for each particle
       const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_D];
 
       const localT = segment - index;

@@ -4,9 +4,9 @@ import { Operator } from "@lume/kiwi";
 export enum UIRelation {
   /** Equality: LHS = RHS */
   EQUAL = 0,
-  /** Less than or equal: LHS ≤ RHS */
+  /** Less than or equal: LHS <= RHS */
   LESS_THAN = 1,
-  /** Greater than or equal: LHS ≥ RHS */
+  /** Greater than or equal: LHS >= RHS */
   GREATER_THAN = 2,
 }
 

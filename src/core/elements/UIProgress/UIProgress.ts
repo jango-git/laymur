@@ -13,6 +13,7 @@ import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.
 import { isUIModeVisible } from "../../miscellaneous/UIMode";
 import source from "../../shaders/UIProgress.glsl";
 import { UIElement } from "../UIElement/UIElement";
+import { blendModeToFactor, packHSL } from "../UIElement/UIElement.Internal";
 import type { UIProgressOptions } from "./UIProgress.Internal";
 import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal";
 
@@ -246,6 +247,8 @@ export class UIProgress extends UIElement {
       ),
       isUIModeVisible(this.mode),
       this.transparencyMode,
+      blendModeToFactor(this.blendMode),
+      packHSL({ h: 0, s: 0, l: 0 }, this.hue, this.saturation, this.lightness),
     );
 
     this.colorInternal.setDirtyFalse();

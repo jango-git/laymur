@@ -1,6 +1,6 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
+import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared";
 import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
 import type { UISceneWrapperView } from "./UISceneWrapper.Internal";
@@ -29,8 +29,18 @@ export class UISceneWrapper implements UISceneWrapperView {
     transform: Matrix4,
     visibility: boolean,
     transparency: UITransparencyMode,
+    blend: number,
+    hsl: HSLAdjustment,
   ): number {
-    return this.planeRegistry.createPlane(source, properties, transform, visibility, transparency);
+    return this.planeRegistry.createPlane(
+      source,
+      properties,
+      transform,
+      visibility,
+      transparency,
+      blend,
+      hsl,
+    );
   }
 
   public destroyPlane(handler: number): void {
@@ -51,6 +61,14 @@ export class UISceneWrapper implements UISceneWrapperView {
 
   public setTransparency(handler: number, transparency: UITransparencyMode): void {
     this.planeRegistry.setTransparency(handler, transparency);
+  }
+
+  public setBlend(handler: number, blend: number): void {
+    this.planeRegistry.setBlend(handler, blend);
+  }
+
+  public setHSL(handler: number, hsl: HSLAdjustment): void {
+    this.planeRegistry.setHSL(handler, hsl);
   }
 
   public insertCustomObject(object: Object3D): this {

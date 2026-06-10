@@ -90,7 +90,6 @@ export class UIBehaviorTorqueNoise extends UIBehaviorModule<{ builtin: "Matrix4"
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      // Constant over the life of a particle but different for each particle
       const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_F];
       const scale = MathUtils.lerp(this.scaleInternal.min, this.scaleInternal.max, scaleT);
 
@@ -99,7 +98,6 @@ export class UIBehaviorTorqueNoise extends UIBehaviorModule<{ builtin: "Matrix4"
         array[itemOffset + BUILTIN_OFFSET_POSITION_Y] * scale,
       );
 
-      // Constant over the life of a particle but different for each particle
       const strengthT = array[itemOffset + BUILTIN_OFFSET_RANDOM_A];
       const strength = MathUtils.lerp(
         this.strengthInternal.min,

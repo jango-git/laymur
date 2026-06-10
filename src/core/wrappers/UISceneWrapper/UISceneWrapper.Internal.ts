@@ -1,6 +1,6 @@
 import type { Matrix4, Object3D } from "three";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
+import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared";
 
 export interface UISceneWrapperView {
   createPlane(
@@ -9,6 +9,8 @@ export interface UISceneWrapperView {
     transform: Matrix4,
     visibility: boolean,
     transparency: UITransparencyMode,
+    blend: number,
+    hsl: HSLAdjustment,
   ): number;
   destroyPlane(handler: number): void;
 
@@ -16,6 +18,8 @@ export interface UISceneWrapperView {
   setProperties(handler: number, properties: Record<string, UIProperty>): void;
   setVisibility(handler: number, visible: boolean): void;
   setTransparency(handler: number, transparency: UITransparencyMode): void;
+  setBlend(handler: number, blend: number): void;
+  setHSL(handler: number, hsl: HSLAdjustment): void;
 
   insertCustomObject(object: Object3D): void;
   removeCustomObject(object: Object3D): void;

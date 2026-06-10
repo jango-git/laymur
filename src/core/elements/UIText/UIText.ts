@@ -235,10 +235,6 @@ export class UIText extends UIElement {
     const desiredHeight = size.height + paddingV;
     const desiredWidth = size.width + paddingH;
 
-    // Two calculation passes are required to cover both cases -
-    // when the width is specified by a constraint and cannot be changed,
-    // or when the height is specified by a constraint and cannot be changed,
-    // but the width still has priority, because it is specified first and last.
     this.width = desiredWidth;
     this.height = (desiredHeight / desiredWidth) * Math.round(this.width);
     this.width = (desiredWidth / desiredHeight) * Math.round(this.height);
@@ -275,9 +271,6 @@ export class UIText extends UIElement {
 
     const textChunks = this.buildTextChunks();
 
-    // Two passes of text size calculation are needed to first
-    // suggest the desired sizes to the solver, and then
-    // adjust our expectations based on the result obtained.
 
     const { size: desiredTextSize } = calculateTextContentParameters(
       textChunks,
@@ -288,7 +281,7 @@ export class UIText extends UIElement {
     const paddingH = this.paddingInternal.left + this.paddingInternal.right;
 
     this.height = desiredTextSize.height + paddingV;
-    this.width = desiredTextSize.width + paddingH; // Width should remain a priority, so it is set last.
+    this.width = desiredTextSize.width + paddingH;
 
     const { lines: realTextLines, size: realTextSize } = calculateTextContentParameters(
       textChunks,

@@ -61,7 +61,6 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      // Constant over the life of a particle but different for each particle
       const dampingT = array[itemOffset + BUILTIN_OFFSET_RANDOM_E];
       const dampingFactor = Math.pow(
         1 - MathUtils.lerp(this.dampingInternal.min, this.dampingInternal.max, dampingT),

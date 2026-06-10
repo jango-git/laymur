@@ -1,3 +1,4 @@
+import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import typescript from "rollup-plugin-typescript2";
 import minifyPrivatesTransformer from "ts-transformer-minify-privates";
@@ -5,6 +6,7 @@ import { string } from "rollup-plugin-string";
 
 const sharedPlugins = [
   nodeResolve({ extensions: [".js", ".ts"] }),
+  commonjs(),
   {
     name: "minify-shaders",
     transform(code, id) {
