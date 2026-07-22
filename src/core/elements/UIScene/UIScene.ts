@@ -1,5 +1,6 @@
 import type { Camera, WebGLRenderer } from "three";
 import {
+  Color,
   LinearFilter,
   MathUtils,
   Matrix3,
@@ -32,6 +33,9 @@ import {
   SCENE_MIN_RESOLUTION_FACTOR,
   UISceneUpdateMode,
 } from "./UIScene.Internal";
+
+let previousClearColor = new Color();
+let previousClearAlpha = 0;
 
 /** Renders Three.js scene to texture */
 export class UIScene extends UIElement {
@@ -243,6 +247,10 @@ export class UIScene extends UIElement {
         this.colorInternal.setDirtyFalse();
       }
 
+      const previousRenderTarget = renderer.getRenderTarget();
+      previousClearColor = renderer.getClearColor(previousClearColor);
+      previousClearAlpha = renderer.getClearAlpha();
+
       renderer.setClearColor(
         this.clearColorInternal.getHexRGB(),
         this.clearColorInternal.a,
@@ -250,6 +258,9 @@ export class UIScene extends UIElement {
       renderer.setRenderTarget(this.renderTarget);
       renderer.clear(true, true, false);
       renderer.render(this.sceneInternal, this.cameraInternal);
+
+      renderer.setRenderTarget(previousRenderTarget);
+      renderer.setClearColor(previousClearColor, previousClearAlpha);
 
       this.propertyDirty = false;
       this.updateRequired = false;
