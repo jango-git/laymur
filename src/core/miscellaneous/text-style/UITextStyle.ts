@@ -3,7 +3,7 @@ import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../asserts";
-import type { UITextStyleConfig } from "./UITextStyle.Internal";
+import type { UITextAlign, UITextStyleConfig } from "./UITextStyle.Internal";
 import {
   TEXT_STYLE_DEFAULT_ALIGN,
   TEXT_STYLE_DEFAULT_COLOR,
@@ -25,7 +25,7 @@ import {
 /** Text style configuration for UI text rendering */
 export class UITextStyle {
   private colorInternal?: string;
-  private alignInternal?: "left" | "center" | "right";
+  private alignInternal?: UITextAlign;
   private fontFamilyInternal?: string;
   private fontSizeInternal?: number;
   private fontStyleInternal?: "normal" | "italic" | "oblique";
@@ -67,7 +67,7 @@ export class UITextStyle {
   }
 
   /** Text alignment */
-  public get align(): "left" | "center" | "right" | undefined {
+  public get align(): UITextAlign | undefined {
     return this.alignInternal;
   }
 
@@ -152,7 +152,7 @@ export class UITextStyle {
     }
   }
 
-  public set align(value: "left" | "center" | "right" | undefined) {
+  public set align(value: UITextAlign | undefined) {
     if (value !== this.alignInternal) {
       this.alignInternal = value;
       this.dirtyInternal = true;

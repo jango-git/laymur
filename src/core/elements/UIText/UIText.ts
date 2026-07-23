@@ -12,11 +12,14 @@ import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
 import source from "../../shaders/UIImage.glsl";
 import { UIElement } from "../UIElement/UIElement";
+import { detectIsRTL } from "./UIText.Bidi";
 import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
 import type { UITextOptions } from "./UIText.Internal";
 import {
+  TEXT_DEFAULT_DIRECTION,
   TEXT_DEFAULT_MAX_LINE_WIDTH,
   TEXT_DEFAULT_RESIZE_MODE,
+  UITextDirection,
   UITextResizeMode,
 } from "./UIText.Internal";
 import { buildTextChunks, calculateTextContentParameters } from "./UIText.Measuring";
@@ -42,11 +45,14 @@ export class UIText extends UIElement {
   private resizeModeInternal: UITextResizeMode;
   private resizeModeDirty = false;
 
+  private directionInternal: UITextDirection;
+  private directionDirty = false;
+  private isRTL = false;
+
   private lastWidth: number;
   private lastHeight: number;
 
   private textChunks: UITextChunk[] = [];
-  private textChunksDirty = false;
 
   /**
    * Creates a new UIText instance.
@@ -83,6 +89,7 @@ export class UIText extends UIElement {
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal = options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
     this.resizeModeInternal = options.resizeMode ?? TEXT_DEFAULT_RESIZE_MODE;
+    this.directionInternal = options.direction ?? TEXT_DEFAULT_DIRECTION;
 
     this.canvas = canvas;
     this.context = context;
@@ -137,6 +144,11 @@ export class UIText extends UIElement {
     return this.resizeModeInternal;
   }
 
+  /** Base direction used for bidirectional text reordering */
+  public get direction(): UITextDirection {
+    return this.directionInternal;
+  }
+
   /** Multiplicative tint. Alpha channel controls opacity. */
   public set color(value: UIColorConfig) {
     this.colorInternal.set(value);
@@ -165,7 +177,6 @@ export class UIText extends UIElement {
         ];
       }
       this.contentDirty = true;
-      this.textChunksDirty = true;
     }
   }
 
@@ -187,6 +198,14 @@ export class UIText extends UIElement {
     if (this.resizeModeInternal !== value) {
       this.resizeModeInternal = value;
       this.resizeModeDirty = true;
+    }
+  }
+
+  /** Base direction used for bidirectional text reordering */
+  public set direction(value: UITextDirection) {
+    if (this.directionInternal !== value) {
+      this.directionInternal = value;
+      this.directionDirty = true;
     }
   }
 
@@ -214,6 +233,7 @@ export class UIText extends UIElement {
     if (
       !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
+      !this.directionDirty &&
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
       !(
@@ -239,18 +259,28 @@ export class UIText extends UIElement {
     this.height = (desiredHeight / desiredWidth) * Math.round(this.width);
     this.width = (desiredWidth / desiredHeight) * Math.round(this.height);
 
-    const resolutionDirty = this.lastWidth !== desiredHeight || this.lastHeight !== desiredWidth;
+    const safeWidth = Math.max(Math.round(desiredWidth), 2);
+    const safeHeight = Math.max(Math.round(desiredHeight), 2);
+
+    const resolutionDirty = this.canvas.width !== safeWidth || this.canvas.height !== safeHeight;
 
     if (resolutionDirty) {
-      this.canvas.height = desiredHeight;
-      this.canvas.width = desiredWidth;
+      this.canvas.width = safeWidth;
+      this.canvas.height = safeHeight;
     }
 
-    renderTextLines(this.paddingInternal.top, this.paddingInternal.left, lines, this.context);
+    renderTextLines(
+      this.paddingInternal.top,
+      this.paddingInternal.left,
+      lines,
+      this.isRTL,
+      this.context,
+    );
 
     this.updateProperties(resolutionDirty);
 
     this.resizeModeDirty = false;
+    this.directionDirty = false;
     this.maxLineWidthDirty = false;
     this.paddingInternal.setDirtyFalse();
     this.setDimensionsDirtyFalse();
@@ -261,6 +291,7 @@ export class UIText extends UIElement {
     if (
       !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
+      !this.directionDirty &&
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
       !this.checkDimensionsDirty() &&
@@ -270,7 +301,6 @@ export class UIText extends UIElement {
     }
 
     const textChunks = this.buildTextChunks();
-
 
     const { size: desiredTextSize } = calculateTextContentParameters(
       textChunks,
@@ -294,7 +324,7 @@ export class UIText extends UIElement {
     const safeWidth = Math.max(Math.round(this.width), 2);
     const safeHeight = Math.max(Math.round(this.height), 2);
 
-    const resolutionDirty = this.lastWidth !== safeWidth || this.lastHeight !== safeHeight;
+    const resolutionDirty = this.canvas.width !== safeWidth || this.canvas.height !== safeHeight;
 
     if (resolutionDirty) {
       this.canvas.width = safeWidth;
@@ -305,12 +335,14 @@ export class UIText extends UIElement {
       this.paddingInternal.top,
       this.paddingInternal.left,
       realTextLines,
+      this.isRTL,
       this.context,
     );
 
     this.updateProperties(resolutionDirty);
 
     this.resizeModeDirty = false;
+    this.directionDirty = false;
     this.maxLineWidthDirty = false;
     this.paddingInternal.setDirtyFalse();
     this.setDimensionsDirtyFalse();
@@ -329,11 +361,12 @@ export class UIText extends UIElement {
     if (resolutionDirty) {
       this.texture.dispose();
       this.texture = createCanvasTexture(this.canvas);
-      this.texture.needsUpdate = true;
 
       properties ??= {};
       properties["texture"] = this.texture;
     }
+
+    this.texture.needsUpdate = true;
 
     if (properties) {
       this.sceneWrapper.setProperties(this.planeHandler, properties);
@@ -341,9 +374,18 @@ export class UIText extends UIElement {
   }
 
   private buildTextChunks(): UITextChunk[] {
-    if (this.textChunksDirty) {
-      this.textChunks = buildTextChunks(this.context, this.contentInternal, this.commonStyle);
-      this.textChunksDirty = false;
+    if (this.directionDirty || this.checkContentDirty()) {
+      this.isRTL =
+        this.directionInternal === UITextDirection.AUTO
+          ? detectIsRTL(this.contentInternal)
+          : this.directionInternal === UITextDirection.RTL;
+
+      this.textChunks = buildTextChunks(
+        this.context,
+        this.contentInternal,
+        this.commonStyle,
+        this.isRTL,
+      );
     }
 
     return this.textChunks;
@@ -362,11 +404,16 @@ export class UIText extends UIElement {
   }
 
   private checkContentDirty(): boolean {
-    return this.contentDirty || this.content.some((span): boolean => span.dirty);
+    return (
+      this.contentDirty ||
+      this.commonStyle.dirty ||
+      this.content.some((span): boolean => span.dirty)
+    );
   }
 
   private setContentDirtyFalse(): void {
     this.contentDirty = false;
+    this.commonStyle.setDirtyFalse();
     for (const span of this.content) {
       span.setDirtyFalse();
     }

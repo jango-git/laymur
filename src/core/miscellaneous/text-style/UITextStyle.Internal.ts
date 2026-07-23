@@ -1,9 +1,12 @@
+/** Text alignment. `start` and `end` are resolved against the text direction. */
+export type UITextAlign = "start" | "left" | "center" | "right" | "end";
+
 /** Complete text style configuration with all properties resolved */
 export interface UITextStyleConfig {
   /** Text color */
   color: string;
   /** Text alignment */
-  align: "left" | "center" | "right";
+  align: UITextAlign;
 
   /** Font family name */
   fontFamily: string;
@@ -36,7 +39,7 @@ export interface UITextStyleConfig {
 }
 
 export const TEXT_STYLE_DEFAULT_COLOR = "#000000";
-export const TEXT_STYLE_DEFAULT_ALIGN = "left" as const;
+export const TEXT_STYLE_DEFAULT_ALIGN = "start" as const;
 export const TEXT_STYLE_DEFAULT_FONT_FAMILY = "Arial";
 export const TEXT_STYLE_DEFAULT_FONT_SIZE = 16;
 export const TEXT_STYLE_DEFAULT_FONT_STYLE = "normal" as const;

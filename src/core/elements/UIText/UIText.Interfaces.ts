@@ -28,6 +28,8 @@ export interface UITextChunk {
   style: UITextStyleConfig;
   /** Chunk metrics */
   metrics: UIChunkMetrics;
+  /** Resolved bidirectional class used for visual reordering */
+  bidiClass: number;
 }
 
 /** Line of text chunks */

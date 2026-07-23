@@ -25,7 +25,7 @@ export { UIProgress } from "./elements/UIProgress/UIProgress";
 export { UIScene } from "./elements/UIScene/UIScene";
 export { UISceneUpdateMode } from "./elements/UIScene/UIScene.Internal";
 export { UIText } from "./elements/UIText/UIText";
-export { UITextResizeMode } from "./elements/UIText/UIText.Internal";
+export { UITextDirection, UITextResizeMode } from "./elements/UIText/UIText.Internal";
 export { UIFullscreenLayer } from "./layers/UIFullscreenLayer/UIFullscreenLayer";
 export type { UIFullscreenLayerInputEventData } from "./layers/UIFullscreenLayer/UIFullscreenLayer.Internal";
 export { UILayer } from "./layers/UILayer/UILayer";

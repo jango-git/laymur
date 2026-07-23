@@ -1,7 +1,30 @@
 import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
-import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
+import type {
+  UITextAlign,
+  UITextStyleConfig,
+} from "../../miscellaneous/text-style/UITextStyle.Internal";
 import { TEXT_STYLE_DEFAULT_ALIGN } from "../../miscellaneous/text-style/UITextStyle.Internal";
+import { reorderChunksVisually } from "./UIText.Bidi";
 import type { UITextLine } from "./UIText.Interfaces";
+import { applyFontStyle } from "./UIText.Measuring";
+
+/**
+ * Resolves logical alignment into a physical one.
+ * @param align Alignment to resolve
+ * @param isRTL Whether the paragraph reads right to left
+ * @returns Physical alignment
+ */
+function resolveAlign(align: UITextAlign, isRTL: boolean): "left" | "center" | "right" {
+  if (align === "start") {
+    return isRTL ? "right" : "left";
+  }
+
+  if (align === "end") {
+    return isRTL ? "left" : "right";
+  }
+
+  return align;
+}
 
 /**
  * Renders single text chunk.
@@ -18,13 +41,15 @@ export function renderTextChunk(
   style: UITextStyleConfig,
   context: UICanvasRenderingContext2D,
 ): void {
-  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px "${style.fontFamily}"`;
+  applyFontStyle(context, style);
 
   if (style.enableShadow) {
     context.shadowOffsetX = style.shadowOffsetX;
     context.shadowOffsetY = style.shadowOffsetY;
     context.shadowBlur = style.shadowBlur;
     context.shadowColor = style.shadowColor;
+  } else {
+    context.shadowColor = "transparent";
   }
 
   if (style.enableStroke) {
@@ -39,17 +64,24 @@ export function renderTextChunk(
 
 /**
  * Renders text lines to canvas.
+ * Chunks are laid out left to right after visual reordering, so x stays the left edge.
  * @param paddingTop Top padding in pixels
  * @param paddingLeft Left padding in pixels
  * @param lines Text lines to render
+ * @param isRTL Whether the paragraph reads right to left
  * @param context Canvas rendering context
  */
 export function renderTextLines(
   paddingTop: number,
   paddingLeft: number,
   lines: UITextLine[],
+  isRTL: boolean,
   context: UICanvasRenderingContext2D,
 ): void {
+  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+  context.direction = isRTL ? "rtl" : "ltr";
+  context.textAlign = "left";
+
   let currentY = paddingTop;
 
   let textWidth = 0;
@@ -62,7 +94,7 @@ export function renderTextLines(
 
     const firstAlign = line.chunks[0]?.style.align ?? TEXT_STYLE_DEFAULT_ALIGN;
     const isUniformAlign = line.chunks.every((c) => c.style.align === firstAlign);
-    const lineAlign = isUniformAlign ? firstAlign : TEXT_STYLE_DEFAULT_ALIGN;
+    const lineAlign = resolveAlign(isUniformAlign ? firstAlign : TEXT_STYLE_DEFAULT_ALIGN, isRTL);
 
     let offsetX = 0;
 
@@ -73,9 +105,9 @@ export function renderTextLines(
     }
 
     let currentX = paddingLeft + offsetX;
-    currentY += i === 0 ? line.height : line.lineHeight;
+    currentY += i === 0 ? line.baseline : line.lineHeight;
 
-    for (const chunk of line.chunks) {
+    for (const chunk of reorderChunksVisually(line.chunks, isRTL)) {
       renderTextChunk(currentX, currentY, chunk.text, chunk.style, context);
       currentX += chunk.metrics.width;
     }
