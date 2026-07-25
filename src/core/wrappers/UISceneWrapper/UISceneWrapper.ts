@@ -1,9 +1,9 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
-import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared";
-import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry";
-import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
-import type { UISceneWrapperView } from "./UISceneWrapper.Internal";
+import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry.js";
+import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
+import type { UISceneWrapperView } from "./UISceneWrapper.Internal.js";
 
 let originalClearColor = new Color();
 let originalClearAlpha = 0;

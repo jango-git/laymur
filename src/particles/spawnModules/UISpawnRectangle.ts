@@ -1,14 +1,14 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNumber } from "../../core/miscellaneous/asserts";
-import type { Vector2Like } from "../../core/miscellaneous/math";
-import type { UIVector2Config } from "../miscellaneous/miscellaneous";
+import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
+import type { Vector2Like } from "../../core/miscellaneous/math.js";
+import type { UIVector2Config } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
   resolveUIVector2Config,
-} from "../miscellaneous/miscellaneous";
-import { UISpawnModule } from "./UISpawnModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UISpawnModule } from "./UISpawnModule.js";
 
 /**
  * Spawns particles at random positions within a rectangle.

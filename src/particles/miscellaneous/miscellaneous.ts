@@ -10,9 +10,9 @@ import {
   UnsignedByteType,
   UVMapping,
 } from "three";
-import type { UIColor } from "../../core";
-import type { Vector2Like } from "../../core/miscellaneous/math";
-import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal";
+import type { UIColor } from "../../core/index.js";
+import type { Vector2Like } from "../../core/miscellaneous/math.js";
+import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
 
 export interface UIRange {
   min: number;

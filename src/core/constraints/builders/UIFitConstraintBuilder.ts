@@ -1,14 +1,14 @@
-import { assertValidNumber } from "../../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
-import { UIPriority } from "../../miscellaneous/UIPriority";
-import { UIRelation } from "../../miscellaneous/UIRelation";
-import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint";
-import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint";
-import type { UIFitConstraintBuilderOptions } from "./UIFitConstraintBuilder.Internal";
-import { DEFAULT_ANCHOR } from "./UIFitConstraintBuilder.Internal";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
+import { UIPriority } from "../../miscellaneous/UIPriority.js";
+import { UIRelation } from "../../miscellaneous/UIRelation.js";
+import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint.js";
+import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint.js";
+import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint.js";
+import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint.js";
+import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint.js";
+import type { UIFitConstraintBuilderOptions } from "./UIFitConstraintBuilder.Internal.js";
+import { DEFAULT_ANCHOR } from "./UIFitConstraintBuilder.Internal.js";
 
 /** Builder for fit layout (like CSS object-fit: contain) */
 export class UIFitConstraintBuilder {

@@ -1,5 +1,5 @@
-import { UIMode } from "../../core";
-import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal";
+import { UIMode } from "../../core/index.js";
+import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal.js";
 
 export interface UIEmitterOptions extends UIAnchorOptions {
   expectedCapacity: number;

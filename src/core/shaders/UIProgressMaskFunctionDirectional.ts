@@ -1,3 +1,4 @@
+const source: string = `
 float calculateMask() {
     float aspect = p_textureResolution.x / p_textureResolution.y;
     vec2 halfExtents = vec2(aspect, 1.0) * 0.5;
@@ -10,3 +11,6 @@ float calculateMask() {
     float offset = (projection / maxProjection + 1.0) * 0.5;
     return step(offset, p_progress);
 }
+`;
+
+export default source;

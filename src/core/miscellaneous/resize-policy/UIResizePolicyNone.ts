@@ -1,5 +1,5 @@
-import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy } from "./UIResizePolicy";
+import { assertValidPositiveNumber } from "../asserts.js";
+import { UIResizePolicy } from "./UIResizePolicy.js";
 
 /** No scaling. Always returns 1. */
 export class UIResizePolicyNone extends UIResizePolicy {

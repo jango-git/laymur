@@ -1,7 +1,7 @@
 import type { InstancedBufferGeometry, ShaderMaterial } from "three";
 import { InstancedBufferAttribute, Matrix4, Mesh, Vector3 } from "three";
-import type { UITransparencyMode } from "../../UITransparencyMode";
-import type { GLProperty, HSLAdjustment, PlaneData } from "../shared";
+import type { UITransparencyMode } from "../../UITransparencyMode.js";
+import type { GLProperty, HSLAdjustment, PlaneData } from "../shared.js";
 import {
   arePropertiesPartiallyCompatible,
   cloneGLProperties,
@@ -9,7 +9,7 @@ import {
   extractZIndexFromBuffer,
   resolveGLSLTypeInfo,
   resolvePropertyUniform,
-} from "../shared";
+} from "../shared.js";
 import {
   buildEmptyInstancedBufferAttribute,
   buildMaterial,
@@ -20,7 +20,7 @@ import {
   reconstructValue,
   shiftBufferRegion,
   writePropertyToArray,
-} from "./UIGenericInstancedPlane.Internal";
+} from "./UIGenericInstancedPlane.Internal.js";
 
 /**
  * Instanced shader plane mesh for batched rendering.

@@ -10,17 +10,17 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import source from "../../shaders/UIImage.glsl";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import source from "../../shaders/UIImage.js";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_WIDTH,
-} from "../UIDummy/UIDummy.Internal";
-import { UIElement } from "../UIElement/UIElement";
-import type { UISceneOptions } from "./UIScene.Internal";
+} from "../UIDummy/UIDummy.Internal.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import type { UISceneOptions } from "./UIScene.Internal.js";
 import {
   SCENE_DEFAULT_CAMERA_FAR,
   SCENE_DEFAULT_CAMERA_FOV,
@@ -32,7 +32,7 @@ import {
   SCENE_MAX_RESOLUTION_FACTOR,
   SCENE_MIN_RESOLUTION_FACTOR,
   UISceneUpdateMode,
-} from "./UIScene.Internal";
+} from "./UIScene.Internal.js";
 
 let previousClearColor = new Color();
 let previousClearAlpha = 0;

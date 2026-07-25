@@ -5,9 +5,9 @@ import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
-import type { UIHorizontalDistanceConstraint } from "../core";
-import { UIColor, UILayer, UIOrientation } from "../core";
-import { isUIPlaneElement } from "../core/miscellaneous/shared";
+import type { UIHorizontalDistanceConstraint } from "../core/index.js";
+import { UIColor, UILayer, UIOrientation } from "../core/index.js";
+import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
 import {
   DEBUG_BADGE_BACKGROUND_COLOR,
   DEBUG_BADGE_FONT_FAMILY,
@@ -16,8 +16,8 @@ import {
   DEBUG_LINE_WIDTH,
   DEBUG_RENDER_ORDER,
   debugResolutionVector,
-} from "./miscellaneous";
-import type { UIConstraintDebug } from "./UIConstraintDebug";
+} from "./miscellaneous.js";
+import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 
 export class UIHorizontalDistanceDebug implements UIConstraintDebug {
   public readonly tint: UIColor = new UIColor("cyan");

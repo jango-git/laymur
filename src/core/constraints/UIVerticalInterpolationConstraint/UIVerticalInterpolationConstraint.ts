@@ -1,13 +1,13 @@
 import {
   assertValidInterpolationConstraintArguments,
   assertValidNumber,
-} from "../../miscellaneous/asserts";
-import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared";
-import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared";
-import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
-import type { UIVerticalInterpolationConstraintOptions } from "./UIVerticalInterpolationConstraint.Internal";
-import { DEFAULT_ANCHOR, DEFAULT_T } from "./UIVerticalInterpolationConstraint.Internal";
+} from "../../miscellaneous/asserts.js";
+import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
+import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared.js";
+import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
+import type { UIVerticalInterpolationConstraintOptions } from "./UIVerticalInterpolationConstraint.Internal.js";
+import { DEFAULT_ANCHOR, DEFAULT_T } from "./UIVerticalInterpolationConstraint.Internal.js";
 
 /** Positions element C vertically between A and B based on interpolation factor */
 export class UIVerticalInterpolationConstraint extends UISingleParameterConstraint {

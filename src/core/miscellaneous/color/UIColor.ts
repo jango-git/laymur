@@ -1,8 +1,8 @@
 import { Color, MathUtils, Vector4 } from "three";
-import { assertValidNumber } from "../asserts";
-import { linearToSRGB, srgbToLinear } from "../math";
-import type { UIColorConfig, UIColorName } from "./UIColor.Internal";
-import { COLORS } from "./UIColor.Internal";
+import { assertValidNumber } from "../asserts.js";
+import { linearToSRGB, srgbToLinear } from "../math.js";
+import type { UIColorConfig, UIColorName } from "./UIColor.Internal.js";
+import { COLORS } from "./UIColor.Internal.js";
 
 /** RGBA color with RGB, HSL, hex, and named color support */
 export class UIColor {

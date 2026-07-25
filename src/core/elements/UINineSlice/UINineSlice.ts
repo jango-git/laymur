@@ -1,22 +1,22 @@
 import type { Matrix3 } from "three";
 import { Vector4 } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
-import { UIInsets } from "../../miscellaneous/insets/UIInsets";
-import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import source from "../../shaders/UINineSlice.glsl";
-import { UIElement } from "../UIElement/UIElement";
-import type { UINineSliceOptions } from "./UINineSlice.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import source from "../../shaders/UINineSlice.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import type { UINineSliceOptions } from "./UINineSlice.Internal.js";
 import {
   NINE_SLICE_DEFAULT_BORDER,
   NINE_SLICE_DEFAULT_REGION_MODE,
   UINineSliceRegionMode,
-} from "./UINineSlice.Internal";
+} from "./UINineSlice.Internal.js";
 
 /** Scalable textured image preserving border regions */
 export class UINineSlice extends UIElement {

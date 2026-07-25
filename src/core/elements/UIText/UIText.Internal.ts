@@ -1,7 +1,7 @@
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
-import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
-import type { UIElementOptions } from "../UIElement/UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Base direction used for bidirectional text reordering */
 export enum UITextDirection {

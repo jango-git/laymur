@@ -1,6 +1,6 @@
-import type { UIOrientation } from "../../miscellaneous/UIOrientation";
-import type { UIPriority } from "../../miscellaneous/UIPriority";
-import type { UIRelation } from "../../miscellaneous/UIRelation";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation.js";
+import type { UIPriority } from "../../miscellaneous/UIPriority.js";
+import type { UIRelation } from "../../miscellaneous/UIRelation.js";
 
 /** Horizontal and vertical values object */
 export interface UIType2DObject<T> {

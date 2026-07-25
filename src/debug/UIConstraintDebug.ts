@@ -1,4 +1,4 @@
-import type { UIConstraint } from "../core/constraints/UIConstraint";
+import type { UIConstraint } from "../core/constraints/UIConstraint.js";
 
 export interface UIConstraintDebug {
   get constraint(): UIConstraint;

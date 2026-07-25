@@ -1,14 +1,14 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts";
-import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
+import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts.js";
+import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_SCALE_X,
   BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
   resolveUIRangeConfig,
-} from "../miscellaneous/miscellaneous";
-import { UISpawnModule } from "./UISpawnModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UISpawnModule } from "./UISpawnModule.js";
 
 /**
  * Assigns random scale to particles.

@@ -1,17 +1,17 @@
 import type { WebGLRenderer } from "three";
 import { Vector2 } from "three";
-import type { UILayer } from "../../core";
-import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor";
-import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal";
-import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
-import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
-import { isUIModeVisible } from "../../core/miscellaneous/UIMode";
-import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule";
-import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle";
+import type { UILayer } from "../../core/index.js";
+import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor.js";
+import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal.js";
+import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
+import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
+import { isUIModeVisible } from "../../core/miscellaneous/UIMode.js";
+import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule.js";
+import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle.js";
 import {
   collectProperties,
   collectUniforms,
-} from "../instancedParticle/UIInstancedParticle.Internal";
+} from "../instancedParticle/UIInstancedParticle.Internal.js";
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_POSITION_X,
@@ -26,17 +26,17 @@ import {
   BUILTIN_OFFSET_TORQUE,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
-} from "../miscellaneous/miscellaneous";
-import type { UIRenderingModule } from "../renderingModules/UIRenderingModule";
-import type { UISpawnModule } from "../spawnModules/UISpawnModule";
-import type { UIEmitterMode, UIEmitterPlayOptions } from "./UIEmitter.Internal";
+} from "../miscellaneous/miscellaneous.js";
+import type { UIRenderingModule } from "../renderingModules/UIRenderingModule.js";
+import type { UISpawnModule } from "../spawnModules/UISpawnModule.js";
+import type { UIEmitterMode, UIEmitterPlayOptions } from "./UIEmitter.Internal.js";
 import {
   EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
   EMITTER_DEFAULT_CAPACITY_STEP,
   EMITTER_DEFAULT_EXPECTED_CAPACITY,
   EMITTER_DEFAULT_MODE,
   ignoreInput,
-} from "./UIEmitter.Internal";
+} from "./UIEmitter.Internal.js";
 
 export interface UIEmitterOptions extends UIAnchorOptions {
   mode: UIEmitterMode;

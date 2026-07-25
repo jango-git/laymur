@@ -1,13 +1,13 @@
 import { MathUtils } from "three";
-import { assertValidNumber } from "../asserts";
-import type { UIMicroAnchorMode, UIMicroConfig } from "./UIMicro.Internal";
+import { assertValidNumber } from "../asserts.js";
+import type { UIMicroAnchorMode, UIMicroConfig } from "./UIMicro.Internal.js";
 import {
   MICRO_DEFAULT_ANCHOR,
   MICRO_DEFAULT_ANCHOR_MODE,
   MICRO_DEFAULT_POSITION,
   MICRO_DEFAULT_ROTATION,
   MICRO_DEFAULT_SCALE,
-} from "./UIMicro.Internal";
+} from "./UIMicro.Internal.js";
 
 /** Transforms that don't affect constraints */
 export class UIMicro {

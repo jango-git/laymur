@@ -1,4 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal";
+import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
 
 /** Horizontal proportion constraint options */
 export interface UIHorizontalProportionConstraintOptions extends UISingleParameterConstraintOptions {

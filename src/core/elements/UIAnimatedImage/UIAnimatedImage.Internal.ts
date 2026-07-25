@@ -1,5 +1,5 @@
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIElementOptions } from "../UIElement/UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Animation loop behavior */
 export enum UIAnimatedImageLoopMode {

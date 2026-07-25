@@ -1,9 +1,9 @@
-import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
-import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
-import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
-import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal";
-import { detectBidiClass } from "./UIText.Bidi";
-import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UIText.Interfaces";
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
+import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
+import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
+import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import { detectBidiClass } from "./UIText.Bidi.js";
+import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UIText.Interfaces.js";
 
 /**
  * Applies font of a resolved style to a canvas context.

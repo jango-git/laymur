@@ -1,5 +1,5 @@
-import { UIMode } from "../../miscellaneous/UIMode";
-import type { UIOrientation } from "../../miscellaneous/UIOrientation";
+import { UIMode } from "../../miscellaneous/UIMode.js";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 
 /** Layer visibility and interactivity state */
 export type UILayerMode = UIMode.HIDDEN | UIMode.VISIBLE | UIMode.INTERACTIVE;

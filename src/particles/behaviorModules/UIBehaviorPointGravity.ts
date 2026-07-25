@@ -1,7 +1,7 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNumber } from "../../core/miscellaneous/asserts";
-import type { Vector2Like } from "../../core/miscellaneous/math";
+import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
+import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
@@ -15,8 +15,8 @@ import {
   type UIRange,
   type UIRangeConfig,
   type UIVector2Config,
-} from "../miscellaneous/miscellaneous";
-import { UIBehaviorModule } from "./UIBehaviorModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
  * Applies gravity attraction toward a point.

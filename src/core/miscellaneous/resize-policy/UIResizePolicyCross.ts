@@ -1,5 +1,5 @@
-import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy } from "./UIResizePolicy";
+import { assertValidPositiveNumber } from "../asserts.js";
+import { UIResizePolicy } from "./UIResizePolicy.js";
 
 /** Scales by width in landscape, by height in portrait */
 export class UIResizePolicyCross extends UIResizePolicy {

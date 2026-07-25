@@ -1,5 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
-import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
+import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 
 /**
  * Base class for particle behavior modules.

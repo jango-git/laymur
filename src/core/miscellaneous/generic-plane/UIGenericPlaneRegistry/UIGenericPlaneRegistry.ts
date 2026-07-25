@@ -1,14 +1,14 @@
 import type { Matrix4, Scene } from "three";
-import type { UITransparencyMode } from "../../UITransparencyMode";
-import type { HSLAdjustment, UIProperty } from "../shared";
+import type { UITransparencyMode } from "../../UITransparencyMode.js";
+import type { HSLAdjustment, UIProperty } from "../shared.js";
 import {
   cloneGLProperties,
   cloneProperties,
   convertUIPropertiesToGLProperties,
   extractZIndex,
-} from "../shared";
-import { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane";
-import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Internal";
+} from "../shared.js";
+import { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane.js";
+import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Internal.js";
 
 /**
  * Manages shader plane instances with automatic batching based on zIndex order.

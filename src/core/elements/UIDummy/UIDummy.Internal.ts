@@ -1,7 +1,7 @@
-import type { UIArea } from "../../miscellaneous/area/UIArea";
-import { UIMode } from "../../miscellaneous/UIMode";
-import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal";
-import type { UIDummy } from "./UIDummy";
+import type { UIArea } from "../../miscellaneous/area/UIArea.js";
+import { UIMode } from "../../miscellaneous/UIMode.js";
+import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal.js";
+import type { UIDummy } from "./UIDummy.js";
 
 /** Input event data */
 export interface UIInputEventData {

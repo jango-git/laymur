@@ -8,7 +8,7 @@ import {
   SRGBColorSpace,
   NoColorSpace,
 } from "three";
-import { checkOffscreenCanvasSupport, checkSRGBSupport } from "./webglCapabilities";
+import { checkOffscreenCanvasSupport, checkSRGBSupport } from "./webglCapabilities.js";
 
 /** Canvas type that works both in main thread and workers */
 export type UICanvas = HTMLCanvasElement | OffscreenCanvas;

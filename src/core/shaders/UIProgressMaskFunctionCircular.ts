@@ -1,3 +1,4 @@
+const source: string = `
 float calculateMask() {
     float aspect = p_textureResolution.x / p_textureResolution.y;
     vec2 p = (p_uv - 0.5) * vec2(aspect, 1.0);
@@ -11,3 +12,6 @@ float calculateMask() {
 
     return step(adjusted, p_progress);
 }
+`;
+
+export default source;

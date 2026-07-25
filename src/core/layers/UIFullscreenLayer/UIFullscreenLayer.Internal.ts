@@ -1,7 +1,7 @@
-import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizePolicy";
-import { UIResizePolicyNone } from "../../miscellaneous/resize-policy/UIResizePolicyNone";
-import type { UILayerOptions } from "../UILayer/UILayer.Internal";
-import type { UIFullscreenLayer } from "./UIFullscreenLayer";
+import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizePolicy.js";
+import { UIResizePolicyNone } from "../../miscellaneous/resize-policy/UIResizePolicyNone.js";
+import type { UILayerOptions } from "../UILayer/UILayer.Internal.js";
+import type { UIFullscreenLayer } from "./UIFullscreenLayer.js";
 
 /** Fullscreen layer input event data */
 export interface UIFullscreenLayerInputEventData {

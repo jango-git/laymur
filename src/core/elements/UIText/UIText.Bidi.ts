@@ -1,5 +1,5 @@
-import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
-import type { UITextChunk } from "./UIText.Interfaces";
+import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
+import type { UITextChunk } from "./UIText.Interfaces.js";
 
 /** No strong directional character */
 const BIDI_NEUTRAL = 0;

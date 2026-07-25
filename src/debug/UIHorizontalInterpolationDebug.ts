@@ -3,9 +3,9 @@ import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three"
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
-import type { UIHorizontalInterpolationConstraint } from "../core";
-import { UIColor, UIOrientation } from "../core";
-import { isUIPlaneElement } from "../core/miscellaneous/shared";
+import type { UIHorizontalInterpolationConstraint } from "../core/index.js";
+import { UIColor, UIOrientation } from "../core/index.js";
+import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
 import {
   DEBUG_BADGE_BACKGROUND_COLOR,
   DEBUG_BADGE_FONT_FAMILY,
@@ -14,8 +14,8 @@ import {
   DEBUG_LINE_WIDTH,
   DEBUG_RENDER_ORDER,
   debugResolutionVector,
-} from "./miscellaneous";
-import type { UIConstraintDebug } from "./UIConstraintDebug";
+} from "./miscellaneous.js";
+import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 
 export class UIHorizontalInterpolationDebug implements UIConstraintDebug {
   public readonly tint: UIColor = new UIColor("cyan");

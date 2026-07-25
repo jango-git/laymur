@@ -1,7 +1,7 @@
 import { Vector4 } from "three";
-import { assertValidNonNegativeNumber } from "../asserts";
-import type { UIInsetsConfig } from "./UIInsets.Internal";
-import { INSETS_DEFAULT_VALUE } from "./UIInsets.Internal";
+import { assertValidNonNegativeNumber } from "../asserts.js";
+import type { UIInsetsConfig } from "./UIInsets.Internal.js";
+import { INSETS_DEFAULT_VALUE } from "./UIInsets.Internal.js";
 
 /** Insets values for four sides */
 export class UIInsets {

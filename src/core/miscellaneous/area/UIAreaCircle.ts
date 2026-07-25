@@ -1,5 +1,5 @@
-import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts";
-import { UIArea } from "./UIArea";
+import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts.js";
+import { UIArea } from "./UIArea.js";
 
 /** Circular interaction area */
 export class UIAreaCircle extends UIArea {

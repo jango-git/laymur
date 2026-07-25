@@ -4,15 +4,15 @@ import {
   InstancedBufferGeometry,
   ShaderMaterial,
 } from "three";
-import { UIColor } from "../../core";
+import { UIColor } from "../../core/index.js";
 import type {
   GLProperty,
   GLTypeInfo,
   UIProperty,
   UIPropertyName,
-} from "../../core/miscellaneous/generic-plane/shared";
-import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared";
-import { checkSRGBSupport } from "../../core/miscellaneous/webglCapabilities";
+} from "../../core/miscellaneous/generic-plane/shared.js";
+import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
+import { checkSRGBSupport } from "../../core/miscellaneous/webglCapabilities.js";
 
 export const INSTANCED_PARTICLE_GEOMETRY = ((): InstancedBufferGeometry => {
   const geometry = new InstancedBufferGeometry();

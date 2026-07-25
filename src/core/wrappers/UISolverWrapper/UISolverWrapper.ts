@@ -1,12 +1,12 @@
 import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
-import { UIExpression } from "../../miscellaneous/UIExpression";
-import { convertPriority, UIPriority } from "../../miscellaneous/UIPriority";
-import { convertRelation, UIRelation } from "../../miscellaneous/UIRelation";
+import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { convertPriority, UIPriority } from "../../miscellaneous/UIPriority.js";
+import { convertRelation, UIRelation } from "../../miscellaneous/UIRelation.js";
 import type {
   ConstraintDescription,
   UISolverWrapperView,
   VariableDescription,
-} from "./UISolverWrapper.Internal";
+} from "./UISolverWrapper.Internal.js";
 
 /**
  * Wrapper around the Kiwi constraint solver providing enhanced UI-specific functionality.

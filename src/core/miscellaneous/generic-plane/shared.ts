@@ -1,8 +1,8 @@
 import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
-import type { UITransparencyMode } from "../UITransparencyMode";
-import { UIColor } from "../color/UIColor";
-import { checkSRGBSupport } from "../webglCapabilities";
+import type { UITransparencyMode } from "../UITransparencyMode.js";
+import { UIColor } from "../color/UIColor.js";
+import { checkSRGBSupport } from "../webglCapabilities.js";
 
 export type UIProperty =
   | Texture

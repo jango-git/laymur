@@ -108,4 +108,14 @@ export default [
       ],
     },
   },
+  {
+    // A shader module must export `string`, not the literal type of its own text. Without
+    // the annotation the whole shader source is inlined into every consumer's .d.ts, and
+    // the `source.replace(...)` rewrite in UIRenderingColorOverVelocity stops type-checking.
+    // The annotation widens deliberately, so it is not "trivially inferred" here.
+    files: ["src/**/shaders/*.ts"],
+    rules: {
+      "@typescript-eslint/no-inferrable-types": "off",
+    },
+  },
 ];

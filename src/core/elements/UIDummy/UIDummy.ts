@@ -1,22 +1,22 @@
 import type { FerrsignView1 } from "ferrsign";
 import { Ferrsign1 } from "ferrsign";
 import { MathUtils } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import type { UIArea } from "../../miscellaneous/area/UIArea";
-import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle";
-import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import type { UIPlaneElement } from "../../miscellaneous/shared";
-import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode";
-import { UIPriority } from "../../miscellaneous/UIPriority";
-import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal";
-import { UIAnchor } from "../UIAnchor/UIAnchor";
-import type { UIDummyOptions, UIInputEventData } from "./UIDummy.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import type { UIArea } from "../../miscellaneous/area/UIArea.js";
+import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle.js";
+import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import type { UIPlaneElement } from "../../miscellaneous/shared.js";
+import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode.js";
+import { UIPriority } from "../../miscellaneous/UIPriority.js";
+import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal.js";
+import { UIAnchor } from "../UIAnchor/UIAnchor.js";
+import type { UIDummyOptions, UIInputEventData } from "./UIDummy.Internal.js";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_MODE,
   DUMMY_DEFAULT_WIDTH,
   DUMMY_DEFAULT_Z_INDEX,
-} from "./UIDummy.Internal";
+} from "./UIDummy.Internal.js";
 
 /** Rectangular area with dimensions but no rendering */
 export class UIDummy extends UIAnchor implements UIPlaneElement {

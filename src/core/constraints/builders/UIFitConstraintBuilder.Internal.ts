@@ -1,4 +1,4 @@
-import type { UIOrientation } from "../../miscellaneous/UIOrientation";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 
 export const DEFAULT_ANCHOR = 0.5;
 

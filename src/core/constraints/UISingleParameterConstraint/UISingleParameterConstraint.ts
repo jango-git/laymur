@@ -1,11 +1,11 @@
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { resolveOrientation, UIOrientation } from "../../miscellaneous/UIOrientation";
-import type { UIPriority } from "../../miscellaneous/UIPriority";
-import { resolvePriority } from "../../miscellaneous/UIPriority";
-import type { UIRelation } from "../../miscellaneous/UIRelation";
-import { resolveRelation } from "../../miscellaneous/UIRelation";
-import { UIConstraint } from "../UIConstraint";
-import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { resolveOrientation, UIOrientation } from "../../miscellaneous/UIOrientation.js";
+import type { UIPriority } from "../../miscellaneous/UIPriority.js";
+import { resolvePriority } from "../../miscellaneous/UIPriority.js";
+import type { UIRelation } from "../../miscellaneous/UIRelation.js";
+import { resolveRelation } from "../../miscellaneous/UIRelation.js";
+import { UIConstraint } from "../UIConstraint.js";
+import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint.Internal.js";
 
 /** Base class for constraints with priority, relation, and orientation */
 export abstract class UISingleParameterConstraint extends UIConstraint {

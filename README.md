@@ -190,4 +190,4 @@ UILayerDebug, UIAspectDebug, UIHeightDebug, UIWidthDebug, UIHorizontalDistanceDe
 
 ## License
 
-MIT © jango
+MIT (c) jango

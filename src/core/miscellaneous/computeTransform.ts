@@ -1,5 +1,5 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
-import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicro.Internal";
+import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicro.Internal.js";
 
 const TEMP_POSITION = new Vector3();
 const TEMP_QUATERNION = new Quaternion();

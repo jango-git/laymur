@@ -1,4 +1,4 @@
-import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
+import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 
 /**
  * Base class for particle rendering modules.

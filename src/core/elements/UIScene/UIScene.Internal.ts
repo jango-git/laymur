@@ -1,7 +1,7 @@
 import type { Camera, Scene } from "three";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIElementOptions } from "../UIElement/UIElement.Internal";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Controls when scene re-renders */
 export enum UISceneUpdateMode {

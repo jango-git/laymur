@@ -1,9 +1,9 @@
 import type { DataTexture } from "three";
-import type { UIColor } from "../../core";
-import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
-import { buildGradientTexture } from "../miscellaneous/miscellaneous";
-import source from "../shaders/UIRenderingColorOverLife.glsl";
-import { UIRenderingModule } from "./UIRenderingModule";
+import type { UIColor } from "../../core/index.js";
+import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
+import { buildGradientTexture } from "../miscellaneous/miscellaneous.js";
+import source from "../shaders/UIRenderingColorOverLife.js";
+import { UIRenderingModule } from "./UIRenderingModule.js";
 
 /**
  * Colors particles based on lifetime progression.

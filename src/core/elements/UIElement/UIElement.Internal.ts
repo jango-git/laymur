@@ -1,8 +1,8 @@
-import type { HSLAdjustment } from "../../miscellaneous/generic-plane/shared";
-import { UIBlendMode } from "../../miscellaneous/UIBlendMode";
-import type { UIMicroConfig } from "../../miscellaneous/micro/UIMicro.Internal";
-import { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
-import type { UIDummyOptions } from "../UIDummy/UIDummy.Internal";
+import type { HSLAdjustment } from "../../miscellaneous/generic-plane/shared.js";
+import { UIBlendMode } from "../../miscellaneous/UIBlendMode.js";
+import type { UIMicroConfig } from "../../miscellaneous/micro/UIMicro.Internal.js";
+import { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
+import type { UIDummyOptions } from "../UIDummy/UIDummy.Internal.js";
 
 /** Configuration options for UIElement */
 export interface UIElementOptions extends UIDummyOptions {

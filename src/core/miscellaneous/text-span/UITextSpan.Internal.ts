@@ -1,4 +1,4 @@
-import type { UITextStyleConfig } from "../text-style/UITextStyle.Internal";
+import type { UITextStyleConfig } from "../text-style/UITextStyle.Internal.js";
 
 /** Configuration for creating a text span */
 export interface UITextSpanConfig {

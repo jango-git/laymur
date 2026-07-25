@@ -3,8 +3,8 @@ import { MathUtils } from "three";
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
-} from "../../core/miscellaneous/asserts";
-import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
+} from "../../core/miscellaneous/asserts.js";
+import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
@@ -13,8 +13,8 @@ import {
   BUILTIN_OFFSET_SCALE_Y,
   resolveAspect,
   resolveUIRangeConfig,
-} from "../miscellaneous/miscellaneous";
-import { UIBehaviorModule } from "./UIBehaviorModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
  * Animates particle scale over lifetime.

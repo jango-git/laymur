@@ -1,4 +1,4 @@
-import type { UIInputWrapperCatcher, UIInputWrapperView } from "./UIInputWrapper.Internal";
+import type { UIInputWrapperCatcher, UIInputWrapperView } from "./UIInputWrapper.Internal.js";
 
 export class UIInputWrapper implements UIInputWrapperView {
   /** @internal */

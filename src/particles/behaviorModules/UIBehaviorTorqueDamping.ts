@@ -1,13 +1,13 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNonNegativeNumber } from "../../core/miscellaneous/asserts";
-import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
+import { assertValidNonNegativeNumber } from "../../core/miscellaneous/asserts.js";
+import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_RANDOM_E,
   BUILTIN_OFFSET_TORQUE,
   resolveUIRangeConfig,
-} from "../miscellaneous/miscellaneous";
-import { UIBehaviorModule } from "./UIBehaviorModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
  * Reduces particle angular velocity over time.

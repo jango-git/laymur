@@ -1,16 +1,16 @@
 import type { WebGLRenderer } from "three";
 import { Matrix4 } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { computeTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
-import { UIMicro } from "../../miscellaneous/micro/UIMicro";
-import type { UIBlendMode } from "../../miscellaneous/UIBlendMode";
-import type { UIMode } from "../../miscellaneous/UIMode";
-import { isUIModeVisible } from "../../miscellaneous/UIMode";
-import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode";
-import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
-import { UIDummy } from "../UIDummy/UIDummy";
-import type { UIElementOptions } from "./UIElement.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { computeTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import { UIMicro } from "../../miscellaneous/micro/UIMicro.js";
+import type { UIBlendMode } from "../../miscellaneous/UIBlendMode.js";
+import type { UIMode } from "../../miscellaneous/UIMode.js";
+import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
+import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
+import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal.js";
+import { UIDummy } from "../UIDummy/UIDummy.js";
+import type { UIElementOptions } from "./UIElement.Internal.js";
 import {
   blendModeToFactor,
   ELEMENT_DEFAULT_BLEND_MODE,
@@ -19,7 +19,7 @@ import {
   ELEMENT_DEFAULT_SATURATION,
   ELEMENT_DEFAULT_TRANSPARENCY_MODE,
   packHSL,
-} from "./UIElement.Internal";
+} from "./UIElement.Internal.js";
 
 /** Base class for renderable UI elements */
 export abstract class UIElement extends UIDummy {

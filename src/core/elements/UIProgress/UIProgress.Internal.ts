@@ -1,6 +1,6 @@
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
-import type { UIElementOptions } from "../UIElement/UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction.js";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Configuration options for UIProgress */
 export interface UIProgressOptions extends UIElementOptions {
@@ -13,12 +13,3 @@ export interface UIProgressOptions extends UIElementOptions {
 }
 
 export const PROGRESS_DEFAULT_VALUE = 1;
-
-export function simplifyGLSLSource(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\/\/[^\n]*/g, "")
-    .replace(/\s*([{}(),=;+\-*/<>])\s*/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
-}

@@ -1,4 +1,4 @@
-import type { UILayer } from "../core";
+import type { UILayer } from "../core/index.js";
 import {
   UIAspectConstraint,
   UIHeightConstraint,
@@ -7,16 +7,16 @@ import {
   UIVerticalDistanceConstraint,
   UIVerticalInterpolationConstraint,
   UIWidthConstraint,
-} from "../core";
-import type { UIConstraint } from "../core/constraints/UIConstraint";
-import { UIAspectDebug } from "./UIAspectDebug";
-import type { UIConstraintDebug } from "./UIConstraintDebug";
-import { UIHeightDebug } from "./UIHeightDebug";
-import { UIHorizontalDistanceDebug } from "./UIHorizontalDistanceDebug";
-import { UIHorizontalInterpolationDebug } from "./UIHorizontalInterpolationDebug";
-import { UIVerticalDistanceDebug } from "./UIVerticalDistanceDebug";
-import { UIVerticalInterpolationDebug } from "./UIVerticalInterpolationDebug";
-import { UIWidthDebug } from "./UIWidthDebug";
+} from "../core/index.js";
+import type { UIConstraint } from "../core/constraints/UIConstraint.js";
+import { UIAspectDebug } from "./UIAspectDebug.js";
+import type { UIConstraintDebug } from "./UIConstraintDebug.js";
+import { UIHeightDebug } from "./UIHeightDebug.js";
+import { UIHorizontalDistanceDebug } from "./UIHorizontalDistanceDebug.js";
+import { UIHorizontalInterpolationDebug } from "./UIHorizontalInterpolationDebug.js";
+import { UIVerticalDistanceDebug } from "./UIVerticalDistanceDebug.js";
+import { UIVerticalInterpolationDebug } from "./UIVerticalInterpolationDebug.js";
+import { UIWidthDebug } from "./UIWidthDebug.js";
 
 export interface UILayerDebugOptions {
   showAspect: boolean;

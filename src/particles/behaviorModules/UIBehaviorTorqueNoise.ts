@@ -3,8 +3,8 @@ import { MathUtils } from "three";
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
-} from "../../core/miscellaneous/asserts";
-import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
+} from "../../core/miscellaneous/asserts.js";
+import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
@@ -13,8 +13,8 @@ import {
   BUILTIN_OFFSET_TORQUE,
   generateNoise2D,
   resolveUIRangeConfig,
-} from "../miscellaneous/miscellaneous";
-import { UIBehaviorModule } from "./UIBehaviorModule";
+} from "../miscellaneous/miscellaneous.js";
+import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
  * Applies noise-based angular acceleration to particles.

@@ -1,7 +1,7 @@
-import source from "../../shaders/UIProgressMaskFunctionCircular.glsl";
-import { assertValidNumber } from "../asserts";
-import type { UIProperty } from "../generic-plane/shared";
-import { UIProgressMaskFunction } from "./UIProgressMaskFunction";
+import source from "../../shaders/UIProgressMaskFunctionCircular.js";
+import { assertValidNumber } from "../asserts.js";
+import type { UIProperty } from "../generic-plane/shared.js";
+import { UIProgressMaskFunction } from "./UIProgressMaskFunction.js";
 
 /** Circular radial progress fill */
 export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {

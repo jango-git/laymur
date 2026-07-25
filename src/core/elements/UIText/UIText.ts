@@ -1,29 +1,29 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
 import { Matrix3 } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
-import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
-import { UIInsets } from "../../miscellaneous/insets/UIInsets";
-import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
-import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan";
-import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle";
-import source from "../../shaders/UIImage.glsl";
-import { UIElement } from "../UIElement/UIElement";
-import { detectIsRTL } from "./UIText.Bidi";
-import type { UITextChunk, UITextContent } from "./UIText.Interfaces";
-import type { UITextOptions } from "./UIText.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
+import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
+import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
+import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
+import source from "../../shaders/UIImage.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import { detectIsRTL } from "./UIText.Bidi.js";
+import type { UITextChunk, UITextContent } from "./UIText.Interfaces.js";
+import type { UITextOptions } from "./UIText.Internal.js";
 import {
   TEXT_DEFAULT_DIRECTION,
   TEXT_DEFAULT_MAX_LINE_WIDTH,
   TEXT_DEFAULT_RESIZE_MODE,
   UITextDirection,
   UITextResizeMode,
-} from "./UIText.Internal";
-import { buildTextChunks, calculateTextContentParameters } from "./UIText.Measuring";
-import { renderTextLines } from "./UIText.Rendering";
+} from "./UIText.Internal.js";
+import { buildTextChunks, calculateTextContentParameters } from "./UIText.Measuring.js";
+import { renderTextLines } from "./UIText.Rendering.js";
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {

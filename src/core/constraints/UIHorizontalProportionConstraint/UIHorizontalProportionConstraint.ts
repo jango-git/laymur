@@ -1,11 +1,11 @@
 import {
   assertValidConstraintArguments,
   assertValidPositiveNumber,
-} from "../../miscellaneous/asserts";
-import type { UIPlaneElement } from "../../miscellaneous/shared";
-import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
-import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal";
+} from "../../miscellaneous/asserts.js";
+import type { UIPlaneElement } from "../../miscellaneous/shared.js";
+import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
+import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal.js";
 
 /** Maintains proportional width relationship (A.width * proportion = B.width) */
 export class UIHorizontalProportionConstraint extends UISingleParameterConstraint {

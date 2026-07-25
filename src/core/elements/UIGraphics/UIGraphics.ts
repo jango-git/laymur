@@ -1,18 +1,18 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
 import { Matrix3 } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
-import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import source from "../../shaders/UIImage.glsl";
-import { UIElement } from "../UIElement/UIElement";
-import type { UIGraphicsOptions } from "./UIGraphics.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
+import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import source from "../../shaders/UIImage.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import type { UIGraphicsOptions } from "./UIGraphics.Internal.js";
 import {
   GRAPHICS_DEFAULT_HEIGHT,
   GRAPHICS_DEFAULT_WIDTH,
   GRAPHICS_TEMP_COLOR,
-} from "./UIGraphics.Internal";
+} from "./UIGraphics.Internal.js";
 
 /** Canvas-based 2D drawing element */
 export class UIGraphics extends UIElement {

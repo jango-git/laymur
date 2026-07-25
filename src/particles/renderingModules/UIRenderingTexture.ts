@@ -1,8 +1,8 @@
-import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared";
-import { UITextureView } from "../../core/miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal";
-import source from "../shaders/UIRenderingTexture.glsl";
-import { UIRenderingModule } from "./UIRenderingModule";
+import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
+import { UITextureView } from "../../core/miscellaneous/texture/UITextureView.js";
+import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
+import source from "../shaders/UIRenderingTexture.js";
+import { UIRenderingModule } from "./UIRenderingModule.js";
 
 function buildMultiTextureShader(count: number): string {
   const branches: string[] = [];

@@ -1,6 +1,6 @@
-import { UILayer } from "../layers/UILayer/UILayer";
-import { EPSILON } from "./math";
-import { isUILayerElement } from "./shared";
+import { UILayer } from "../layers/UILayer/UILayer.js";
+import { EPSILON } from "./math.js";
+import { isUILayerElement } from "./shared.js";
 
 /**
  * Validates value is finite number within safe range.

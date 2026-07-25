@@ -11,10 +11,10 @@ import {
   Vector3,
   Vector4,
 } from "three";
-import { UIColor } from "../../color/UIColor";
-import { UITransparencyMode } from "../../UITransparencyMode";
-import type { GLProperty, UIProperty } from "../shared";
-import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared";
+import { UIColor } from "../../color/UIColor.js";
+import { UITransparencyMode } from "../../UITransparencyMode.js";
+import type { GLProperty, UIProperty } from "../shared.js";
+import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared.js";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const geometry = new InstancedBufferGeometry();

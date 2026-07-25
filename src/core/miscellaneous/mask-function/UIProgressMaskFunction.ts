@@ -1,4 +1,4 @@
-import type { UIProperty } from "../generic-plane/shared";
+import type { UIProperty } from "../generic-plane/shared.js";
 
 /** Base class for progress bar fill functions */
 export abstract class UIProgressMaskFunction {

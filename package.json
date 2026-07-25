@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "keywords": [
     "ui",
@@ -21,11 +21,12 @@
   "sideEffects": false,
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && rollup -c",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "prepublishOnly": "npm run build"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/core/index.js",
+  "module": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
   "files": [
     "dist",
     "README.md",
@@ -33,17 +34,18 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/core/index.d.ts"
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
     },
     "./particles": {
-      "import": "./dist/particles/index.js",
-      "types": "./dist/particles/index.d.ts"
+      "types": "./dist/particles/index.d.ts",
+      "import": "./dist/particles/index.js"
     },
     "./debug": {
-      "import": "./dist/debug/index.js",
-      "types": "./dist/debug/index.d.ts"
-    }
+      "types": "./dist/debug/index.d.ts",
+      "import": "./dist/debug/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "peerDependencies": {
     "@lume/kiwi": "^0.4.4",
@@ -52,17 +54,11 @@
     "three": ">=0.157.0 <0.180.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^29.0.3",
-    "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/node": "^25.0.2",
     "@types/three": "^0.157.0",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "eslint": "^9.26.0",
-    "rollup": "^4.40.2",
-    "rollup-plugin-string": "^3.0.0",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "ts-transformer-minify-privates": "^1.0.0",
     "typescript": "^5.8.3"
   }
 }

@@ -1,4 +1,4 @@
-import { assertValidNumber } from "./asserts";
+import { assertValidNumber } from "./asserts.js";
 
 /** Linear expression for constraint equations */
 export class UIExpression {

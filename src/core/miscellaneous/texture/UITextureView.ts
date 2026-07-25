@@ -1,13 +1,13 @@
 import type { FerrsignView3 } from "ferrsign";
 import { Ferrsign3 } from "ferrsign";
 import { Matrix3, Texture, Vector2 } from "three";
-import { assertValidNonNegativeNumber, assertValidPositiveNumber } from "../asserts";
+import { assertValidNonNegativeNumber, assertValidPositiveNumber } from "../asserts.js";
 import type {
   UITextureAtlasConfig,
   UITextureConfig,
   UITextureTrim,
-} from "./UITextureView.Internal";
-import { TEXTURE_DEFAULT_SIZE, TEXTURE_DEFAULT_TEXTURE } from "./UITextureView.Internal";
+} from "./UITextureView.Internal.js";
+import { TEXTURE_DEFAULT_SIZE, TEXTURE_DEFAULT_TEXTURE } from "./UITextureView.Internal.js";
 
 /** Wrapper for Three.js texture with atlas and trim support. Does not own the underlying texture; user must dispose it. */
 export class UITextureView {

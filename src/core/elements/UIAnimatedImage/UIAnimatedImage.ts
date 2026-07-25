@@ -1,23 +1,23 @@
 import type { FerrsignView0 } from "ferrsign";
 import { Ferrsign0 } from "ferrsign";
 import type { Matrix3, WebGLRenderer } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import source from "../../shaders/UIImage.glsl";
-import { UIElement } from "../UIElement/UIElement";
-import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import source from "../../shaders/UIImage.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal.js";
 import {
   ANIMATED_IMAGE_DEFAULT_FRAME_RATE,
   ANIMATED_IMAGE_DEFAULT_LOOP_MODE,
   ANIMATED_IMAGE_DEFAULT_TIME_SCALE,
   UIAnimatedImageLoopMode,
-} from "./UIAnimatedImage.Internal";
+} from "./UIAnimatedImage.Internal.js";
 
 /** Frame-based texture animation element */
 export class UIAnimatedImage extends UIElement {

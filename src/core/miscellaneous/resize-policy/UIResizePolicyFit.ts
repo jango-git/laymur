@@ -1,5 +1,5 @@
-import { assertValidPositiveNumber } from "../asserts";
-import { UIResizePolicy } from "./UIResizePolicy";
+import { assertValidPositiveNumber } from "../asserts.js";
+import { UIResizePolicy } from "./UIResizePolicy.js";
 
 /** Scales area to fit around rect preserving proportions */
 export class UIResizePolicyFit extends UIResizePolicy {

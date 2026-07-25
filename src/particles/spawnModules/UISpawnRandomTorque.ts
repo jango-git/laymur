@@ -1,9 +1,9 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNumber } from "../../core/miscellaneous/asserts";
-import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous";
-import { BUILTIN_OFFSET_TORQUE, resolveUIRangeConfig } from "../miscellaneous/miscellaneous";
-import { UISpawnModule } from "./UISpawnModule";
+import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
+import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
+import { BUILTIN_OFFSET_TORQUE, resolveUIRangeConfig } from "../miscellaneous/miscellaneous.js";
+import { UISpawnModule } from "./UISpawnModule.js";
 
 /**
  * Assigns random angular velocity to particles.

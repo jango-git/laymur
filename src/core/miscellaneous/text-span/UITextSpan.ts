@@ -1,5 +1,5 @@
-import { UITextStyle } from "../text-style/UITextStyle";
-import type { UITextSpanConfig } from "./UITextSpan.Internal";
+import { UITextStyle } from "../text-style/UITextStyle.js";
+import type { UITextSpanConfig } from "./UITextSpan.Internal.js";
 
 /** Text span with associated style */
 export class UITextSpan {

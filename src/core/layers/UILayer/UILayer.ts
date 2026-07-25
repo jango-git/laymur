@@ -1,21 +1,21 @@
 import type { FerrsignView2, FerrsignView3 } from "ferrsign";
 import { Ferrsign2, Ferrsign3 } from "ferrsign";
 import type { WebGLRenderer } from "three";
-import type { UIPlaneElement } from "../../miscellaneous/shared";
+import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 
-import type { UIConstraint } from "../../constraints/UIConstraint";
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import { isUIModeVisible } from "../../miscellaneous/UIMode";
-import { UIOrientation } from "../../miscellaneous/UIOrientation";
-import { UIPriority } from "../../miscellaneous/UIPriority";
-import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper";
-import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal";
-import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper";
-import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal";
-import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper";
-import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
-import type { UILayerMode, UILayerOptions, UILayerOrientation } from "./UILayer.Internal";
-import { LAYER_DEFAULT_MODE, LAYER_DEFAULT_NAME, LAYER_DEFAULT_SIZE } from "./UILayer.Internal";
+import type { UIConstraint } from "../../constraints/UIConstraint.js";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
+import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
+import { UIPriority } from "../../miscellaneous/UIPriority.js";
+import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper.js";
+import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal.js";
+import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper.js";
+import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal.js";
+import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper.js";
+import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
+import type { UILayerMode, UILayerOptions, UILayerOrientation } from "./UILayer.Internal.js";
+import { LAYER_DEFAULT_MODE, LAYER_DEFAULT_NAME, LAYER_DEFAULT_SIZE } from "./UILayer.Internal.js";
 
 /** Base layer for UI rendering and layout management */
 export abstract class UILayer implements UIPlaneElement {

@@ -1,14 +1,14 @@
-import { assertValidNumber } from "../../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
-import { UIPriority } from "../../miscellaneous/UIPriority";
-import { UIRelation } from "../../miscellaneous/UIRelation";
-import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint";
-import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
-import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
-import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint";
-import type { UICoverConstraintBuilderOptions } from "./UICoverConstraintBuilder.Internal";
-import { COVER_CONSTRAINT_DEFAULT_ANCHOR } from "./UICoverConstraintBuilder.Internal";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
+import { UIPriority } from "../../miscellaneous/UIPriority.js";
+import { UIRelation } from "../../miscellaneous/UIRelation.js";
+import { UIAspectConstraint } from "../UIAspectConstraint/UIAspectConstraint.js";
+import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint.js";
+import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint.js";
+import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint.js";
+import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint.js";
+import type { UICoverConstraintBuilderOptions } from "./UICoverConstraintBuilder.Internal.js";
+import { COVER_CONSTRAINT_DEFAULT_ANCHOR } from "./UICoverConstraintBuilder.Internal.js";
 
 /** Builder for cover layout (like CSS object-fit: cover) */
 export class UICoverConstraintBuilder {

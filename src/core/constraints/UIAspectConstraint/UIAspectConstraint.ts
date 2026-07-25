@@ -1,8 +1,8 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts";
-import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared";
-import { UIExpression } from "../../miscellaneous/UIExpression";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint";
-import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
+import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
+import type { UIAspectConstraintOptions } from "./UIAspectConstraint.Internal.js";
 
 /** Maintains element aspect ratio (width = height * aspect) */
 export class UIAspectConstraint extends UISingleParameterConstraint {

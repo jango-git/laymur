@@ -2,8 +2,8 @@ import {
   assertValidNonNegativeNumber,
   assertValidNumber,
   assertValidPositiveNumber,
-} from "../asserts";
-import type { UITextAlign, UITextStyleConfig } from "./UITextStyle.Internal";
+} from "../asserts.js";
+import type { UITextAlign, UITextStyleConfig } from "./UITextStyle.Internal.js";
 import {
   TEXT_STYLE_DEFAULT_ALIGN,
   TEXT_STYLE_DEFAULT_COLOR,
@@ -20,7 +20,7 @@ import {
   TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y,
   TEXT_STYLE_DEFAULT_STROKE_COLOR,
   TEXT_STYLE_DEFAULT_STROKE_THICKNESS,
-} from "./UITextStyle.Internal";
+} from "./UITextStyle.Internal.js";
 
 /** Text style configuration for UI text rendering */
 export class UITextStyle {

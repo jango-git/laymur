@@ -1,21 +1,21 @@
-import type { UIElement } from "../../elements/UIElement/UIElement";
-import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared";
-import { UIHeightConstraint } from "../UIHeightConstraint/UIHeightConstraint";
-import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint";
-import { UIHorizontalInterpolationConstraint } from "../UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint";
-import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint";
-import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint";
-import { UIVerticalInterpolationConstraint } from "../UIVerticalInterpolationConstraint/UIVerticalInterpolationConstraint";
-import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint";
-import { UIWidthConstraint } from "../UIWidthConstraint/UIWidthConstraint";
+import type { UIElement } from "../../elements/UIElement/UIElement.js";
+import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
+import { UIHeightConstraint } from "../UIHeightConstraint/UIHeightConstraint.js";
+import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint.js";
+import { UIHorizontalInterpolationConstraint } from "../UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint.js";
+import { UIHorizontalProportionConstraint } from "../UIHorizontalProportionConstraint/UIHorizontalProportionConstraint.js";
+import { UIVerticalDistanceConstraint } from "../UIVerticalDistanceConstraint/UIVerticalDistanceConstraint.js";
+import { UIVerticalInterpolationConstraint } from "../UIVerticalInterpolationConstraint/UIVerticalInterpolationConstraint.js";
+import { UIVerticalProportionConstraint } from "../UIVerticalProportionConstraint/UIVerticalProportionConstraint.js";
+import { UIWidthConstraint } from "../UIWidthConstraint/UIWidthConstraint.js";
 import type {
   UIConstraint2DResult,
   UIConstraintDistance2DOptions,
   UIConstraintInterpolation2DOptions,
   UIConstraintProportion2DOptions,
   UIConstraintSize2DOptions,
-} from "./UIConstraint2DBuilder.Internal";
-import { normalizeUIType2D } from "./UIConstraint2DBuilder.Internal";
+} from "./UIConstraint2DBuilder.Internal.js";
+import { normalizeUIType2D } from "./UIConstraint2DBuilder.Internal.js";
 
 /** Builder for paired horizontal and vertical constraints */
 export class UIConstraint2DBuilder {

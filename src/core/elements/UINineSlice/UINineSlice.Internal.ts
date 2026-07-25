@@ -1,6 +1,6 @@
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal";
-import type { UIElementOptions } from "../UIElement/UIElement.Internal";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
+import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Controls how sliceRegions values are interpreted */
 export enum UINineSliceRegionMode {

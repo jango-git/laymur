@@ -1,21 +1,21 @@
 import type { Matrix3, Vector2 } from "three";
 import { MathUtils } from "three";
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { assertValidNumber } from "../../miscellaneous/asserts";
-import { UIColor } from "../../miscellaneous/color/UIColor";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform";
-import type { UIProperty } from "../../miscellaneous/generic-plane/shared";
-import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction";
-import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView";
-import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal";
-import { isUIModeVisible } from "../../miscellaneous/UIMode";
-import source from "../../shaders/UIProgress.glsl";
-import { UIElement } from "../UIElement/UIElement";
-import { blendModeToFactor, packHSL } from "../UIElement/UIElement.Internal";
-import type { UIProgressOptions } from "./UIProgress.Internal";
-import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction.js";
+import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
+import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
+import source from "../../shaders/UIProgress.js";
+import { UIElement } from "../UIElement/UIElement.js";
+import { blendModeToFactor, packHSL } from "../UIElement/UIElement.Internal.js";
+import type { UIProgressOptions } from "./UIProgress.Internal.js";
+import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal.js";
 
 /** Progress bar with customizable fill direction */
 export class UIProgress extends UIElement {

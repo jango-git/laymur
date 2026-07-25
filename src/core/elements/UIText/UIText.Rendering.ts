@@ -1,12 +1,12 @@
-import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas";
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import type {
   UITextAlign,
   UITextStyleConfig,
-} from "../../miscellaneous/text-style/UITextStyle.Internal";
-import { TEXT_STYLE_DEFAULT_ALIGN } from "../../miscellaneous/text-style/UITextStyle.Internal";
-import { reorderChunksVisually } from "./UIText.Bidi";
-import type { UITextLine } from "./UIText.Interfaces";
-import { applyFontStyle } from "./UIText.Measuring";
+} from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import { TEXT_STYLE_DEFAULT_ALIGN } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import { reorderChunksVisually } from "./UIText.Bidi.js";
+import type { UITextLine } from "./UIText.Interfaces.js";
+import { applyFontStyle } from "./UIText.Measuring.js";
 
 /**
  * Resolves logical alignment into a physical one.

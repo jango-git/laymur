@@ -1,6 +1,6 @@
-import { assertValidNumber } from "../asserts";
-import type { Vector2Like } from "../math";
-import { UIArea } from "./UIArea";
+import { assertValidNumber } from "../asserts.js";
+import type { Vector2Like } from "../math.js";
+import { UIArea } from "./UIArea.js";
 
 /** Polygonal interaction area using ray casting */
 export class UIAreaPolygon extends UIArea {

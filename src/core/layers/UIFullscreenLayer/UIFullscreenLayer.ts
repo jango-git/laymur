@@ -2,15 +2,15 @@ import type { FerrsignView1 } from "ferrsign";
 import { Ferrsign1 } from "ferrsign";
 import type { Camera, Vector2, WebGLRenderer } from "three";
 import { MathUtils, Ray, Vector3 } from "three";
-import { assertValidNumber } from "../../miscellaneous/asserts";
-import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizePolicy";
-import { isUIModeInteractive } from "../../miscellaneous/UIMode";
-import { UILayer } from "../UILayer/UILayer";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizePolicy.js";
+import { isUIModeInteractive } from "../../miscellaneous/UIMode.js";
+import { UILayer } from "../UILayer/UILayer.js";
 import type {
   UIFullscreenLayerInputEventData,
   UIFullscreenLayerOptions,
-} from "./UIFullscreenLayer.Internal";
-import { FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY } from "./UIFullscreenLayer.Internal";
+} from "./UIFullscreenLayer.Internal.js";
+import { FULLSCREEN_LAYER_DEFAULT_RESIZE_POLICY } from "./UIFullscreenLayer.Internal.js";
 
 /** Layer that automatically handles browser window resizing and input events */
 export class UIFullscreenLayer extends UILayer {

@@ -1,4 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal";
+import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
 
 /** Height constraint options */
 export interface UIHeightConstraintOptions extends UISingleParameterConstraintOptions {

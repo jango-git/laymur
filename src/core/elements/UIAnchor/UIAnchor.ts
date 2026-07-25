@@ -1,10 +1,10 @@
-import type { UILayer } from "../../layers/UILayer/UILayer";
-import { assertValidNumber } from "../../miscellaneous/asserts";
-import type { UILayerElement, UIPointElement } from "../../miscellaneous/shared";
-import { UIPriority } from "../../miscellaneous/UIPriority";
-import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal";
-import type { UIAnchorOptions } from "./UIAnchor.Internal";
-import { ANCHOR_DEFAULT_NAME, ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal";
+import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import type { UILayerElement, UIPointElement } from "../../miscellaneous/shared.js";
+import { UIPriority } from "../../miscellaneous/UIPriority.js";
+import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
+import type { UIAnchorOptions } from "./UIAnchor.Internal.js";
+import { ANCHOR_DEFAULT_NAME, ANCHOR_DEFAULT_X, ANCHOR_DEFAULT_Y } from "./UIAnchor.Internal.js";
 
 /** Point in 2D space with constraint-based positioning */
 export class UIAnchor implements UILayerElement, UIPointElement {

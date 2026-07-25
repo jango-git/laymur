@@ -1,5 +1,5 @@
-import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts";
-import { UIArea } from "./UIArea";
+import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts.js";
+import { UIArea } from "./UIArea.js";
 
 /** Rectangular interaction area with rounded corners */
 export class UIAreaRoundedRectangle extends UIArea {
