@@ -33,7 +33,7 @@ export class UITextureView {
   private uvTransformDirtyInternal = false;
   private trimDirtyInternal = false;
 
-  private readonly signalDiminsionsChangedInternal = new Ferrsign3<number, number, UITextureView>();
+  private readonly signalDimensionsChangedInternal = new Ferrsign3<number, number, UITextureView>();
 
   /** @param config Texture or atlas configuration */
   constructor(config?: UITextureConfig) {
@@ -104,8 +104,8 @@ export class UITextureView {
     return this.trimDirtyInternal;
   }
 
-  public get signalDiminsionsChanged(): FerrsignView3<number, number, UITextureView> {
-    return this.signalDiminsionsChangedInternal;
+  public get signalDimensionsChanged(): FerrsignView3<number, number, UITextureView> {
+    return this.signalDimensionsChangedInternal;
   }
 
   public setTextureDirtyFalse(): void {
@@ -177,7 +177,7 @@ export class UITextureView {
     }
 
     if (this.width !== lastWidth || this.height !== lastHeight) {
-      this.signalDiminsionsChangedInternal.emit(this.width, this.height, this);
+      this.signalDimensionsChangedInternal.emit(this.width, this.height, this);
     }
   }
 

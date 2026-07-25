@@ -89,7 +89,7 @@ export class UINineSlice extends UIElement {
     this.lastElementWidth = this.width;
     this.lastElementHeight = this.height;
 
-    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
+    this.texture.signalDimensionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -137,7 +137,7 @@ export class UINineSlice extends UIElement {
 
   /** Removes nine slice and frees resources */
   public override destroy(): void {
-    this.texture.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
+    this.texture.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
     super.destroy();
   }
 

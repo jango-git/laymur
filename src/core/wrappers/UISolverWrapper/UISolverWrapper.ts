@@ -576,29 +576,45 @@ export class UISolverWrapper implements UISolverWrapperView {
    *
    * Re-adds all variables and constraints to a fresh solver instance.
    * Used for recovery when the solver enters an invalid state.
+   *
+   * The solver is normally dropped because some constraint was rejected by kiwi,
+   * and that same constraint is still registered here. Replaying it would throw
+   * again, so every replay is guarded individually: a constraint kiwi refuses is
+   * skipped and stays registered but unapplied, which is exactly the state it was
+   * already in. The fresh solver is only published once the replay is complete,
+   * so a rejection can never leave a half-built solver in place.
    */
   private rebuildSolver(): void {
     if (this.solver) {
       throw new Error("UISolverWrapper.rebuildSolver: solver already exists");
     }
 
-    this.solver = new Solver();
+    const solver = new Solver();
 
     for (const description of this.variables.values()) {
-      if (description.constraint) {
-        this.solver.addConstraint(description.constraint);
-      } else {
-        this.solver.addEditVariable(description.variable, convertPriority(description.priority));
-        this.solver.suggestValue(description.variable, description.value);
+      try {
+        if (description.constraint) {
+          solver.addConstraint(description.constraint);
+        } else {
+          solver.addEditVariable(description.variable, convertPriority(description.priority));
+          solver.suggestValue(description.variable, description.value);
+        }
+      } catch {
+        continue;
       }
     }
 
     for (const description of this.constraints.values()) {
       if (description.enabled) {
-        this.solver.addConstraint(description.constraint);
+        try {
+          solver.addConstraint(description.constraint);
+        } catch {
+          continue;
+        }
       }
     }
 
+    this.solver = solver;
     this.recalculationRequired = true;
     this.dirty = true;
   }

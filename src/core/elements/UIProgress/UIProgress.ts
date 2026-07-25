@@ -78,7 +78,7 @@ export class UIProgress extends UIElement {
     this.progressInternal = progress;
     this.maskFunctionInternal = maskFunction;
 
-    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
+    this.texture.signalDimensionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -117,6 +117,12 @@ export class UIProgress extends UIElement {
       this.progressInternal = value;
       this.progressDirty = true;
     }
+  }
+
+  /** Removes element and frees resources */
+  public override destroy(): void {
+    this.texture.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
+    super.destroy();
   }
 
   protected override setPlaneTransform(): void {

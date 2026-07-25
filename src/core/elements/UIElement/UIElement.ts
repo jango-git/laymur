@@ -87,6 +87,31 @@ export abstract class UIElement extends UIDummy {
     return this.blendModeInternal;
   }
 
+  /** Hue shift in degrees */
+  public get hue(): number {
+    return this.hueInternal;
+  }
+
+  /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
+  public get saturation(): number {
+    return this.saturationInternal;
+  }
+
+  /** Lightness offset (0 = unchanged) */
+  public get lightness(): number {
+    return this.lightnessInternal;
+  }
+
+  /**
+   * Controls visibility and interactivity.
+   *
+   * Redeclared here because declaring only a setter would shadow the accessor
+   * pair inherited from {@link UIDummy}, making reads return undefined.
+   */
+  public override get mode(): UIMode {
+    return this.modeInternal;
+  }
+
   /** Alpha blending mode */
   public set transparencyMode(value: UITransparencyMode) {
     if (this.transparencyModeInternal !== value) {
@@ -104,21 +129,11 @@ export abstract class UIElement extends UIDummy {
   }
 
   /** Hue shift in degrees */
-  public get hue(): number {
-    return this.hueInternal;
-  }
-
-  /** Hue shift in degrees */
   public set hue(value: number) {
     if (this.hueInternal !== value) {
       this.hueInternal = value;
       this.hslDirty = true;
     }
-  }
-
-  /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
-  public get saturation(): number {
-    return this.saturationInternal;
   }
 
   /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
@@ -130,11 +145,6 @@ export abstract class UIElement extends UIDummy {
   }
 
   /** Lightness offset (0 = unchanged) */
-  public get lightness(): number {
-    return this.lightnessInternal;
-  }
-
-  /** Lightness offset (0 = unchanged) */
   public set lightness(value: number) {
     if (this.lightnessInternal !== value) {
       this.lightnessInternal = value;
@@ -142,6 +152,7 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
+  /** Controls visibility and interactivity */
   public override set mode(value: UIMode) {
     if (this.modeInternal !== value) {
       this.visibilityDirty = isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);

@@ -343,13 +343,13 @@ export class UIAnimatedImage extends UIElement {
 
   private subscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
-      frame.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
+      frame.signalDimensionsChanged.on(this.onTextureDimensionsChanged);
     }
   }
 
   private unsubscribeSequenceEvents(): void {
     for (const frame of this.sequenceInternal) {
-      frame.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
+      frame.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
     }
   }
 }

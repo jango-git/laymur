@@ -46,7 +46,7 @@ export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {
     if (Math.abs(squaredLength) <= EPSILON) {
       this.direction.set(1, 0);
     } else if (Math.abs(squaredLength - 1) > EPSILON) {
-      this.direction.divideScalar(squaredLength);
+      this.direction.divideScalar(Math.sqrt(squaredLength));
     }
   }
 }

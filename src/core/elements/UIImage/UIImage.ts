@@ -50,7 +50,7 @@ export class UIImage extends UIElement {
     this.textureTransform = textureTransform;
     this.colorInternal = color;
 
-    this.texture.signalDiminsionsChanged.on(this.onTextureDimensionsChanged);
+    this.texture.signalDimensionsChanged.on(this.onTextureDimensionsChanged);
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -65,7 +65,7 @@ export class UIImage extends UIElement {
 
   /** Removes image and frees resources */
   public override destroy(): void {
-    this.texture.signalDiminsionsChanged.off(this.onTextureDimensionsChanged);
+    this.texture.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
     super.destroy();
   }
 
