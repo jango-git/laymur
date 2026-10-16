@@ -21,6 +21,10 @@ export interface UISceneWrapperView {
   setBlend(handler: number, blend: number): void;
   setHSL(handler: number, hsl: HSLAdjustment): void;
 
+  insertOrderedObject(object: Object3D, depth: number): void;
+  setOrderedObjectDepth(object: Object3D, depth: number): void;
+  removeOrderedObject(object: Object3D): void;
+
   insertCustomObject(object: Object3D): void;
   removeCustomObject(object: Object3D): void;
 }

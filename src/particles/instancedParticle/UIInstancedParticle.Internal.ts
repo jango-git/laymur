@@ -1,5 +1,6 @@
 import {
   BufferAttribute,
+  DoubleSide,
   Float32BufferAttribute,
   InstancedBufferGeometry,
   ShaderMaterial,
@@ -46,7 +47,9 @@ export function collectProperties(
       if (existingTypeInfo === undefined) {
         keeper[key] = newTypeInfo;
       } else if (existingTypeInfo.glslTypeName !== newTypeInfo.glslTypeName) {
-        throw new Error(`${debugContext}: property conflict for "${key}"`);
+        throw new Error(
+          `${debugContext}: property conflict for "${key}" (${existingTypeInfo.glslTypeName} and ${newTypeInfo.glslTypeName})`,
+        );
       }
     }
   }
@@ -68,7 +71,9 @@ export function collectUniforms(
       } else if (
         existingGLProperty.glslTypeInfo.glslTypeName !== newPropertyTypeInfo.glslTypeName
       ) {
-        throw new Error(`${debugContext}: property conflict for "${key}"`);
+        throw new Error(
+          `${debugContext}: uniform conflict for "${key}" (${existingGLProperty.glslTypeInfo.glslTypeName} and ${newPropertyTypeInfo.glslTypeName})`,
+        );
       }
     }
   }
@@ -258,6 +263,8 @@ export function buildParticleMaterial(
     ),
     fragmentShader: buildParticleFragmentShader(uniformDeclarations, varyingDeclarations, sources),
     transparent: true,
+    side: DoubleSide,
+    forceSinglePass: true,
     depthWrite: false,
     depthTest: true,
   });

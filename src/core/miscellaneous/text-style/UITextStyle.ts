@@ -334,6 +334,26 @@ export class UITextStyle {
     };
   }
 
+  /**
+   * Calculates maximum padding required for stroke and shadow of a resolved style.
+   * The stroke is centered on the glyph outline, so only half of it is outside.
+   * The shadow is cast by the stroke as well as by the fill.
+   * @param style Resolved style
+   * @returns Padding in pixels needed on all sides
+   */
+  public static calculatePadding(style: UITextStyleConfig): number {
+    let padding = style.enableStroke ? style.strokeThickness / 2 : 0;
+
+    if (style.enableShadow) {
+      const shadowSpread = style.shadowBlur * 2;
+      const shadowMaxX = Math.abs(style.shadowOffsetX) + shadowSpread;
+      const shadowMaxY = Math.abs(style.shadowOffsetY) + shadowSpread;
+      padding += Math.max(shadowMaxX, shadowMaxY);
+    }
+
+    return Math.ceil(padding);
+  }
+
   /** @internal */
   public setDirtyFalse(): void {
     this.dirtyInternal = false;
@@ -455,25 +475,12 @@ export class UITextStyle {
 
   /**
    * Calculates maximum padding required for stroke and shadow.
+   * Properties left undefined here are taken from `fallback`, then from defaults,
+   * so a span style is measured with the stroke and shadow it is drawn with.
+   * @param fallback Style that supplies undefined properties (usually the common style)
    * @returns Padding in pixels needed on all sides
    */
-  public calculatePadding(): number {
-    let padding = 0;
-
-    if (this.enableStrokeInternal !== undefined) {
-      padding += this.strokeThicknessInternal ?? 0;
-    }
-
-    if (this.enableShadowInternal !== undefined) {
-      const blur = this.shadowBlurInternal ?? 0;
-      const offsetX = this.shadowOffsetXInternal ?? 0;
-      const offsetY = this.shadowOffsetYInternal ?? 0;
-      const shadowSpread = blur * 2;
-      const shadowMaxX = Math.abs(offsetX) + shadowSpread;
-      const shadowMaxY = Math.abs(offsetY) + shadowSpread;
-      padding += Math.max(shadowMaxX, shadowMaxY);
-    }
-
-    return Math.ceil(padding);
+  public calculatePadding(fallback?: UITextStyle): number {
+    return UITextStyle.calculatePadding(UITextStyle.resolve(this, fallback));
   }
 }

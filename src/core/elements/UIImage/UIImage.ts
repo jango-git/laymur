@@ -63,10 +63,10 @@ export class UIImage extends UIElement {
     this.colorInternal.set(value);
   }
 
-  /** Removes image and frees resources */
-  public override destroy(): void {
+  /** Frees resources of the image */
+  protected override destroyInternal(): void {
     this.texture.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected override setPlaneTransform(): void {
@@ -111,7 +111,7 @@ export class UIImage extends UIElement {
           this.y,
           this.width,
           this.height,
-          this.zIndex,
+          this.renderDepth,
           micro.x,
           micro.y,
           micro.anchorX,

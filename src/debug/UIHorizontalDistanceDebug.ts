@@ -66,7 +66,9 @@ export class UIHorizontalDistanceDebug implements UIConstraintDebug {
 
     const context = canvas.getContext("2d");
     if (context === null) {
-      throw new Error("Failed to get 2D context for debug text");
+      throw new Error(
+        "UIHorizontalDistanceDebug.constructor: failed to get 2D context for debug text",
+      );
     }
 
     this.canvas = canvas;

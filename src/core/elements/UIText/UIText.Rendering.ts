@@ -104,7 +104,7 @@ export function renderTextLines(
       offsetX = textWidth - line.width;
     }
 
-    let currentX = paddingLeft + offsetX;
+    let currentX = paddingLeft + offsetX + line.overhangLeft;
     currentY += i === 0 ? line.baseline : line.lineHeight;
 
     for (const chunk of reorderChunksVisually(line.chunks, isRTL)) {

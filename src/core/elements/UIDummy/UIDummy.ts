@@ -107,7 +107,10 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     return this.modeInternal;
   }
 
-  /** Rendering and input priority. Higher values on top. */
+  /**
+   * Rendering and input priority. Higher values on top; elements with equal values keep the
+   * order of creation, a later one on top.
+   */
   public get zIndex(): number {
     return this.inputWrapper.getZIndex(this.catcherHandler);
   }
@@ -137,44 +140,56 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     return this.signalPointerLeftInternal;
   }
 
+  /** Unique depth of the element among the elements of the layer, derived from `zIndex` */
+  protected get renderDepth(): number {
+    return this.inputWrapper.getDepth(this.catcherHandler);
+  }
+
   /** Width in world units */
   public set width(value: number) {
+    this.assertNotDestroyed("UIDummy.width");
     assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   /** Height in world units */
   public set height(value: number) {
+    this.assertNotDestroyed("UIDummy.height");
     assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   /** X coordinate of right edge */
   public set oppositeX(value: number) {
+    this.assertNotDestroyed("UIDummy.oppositeX");
     assertValidNumber(value, "UIDummy.oppositeX");
     this.x = value - this.width;
   }
 
   /** Y coordinate of top edge */
   public set oppositeY(value: number) {
+    this.assertNotDestroyed("UIDummy.oppositeY");
     assertValidNumber(value, "UIDummy.oppositeY");
     this.y = value - this.height;
   }
 
   /** X coordinate of horizontal center */
   public set centerX(value: number) {
+    this.assertNotDestroyed("UIDummy.centerX");
     assertValidNumber(value, "UIDummy.centerX");
     this.x = value - this.width / 2;
   }
 
   /** Y coordinate of vertical center */
   public set centerY(value: number) {
+    this.assertNotDestroyed("UIDummy.centerY");
     assertValidNumber(value, "UIDummy.centerY");
     this.y = value - this.height / 2;
   }
 
   /** Controls visibility and interactivity */
   public set mode(value: UIMode) {
+    this.assertNotDestroyed("UIDummy.mode");
     if (this.modeInternal !== value) {
       const newInteractivity = isUIModeInteractive(value);
       this.inputWrapper.setActive(this.catcherHandler, newInteractivity);
@@ -182,18 +197,25 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     }
   }
 
-  /** Rendering and input priority. Higher values on top. */
+  /**
+   * Rendering and input priority. Higher values on top; elements with equal values keep the
+   * order of creation, a later one on top.
+   */
   public set zIndex(value: number) {
+    this.assertNotDestroyed("UIDummy.zIndex");
     assertValidNumber(value, "UIDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
+  protected override getSolverVariables(): number[] {
+    return [...super.getSolverVariables(), this.wVariable, this.hVariable];
+  }
+
+  protected override destroyInternal(): void {
     this.solverWrapper.removeVariable(this.hVariable);
     this.solverWrapper.removeVariable(this.wVariable);
     this.inputWrapper.destroyInputCatcher(this.catcherHandler);
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected readonly catchPointerDown = (x: number, y: number, identifier: number): boolean => {

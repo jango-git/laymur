@@ -4,6 +4,7 @@ import type { WebGLRenderer } from "three";
 import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 
 import type { UIConstraint } from "../../constraints/UIConstraint.js";
+import type { UIAnchor } from "../../elements/UIAnchor/UIAnchor.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
 import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
@@ -46,6 +47,8 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalConstraintRemovedInternal = new Ferrsign2<UILayer, UIConstraint>();
 
   private readonly constraintRegistryInternal: UIConstraint[] = [];
+  private readonly elementRegistryInternal: UIAnchor[] = [];
+  private destroyedInternal = false;
 
   constructor(options: Partial<UILayerOptions>) {
     if (options.width !== undefined) {
@@ -170,6 +173,16 @@ export abstract class UILayer implements UIPlaneElement {
     return this.constraintRegistryInternal;
   }
 
+  /** Elements created on the layer and not destroyed yet */
+  public get elementRegistry(): readonly UIAnchor[] {
+    return this.elementRegistryInternal;
+  }
+
+  /** Whether the layer is destroyed */
+  public get destroyed(): boolean {
+    return this.destroyedInternal;
+  }
+
   /** Updates visibility and interactivity mode */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
@@ -178,8 +191,57 @@ export abstract class UILayer implements UIPlaneElement {
     }
   }
 
+  /**
+   * Destroys all elements and constraints of the layer, those snapped to the layer itself
+   * included, and frees the GPU resources of the layer. Textures are left to their owners.
+   * Does nothing if the layer is already destroyed.
+   */
+  public destroy(): void {
+    if (this.destroyedInternal) {
+      return;
+    }
+    this.destroyedInternal = true;
+
+    for (const element of [...this.elementRegistryInternal]) {
+      element.destroy();
+    }
+    this.destroyConstraints(() => true);
+    this.sceneWrapperInternal.destroy();
+  }
+
+  /**
+   * Destroys the constraints that refer to any of the solver variables, so that an element
+   * can remove its variables.
+   * @internal
+   */
+  public destroyConstraintsUsingVariables(variables: readonly number[]): void {
+    this.destroyConstraints((constraint) =>
+      variables.some((variable) => constraint.isUsingVariable(variable)),
+    );
+  }
+
+  /** @internal */
+  public addElement(element: UIAnchor): void {
+    if (this.destroyedInternal) {
+      throw new Error(`UILayer.addElement: layer is destroyed`);
+    }
+    this.elementRegistryInternal.push(element);
+  }
+
+  /** @internal */
+  public removeElement(element: UIAnchor): void {
+    const index = this.elementRegistryInternal.indexOf(element);
+    if (index === -1) {
+      throw new Error(`UILayer.removeElement: element is not found in this layer`);
+    }
+    this.elementRegistryInternal.splice(index, 1);
+  }
+
   /** @internal */
   public addConstraint(constraint: UIConstraint): void {
+    if (this.destroyedInternal) {
+      throw new Error(`UILayer.addConstraint: layer is destroyed`);
+    }
     if (this.constraintRegistryInternal.includes(constraint)) {
       throw new Error(`UILayer.addConstraint: constraint is already added to this layer`);
     }
@@ -211,12 +273,28 @@ export abstract class UILayer implements UIPlaneElement {
   }
 
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
+    if (this.destroyedInternal) {
+      return;
+    }
+
     if (isUIModeVisible(this.mode)) {
       this.signalRenderingInternal.emit(renderer, deltaTime, this);
+      if (this.destroyed) {
+        return;
+      }
       this.sceneWrapperInternal.render(renderer);
     }
 
     this.solverWrapperInternal.dirty = false;
     this.inputWrapperInternal.dirty = false;
+  }
+
+  /** A removal signal handler may destroy other constraints, so the registry is walked over a copy */
+  private destroyConstraints(predicate: (constraint: UIConstraint) => boolean): void {
+    for (const constraint of [...this.constraintRegistryInternal]) {
+      if (!constraint.destroyed && predicate(constraint)) {
+        constraint.destroy();
+      }
+    }
   }
 }

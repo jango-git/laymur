@@ -1,5 +1,7 @@
 export { UIBehaviorDirectionalGravity } from "./behaviorModules/UIBehaviorDirectionalGravity.js";
 export { UIBehaviorPointGravity } from "./behaviorModules/UIBehaviorPointGravity.js";
+export { UIBehaviorScaleOscillation } from "./behaviorModules/UIBehaviorScaleOscillation.js";
+export type { UIScaleOscillationAxis } from "./behaviorModules/UIBehaviorScaleOscillation.js";
 export { UIBehaviorScaleOverLife } from "./behaviorModules/UIBehaviorScaleOverLife.js";
 export { UIBehaviorTorqueDamping } from "./behaviorModules/UIBehaviorTorqueDamping.js";
 export { UIBehaviorTorqueNoise } from "./behaviorModules/UIBehaviorTorqueNoise.js";

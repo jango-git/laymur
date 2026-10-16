@@ -71,6 +71,24 @@ export class UISceneWrapper implements UISceneWrapperView {
     this.planeRegistry.setHSL(handler, hsl);
   }
 
+  /** Adds an object drawn between planes by depth, on the same scale as plane zIndex */
+  public insertOrderedObject(object: Object3D, depth: number): this {
+    this.planeRegistry.insertOrderedObject(object, depth);
+    return this;
+  }
+
+  /** Moves an ordered object to the given depth */
+  public setOrderedObjectDepth(object: Object3D, depth: number): this {
+    this.planeRegistry.setOrderedObjectDepth(object, depth);
+    return this;
+  }
+
+  /** Removes an ordered object */
+  public removeOrderedObject(object: Object3D): this {
+    this.planeRegistry.removeOrderedObject(object);
+    return this;
+  }
+
   public insertCustomObject(object: Object3D): this {
     this.scene.add(object);
     return this;
@@ -79,6 +97,11 @@ export class UISceneWrapper implements UISceneWrapperView {
   public removeCustomObject(object: Object3D): this {
     this.scene.remove(object);
     return this;
+  }
+
+  /** Frees the GPU resources of all planes; custom and ordered objects are left to their owners */
+  public destroy(): void {
+    this.planeRegistry.destroy();
   }
 
   public resize(width: number, height: number): this {

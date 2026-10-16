@@ -119,10 +119,10 @@ export class UIProgress extends UIElement {
     }
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
+  /** Frees resources of the progress bar */
+  protected override destroyInternal(): void {
     this.texture.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected override setPlaneTransform(): void {
@@ -188,7 +188,7 @@ export class UIProgress extends UIElement {
           this.y,
           this.width,
           this.height,
-          this.zIndex,
+          this.renderDepth,
           micro.x,
           micro.y,
           micro.anchorX,
@@ -237,7 +237,7 @@ export class UIProgress extends UIElement {
         this.y,
         this.width,
         this.height,
-        this.zIndex,
+        this.renderDepth,
         micro.x,
         micro.y,
         micro.anchorX,

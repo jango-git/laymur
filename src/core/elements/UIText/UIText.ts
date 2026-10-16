@@ -32,6 +32,9 @@ export class UIText extends UIElement {
 
   private readonly colorInternal: UIColor;
   private readonly paddingInternal: UIInsets;
+  private autoPaddingInternal: boolean;
+  /** Padding last set by auto padding; any other value means it was changed by hand */
+  private lastAutoPadding = 0;
   private readonly canvas: UICanvas;
   private readonly context: UICanvasRenderingContext2D;
   private texture: CanvasTexture;
@@ -86,6 +89,7 @@ export class UIText extends UIElement {
 
     this.colorInternal = color;
     this.paddingInternal = new UIInsets(options.padding);
+    this.autoPaddingInternal = options.padding === undefined;
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal = options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
     this.resizeModeInternal = options.resizeMode ?? TEXT_DEFAULT_RESIZE_MODE;
@@ -99,14 +103,7 @@ export class UIText extends UIElement {
     this.lastWidth = this.width;
     this.lastHeight = this.height;
 
-    if (options.padding === undefined) {
-      this.paddingInternal.setUnified(
-        this.content.reduce(
-          (a, b) => Math.max(a, b.style.calculatePadding()),
-          this.commonStyle.calculatePadding(),
-        ),
-      );
-    }
+    this.updateAutoPadding();
 
     switch (this.resizeModeInternal) {
       case UITextResizeMode.SCALE:
@@ -137,6 +134,14 @@ export class UIText extends UIElement {
   /** Text padding in world units */
   public get padding(): UIInsets {
     return this.paddingInternal;
+  }
+
+  /**
+   * Whether the padding follows the stroke and shadow of the styles. On by default, off once
+   * the padding is set by hand.
+   */
+  public get autoPadding(): boolean {
+    return this.autoPaddingInternal;
   }
 
   /** Controls how text adapts to element size */
@@ -188,9 +193,24 @@ export class UIText extends UIElement {
     }
   }
 
-  /** Text padding in world units */
+  /** Text padding in world units. Turns auto padding off. */
   public set padding(value: UIInsetsConfig) {
+    this.autoPaddingInternal = false;
     this.paddingInternal.set(value);
+  }
+
+  /**
+   * Whether the padding follows the stroke and shadow of the styles. On by default, off once
+   * the padding is set by hand.
+   */
+  public set autoPadding(value: boolean) {
+    if (this.autoPaddingInternal !== value) {
+      this.autoPaddingInternal = value;
+      if (value) {
+        this.lastAutoPadding = Number.NaN;
+        this.updateAutoPadding();
+      }
+    }
   }
 
   /** Controls how text adapts to size constraints */
@@ -209,10 +229,10 @@ export class UIText extends UIElement {
     }
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
+  /** Frees resources of the text */
+  protected override destroyInternal(): void {
     this.texture.dispose();
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
@@ -230,6 +250,10 @@ export class UIText extends UIElement {
   }
 
   private tryToRenderTextScaleMode(): void {
+    if (this.checkContentDirty()) {
+      this.updateAutoPadding();
+    }
+
     if (
       !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
@@ -247,7 +271,11 @@ export class UIText extends UIElement {
 
     const textChunks = this.buildTextChunks();
 
-    const { lines, size } = calculateTextContentParameters(textChunks, this.maxLineWidthInternal);
+    const { lines, size } = calculateTextContentParameters(
+      textChunks,
+      this.maxLineWidthInternal,
+      this.isRTL,
+    );
 
     const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
     const paddingH = this.paddingInternal.left + this.paddingInternal.right;
@@ -288,6 +316,10 @@ export class UIText extends UIElement {
   }
 
   private tryToRenderTextBreakMode(): void {
+    if (this.checkContentDirty()) {
+      this.updateAutoPadding();
+    }
+
     if (
       !this.colorInternal.dirty &&
       !this.resizeModeDirty &&
@@ -305,6 +337,7 @@ export class UIText extends UIElement {
     const { size: desiredTextSize } = calculateTextContentParameters(
       textChunks,
       this.maxLineWidthInternal,
+      this.isRTL,
     );
 
     const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
@@ -316,6 +349,7 @@ export class UIText extends UIElement {
     const { lines: realTextLines, size: realTextSize } = calculateTextContentParameters(
       textChunks,
       Math.round(this.width) - paddingH,
+      this.isRTL,
     );
 
     this.height = realTextSize.height + paddingV;
@@ -371,6 +405,29 @@ export class UIText extends UIElement {
     if (properties) {
       this.sceneWrapper.setProperties(this.planeHandler, properties);
     }
+  }
+
+  private updateAutoPadding(): void {
+    if (!this.autoPaddingInternal) {
+      return;
+    }
+
+    const { left, right, top, bottom } = this.paddingInternal;
+    const last = this.lastAutoPadding;
+    if (
+      !Number.isNaN(last) &&
+      (left !== last || right !== last || top !== last || bottom !== last)
+    ) {
+      this.autoPaddingInternal = false;
+      return;
+    }
+
+    const padding = this.content.reduce(
+      (result, span) => Math.max(result, span.style.calculatePadding(this.commonStyle)),
+      this.commonStyle.calculatePadding(),
+    );
+    this.paddingInternal.setUnified(padding);
+    this.lastAutoPadding = padding;
   }
 
   private buildTextChunks(): UITextChunk[] {

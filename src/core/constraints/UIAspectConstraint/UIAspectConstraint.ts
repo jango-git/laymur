@@ -1,4 +1,7 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import {
+  assertValidConstraintElement,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts.js";
 import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
@@ -24,7 +27,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
       assertValidPositiveNumber(options.aspect, "UIAspectConstraint.constructor.options.aspect");
     }
 
-    super(element.layer, options);
+    super(assertValidConstraintElement(element, "UIAspectConstraint.constructor"), options);
 
     this.aspectInternal = options.aspect ?? element.width / element.height;
     this.constraint = this.solverWrapper.createConstraint(
@@ -43,6 +46,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
 
   /** Updates aspect ratio */
   public set aspect(value: number) {
+    this.assertNotDestroyed("UIAspectConstraint.aspect");
     assertValidPositiveNumber(value, "UIAspectConstraint.aspect");
     if (this.aspectInternal !== value) {
       this.aspectInternal = value;

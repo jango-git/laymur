@@ -1,6 +1,8 @@
 import { UILayer } from "../layers/UILayer/UILayer.js";
 import { EPSILON } from "./math.js";
+import type { UILayerElement } from "./shared.js";
 import { isUILayerElement } from "./shared.js";
+import type { UIExpression } from "./UIExpression.js";
 
 /**
  * Validates value is finite number within safe range.
@@ -11,11 +13,11 @@ import { isUILayerElement } from "./shared.js";
 export function assertValidNumber(value: number, subject: string): void {
   if (process.env.NODE_ENV !== "production") {
     if (!Number.isFinite(value)) {
-      throw new Error(`${subject}: value must be a finite number`);
+      throw new Error(`${subject}: value must be a finite number, got ${value}`);
     }
 
     if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
-      throw new Error(`${subject}: value exceeds maximum safe integer range`);
+      throw new Error(`${subject}: value exceeds maximum safe integer range, got ${value}`);
     }
   }
 }
@@ -30,7 +32,9 @@ export function assertValidPositiveNumber(value: number, subject: string): void 
   if (process.env.NODE_ENV !== "production") {
     assertValidNumber(value, subject);
     if (value < EPSILON) {
-      throw new Error(`${subject}: value must be greater than or equal to ${EPSILON}`);
+      throw new Error(
+        `${subject}: value must be greater than or equal to ${EPSILON}, got ${value}`,
+      );
     }
   }
 }
@@ -45,7 +49,7 @@ export function assertValidNonNegativeNumber(value: number, subject: string): vo
   if (process.env.NODE_ENV !== "production") {
     assertValidNumber(value, subject);
     if (value < 0) {
-      throw new Error(`${subject}: value must be greater than or equal to 0`);
+      throw new Error(`${subject}: value must be greater than or equal to 0, got ${value}`);
     }
   }
 }
@@ -60,6 +64,9 @@ export function assertValidNonNegativeNumber(value: number, subject: string): vo
  */
 export function assertValidConstraintArguments(a: unknown, b: unknown, subject: string): UILayer {
   if (process.env.NODE_ENV !== "production") {
+    assertNotDestroyed(a, "A", subject);
+    assertNotDestroyed(b, "B", subject);
+
     if (a instanceof UILayer && b instanceof UILayer) {
       throw new Error(`${subject}: layer cannot be snapped to another layer`);
     }
@@ -103,7 +110,7 @@ export function assertValidConstraintArguments(a: unknown, b: unknown, subject: 
     return b.layer;
   }
 
-  throw new Error(`${subject}: no valid subjects found`);
+  throw new Error(`${subject}: A or B must be a UILayer or a UILayerElement`);
 }
 
 /**
@@ -126,6 +133,10 @@ export function assertValidInterpolationConstraintArguments(
   anchorB: number,
 ): UILayer {
   if (process.env.NODE_ENV !== "production") {
+    assertNotDestroyed(a, "A", subject);
+    assertNotDestroyed(b, "B", subject);
+    assertNotDestroyed(c, "C", subject);
+
     if (c instanceof UILayer) {
       throw new Error(`${subject}: C cannot be a layer`);
     }
@@ -140,13 +151,13 @@ export function assertValidInterpolationConstraintArguments(
     if (a instanceof UILayer || isUILayerElement(a)) {
       layerA = a instanceof UILayer ? a : a.layer;
     } else {
-      throw new Error(`${subject}: A must be UILayer or UILayerElement`);
+      throw new Error(`${subject}: A must be a UILayer or a UILayerElement`);
     }
 
     if (b instanceof UILayer || isUILayerElement(b)) {
       layerB = b instanceof UILayer ? b : b.layer;
     } else {
-      throw new Error(`${subject}: B must be UILayer or UILayerElement`);
+      throw new Error(`${subject}: B must be a UILayer or a UILayerElement`);
     }
 
     const layerC = c.layer;
@@ -183,5 +194,64 @@ export function assertValidInterpolationConstraintArguments(
     return b;
   }
 
-  throw new Error(`${subject}: no valid subjects found`);
+  throw new Error(`${subject}: A or B must be a UILayer or a UILayerElement`);
+}
+
+/**
+ * Validates the element of a single element constraint.
+ * @param element Constrained element
+ * @param subject Constraint name for error messages
+ * @returns Layer of the element
+ * @throws If the element is destroyed
+ */
+export function assertValidConstraintElement(element: UILayerElement, subject: string): UILayer {
+  if (process.env.NODE_ENV !== "production") {
+    assertNotDestroyed(element, "element", subject);
+  }
+  return element.layer;
+}
+
+/**
+ * Validates that the expressions of a custom constraint refer only to existing variables.
+ * @param layer Layer of the constraint
+ * @param expressions Constraint expressions
+ * @param subject Constraint name for error messages
+ * @returns The layer
+ * @throws If the layer is destroyed or a variable does not exist
+ */
+export function assertValidConstraintExpressions(
+  layer: UILayer,
+  expressions: UIExpression[],
+  subject: string,
+): UILayer {
+  if (process.env.NODE_ENV !== "production") {
+    assertNotDestroyed(layer, "layer", subject);
+    for (const expression of expressions) {
+      for (const [variableIndex] of expression.prepareTerms()) {
+        if (!layer.solverWrapper.hasVariable(variableIndex)) {
+          throw new Error(`${subject}: variable ${variableIndex} does not exist`);
+        }
+      }
+    }
+  }
+  return layer;
+}
+
+/**
+ * Validates that a constraint subject is not destroyed. A constraint made with a destroyed
+ * subject would stay in the layer without a solver constraint.
+ * @param value Element or layer
+ * @param name Subject name for error messages
+ * @param subject Constraint name for error messages
+ * @throws If the subject is destroyed
+ */
+function assertNotDestroyed(value: unknown, name: string, subject: string): void {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "destroyed" in value &&
+    value.destroyed === true
+  ) {
+    throw new Error(`${subject}: ${name} is destroyed`);
+  }
 }

@@ -49,7 +49,7 @@ export class UIAspectDebug implements UIConstraintDebug {
 
     const context = canvas.getContext("2d");
     if (context === null) {
-      throw new Error("Failed to get 2D context for debug text");
+      throw new Error("UIAspectDebug.constructor: failed to get 2D context for debug text");
     }
 
     this.canvas = canvas;

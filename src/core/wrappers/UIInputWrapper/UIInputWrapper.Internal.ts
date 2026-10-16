@@ -8,6 +8,7 @@ export interface UIInputWrapperView {
   ): number;
   destroyInputCatcher(handler: number): void;
   getZIndex(handler: number): number;
+  getDepth(handler: number): number;
   setZIndex(handler: number, zIndex: number): void;
   getActive(handler: number): boolean;
   setActive(handler: number, active: boolean): void;
@@ -18,6 +19,9 @@ export interface UIInputWrapperCatcher {
   catchPointerDown: (x: number, y: number, identifier: number) => boolean;
   catchPointerMove: (x: number, y: number, identifier: number) => boolean;
   catchPointerUp: (x: number, y: number, identifier: number) => boolean;
+  /** Order requested by the user; equal values keep the order of creation */
   zIndex: number;
+  /** Unique position in the sorted order, used as the rendering depth */
+  depth: number;
   active: boolean;
 }

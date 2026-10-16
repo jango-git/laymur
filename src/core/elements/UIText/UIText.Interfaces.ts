@@ -18,6 +18,10 @@ export interface UIChunkMetrics extends UITextSize {
   baseline: number;
   /** Line height in pixels */
   lineHeight: number;
+  /** How far the glyphs reach left of the start of the advance, in pixels */
+  overhangLeft: number;
+  /** How far the glyphs reach right of the end of the advance, in pixels */
+  overhangRight: number;
 }
 
 /** Styled text chunk */

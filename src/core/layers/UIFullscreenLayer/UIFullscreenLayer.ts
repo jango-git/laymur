@@ -67,12 +67,13 @@ export class UIFullscreenLayer extends UILayer {
     }
   }
 
-  /** Removes event listeners and frees resources */
-  public destroy(): void {
+  /** Removes event listeners and destroys the layer with its elements and constraints */
+  public override destroy(): void {
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("pointerdown", this.onPointerDown);
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
+    super.destroy();
   }
 
   /**
@@ -82,6 +83,9 @@ export class UIFullscreenLayer extends UILayer {
    */
   public render(renderer: WebGLRenderer, deltaTime: number): void {
     assertValidNumber(deltaTime, "UIFullscreenLayer.render.deltaTime");
+    if (this.destroyed) {
+      return;
+    }
     if (this.resizePolicy.dirty || this.resizePolicyDirty) {
       this.onResize();
     }

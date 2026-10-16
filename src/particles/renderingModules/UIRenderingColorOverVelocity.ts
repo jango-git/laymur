@@ -28,11 +28,15 @@ export class UIRenderingColorOverVelocity extends UIRenderingModule {
     super();
 
     if (colors.length === 0) {
-      throw new Error("UIRenderingColorOverVelocity: colors array cannot be empty");
+      throw new Error(
+        "UIRenderingColorOverVelocity.constructor.colors: colors array cannot be empty",
+      );
     }
 
     if (maxVelocity <= 0) {
-      throw new Error("UIRenderingColorOverVelocity: maxVelocity must be greater than 0");
+      throw new Error(
+        `UIRenderingColorOverVelocity.constructor.maxVelocity: value must be greater than 0, got ${maxVelocity}`,
+      );
     }
 
     this.source = source.replace(

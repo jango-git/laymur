@@ -13,6 +13,7 @@ import {
 import type { UIColor } from "../../core/index.js";
 import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
+import { getTextureImageSize } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
 
 export interface UIRange {
   min: number;
@@ -53,7 +54,8 @@ export function resolveAspect(config: number | UITextureConfig): number {
   }
 
   if (config instanceof Texture) {
-    return config.image.naturalWidth / config.image.naturalHeight;
+    const { w, h } = getTextureImageSize(config);
+    return w / h;
   }
 
   return config.sourceSize.w / config.sourceSize.h;

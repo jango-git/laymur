@@ -131,7 +131,7 @@ export function resolveGLSLTypeInfo(
       case "Matrix4":
         return GLSL_TYPE_INFO_MAT4;
       default:
-        throw new Error(`resolveGLSLTypeInfo.value: unsupported property type name`);
+        throw new Error(`resolveGLSLTypeInfo.value: unsupported property type name "${value}"`);
     }
   }
   if (typeof value === "function") {
@@ -159,7 +159,9 @@ export function resolveGLSLTypeInfo(
     if (value === Matrix4) {
       return GLSL_TYPE_INFO_MAT4;
     }
-    throw new Error(`resolveGLSLTypeInfo.value: unsupported property type constructor`);
+    throw new Error(
+      `resolveGLSLTypeInfo.value: unsupported property type constructor ${value.name}`,
+    );
   }
   if (typeof value === "number") {
     return GLSL_TYPE_INFO_FLOAT;
@@ -194,7 +196,7 @@ export function resolvePropertyUniform(
 ): IUniform<UIProperty> {
   const uniform = material.uniforms[`p_${name}`] as IUniform<UIProperty> | undefined;
   if (uniform === undefined) {
-    throw new Error(`resolvePropertyUniform.name: unknown uniform`);
+    throw new Error(`resolvePropertyUniform.name: unknown uniform "p_${name}"`);
   }
   return uniform;
 }

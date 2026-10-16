@@ -149,10 +149,10 @@ export class UIGraphics extends UIElement {
     return this;
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
+  /** Frees resources of the graphics */
+  protected override destroyInternal(): void {
     this.texture.dispose();
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {

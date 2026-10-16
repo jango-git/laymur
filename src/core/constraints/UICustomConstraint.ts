@@ -1,4 +1,5 @@
 import type { UILayer } from "../layers/UILayer/UILayer.js";
+import { assertValidConstraintExpressions } from "../miscellaneous/asserts.js";
 import type { UIExpression } from "../miscellaneous/UIExpression.js";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
@@ -24,7 +25,10 @@ export class UICustomConstraint extends UISingleParameterConstraint {
     rhs: UIExpression,
     options: Partial<UISingleParameterConstraintOptions> = {},
   ) {
-    super(layer, options);
+    super(
+      assertValidConstraintExpressions(layer, [lhs, rhs], "UICustomConstraint.constructor"),
+      options,
+    );
 
     this.lhsInternal = lhs;
     this.rhsInternal = rhs;
@@ -50,12 +54,14 @@ export class UICustomConstraint extends UISingleParameterConstraint {
 
   /** Updates left-hand side expression */
   public setLHS(value: UIExpression): void {
+    this.assertNotDestroyed("UICustomConstraint.setLHS");
     this.lhsInternal = value;
     this.solverWrapper.setConstraintLHS(this.constraint, this.lhsInternal);
   }
 
   /** Updates right-hand side expression */
   public setRHS(value: UIExpression): void {
+    this.assertNotDestroyed("UICustomConstraint.setRHS");
     this.rhsInternal = value;
     this.solverWrapper.setConstraintRHS(this.constraint, this.rhsInternal);
   }

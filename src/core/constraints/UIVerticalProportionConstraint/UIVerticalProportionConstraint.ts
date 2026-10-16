@@ -51,6 +51,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
 
   /** Updates proportion multiplier */
   public set proportion(value: number) {
+    this.assertNotDestroyed("UIVerticalProportionConstraint.proportion");
     assertValidPositiveNumber(value, "UIVerticalProportionConstraint.proportion");
     if (this.proportionInternal !== value) {
       this.proportionInternal = value;

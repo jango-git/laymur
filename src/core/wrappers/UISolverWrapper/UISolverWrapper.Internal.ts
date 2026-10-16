@@ -7,6 +7,7 @@ export interface UISolverWrapperView {
   get dirty(): boolean;
   createVariable(value: number, priority: UIPriority): number;
   removeVariable(index: number): void;
+  hasVariable(index: number): boolean;
   suggestVariableValue(index: number, value: number): void;
   setVariablePriority(index: number, priority: UIPriority): void;
   readVariableValue(index: number): number;
@@ -18,6 +19,7 @@ export interface UISolverWrapperView {
     enabled: boolean,
   ): number;
   removeConstraint(index: number): void;
+  isConstraintUsingVariable(constraintIndex: number, variableIndex: number): boolean;
   setConstraintLHS(index: number, lhs: UIExpression): void;
   setConstraintRHS(index: number, rhs: UIExpression): void;
   setConstraintRelation(index: number, relation: UIRelation): void;

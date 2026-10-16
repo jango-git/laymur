@@ -108,6 +108,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
 
   /** Updates interpolation factor */
   public set t(value: number) {
+    this.assertNotDestroyed("UIHorizontalInterpolationConstraint.t");
     assertValidNumber(value, "UIHorizontalInterpolationConstraint.t");
     if (this.tInternal !== value) {
       this.tInternal = value;
@@ -117,6 +118,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
 
   /** Updates anchor on element A */
   public set anchorA(value: number) {
+    this.assertNotDestroyed("UIHorizontalInterpolationConstraint.anchorA");
     assertValidNumber(value, "UIHorizontalInterpolationConstraint.anchorA");
     if (this.anchorAInternal !== value) {
       this.anchorAInternal = value;
@@ -126,6 +128,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
 
   /** Updates anchor on element B */
   public set anchorB(value: number) {
+    this.assertNotDestroyed("UIHorizontalInterpolationConstraint.anchorB");
     assertValidNumber(value, "UIHorizontalInterpolationConstraint.anchorB");
     if (this.anchorBInternal !== value) {
       this.anchorBInternal = value;
@@ -135,6 +138,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
 
   /** Updates anchor on element C */
   public set anchorC(value: number) {
+    this.assertNotDestroyed("UIHorizontalInterpolationConstraint.anchorC");
     assertValidNumber(value, "UIHorizontalInterpolationConstraint.anchorC");
     if (this.anchorCInternal !== value) {
       this.anchorCInternal = value;
@@ -156,7 +160,9 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.xVariable, 1);
     } else {
-      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.a: invalid element type");
+      throw new Error(
+        "UIHorizontalInterpolationConstraint.buildLHS.a: A is neither a point nor a plane element",
+      );
     }
 
     if (isUIPlaneElement(this.b)) {
@@ -167,7 +173,9 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.xVariable, 1);
     } else {
-      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.b: invalid element type");
+      throw new Error(
+        "UIHorizontalInterpolationConstraint.buildLHS.b: B is neither a point nor a plane element",
+      );
     }
 
     if (isUIPlaneElement(this.c)) {
@@ -178,7 +186,9 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     } else if (isUIPointElement(this.c)) {
       cExpression = new UIExpression().plus(this.c.xVariable, 1);
     } else {
-      throw new Error("UIHorizontalInterpolationConstraint.buildLHS.c: invalid element type");
+      throw new Error(
+        "UIHorizontalInterpolationConstraint.buildLHS.c: C is neither a point nor a plane element",
+      );
     }
 
     const aScaled = aExpression.clone().multiply(1 - this.tInternal);

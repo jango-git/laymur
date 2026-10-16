@@ -202,15 +202,15 @@ export class UIScene extends UIElement {
     }
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
-    this.renderTarget.dispose();
-    super.destroy();
-  }
-
   /** Triggers re-render on next frame. Useful in MANUAL mode. */
   public requestUpdate(): void {
     this.updateRequired = true;
+  }
+
+  /** Frees resources of the scene */
+  protected override destroyInternal(): void {
+    this.renderTarget.dispose();
+    super.destroyInternal();
   }
 
   protected override onWillRender(

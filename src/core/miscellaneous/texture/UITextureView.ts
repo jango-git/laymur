@@ -7,7 +7,11 @@ import type {
   UITextureConfig,
   UITextureTrim,
 } from "./UITextureView.Internal.js";
-import { TEXTURE_DEFAULT_SIZE, TEXTURE_DEFAULT_TEXTURE } from "./UITextureView.Internal.js";
+import {
+  getTextureImageSize,
+  TEXTURE_DEFAULT_SIZE,
+  TEXTURE_DEFAULT_TEXTURE,
+} from "./UITextureView.Internal.js";
 
 /** Wrapper for Three.js texture with atlas and trim support. Does not own the underlying texture; user must dispose it. */
 export class UITextureView {
@@ -128,8 +132,7 @@ export class UITextureView {
    * @returns UV transform matrix
    */
   public calculateUVTransform(result = new Matrix3()): Matrix3 {
-    const atlasWidth = this.textureInternal.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
-    const atlasHeight = this.textureInternal.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
+    const { w: atlasWidth, h: atlasHeight } = getTextureImageSize(this.textureInternal);
 
     if (this.rotatedInternal) {
       const physicalWidth = this.frameHeight;
@@ -182,8 +185,7 @@ export class UITextureView {
   }
 
   private setFromTexture(texture: Texture): void {
-    const width = texture.image?.naturalWidth ?? TEXTURE_DEFAULT_SIZE;
-    const height = texture.image?.naturalHeight ?? TEXTURE_DEFAULT_SIZE;
+    const { w: width, h: height } = getTextureImageSize(texture);
 
     this.sourceWidth = width;
     this.sourceHeight = height;

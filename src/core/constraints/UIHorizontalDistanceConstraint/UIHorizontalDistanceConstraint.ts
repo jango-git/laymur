@@ -82,6 +82,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
 
   /** Updates distance */
   public set distance(value: number) {
+    this.assertNotDestroyed("UIHorizontalDistanceConstraint.distance");
     assertValidNumber(value, "UIHorizontalDistanceConstraint.distance");
     if (this.distanceInternal !== value) {
       this.distanceInternal = value;
@@ -91,6 +92,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
 
   /** Updates anchor on element A */
   public set anchorA(value: number) {
+    this.assertNotDestroyed("UIHorizontalDistanceConstraint.anchorA");
     assertValidNumber(value, "UIHorizontalDistanceConstraint.anchorA");
     if (this.anchorAInternal !== value) {
       this.anchorAInternal = value;
@@ -100,6 +102,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
 
   /** Updates anchor on element B */
   public set anchorB(value: number) {
+    this.assertNotDestroyed("UIHorizontalDistanceConstraint.anchorB");
     assertValidNumber(value, "UIHorizontalDistanceConstraint.anchorB");
     if (this.anchorBInternal !== value) {
       this.anchorBInternal = value;
@@ -120,7 +123,9 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     } else if (isUIPointElement(this.a)) {
       aExpression = new UIExpression().plus(this.a.xVariable, 1);
     } else {
-      throw new Error("UIHorizontalDistanceConstraint.buildLHS.a: invalid element type");
+      throw new Error(
+        "UIHorizontalDistanceConstraint.buildLHS.a: A is neither a point nor a plane element",
+      );
     }
 
     if (isUIPlaneElement(this.b)) {
@@ -131,7 +136,9 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
     } else if (isUIPointElement(this.b)) {
       bExpression = new UIExpression().plus(this.b.xVariable, 1);
     } else {
-      throw new Error("UIHorizontalDistanceConstraint.buildLHS.b: invalid element type");
+      throw new Error(
+        "UIHorizontalDistanceConstraint.buildLHS.b: B is neither a point nor a plane element",
+      );
     }
 
     return UIExpression.minus(bExpression, aExpression);

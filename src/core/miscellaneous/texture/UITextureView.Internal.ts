@@ -3,6 +3,33 @@ import { Texture } from "three";
 export const TEXTURE_DEFAULT_TEXTURE = new Texture();
 export const TEXTURE_DEFAULT_SIZE = 2;
 
+/** Size fields of the possible texture image sources */
+interface UITextureImageSize {
+  /** HTMLImageElement */
+  naturalWidth?: number;
+  naturalHeight?: number;
+  /** HTMLVideoElement */
+  videoWidth?: number;
+  videoHeight?: number;
+  /** Canvas, OffscreenCanvas, ImageBitmap, data of a DataTexture */
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Reads the pixel size of a texture image: an image, a video, a canvas, a bitmap
+ * or the data of a DataTexture.
+ * @param texture Texture to measure
+ * @returns Width and height in pixels
+ */
+export function getTextureImageSize(texture: Texture): UITextureSize {
+  const image = texture.image as UITextureImageSize | null | undefined;
+  return {
+    w: image?.naturalWidth ?? image?.videoWidth ?? image?.width ?? TEXTURE_DEFAULT_SIZE,
+    h: image?.naturalHeight ?? image?.videoHeight ?? image?.height ?? TEXTURE_DEFAULT_SIZE,
+  };
+}
+
 /** Rectangle coordinates and dimensions in atlas */
 export interface UITextureRect {
   /** X coordinate in pixels */

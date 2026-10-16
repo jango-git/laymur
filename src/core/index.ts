@@ -2,6 +2,7 @@ export { UIConstraint2DBuilder } from "./constraints/builders/UIConstraint2DBuil
 export { UICoverConstraintBuilder } from "./constraints/builders/UICoverConstraintBuilder.js";
 export { UIFitConstraintBuilder } from "./constraints/builders/UIFitConstraintBuilder.js";
 export { UIAspectConstraint } from "./constraints/UIAspectConstraint/UIAspectConstraint.js";
+export { UIConstraint } from "./constraints/UIConstraint.js";
 export { UICustomConstraint } from "./constraints/UICustomConstraint.js";
 export { UIHeightConstraint } from "./constraints/UIHeightConstraint/UIHeightConstraint.js";
 export { UIHorizontalDistanceConstraint } from "./constraints/UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint.js";

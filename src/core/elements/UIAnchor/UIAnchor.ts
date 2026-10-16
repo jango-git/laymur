@@ -19,6 +19,8 @@ export class UIAnchor implements UILayerElement, UIPointElement {
 
   protected readonly solverWrapper: UISolverWrapperView;
 
+  private destroyedInternal = false;
+
   /**
    * Creates a new UIAnchor instance.
    *
@@ -34,10 +36,19 @@ export class UIAnchor implements UILayerElement, UIPointElement {
     assertValidNumber(x, "UIAnchor.constructor.options.x");
     assertValidNumber(y, "UIAnchor.constructor.options.y");
 
+    this.layer.addElement(this);
     this.solverWrapper = this.layer.solverWrapper;
     this.xVariable = this.solverWrapper.createVariable(x, UIPriority.P7);
     this.yVariable = this.solverWrapper.createVariable(y, UIPriority.P7);
     this.name = options?.name ?? ANCHOR_DEFAULT_NAME;
+  }
+
+  /**
+   * Whether the element is removed from its layer. An element is removed by its own
+   * `destroy` or together with its layer.
+   */
+  public get destroyed(): boolean {
+    return this.destroyedInternal;
   }
 
   /** X coordinate relative to layer origin (bottom-left) */
@@ -52,19 +63,50 @@ export class UIAnchor implements UILayerElement, UIPointElement {
 
   /** X coordinate relative to layer origin (bottom-left) */
   public set x(value: number) {
+    this.assertNotDestroyed("UIAnchor.x");
     assertValidNumber(value, "UIAnchor.x");
     this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
   /** Y coordinate relative to layer origin (bottom-left) */
   public set y(value: number) {
+    this.assertNotDestroyed("UIAnchor.y");
     assertValidNumber(value, "UIAnchor.y");
     this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
 
-  /** Removes anchor and frees resources */
+  /**
+   * Removes element from its layer together with the constraints that refer to it.
+   * Does nothing if the element is already destroyed.
+   */
   public destroy(): void {
+    if (this.destroyedInternal) {
+      return;
+    }
+    this.destroyedInternal = true;
+    this.layer.destroyConstraintsUsingVariables(this.getSolverVariables());
+    this.destroyInternal();
+    this.layer.removeElement(this);
+  }
+
+  /** Solver variables of the element; constraints that use any of them are destroyed with it */
+  protected getSolverVariables(): number[] {
+    return [this.xVariable, this.yVariable];
+  }
+
+  /** Frees what the element holds; called once, after its constraints are destroyed */
+  protected destroyInternal(): void {
     this.solverWrapper.removeVariable(this.yVariable);
     this.solverWrapper.removeVariable(this.xVariable);
+  }
+
+  /**
+   * Throws if the element is destroyed.
+   * @param subject Name of the changed property for the error message
+   */
+  protected assertNotDestroyed(subject: string): void {
+    if (this.destroyedInternal) {
+      throw new Error(`${subject}: element is destroyed`);
+    }
   }
 }

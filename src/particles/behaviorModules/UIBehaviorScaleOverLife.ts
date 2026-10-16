@@ -36,7 +36,7 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
 
     if (scales.length < 2) {
       throw new Error(
-        "UIBehaviorScaleOverLife.scales: the number of scale anchors must be more than two",
+        `UIBehaviorScaleOverLife.constructor.scales: at least two scale anchors are required, got ${scales.length}`,
       );
     }
 

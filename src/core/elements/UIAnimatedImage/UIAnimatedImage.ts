@@ -176,12 +176,6 @@ export class UIAnimatedImage extends UIElement {
     this.timeScaleInternal = value;
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
-    this.unsubscribeSequenceEvents();
-    super.destroy();
-  }
-
   /** Starts or resumes animation playback */
   public play(): void {
     if (!this.isPlaying) {
@@ -207,6 +201,12 @@ export class UIAnimatedImage extends UIElement {
       this.currentFrameIndexDirty = true;
       this.signalStoppedInternal.emit();
     }
+  }
+
+  /** Frees resources of the animated image */
+  protected override destroyInternal(): void {
+    this.unsubscribeSequenceEvents();
+    super.destroyInternal();
   }
 
   protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
@@ -308,7 +308,7 @@ export class UIAnimatedImage extends UIElement {
           this.y,
           this.width,
           this.height,
-          this.zIndex,
+          this.renderDepth,
           micro.x,
           micro.y,
           micro.anchorX,

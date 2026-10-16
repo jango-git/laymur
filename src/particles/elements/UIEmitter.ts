@@ -3,6 +3,7 @@ import { Vector2 } from "three";
 import type { UILayer } from "../../core/index.js";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor.js";
 import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal.js";
+import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { isUIModeVisible } from "../../core/miscellaneous/UIMode.js";
@@ -90,7 +91,7 @@ export class UIEmitter extends UIAnchor {
       // 10, 11, 12   randomX, randomY, randomZ
       // 13, 14, 16   reservedX, reservedY, reservedZ
     };
-    collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence:");
+    collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence");
     collectProperties(
       collectedProperties,
       behaviorSequence,
@@ -126,10 +127,12 @@ export class UIEmitter extends UIAnchor {
       options.expectedCapacity ?? EMITTER_DEFAULT_EXPECTED_CAPACITY,
       options.capacityStep ?? EMITTER_DEFAULT_CAPACITY_STEP,
     );
-    this.mesh.renderOrder = zIndex;
 
     this.layer.signalRendering.on(this.onRendering);
-    this.layer.sceneWrapper.insertCustomObject(this.mesh);
+    this.layer.sceneWrapper.insertOrderedObject(
+      this.mesh,
+      this.layer.inputWrapper.getDepth(this.catcherHandler),
+    );
 
     this.automaticallyDestroyModules =
       options.automaticallyDestroyModules ?? EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES;
@@ -141,42 +144,31 @@ export class UIEmitter extends UIAnchor {
     return this.modeInternal;
   }
 
-  /** Rendering order. Higher values draw on top */
+  /**
+   * Rendering order among the elements of the layer. Higher values on top; elements with equal
+   * values keep the order of creation, a later one on top.
+   */
   public get zIndex(): number {
     return this.layer.inputWrapper.getZIndex(this.catcherHandler);
   }
 
   /** Visibility mode */
   public set mode(value: UIEmitterMode) {
+    this.assertNotDestroyed("UIEmitter.mode");
     if (this.modeInternal !== value) {
       this.modeInternal = value;
       this.mesh.visible = isUIModeVisible(value);
     }
   }
 
-  /** Rendering order. Higher values draw on top */
+  /**
+   * Rendering order among the elements of the layer. Higher values on top; elements with equal
+   * values keep the order of creation, a later one on top.
+   */
   public set zIndex(value: number) {
+    this.assertNotDestroyed("UIEmitter.zIndex");
+    assertValidNumber(value, "UIEmitter.zIndex");
     this.layer.inputWrapper.setZIndex(this.catcherHandler, value);
-  }
-
-  /** Removes emitter and optionally destroys modules */
-  public override destroy(): void {
-    this.layer.signalRendering.off(this.onRendering);
-    this.layer.sceneWrapper.removeCustomObject(this.mesh);
-
-    if (this.automaticallyDestroyModules) {
-      for (const module of this.spawnSequence) {
-        module.destroy?.();
-      }
-      for (const module of this.behaviorSequence) {
-        module.destroy?.();
-      }
-      for (const module of this.renderingSequence) {
-        module.destroy?.();
-      }
-    }
-
-    super.destroy();
   }
 
   /**
@@ -185,6 +177,7 @@ export class UIEmitter extends UIAnchor {
    * @param count - Number of particles to create
    */
   public burst(count: number): void {
+    this.assertNotDestroyed("UIEmitter.burst");
     const instanceBegin = this.mesh.instanceCount;
     this.mesh.createInstances(count);
     const instanceEnd = this.mesh.instanceCount;
@@ -213,6 +206,7 @@ export class UIEmitter extends UIAnchor {
 
   /** Removes all active particles */
   public clear(): void {
+    this.assertNotDestroyed("UIEmitter.clear");
     this.mesh.drop();
   }
 
@@ -223,6 +217,7 @@ export class UIEmitter extends UIAnchor {
    * @param options - Emission duration and other settings
    */
   public play(rate: number, options: Partial<UIEmitterPlayOptions> = {}): void {
+    this.assertNotDestroyed("UIEmitter.play");
     this.emissionRate = rate;
     this.emissionAccumulator = 0;
     this.emissionDuration = options.duration ?? Infinity;
@@ -231,13 +226,41 @@ export class UIEmitter extends UIAnchor {
 
   /** Stops continuous particle emission */
   public stop(): void {
+    this.assertNotDestroyed("UIEmitter.stop");
     this.emissionRate = 0;
     this.emissionAccumulator = 0;
     this.emissionDuration = Infinity;
     this.emissionElapsed = 0;
   }
 
+  /** Frees the particles and the input catcher, optionally destroys modules */
+  protected override destroyInternal(): void {
+    this.layer.signalRendering.off(this.onRendering);
+    this.layer.sceneWrapper.removeOrderedObject(this.mesh);
+    this.mesh.destroy();
+    this.layer.inputWrapper.destroyInputCatcher(this.catcherHandler);
+
+    if (this.automaticallyDestroyModules) {
+      for (const module of this.spawnSequence) {
+        module.destroy?.();
+      }
+      for (const module of this.behaviorSequence) {
+        module.destroy?.();
+      }
+      for (const module of this.renderingSequence) {
+        module.destroy?.();
+      }
+    }
+
+    super.destroyInternal();
+  }
+
   private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
+    this.layer.sceneWrapper.setOrderedObjectDepth(
+      this.mesh,
+      this.layer.inputWrapper.getDepth(this.catcherHandler),
+    );
+
     {
       const { builtin } = this.mesh.propertyBuffers;
       const { array, itemSize } = builtin;
@@ -270,7 +293,6 @@ export class UIEmitter extends UIAnchor {
       return;
     }
 
-    this.mesh.renderOrder = this.zIndex;
     this.mesh.setOrigin(this.x, this.y);
 
     {

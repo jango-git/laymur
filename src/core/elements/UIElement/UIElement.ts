@@ -160,11 +160,11 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
-  /** Removes element and frees resources */
-  public override destroy(): void {
+  /** Frees resources of the element */
+  protected override destroyInternal(): void {
     this.layer.signalRendering.off(this.handleWillRender);
     this.sceneWrapper.destroyPlane(this.planeHandler);
-    super.destroy();
+    super.destroyInternal();
   }
 
   protected setPlaneTransform(): void {
@@ -176,7 +176,7 @@ export abstract class UIElement extends UIDummy {
           this.y,
           this.width,
           this.height,
-          this.zIndex,
+          this.renderDepth,
           this.micro.x,
           this.micro.y,
           this.micro.anchorX,

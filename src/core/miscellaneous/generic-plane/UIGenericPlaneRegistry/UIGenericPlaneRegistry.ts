@@ -1,4 +1,4 @@
-import type { Matrix4, Scene } from "three";
+import type { Matrix4, Object3D, Scene } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
 import type { HSLAdjustment, UIProperty } from "../shared.js";
 import {
@@ -18,6 +18,10 @@ import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Inter
  * - flush() applies all pending changes to GPU representation
  * - setVisibility is immediate (doesn't affect structure)
  *
+ * Ordered objects, such as particle emitters, are placed by depth on the same scale as plane
+ * zIndex; an object is above a plane of equal depth. No mesh spans the depth of an ordered object,
+ * so the object gets a renderOrder between the meshes below and above it.
+ *
  * @internal
  */
 export class UIPlaneRegistry {
@@ -28,6 +32,7 @@ export class UIPlaneRegistry {
 
   private readonly orderedMeshes: UIGenericInstancedPlane[] = [];
   private readonly handlerToDescriptor: Map<number, PlaneDescriptor> = new Map();
+  private readonly objectToDepth: Map<Object3D, number> = new Map();
 
   private readonly pendingCreate: Set<number> = new Set();
   private readonly pendingDelete: Set<number> = new Set();
@@ -80,7 +85,9 @@ export class UIPlaneRegistry {
    */
   public destroyPlane(handler: number): void {
     if (!this.handlerToState.has(handler)) {
-      throw new Error(`UIPlaneRegistry.destroyPlane: handler ${handler} not found`);
+      throw new Error(
+        `UIPlaneRegistry.destroyPlane: handler ${handler} not found; its element may be destroyed`,
+      );
     }
 
     this.handlerToState.delete(handler);
@@ -222,6 +229,54 @@ export class UIPlaneRegistry {
   }
 
   /**
+   * Adds an object drawn between planes at the given depth.
+   * Its renderOrder is managed by the registry. Changes are pending until flush() is called.
+   */
+  public insertOrderedObject(object: Object3D, depth: number): void {
+    if (this.objectToDepth.has(object)) {
+      throw new Error(
+        `UIPlaneRegistry.insertOrderedObject: object ${object.id} is already inserted`,
+      );
+    }
+
+    this.objectToDepth.set(object, depth);
+    this.scene.add(object);
+    this.needsFlush = true;
+  }
+
+  /**
+   * Moves an ordered object to the given depth.
+   * Changes are pending until flush() is called.
+   */
+  public setOrderedObjectDepth(object: Object3D, depth: number): void {
+    const currentDepth = this.objectToDepth.get(object);
+    if (currentDepth === undefined) {
+      throw new Error(
+        `UIPlaneRegistry.setOrderedObjectDepth: object ${object.id} not found; it may be removed already`,
+      );
+    }
+
+    if (currentDepth !== depth) {
+      this.objectToDepth.set(object, depth);
+      this.needsFlush = true;
+    }
+  }
+
+  /**
+   * Removes an ordered object; the meshes it separated merge back on flush().
+   */
+  public removeOrderedObject(object: Object3D): void {
+    if (!this.objectToDepth.delete(object)) {
+      throw new Error(
+        `UIPlaneRegistry.removeOrderedObject: object ${object.id} not found; it may be removed already`,
+      );
+    }
+
+    this.scene.remove(object);
+    this.needsFlush = true;
+  }
+
+  /**
    * Apply all pending changes to GPU representation.
    * Call this before rendering.
    */
@@ -233,10 +288,30 @@ export class UIPlaneRegistry {
     this.processDeletes();
     this.processRelocates();
     this.processCreates();
+    this.splitAtObjects();
     this.mergeCompatibleNeighbors();
     this.cleanupEmptyMeshes();
     this.syncSceneOrder();
 
+    this.pendingCreate.clear();
+    this.pendingDelete.clear();
+    this.pendingRelocate.clear();
+    this.needsFlush = false;
+  }
+
+  /**
+   * Removes all meshes from the scene and frees their GPU resources.
+   * Textures and ordered objects are left to their owners.
+   */
+  public destroy(): void {
+    for (const mesh of this.orderedMeshes) {
+      this.scene.remove(mesh);
+      mesh.destroy();
+    }
+    this.orderedMeshes.length = 0;
+    this.handlerToState.clear();
+    this.handlerToDescriptor.clear();
+    this.objectToDepth.clear();
     this.pendingCreate.clear();
     this.pendingDelete.clear();
     this.pendingRelocate.clear();
@@ -376,6 +451,35 @@ export class UIPlaneRegistry {
     this.scene.add(tail);
   }
 
+  /**
+   * Splits every mesh that spans the depth of an ordered object. Runs after all inserts, since
+   * an object may move into a mesh whose planes stayed in place.
+   */
+  private splitAtObjects(): void {
+    for (const depth of this.objectToDepth.values()) {
+      for (let i = 0; i < this.orderedMeshes.length; i++) {
+        const mesh = this.orderedMeshes[i];
+        if (mesh.instancesCount < 2) {
+          continue;
+        }
+
+        if (mesh.getZIndexAt(0) <= depth && depth < mesh.getZIndexAt(mesh.instancesCount - 1)) {
+          this.splitMeshAt(i, mesh, this.findInstanceIndexInMesh(mesh, depth));
+          break;
+        }
+      }
+    }
+  }
+
+  private hasObjectBetween(minZ: number, maxZ: number): boolean {
+    for (const depth of this.objectToDepth.values()) {
+      if (minZ <= depth && depth < maxZ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private mergeCompatibleNeighbors(): void {
     let i = 0;
     while (i < this.orderedMeshes.length - 1) {
@@ -392,6 +496,7 @@ export class UIPlaneRegistry {
 
       if (
         leftMaxZ < rightMinZ &&
+        !this.hasObjectBetween(leftMaxZ, rightMinZ) &&
         left.isCompatibleWith(right.source, right.getProperties(), right.transparency)
       ) {
         const indexOffset = left.instancesCount;
@@ -423,7 +528,9 @@ export class UIPlaneRegistry {
   private resolveState(handler: number): PlaneState {
     const state = this.handlerToState.get(handler);
     if (!state) {
-      throw new Error(`UIPlaneRegistry.resolveState: handler ${handler} not found`);
+      throw new Error(
+        `UIPlaneRegistry.resolveState: handler ${handler} not found; its element may be destroyed`,
+      );
     }
     return state;
   }
@@ -469,8 +576,20 @@ export class UIPlaneRegistry {
       return aZ - bZ;
     });
 
-    for (let i = 0; i < this.orderedMeshes.length; i++) {
-      this.orderedMeshes[i].renderOrder = i;
+    const objects = [...this.objectToDepth].sort((a, b) => a[1] - b[1]);
+    let objectIndex = 0;
+    let renderOrder = 0;
+
+    for (const mesh of this.orderedMeshes) {
+      const meshZ = mesh.instancesCount > 0 ? mesh.getZIndexAt(0) : 0;
+      while (objectIndex < objects.length && objects[objectIndex][1] < meshZ) {
+        objects[objectIndex++][0].renderOrder = renderOrder++;
+      }
+      mesh.renderOrder = renderOrder++;
+    }
+
+    while (objectIndex < objects.length) {
+      objects[objectIndex++][0].renderOrder = renderOrder++;
     }
   }
 }
