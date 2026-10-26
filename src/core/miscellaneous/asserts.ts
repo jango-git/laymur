@@ -1,3 +1,4 @@
+import type { WebGLRenderer } from "three";
 import { UILayer } from "../layers/UILayer/UILayer.js";
 import { EPSILON } from "./math.js";
 import type { UILayerElement } from "./shared.js";
@@ -18,6 +19,29 @@ export function assertValidNumber(value: number, subject: string): void {
 
     if (Math.abs(value) > Number.MAX_SAFE_INTEGER) {
       throw new Error(`${subject}: value exceeds maximum safe integer range, got ${value}`);
+    }
+  }
+}
+
+/**
+ * Validates a shader fits the vertex attribute budget of the device. A program over the budget
+ * fails to link, which three.js only logs, and its mesh is not drawn.
+ * @param renderer Renderer the shader is drawn with
+ * @param required Number of vertex attribute locations the shader uses
+ * @param subject Value name for error messages
+ * @throws If required exceeds the renderer's MAX_VERTEX_ATTRIBS
+ */
+export function assertVertexAttributeBudget(
+  renderer: WebGLRenderer,
+  required: number,
+  subject: string,
+): void {
+  if (process.env.NODE_ENV !== "production") {
+    const available = renderer.capabilities.maxAttributes;
+    if (required > available) {
+      throw new Error(
+        `${subject}: shader needs ${required} vertex attributes, the device supports ${available}`,
+      );
     }
   }
 }

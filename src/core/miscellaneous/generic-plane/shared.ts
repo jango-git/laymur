@@ -1,6 +1,5 @@
 import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
-import type { UITransparencyMode } from "../UITransparencyMode.js";
 import { UIColor } from "../color/UIColor.js";
 import { checkSRGBSupport } from "../webglCapabilities.js";
 
@@ -41,6 +40,12 @@ export type UIPropertyCopyFrom = UIColor & Vector2 & Vector3 & Vector4 & Matrix3
 export interface GLTypeInfo {
   glslTypeName: string;
   bufferSize: number;
+  /**
+   * Number of columns, each holding bufferSize / columnCount floats: one per column of a matrix,
+   * one for a scalar or vector, none for a non-instantiable type. As a vertex attribute the type
+   * takes one location per column.
+   */
+  columnCount: number;
   instantiable: boolean;
 }
 
@@ -49,15 +54,6 @@ export interface GLProperty {
   glslTypeInfo: GLTypeInfo;
 }
 
-export interface PlaneData {
-  source: string;
-  properties: Record<string, GLProperty>;
-  transform: Matrix4;
-  visibility: boolean;
-  transparency: UITransparencyMode;
-}
-
-/** Per-instance HSL adjustment in shader space (matches the instanceHSL attribute). */
 export interface HSLAdjustment {
   /** Hue shift in turns (degrees / 360); wrapped with fract() in the shader. */
   h: number;
@@ -70,42 +66,49 @@ export interface HSLAdjustment {
 const GLSL_TYPE_INFO_FLOAT: GLTypeInfo = Object.freeze({
   glslTypeName: "float",
   bufferSize: 1,
+  columnCount: 1,
   instantiable: true,
 } as const);
 
 const GLSL_TYPE_INFO_SAMPLER2D: GLTypeInfo = Object.freeze({
   glslTypeName: "sampler2D",
   bufferSize: -1,
+  columnCount: 0,
   instantiable: false,
 } as const);
 
 const GLSL_TYPE_INFO_VEC2: GLTypeInfo = Object.freeze({
   glslTypeName: "vec2",
   bufferSize: 2,
+  columnCount: 1,
   instantiable: true,
 } as const);
 
 const GLSL_TYPE_INFO_VEC3: GLTypeInfo = Object.freeze({
   glslTypeName: "vec3",
   bufferSize: 3,
+  columnCount: 1,
   instantiable: true,
 } as const);
 
 const GLSL_TYPE_INFO_VEC4: GLTypeInfo = Object.freeze({
   glslTypeName: "vec4",
   bufferSize: 4,
+  columnCount: 1,
   instantiable: true,
 } as const);
 
 const GLSL_TYPE_INFO_MAT3: GLTypeInfo = Object.freeze({
   glslTypeName: "mat3",
   bufferSize: 9,
+  columnCount: 3,
   instantiable: true,
 } as const);
 
 const GLSL_TYPE_INFO_MAT4: GLTypeInfo = Object.freeze({
   glslTypeName: "mat4",
   bufferSize: 16,
+  columnCount: 4,
   instantiable: true,
 } as const);
 
@@ -270,14 +273,15 @@ export function cloneGLProperties(
   return result;
 }
 
+/**
+ * Index of the zIndex in Matrix4.elements: the zIndex is carried in translation z rather than as a
+ * separate field.
+ */
+export const TRANSFORM_ZINDEX_OFFSET = 14;
+
 /** Extracts zIndex from transform matrix (translation.z component) */
 export function extractZIndex(transform: Matrix4): number {
-  return transform.elements[14];
-}
-
-/** Extracts zIndex from transform buffer at given instance index */
-export function extractZIndexFromBuffer(buffer: Float32Array, instanceIndex: number): number {
-  return buffer[instanceIndex * 16 + 14];
+  return transform.elements[TRANSFORM_ZINDEX_OFFSET];
 }
 
 export function buildGenericPlaneFragmentShader(

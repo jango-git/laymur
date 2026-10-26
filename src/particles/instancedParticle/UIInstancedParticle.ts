@@ -1,5 +1,6 @@
-import type { InstancedBufferGeometry, ShaderMaterial, Vector2 } from "three";
+import type { InstancedBufferGeometry, ShaderMaterial, Vector2, WebGLRenderer } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
+import { assertVertexAttributeBudget } from "../../core/miscellaneous/asserts.js";
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolvePropertyUniform } from "../../core/miscellaneous/generic-plane/shared.js";
 import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_LIFETIME } from "../miscellaneous/miscellaneous.js";
@@ -10,6 +11,8 @@ export class UIInstancedParticle extends Mesh {
 
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
+  private readonly vertexAttributeCount: number;
+  private readonly vertexAttributeSubject: string;
   private capacity: number;
 
   constructor(
@@ -36,6 +39,16 @@ export class UIInstancedParticle extends Mesh {
       Math.ceil(expectedCapacity / this.capacityStep) * this.capacityStep,
       this.capacityStep,
     );
+
+    let vertexAttributeCount = Object.keys(INSTANCED_PARTICLE_GEOMETRY.attributes).length;
+    for (const name in varyings) {
+      vertexAttributeCount += varyings[name].columnCount;
+    }
+    this.vertexAttributeCount = vertexAttributeCount;
+    this.vertexAttributeSubject = `UIInstancedParticle.onBeforeRender.properties (${Object.keys(
+      varyings,
+    ).join(", ")})`;
+    this.onBeforeRender = this.onBeforeRenderInternal;
 
     for (const name in varyings) {
       const { bufferSize } = varyings[name];
@@ -132,4 +145,8 @@ export class UIInstancedParticle extends Mesh {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- old three.js compatibility fix
     (this.instancedGeometry as any)._maxInstanceCount = newCapacity;
   }
+
+  private readonly onBeforeRenderInternal = (renderer: WebGLRenderer): void => {
+    assertVertexAttributeBudget(renderer, this.vertexAttributeCount, this.vertexAttributeSubject);
+  };
 }

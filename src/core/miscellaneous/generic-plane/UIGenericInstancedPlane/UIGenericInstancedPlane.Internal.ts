@@ -15,6 +15,13 @@ import { UIColor } from "../../color/UIColor.js";
 import { UITransparencyMode } from "../../UITransparencyMode.js";
 import type { GLProperty, UIProperty } from "../shared.js";
 import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared.js";
+import type { PackedFieldSpec, PackedLayout } from "./UIGenericInstancedPlane.Layout.js";
+import {
+  buildPackedAttributeDeclarations,
+  buildPackedFieldSpec,
+  buildPackedLayout,
+  resolvePackedField,
+} from "./UIGenericInstancedPlane.Layout.js";
 
 export const INSTANCED_PLANE_GEOMETRY = ((): InstancedBufferGeometry => {
   const geometry = new InstancedBufferGeometry();
@@ -65,32 +72,63 @@ export function writePropertyToArray(value: UIProperty, array: Float32Array, off
   }
 }
 
-export function buildEmptyInstancedBufferAttribute(
-  value: UIProperty,
-  capacity: number,
-): InstancedBufferAttribute {
-  const info = resolveGLSLTypeInfo(value);
-  if (!info.instantiable) {
-    throw new Error(
-      `buildEmptyInstancedBufferAttribute.value: cannot create instanced attribute for non-instantiable type`,
-    );
+export const BUILTIN_TRANSFORM = "instanceTransform";
+export const BUILTIN_VISIBILITY = "instanceVisibility";
+export const BUILTIN_BLEND = "instanceBlend";
+export const BUILTIN_HSL = "instanceHSL";
+
+/**
+ * Builtin fields only the vertex shader reads. Every other field, builtin blend and HSL included,
+ * is passed on to the fragment shader as a p_* varying.
+ */
+const BUILTIN_VERTEX_ONLY: readonly string[] = [BUILTIN_TRANSFORM, BUILTIN_VISIBILITY];
+
+/**
+ * The transform is a Matrix4, but the plane is a unit quad at z = 0 and every element transform
+ * is affine: the z basis column only ever multiplies 0 and the bottom row is always (0, 0, 0, 1).
+ * Only the x basis, y basis and translation columns are stored, without their w components, and
+ * the shader applies them as mat3(xBasis, yBasis, translation) * vec3(position.xy, 1.0).
+ * Translation z is the zIndex, see TRANSFORM_ZINDEX_OFFSET.
+ */
+const BUILTIN_TRANSFORM_SPEC: PackedFieldSpec = {
+  name: BUILTIN_TRANSFORM,
+  glslTypeName: "mat3",
+  flatSize: 16,
+  columns: [
+    { sourceOffset: 0, size: 3 },
+    { sourceOffset: 4, size: 3 },
+    { sourceOffset: 12, size: 3 },
+  ],
+};
+
+export function buildPlaneLayout(varyingProperties: Record<string, GLProperty>): PackedLayout {
+  const specs: PackedFieldSpec[] = [
+    BUILTIN_TRANSFORM_SPEC,
+    buildPackedFieldSpec(BUILTIN_VISIBILITY, resolveGLSLTypeInfo("number")),
+    buildPackedFieldSpec(BUILTIN_BLEND, resolveGLSLTypeInfo("number")),
+    buildPackedFieldSpec(BUILTIN_HSL, resolveGLSLTypeInfo("Vector3")),
+  ];
+
+  for (const name in varyingProperties) {
+    specs.push(buildPackedFieldSpec(name, varyingProperties[name].glslTypeInfo));
   }
-  return new InstancedBufferAttribute(
-    new Float32Array(capacity * info.bufferSize),
-    info.bufferSize,
-  );
+
+  return buildPackedLayout(specs);
+}
+
+export function buildPackedAttribute(itemSize: number, capacity: number): InstancedBufferAttribute {
+  return new InstancedBufferAttribute(new Float32Array(capacity * itemSize), itemSize);
 }
 
 export function buildMaterial(
   source: string,
   uniformProperties: Record<string, GLProperty>,
-  varyingProperties: Record<string, GLProperty>,
+  layout: PackedLayout,
   transparency: UITransparencyMode,
 ): ShaderMaterial {
   const uniforms: Record<string, { value: unknown }> = {};
 
   const uniformDeclarations: string[] = [];
-  const attributeDeclarations: string[] = [];
   const varyingDeclarations: string[] = [];
   const vertexAssignments: string[] = [];
 
@@ -102,16 +140,19 @@ export function buildMaterial(
     uniformDeclarations.push(`uniform ${glslTypeInfo.glslTypeName} p_${name};`);
   }
 
-  for (const name in varyingProperties) {
-    const { glslTypeInfo } = varyingProperties[name];
-    attributeDeclarations.push(`attribute ${glslTypeInfo.glslTypeName} a_${name};`);
-    varyingDeclarations.push(`varying ${glslTypeInfo.glslTypeName} p_${name};`);
-    vertexAssignments.push(`p_${name} = a_${name};`);
+  for (const [name, field] of layout.fields) {
+    if (BUILTIN_VERTEX_ONLY.includes(name)) {
+      continue;
+    }
+    varyingDeclarations.push(`varying ${field.glslTypeName} p_${name};`);
+    vertexAssignments.push(`p_${name} = ${field.expression};`);
   }
 
+  const visibility = resolvePackedField(layout, BUILTIN_VISIBILITY).expression;
+  const transform = resolvePackedField(layout, BUILTIN_TRANSFORM).expression;
+
   const vertexShader = `
-    // User attributes
-    ${attributeDeclarations.join("\n")}
+    ${buildPackedAttributeDeclarations(layout).join("\n")}
 
     // Uniforms
     ${uniformDeclarations.join("\n")}
@@ -120,11 +161,10 @@ export function buildMaterial(
     varying vec3 p_position;
     varying vec2 p_uv;
 
-    // User varyings
     ${varyingDeclarations.join("\n")}
 
     void main() {
-      if (a_instanceVisibility < 0.5) {
+      if (${visibility} < 0.5) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
         return;
       }
@@ -134,7 +174,8 @@ export function buildMaterial(
       p_position = position;
       p_uv = uv;
 
-      gl_Position = projectionMatrix * a_instanceTransform * vec4(position, 1.0);
+      vec3 worldPosition = ${transform} * vec3(position.xy, 1.0);
+      gl_Position = projectionMatrix * vec4(worldPosition, 1.0);
     }
   `;
 
@@ -162,44 +203,6 @@ export function buildMaterial(
     forceSinglePass: true,
     premultipliedAlpha,
   });
-}
-
-export function reconstructValue(
-  referenceValue: UIProperty,
-  array: Float32Array,
-  offset: number,
-): UIProperty {
-  if (typeof referenceValue === "number") {
-    return array[offset];
-  }
-  if (referenceValue instanceof Vector2) {
-    return new Vector2(array[offset], array[offset + 1]);
-  }
-  if (referenceValue instanceof Vector3) {
-    return new Vector3(array[offset], array[offset + 1], array[offset + 2]);
-  }
-  if (referenceValue instanceof Vector4) {
-    return new Vector4(array[offset], array[offset + 1], array[offset + 2], array[offset + 3]);
-  }
-  if (referenceValue instanceof UIColor) {
-    return new UIColor().setGLSLColor(
-      array[offset],
-      array[offset + 1],
-      array[offset + 2],
-      array[offset + 3],
-    );
-  }
-  if (referenceValue instanceof Matrix3) {
-    const matrix = new Matrix3();
-    matrix.fromArray(array, offset);
-    return matrix;
-  }
-  if (referenceValue instanceof Matrix4) {
-    const matrix = new Matrix4();
-    matrix.fromArray(array, offset);
-    return matrix;
-  }
-  throw new Error(`reconstructValue.referenceValue: cannot reconstruct value for type`);
 }
 
 /**

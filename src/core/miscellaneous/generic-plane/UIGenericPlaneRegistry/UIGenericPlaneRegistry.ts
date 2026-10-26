@@ -497,7 +497,7 @@ export class UIPlaneRegistry {
       if (
         leftMaxZ < rightMinZ &&
         !this.hasObjectBetween(leftMaxZ, rightMinZ) &&
-        left.isCompatibleWith(right.source, right.getProperties(), right.transparency)
+        left.canMerge(right)
       ) {
         const indexOffset = left.instancesCount;
         left.merge(right);
