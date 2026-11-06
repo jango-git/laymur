@@ -73,7 +73,10 @@ export abstract class UILayer implements UIPlaneElement {
     this.hVariable = this.solverWrapperInternal.createVariable(height, UIPriority.P0);
   }
 
-  /** @internal */
+  /**
+   * Scene of the layer. Elements living outside laymur, such as Spine skeletons, use it to add
+   * their own objects ordered among the planes.
+   */
   public get sceneWrapper(): UISceneWrapperView {
     return this.sceneWrapperInternal;
   }

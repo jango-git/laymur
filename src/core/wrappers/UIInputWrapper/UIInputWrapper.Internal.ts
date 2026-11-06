@@ -1,4 +1,5 @@
 export interface UIInputWrapperView {
+  /** @internal */
   get dirty(): boolean;
   createInputCatcher(
     catchPointerDown: (x: number, y: number, identifier: number) => boolean,

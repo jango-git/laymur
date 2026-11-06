@@ -4,6 +4,7 @@ import type { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UIRelation } from "../../miscellaneous/UIRelation.js";
 
 export interface UISolverWrapperView {
+  /** @internal */
   get dirty(): boolean;
   createVariable(value: number, priority: UIPriority): number;
   removeVariable(index: number): void;
