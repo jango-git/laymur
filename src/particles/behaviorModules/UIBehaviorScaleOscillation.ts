@@ -28,7 +28,6 @@ export type UIScaleOscillationAxis = "x" | "y";
  * turns negative, which shows the mirrored back side.
  */
 export class UIBehaviorScaleOscillation extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private readonly axisInternal: UIScaleOscillationAxis;
   private frequencyInternal: UIRange;
@@ -115,7 +114,6 @@ export class UIBehaviorScaleOscillation extends UIBehaviorModule<{ builtin: "Mat
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOscillation.aspect");
   }
 
-  /** @internal */
   public update(properties: { builtin: InstancedBufferAttribute }, instanceCount: number): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;

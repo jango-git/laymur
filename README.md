@@ -17,7 +17,8 @@
 
 * **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
 * **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
-* **Micro-transforms** - visual-only transforms (scale, rotation, offset) that bypass the solver
+* **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
+* **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
 * **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
 * **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
 * **Modular particles** - separate `laymur/particles` entry point, import only if needed
@@ -107,7 +108,36 @@ element.micro.scaleX = Math.sin(Date.now() * 0.001) + 1;
 element.micro.rotation += 0.01;
 ```
 
-### 4. Color Adjustment
+Input follows micro-transforms: a moved, rotated or scaled element is hit where it is drawn. Turn it off for effects where the hit area should stay put, such as shrinking a button while it is pressed:
+
+```typescript
+button.micro.affectsInput = false;
+```
+
+### 4. Masks
+
+`UIMask` follows the rectangle of a source element or of the layer, so it is laid out with constraints. Masks are computed in the shader: edges can be soft and masked elements keep batching together.
+
+```typescript
+import { UIDummy, UIMask, UIMaskShape } from 'laymur';
+
+// Scroll view: content moves, the viewport stays
+const viewport = new UIDummy(layer);
+const mask = new UIMask(viewport, { radius: 24, softness: 8, padding: 10 });
+for (const item of items) {
+  item.mask = mask;
+}
+
+// Round avatar
+avatar.mask = new UIMask(avatarFrame, { shape: UIMaskShape.ELLIPSE, softness: 2 });
+
+// Tutorial spotlight: taps inside the hole reach the button below the overlay
+dimOverlay.mask = new UIMask(ctaButton, { shape: UIMaskShape.ELLIPSE, inverted: true, softness: 40 });
+```
+
+A mask also clips input and lives as long as its source. Particles are not clipped; three.js materials of your own can be, through `UIMaskMaterialPatch`.
+
+### 5. Color Adjustment
 
 Every element supports per-element color tweaks that run in the shader, independent of the layout solver.
 
@@ -122,7 +152,7 @@ element.lightness = 0.1;  // offset (0 = unchanged)
 element.blendMode = UIBlendMode.ADDITIVE;
 ```
 
-### 5. Particle System
+### 6. Particle System
 
 Modular pipeline: Spawn -> Behavior -> Rendering.
 
@@ -140,7 +170,7 @@ const emitter = new UIEmitter(
 emitter.play(60); // particles/sec
 ```
 
-### 6. Debug Overlay
+### 7. Debug Overlay
 
 `laymur/debug` renders visual overlays for constraints - useful during development to inspect layout relationships.
 
@@ -174,11 +204,17 @@ Most commonly used exports (not exhaustive):
 
 ### Core
 
-UIFullscreenLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress
+UIFullscreenLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIMask
 
 ### Constraints
 
 UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint, UIHorizontalProportionConstraint, UIVerticalProportionConstraint, UICoverConstraintBuilder, UIFitConstraintBuilder
+
+### Extension Points
+
+UIElement, UIArea, UIResizePolicy, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
+
+UIRenderingModule, UISpawnModule, UIBehaviorModule (laymur/particles)
 
 ### Particles (laymur/particles)
 

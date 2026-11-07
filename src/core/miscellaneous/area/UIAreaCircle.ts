@@ -21,7 +21,6 @@ export class UIAreaCircle extends UIArea {
     assertValidNonNegativeNumber(radius, "UIAreaCircle.constructor.radius");
   }
 
-  /** @internal */
   public contains(pointX: number, pointY: number): boolean {
     assertValidNumber(pointX, "UIAreaCircle.contains.pointX");
     assertValidNumber(pointY, "UIAreaCircle.contains.pointY");

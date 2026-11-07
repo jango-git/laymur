@@ -22,7 +22,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
  * Interpolates between scale anchors based on particle age. Requires at least 2 anchors.
  */
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private readonly scales: UIRange[] = [];
   private aspectInternal: number;
@@ -68,7 +67,6 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.aspect");
   }
 
-  /** @internal */
   public update(properties: { builtin: InstancedBufferAttribute }, instanceCount: number): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;

@@ -3,7 +3,6 @@ import {
   Color,
   LinearFilter,
   MathUtils,
-  Matrix3,
   PerspectiveCamera,
   RGBAFormat,
   Scene,
@@ -14,6 +13,7 @@ import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
 import source from "../../shaders/UIImage.js";
 import {
   DUMMY_DEFAULT_HEIGHT,
@@ -96,7 +96,7 @@ export class UIScene extends UIElement {
       source,
       {
         texture: renderTarget.texture,
-        textureTransform: new Matrix3(),
+        textureTransform: new UIAffineMatrix3(),
         color,
       },
       options,

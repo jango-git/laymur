@@ -1,4 +1,5 @@
 import type { UIArea } from "../../miscellaneous/area/UIArea.js";
+import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import { UIMode } from "../../miscellaneous/UIMode.js";
 import type { UIAnchorOptions } from "../UIAnchor/UIAnchor.Internal.js";
 import type { UIDummy } from "./UIDummy.js";
@@ -25,6 +26,8 @@ export interface UIDummyOptions extends UIAnchorOptions {
   interactionArea: UIArea;
   /** Controls visibility and interactivity */
   mode: UIMode;
+  /** Mask clipping the element, see UIDummy.mask */
+  mask: UIMask | null;
 }
 
 export const DUMMY_DEFAULT_WIDTH = 64;

@@ -13,7 +13,6 @@ export class UIAreaPolygon extends UIArea {
     super();
   }
 
-  /** @internal */
   public contains(pointX: number, pointY: number): boolean {
     assertValidNumber(pointX, "UIAreaPolygon.contains.pointX");
     assertValidNumber(pointY, "UIAreaPolygon.contains.pointY");

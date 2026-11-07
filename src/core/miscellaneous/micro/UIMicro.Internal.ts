@@ -24,6 +24,8 @@ export interface UIMicroConfig {
   rotation: number;
   /** Which transforms apply relative to anchor */
   anchorMode: UIMicroAnchorMode;
+  /** Whether input follows the transformed element instead of its layout rectangle */
+  affectsInput: boolean;
 }
 
 export const MICRO_DEFAULT_POSITION = 0;
@@ -31,3 +33,4 @@ export const MICRO_DEFAULT_ANCHOR = 0.5;
 export const MICRO_DEFAULT_SCALE = 1;
 export const MICRO_DEFAULT_ROTATION = 0;
 export const MICRO_DEFAULT_ANCHOR_MODE = UIMicroAnchorMode.ROTATION_SCALE;
+export const MICRO_DEFAULT_AFFECTS_INPUT = true;

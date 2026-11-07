@@ -2,6 +2,7 @@ import { MathUtils } from "three";
 import { assertValidNumber } from "../asserts.js";
 import type { UIMicroAnchorMode, UIMicroConfig } from "./UIMicro.Internal.js";
 import {
+  MICRO_DEFAULT_AFFECTS_INPUT,
   MICRO_DEFAULT_ANCHOR,
   MICRO_DEFAULT_ANCHOR_MODE,
   MICRO_DEFAULT_POSITION,
@@ -9,7 +10,13 @@ import {
   MICRO_DEFAULT_SCALE,
 } from "./UIMicro.Internal.js";
 
-/** Transforms that don't affect constraints */
+/**
+ * Transforms that don't affect constraints.
+ *
+ * Input follows them by default: a moved, rotated or scaled element is hit where it is drawn.
+ * Turn {@link affectsInput} off for effects such as shrinking a button while it is pressed,
+ * where the hit area should stay put under the finger.
+ */
 export class UIMicro {
   private xInternal: number;
   private yInternal: number;
@@ -19,6 +26,7 @@ export class UIMicro {
   private scaleYInternal: number;
   private rotationInternal: number;
   private anchorModeInternal: UIMicroAnchorMode;
+  private affectsInputInternal: boolean;
 
   private dirtyInternal = true;
 
@@ -36,6 +44,7 @@ export class UIMicro {
     this.scaleYInternal = config?.scaleY ?? MICRO_DEFAULT_SCALE;
     this.rotationInternal = config?.rotation ?? MICRO_DEFAULT_ROTATION;
     this.anchorModeInternal = config?.anchorMode ?? MICRO_DEFAULT_ANCHOR_MODE;
+    this.affectsInputInternal = config?.affectsInput ?? MICRO_DEFAULT_AFFECTS_INPUT;
   }
 
   /** X offset in world units */
@@ -81,6 +90,14 @@ export class UIMicro {
   /** Rotation in radians */
   public get rotation(): number {
     return this.rotationInternal;
+  }
+
+  /**
+   * Whether input follows the transformed element instead of its layout rectangle. Not a
+   * transform itself, so `reset` and `copy` leave it as is.
+   */
+  public get affectsInput(): boolean {
+    return this.affectsInputInternal;
   }
 
   /** @internal */
@@ -167,6 +184,14 @@ export class UIMicro {
       this.anchorModeInternal = value;
       this.dirtyInternal = true;
     }
+  }
+
+  /**
+   * Whether input follows the transformed element instead of its layout rectangle. Not a
+   * transform itself, so `reset` and `copy` leave it as is.
+   */
+  public set affectsInput(value: boolean) {
+    this.affectsInputInternal = value;
   }
 
   /** Sets the same scale for X and Y */

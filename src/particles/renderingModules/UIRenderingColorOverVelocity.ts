@@ -11,13 +11,10 @@ import { UIRenderingModule } from "./UIRenderingModule.js";
  * Maps velocity from 0 to maxVelocity across the color gradient.
  */
 export class UIRenderingColorOverVelocity extends UIRenderingModule {
-  /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
     builtin: "Matrix4",
   } as const;
-  /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
-  /** @internal */
   public readonly source = source;
 
   /**

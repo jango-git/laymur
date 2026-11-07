@@ -16,7 +16,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * Position is chosen uniformly within the bounds defined by min and max.
  */
 export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private minInternal: Vector2Like;
   private maxInternal: Vector2Like;
@@ -59,7 +58,6 @@ export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidNumber(this.maxInternal.y, "UISpawnRectangle.max.y");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

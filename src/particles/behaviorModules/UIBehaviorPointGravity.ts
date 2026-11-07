@@ -24,7 +24,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
  * Force follows inverse power law: strength / distance^exponent. Particles closer than threshold are unaffected.
  */
 export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private centerInternal: Vector2Like;
   private strengthInternal: UIRange;
@@ -115,7 +114,6 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
     assertValidNumber(this.thresholdInternal.max, "UIBehaviorPointGravity.threshold.max");
   }
 
-  /** @internal */
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,

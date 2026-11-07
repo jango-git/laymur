@@ -11,13 +11,17 @@ import {
   Vector3,
   Vector4,
 } from "three";
+import maskSource from "../../../shaders/UIMask.js";
 import { UIColor } from "../../color/UIColor.js";
 import { UITransparencyMode } from "../../UITransparencyMode.js";
 import type { GLProperty, UIProperty } from "../shared.js";
 import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared.js";
+import type { VaryingFieldSpec } from "../varyingPacking.js";
+import { isIdentifierReferenced, packVaryings } from "../varyingPacking.js";
 import type { PackedFieldSpec, PackedLayout } from "./UIGenericInstancedPlane.Layout.js";
 import {
   buildPackedAttributeDeclarations,
+  buildPackedFieldComponents,
   buildPackedFieldSpec,
   buildPackedLayout,
   resolvePackedField,
@@ -43,8 +47,25 @@ export const INITIAL_CAPACITY = 1;
 
 const TEMP_COLOR_VECTOR = new Vector4();
 
-export function writePropertyToArray(value: UIProperty, array: Float32Array, offset: number): void {
-  if (value instanceof UIColor) {
+/**
+ * Flattens a property value into the array.
+ * @param affine Write a Matrix3 as a 2D affine transform: its three columns without the bottom row
+ */
+export function writePropertyToArray(
+  value: UIProperty,
+  array: Float32Array,
+  offset: number,
+  affine = false,
+): void {
+  if (affine && value instanceof Matrix3) {
+    const elements = value.elements;
+    array[offset] = elements[0];
+    array[offset + 1] = elements[1];
+    array[offset + 2] = elements[3];
+    array[offset + 3] = elements[4];
+    array[offset + 4] = elements[6];
+    array[offset + 5] = elements[7];
+  } else if (value instanceof UIColor) {
     value.toGLSLColor(TEMP_COLOR_VECTOR);
     array[offset] = TEMP_COLOR_VECTOR.x;
     array[offset + 1] = TEMP_COLOR_VECTOR.y;
@@ -77,11 +98,24 @@ export const BUILTIN_VISIBILITY = "instanceVisibility";
 export const BUILTIN_BLEND = "instanceBlend";
 export const BUILTIN_HSL = "instanceHSL";
 
+/** Rows of the layer -> mask-local map, see MASK_DATA_SIZE; present on masked planes only */
+export const BUILTIN_MASK_ROW0 = "instanceMaskRow0";
+export const BUILTIN_MASK_ROW1 = "instanceMaskRow1";
+/** Half width, half height, corner radius and softness of the mask */
+export const BUILTIN_MASK_SHAPE = "instanceMaskShape";
+/** Mask shape + 2 when inverted */
+export const BUILTIN_MASK_MODE = "instanceMaskMode";
+
 /**
  * Builtin fields only the vertex shader reads. Every other field, builtin blend and HSL included,
  * is passed on to the fragment shader as a p_* varying.
  */
-const BUILTIN_VERTEX_ONLY: readonly string[] = [BUILTIN_TRANSFORM, BUILTIN_VISIBILITY];
+const BUILTIN_VERTEX_ONLY: readonly string[] = [
+  BUILTIN_TRANSFORM,
+  BUILTIN_VISIBILITY,
+  BUILTIN_MASK_ROW0,
+  BUILTIN_MASK_ROW1,
+];
 
 /**
  * The transform is a Matrix4, but the plane is a unit quad at z = 0 and every element transform
@@ -101,13 +135,25 @@ const BUILTIN_TRANSFORM_SPEC: PackedFieldSpec = {
   ],
 };
 
-export function buildPlaneLayout(varyingProperties: Record<string, GLProperty>): PackedLayout {
+export function buildPlaneLayout(
+  varyingProperties: Record<string, GLProperty>,
+  masked: boolean,
+): PackedLayout {
   const specs: PackedFieldSpec[] = [
     BUILTIN_TRANSFORM_SPEC,
     buildPackedFieldSpec(BUILTIN_VISIBILITY, resolveGLSLTypeInfo("number")),
     buildPackedFieldSpec(BUILTIN_BLEND, resolveGLSLTypeInfo("number")),
     buildPackedFieldSpec(BUILTIN_HSL, resolveGLSLTypeInfo("Vector3")),
   ];
+
+  if (masked) {
+    specs.push(
+      buildPackedFieldSpec(BUILTIN_MASK_ROW0, resolveGLSLTypeInfo("Vector3")),
+      buildPackedFieldSpec(BUILTIN_MASK_ROW1, resolveGLSLTypeInfo("Vector3")),
+      buildPackedFieldSpec(BUILTIN_MASK_SHAPE, resolveGLSLTypeInfo("Vector4")),
+      buildPackedFieldSpec(BUILTIN_MASK_MODE, resolveGLSLTypeInfo("number")),
+    );
+  }
 
   for (const name in varyingProperties) {
     specs.push(buildPackedFieldSpec(name, varyingProperties[name].glslTypeInfo));
@@ -125,12 +171,10 @@ export function buildMaterial(
   uniformProperties: Record<string, GLProperty>,
   layout: PackedLayout,
   transparency: UITransparencyMode,
-): ShaderMaterial {
+  masked: boolean,
+): { material: ShaderMaterial; varyingRowCount: number } {
   const uniforms: Record<string, { value: unknown }> = {};
-
   const uniformDeclarations: string[] = [];
-  const varyingDeclarations: string[] = [];
-  const vertexAssignments: string[] = [];
 
   for (const name in uniformProperties) {
     const { value, glslTypeInfo } = uniformProperties[name];
@@ -140,16 +184,64 @@ export function buildMaterial(
     uniformDeclarations.push(`uniform ${glslTypeInfo.glslTypeName} p_${name};`);
   }
 
+  // Every value the fragment shader may read, as p_* fields
+  const candidates: VaryingFieldSpec[] = [
+    { name: "p_uv", glslTypeName: "vec2", components: ["uv.x", "uv.y"] },
+  ];
   for (const [name, field] of layout.fields) {
-    if (BUILTIN_VERTEX_ONLY.includes(name)) {
-      continue;
+    if (!BUILTIN_VERTEX_ONLY.includes(name)) {
+      candidates.push({
+        name: `p_${name}`,
+        glslTypeName: field.glslTypeName,
+        components: buildPackedFieldComponents(layout, field),
+        affine: field.affine,
+      });
     }
-    varyingDeclarations.push(`varying ${field.glslTypeName} p_${name};`);
-    vertexAssignments.push(`p_${name} = ${field.expression};`);
   }
 
   const visibility = resolvePackedField(layout, BUILTIN_VISIBILITY).expression;
   const transform = resolvePackedField(layout, BUILTIN_TRANSFORM).expression;
+
+  let maskVertex = "";
+  if (masked) {
+    const row0 = resolvePackedField(layout, BUILTIN_MASK_ROW0).expression;
+    const row1 = resolvePackedField(layout, BUILTIN_MASK_ROW1).expression;
+    candidates.push({
+      name: "p_instanceMaskLocal",
+      glslTypeName: "vec2",
+      components: ["maskLocal.x", "maskLocal.y"],
+    });
+    // worldPosition.z carries the zIndex, the mask map only takes the plane position
+    maskVertex = `
+      vec3 maskPoint = vec3(worldPosition.xy, 1.0);
+      vec2 maskLocal = vec2(dot(${row0}, maskPoint), dot(${row1}, maskPoint));
+    `;
+  }
+
+  const alphaTestValue = 0.0075;
+  const premultipliedAlpha = transparency === UITransparencyMode.BLEND;
+  const maskFragment = masked ? maskSource : undefined;
+
+  // Only fields the fragment shader reads take varyings: the blend factor, for one, is read by
+  // premultiplied shaders only. The shader without fields tells which ones it reads.
+  const unpackedFragment = buildGenericPlaneFragmentShader(
+    uniformDeclarations,
+    [],
+    [],
+    source,
+    alphaTestValue,
+    premultipliedAlpha,
+    maskFragment,
+  );
+  const fields = candidates.filter(({ name }) => isIdentifierReferenced(unpackedFragment, name));
+  const packed = packVaryings(fields);
+
+  const fieldDeclarations = [...packed.declarations];
+  const fieldAssignments: string[] = [];
+  for (const { name, glslTypeName } of fields) {
+    fieldDeclarations.push(`${glslTypeName} ${name};`);
+    fieldAssignments.push(`${name} = ${packed.fragmentExpressions.get(name) ?? ""};`);
+  }
 
   const vertexShader = `
     ${buildPackedAttributeDeclarations(layout).join("\n")}
@@ -157,11 +249,8 @@ export function buildMaterial(
     // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Builtin varyings
-    varying vec3 p_position;
-    varying vec2 p_uv;
-
-    ${varyingDeclarations.join("\n")}
+    // Packed varyings
+    ${packed.declarations.join("\n")}
 
     void main() {
       if (${visibility} < 0.5) {
@@ -169,28 +258,25 @@ export function buildMaterial(
         return;
       }
 
-      ${vertexAssignments.join("\n")}
-
-      p_position = position;
-      p_uv = uv;
-
       vec3 worldPosition = ${transform} * vec3(position.xy, 1.0);
       gl_Position = projectionMatrix * vec4(worldPosition, 1.0);
+      ${maskVertex}
+
+      ${packed.vertexAssignments.join("\n")}
     }
   `;
 
-  const alphaTestValue = 0.0075;
-  const premultipliedAlpha = transparency === UITransparencyMode.BLEND;
-
   const fragmentShader = buildGenericPlaneFragmentShader(
     uniformDeclarations,
-    varyingDeclarations,
+    fieldDeclarations,
+    fieldAssignments,
     source,
     alphaTestValue,
     premultipliedAlpha,
+    maskFragment,
   );
 
-  return new ShaderMaterial({
+  const material = new ShaderMaterial({
     uniforms,
     vertexShader,
     fragmentShader,
@@ -203,6 +289,13 @@ export function buildMaterial(
     forceSinglePass: true,
     premultipliedAlpha,
   });
+
+  if (masked) {
+    // fwidth on WebGL1 (three.js before r163); WebGL2 has derivatives built in
+    material.extensions.derivatives = true;
+  }
+
+  return { material, varyingRowCount: packed.rowCount };
 }
 
 /**

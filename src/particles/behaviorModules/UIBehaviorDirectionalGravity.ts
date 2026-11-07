@@ -15,7 +15,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
  * Adds the direction vector to particle velocity each frame.
  */
 export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private directionInternal: Vector2Like;
 
@@ -47,7 +46,6 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "M
     assertValidNumber(this.directionInternal.y, "UIBehaviorDirectionalGravity.direction.y");
   }
 
-  /** @internal */
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,

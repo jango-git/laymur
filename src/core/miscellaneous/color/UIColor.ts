@@ -63,6 +63,7 @@ export class UIColor {
   constructor(uiColorConfig?: UIColorConfig);
   constructor(...args: unknown[]) {
     if (args.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Needed by tsc: no single overload of set() accepts unknown[], the rule misjudges overloaded methods
       (this.set as (...a: unknown[]) => this)(...args);
     }
   }

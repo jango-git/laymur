@@ -1,6 +1,9 @@
 import type { InstancedBufferGeometry, ShaderMaterial, Vector2, WebGLRenderer } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
-import { assertVertexAttributeBudget } from "../../core/miscellaneous/asserts.js";
+import {
+  assertVaryingBudget,
+  assertVertexAttributeBudget,
+} from "../../core/miscellaneous/asserts.js";
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolvePropertyUniform } from "../../core/miscellaneous/generic-plane/shared.js";
 import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_LIFETIME } from "../miscellaneous/miscellaneous.js";
@@ -13,6 +16,7 @@ export class UIInstancedParticle extends Mesh {
   private readonly shaderMaterial: ShaderMaterial;
   private readonly vertexAttributeCount: number;
   private readonly vertexAttributeSubject: string;
+  private readonly varyingRowCount: number;
   private capacity: number;
 
   constructor(
@@ -23,7 +27,11 @@ export class UIInstancedParticle extends Mesh {
     private readonly capacityStep: number,
   ) {
     const instancedGeometry = INSTANCED_PARTICLE_GEOMETRY.clone();
-    const shaderMaterial = buildParticleMaterial(sources, uniforms, varyings);
+    const { material: shaderMaterial, varyingRowCount } = buildParticleMaterial(
+      sources,
+      uniforms,
+      varyings,
+    );
 
     super(instancedGeometry, shaderMaterial);
 
@@ -48,6 +56,7 @@ export class UIInstancedParticle extends Mesh {
     this.vertexAttributeSubject = `UIInstancedParticle.onBeforeRender.properties (${Object.keys(
       varyings,
     ).join(", ")})`;
+    this.varyingRowCount = varyingRowCount;
     this.onBeforeRender = this.onBeforeRenderInternal;
 
     for (const name in varyings) {
@@ -148,5 +157,6 @@ export class UIInstancedParticle extends Mesh {
 
   private readonly onBeforeRenderInternal = (renderer: WebGLRenderer): void => {
     assertVertexAttributeBudget(renderer, this.vertexAttributeCount, this.vertexAttributeSubject);
+    assertVaryingBudget(renderer, this.varyingRowCount, this.vertexAttributeSubject);
   };
 }

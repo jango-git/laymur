@@ -16,5 +16,7 @@ export interface PlaneState {
   transparency: UITransparencyMode;
   blend: number;
   hsl: HSLAdjustment;
+  /** Packed mask data (see UIMask.Internal.ts), null for an unmasked plane */
+  mask: Float32Array | null;
   zIndex: number;
 }

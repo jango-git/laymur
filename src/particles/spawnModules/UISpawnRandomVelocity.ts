@@ -15,7 +15,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * Direction and magnitude are chosen independently from their respective ranges.
  */
 export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private angleInternal: UIRange;
   private magnitudeInternal: UIRange;
@@ -67,7 +66,6 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }>
     assertValidNumber(this.magnitudeInternal.max, "UISpawnRandomVelocity.magnitude.max");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

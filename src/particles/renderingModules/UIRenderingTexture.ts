@@ -35,11 +35,8 @@ function buildMultiTextureShader(count: number): string {
  * All configs in the array must share the same underlying Three.js Texture object.
  */
 export class UIRenderingTexture extends UIRenderingModule {
-  /** @internal */
   public override readonly requiredProperties?: Record<string, UIPropertyName>;
-  /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
-  /** @internal */
   public readonly source: string;
 
   /**

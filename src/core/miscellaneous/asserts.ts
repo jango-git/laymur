@@ -47,6 +47,29 @@ export function assertVertexAttributeBudget(
 }
 
 /**
+ * Validates a shader fits the varying budget of the device. Like an attribute overflow, a
+ * program over the budget fails to link, which three.js only logs, and its mesh is not drawn.
+ * @param renderer Renderer the shader is drawn with
+ * @param required Number of varying rows (vec4 locations) the shader uses
+ * @param subject Value name for error messages
+ * @throws If required exceeds the renderer's MAX_VARYING_VECTORS
+ */
+export function assertVaryingBudget(
+  renderer: WebGLRenderer,
+  required: number,
+  subject: string,
+): void {
+  if (process.env.NODE_ENV !== "production") {
+    const available = renderer.capabilities.maxVaryings;
+    if (required > available) {
+      throw new Error(
+        `${subject}: shader needs ${required} varying vectors, the device supports ${available}`,
+      );
+    }
+  }
+}
+
+/**
  * Validates value is positive (>= EPSILON).
  * @param value Number to validate
  * @param subject Value name for error messages

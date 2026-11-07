@@ -17,7 +17,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
 export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
   builtin: "Matrix4";
 }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private dampingInternal: UIRange;
 
@@ -49,7 +48,6 @@ export class UIBehaviorTorqueDamping extends UIBehaviorModule<{
     assertValidNonNegativeNumber(this.dampingInternal.max, `UIBehaviorTorqueDamping.damping.max`);
   }
 
-  /** @internal */
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,

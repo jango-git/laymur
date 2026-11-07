@@ -35,6 +35,8 @@ export interface PackedFieldSpec {
   glslTypeName: string;
   flatSize: number;
   columns: readonly PackedColumnSpec[];
+  /** A mat3 stored as three columns of two, see GLTypeInfo.affine */
+  affine?: boolean;
 }
 
 /**
@@ -54,6 +56,8 @@ export interface PackedField {
   glslTypeName: string;
   columns: readonly PackedColumn[];
   expression: string;
+  /** A mat3 stored as three columns of two, see GLTypeInfo.affine */
+  affine: boolean;
 }
 
 /**
@@ -71,7 +75,7 @@ export function packedAttributeName(attributeIndex: number): string {
 }
 
 export function buildPackedFieldSpec(name: string, glslTypeInfo: GLTypeInfo): PackedFieldSpec {
-  const { glslTypeName, bufferSize, columnCount, instantiable } = glslTypeInfo;
+  const { glslTypeName, bufferSize, columnCount, instantiable, affine } = glslTypeInfo;
   if (!instantiable) {
     throw new Error(
       `buildPackedFieldSpec.glslTypeInfo: "${name}" (${glslTypeName}) is not instantiable`,
@@ -84,7 +88,7 @@ export function buildPackedFieldSpec(name: string, glslTypeInfo: GLTypeInfo): Pa
     columns.push({ sourceOffset: i * columnSize, size: columnSize });
   }
 
-  return { name, glslTypeName, flatSize: bufferSize, columns };
+  return { name, glslTypeName, flatSize: bufferSize, columns, affine: affine === true };
 }
 
 function compareNames(a: string, b: string): number {
@@ -165,11 +169,18 @@ export function buildPackedLayout(specs: readonly PackedFieldSpec[]): PackedLayo
     });
 
     const expression =
-      columnExpressions.length === 1
-        ? columnExpressions[0]
-        : `${spec.glslTypeName}(${columnExpressions.join(", ")})`;
+      spec.affine === true
+        ? `mat3(vec3(${columnExpressions[0]}, 0.0), vec3(${columnExpressions[1]}, 0.0), vec3(${columnExpressions[2]}, 1.0))`
+        : columnExpressions.length === 1
+          ? columnExpressions[0]
+          : `${spec.glslTypeName}(${columnExpressions.join(", ")})`;
 
-    fields.set(spec.name, { glslTypeName: spec.glslTypeName, columns, expression });
+    fields.set(spec.name, {
+      glslTypeName: spec.glslTypeName,
+      columns,
+      expression,
+      affine: spec.affine === true,
+    });
 
     const sourceOffsets = columns.map(({ sourceOffset }) => sourceOffset).join(",");
     signatureParts.push(`${spec.name}:${spec.glslTypeName}[${sourceOffsets}]=${expression}`);
@@ -184,6 +195,25 @@ export function resolvePackedField(layout: PackedLayout, name: string): PackedFi
     throw new Error(`resolvePackedField.name: unknown field "${name}"`);
   }
   return field;
+}
+
+/**
+ * Vertex shader expressions of the scalar components of a packed field, in the order the GLSL
+ * constructor of its type takes them; used to pass the field on through packed varyings.
+ */
+export function buildPackedFieldComponents(layout: PackedLayout, field: PackedField): string[] {
+  const components: string[] = [];
+  for (const { attributeIndex, componentOffset, size } of field.columns) {
+    const attributeName = packedAttributeName(attributeIndex);
+    for (let i = 0; i < size; i++) {
+      components.push(
+        layout.attributeSizes[attributeIndex] === 1
+          ? attributeName
+          : `${attributeName}.${SWIZZLE_COMPONENTS[componentOffset + i]}`,
+      );
+    }
+  }
+  return components;
 }
 
 export function buildPackedAttributeDeclarations(layout: PackedLayout): string[] {

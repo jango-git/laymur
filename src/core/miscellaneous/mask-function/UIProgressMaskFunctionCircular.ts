@@ -48,7 +48,6 @@ export class UIProgressMaskFunctionCircular extends UIProgressMaskFunction {
     }
   }
 
-  /** @internal */
   public enumerateProperties(): Record<string, UIProperty> {
     return {
       direction: this.inverseDirectionInternal ? -1 : 1,

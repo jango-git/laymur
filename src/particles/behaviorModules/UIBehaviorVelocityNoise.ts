@@ -24,7 +24,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
  * Uses 2D noise based on particle position. Higher scale means finer noise detail.
  */
 export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private strengthInternal: UIRange;
@@ -80,7 +79,6 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
     assertValidNonNegativeNumber(this.strengthInternal.max, `UIBehaviorVelocityNoise.strength.max`);
   }
 
-  /** @internal */
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,

@@ -20,6 +20,8 @@ export interface UISceneWrapperView {
   setTransparency(handler: number, transparency: UITransparencyMode): void;
   setBlend(handler: number, blend: number): void;
   setHSL(handler: number, hsl: HSLAdjustment): void;
+  /** Packed mask data (see UIMask.Internal.ts) or null to remove the mask */
+  setMask(handler: number, mask: Readonly<Float32Array> | null): void;
 
   insertOrderedObject(object: Object3D, depth: number): void;
   setOrderedObjectDepth(object: Object3D, depth: number): void;

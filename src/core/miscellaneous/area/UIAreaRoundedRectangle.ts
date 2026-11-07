@@ -30,7 +30,6 @@ export class UIAreaRoundedRectangle extends UIArea {
     this.radius = Math.min(radius, Math.min(width, height) / 2);
   }
 
-  /** @internal */
   public contains(pointX: number, pointY: number): boolean {
     assertValidNumber(pointX, "UIAreaRoundedRectangle.contains.pointX");
     assertValidNumber(pointY, "UIAreaRoundedRectangle.contains.pointY");

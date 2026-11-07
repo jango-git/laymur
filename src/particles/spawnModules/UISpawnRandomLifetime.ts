@@ -15,7 +15,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * Lifetime is chosen uniformly from the specified range. Age is set to 0.
  */
 export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private lifetimeInternal: UIRange;
 
@@ -47,7 +46,6 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }>
     assertValidPositiveNumber(this.lifetimeInternal.max, "UISpawnRandomLifetime.lifetime.max");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

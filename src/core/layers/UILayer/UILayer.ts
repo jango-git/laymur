@@ -6,6 +6,7 @@ import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 import type { UIConstraint } from "../../constraints/UIConstraint.js";
 import type { UIAnchor } from "../../elements/UIAnchor/UIAnchor.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
 import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 import { UIPriority } from "../../miscellaneous/UIPriority.js";
@@ -48,6 +49,7 @@ export abstract class UILayer implements UIPlaneElement {
 
   private readonly constraintRegistryInternal: UIConstraint[] = [];
   private readonly elementRegistryInternal: UIAnchor[] = [];
+  private readonly maskRegistryInternal: UIMask[] = [];
   private destroyedInternal = false;
 
   constructor(options: Partial<UILayerOptions>) {
@@ -181,6 +183,11 @@ export abstract class UILayer implements UIPlaneElement {
     return this.elementRegistryInternal;
   }
 
+  /** Masks whose source is the layer or one of its elements, not destroyed yet */
+  public get maskRegistry(): readonly UIMask[] {
+    return this.maskRegistryInternal;
+  }
+
   /** Whether the layer is destroyed */
   public get destroyed(): boolean {
     return this.destroyedInternal;
@@ -195,7 +202,7 @@ export abstract class UILayer implements UIPlaneElement {
   }
 
   /**
-   * Destroys all elements and constraints of the layer, those snapped to the layer itself
+   * Destroys all elements, constraints and masks of the layer, those tied to the layer itself
    * included, and frees the GPU resources of the layer. Textures are left to their owners.
    * Does nothing if the layer is already destroyed.
    */
@@ -208,6 +215,7 @@ export abstract class UILayer implements UIPlaneElement {
     for (const element of [...this.elementRegistryInternal]) {
       element.destroy();
     }
+    this.destroyMasksUsingSource(this);
     this.destroyConstraints(() => true);
     this.sceneWrapperInternal.destroy();
   }
@@ -221,6 +229,35 @@ export abstract class UILayer implements UIPlaneElement {
     this.destroyConstraints((constraint) =>
       variables.some((variable) => constraint.isUsingVariable(variable)),
     );
+  }
+
+  /**
+   * Destroys the masks that follow the given source, so that the source can be removed.
+   * @internal
+   */
+  public destroyMasksUsingSource(source: UIAnchor | UILayer): void {
+    for (const mask of [...this.maskRegistryInternal]) {
+      if (mask.source === source) {
+        mask.destroy();
+      }
+    }
+  }
+
+  /** @internal */
+  public addMask(mask: UIMask): void {
+    if (this.destroyedInternal) {
+      throw new Error(`UILayer.addMask: layer is destroyed`);
+    }
+    this.maskRegistryInternal.push(mask);
+  }
+
+  /** @internal */
+  public removeMask(mask: UIMask): void {
+    const index = this.maskRegistryInternal.indexOf(mask);
+    if (index === -1) {
+      throw new Error(`UILayer.removeMask: mask is not found in this layer`);
+    }
+    this.maskRegistryInternal.splice(index, 1);
   }
 
   /** @internal */

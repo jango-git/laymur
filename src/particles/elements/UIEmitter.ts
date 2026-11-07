@@ -2,7 +2,6 @@ import type { WebGLRenderer } from "three";
 import { Vector2 } from "three";
 import type { UILayer } from "../../core/index.js";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor.js";
-import type { UIAnchorOptions } from "../../core/elements/UIAnchor/UIAnchor.Internal.js";
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
@@ -30,7 +29,11 @@ import {
 } from "../miscellaneous/miscellaneous.js";
 import type { UIRenderingModule } from "../renderingModules/UIRenderingModule.js";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule.js";
-import type { UIEmitterMode, UIEmitterPlayOptions } from "./UIEmitter.Internal.js";
+import type {
+  UIEmitterMode,
+  UIEmitterOptions,
+  UIEmitterPlayOptions,
+} from "./UIEmitter.Internal.js";
 import {
   EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
   EMITTER_DEFAULT_CAPACITY_STEP,
@@ -38,13 +41,6 @@ import {
   EMITTER_DEFAULT_MODE,
   ignoreInput,
 } from "./UIEmitter.Internal.js";
-
-export interface UIEmitterOptions extends UIAnchorOptions {
-  mode: UIEmitterMode;
-  expectedCapacity: number;
-  capacityStep: number;
-  automaticallyDestroyModules: boolean;
-}
 
 /**
  * Particle emitter element.

@@ -1,6 +1,7 @@
 import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 import { UIColor } from "../color/UIColor.js";
+import { UIAffineMatrix3 } from "../UIAffineMatrix3.js";
 import { checkSRGBSupport } from "../webglCapabilities.js";
 
 export type UIProperty =
@@ -20,6 +21,7 @@ export type UIPropertyName =
   | "Vector3"
   | "Vector4"
   | "Matrix3"
+  | "UIAffineMatrix3"
   | "Matrix4"
   | "number";
 
@@ -30,6 +32,7 @@ export type UIPropertyConstructor =
   | typeof Vector3
   | typeof Vector4
   | typeof Matrix3
+  | typeof UIAffineMatrix3
   | typeof Matrix4
   | NumberConstructor;
 
@@ -47,6 +50,11 @@ export interface GLTypeInfo {
    */
   columnCount: number;
   instantiable: boolean;
+  /**
+   * Whether a mat3 is stored as a 2D affine transform: three columns of two floats, the bottom
+   * row taken as (0, 0, 1). See UIAffineMatrix3.
+   */
+  affine?: boolean;
 }
 
 export interface GLProperty {
@@ -105,6 +113,14 @@ const GLSL_TYPE_INFO_MAT3: GLTypeInfo = Object.freeze({
   instantiable: true,
 } as const);
 
+const GLSL_TYPE_INFO_AFFINE_MAT3: GLTypeInfo = Object.freeze({
+  glslTypeName: "mat3",
+  bufferSize: 6,
+  columnCount: 3,
+  instantiable: true,
+  affine: true,
+} as const);
+
 const GLSL_TYPE_INFO_MAT4: GLTypeInfo = Object.freeze({
   glslTypeName: "mat4",
   bufferSize: 16,
@@ -131,6 +147,8 @@ export function resolveGLSLTypeInfo(
         return GLSL_TYPE_INFO_VEC4;
       case "Matrix3":
         return GLSL_TYPE_INFO_MAT3;
+      case "UIAffineMatrix3":
+        return GLSL_TYPE_INFO_AFFINE_MAT3;
       case "Matrix4":
         return GLSL_TYPE_INFO_MAT4;
       default:
@@ -155,6 +173,9 @@ export function resolveGLSLTypeInfo(
     }
     if (value === Vector4) {
       return GLSL_TYPE_INFO_VEC4;
+    }
+    if (value === UIAffineMatrix3) {
+      return GLSL_TYPE_INFO_AFFINE_MAT3;
     }
     if (value === Matrix3) {
       return GLSL_TYPE_INFO_MAT3;
@@ -183,6 +204,9 @@ export function resolveGLSLTypeInfo(
   }
   if (value instanceof Vector4) {
     return GLSL_TYPE_INFO_VEC4;
+  }
+  if (value instanceof UIAffineMatrix3) {
+    return GLSL_TYPE_INFO_AFFINE_MAT3;
   }
   if (value instanceof Matrix3) {
     return GLSL_TYPE_INFO_MAT3;
@@ -216,7 +240,11 @@ export function arePropertiesPartiallyCompatible(
     const infoFull = full[key].glslTypeInfo;
     const infoPartial = partial[key].glslTypeInfo;
 
-    if (infoFull.glslTypeName !== infoPartial.glslTypeName) {
+    // An affine mat3 and a full one share the GLSL type but not the layout
+    if (
+      infoFull.glslTypeName !== infoPartial.glslTypeName ||
+      infoFull.bufferSize !== infoPartial.bufferSize
+    ) {
       return false;
     }
 
@@ -284,27 +312,35 @@ export function extractZIndex(transform: Matrix4): number {
   return transform.elements[TRANSFORM_ZINDEX_OFFSET];
 }
 
+/**
+ * Builds the fragment shader of a plane. The p_* fields the source reads are plain globals,
+ * filled from the packed varyings at the start of main (see varyingPacking.ts).
+ * @param fieldDeclarations Packed varying and p_* global declarations
+ * @param fieldAssignments Statements filling the p_* globals from the packed varyings
+ */
 export function buildGenericPlaneFragmentShader(
   uniformDeclarations: string[],
-  varyingDeclarations: string[],
+  fieldDeclarations: string[],
+  fieldAssignments: string[],
   source: string,
   alphaTestValue: number,
   usePremultipliedAlpha: boolean,
+  maskSource?: string,
 ): string {
   return `
     // Defines
     #define PI 3.14159265359
     #define SRGB_SUPPORTED ${checkSRGBSupport() ? "1" : "0"}
+    ${maskSource === undefined ? "" : "#define LAYMUR_MASK_DERIVATIVES"}
 
     // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Builtin varyings
-    varying vec3 p_position;
-    varying vec2 p_uv;
+    // Packed varyings and the fields read from them
+    ${fieldDeclarations.join("\n")}
 
-    // User varyings
-    ${varyingDeclarations.join("\n")}
+    // The unit quad position equals its uv
+    #define p_position vec3(p_uv, 0.0)
 
     #include <alphahash_pars_fragment>
 
@@ -377,15 +413,22 @@ export function buildGenericPlaneFragmentShader(
       return hslToRgb(hsl);
     }
 
+    // Mask coverage, masked planes only
+    ${maskSource ?? ""}
+
     // Source must define vec4 draw() function
     ${source}
     void main() {
+      ${fieldAssignments.join("\n")}
+
       vec4 diffuseColor = draw();
 
       // Skip the HSL roundtrip entirely for the default (identity) case.
       if (p_instanceHSL != vec3(0.0, 1.0, 0.0)) {
         diffuseColor.rgb = applyInstanceHSL(diffuseColor.rgb);
       }
+
+      ${maskSource === undefined ? "" : "diffuseColor.a *= laymurMaskCoverage(p_instanceMaskLocal, p_instanceMaskShape, p_instanceMaskMode);"}
 
       if (diffuseColor.a <= ${alphaTestValue.toFixed(8)}) {
         discard;

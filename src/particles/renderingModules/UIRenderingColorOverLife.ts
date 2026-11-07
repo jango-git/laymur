@@ -11,13 +11,10 @@ import { UIRenderingModule } from "./UIRenderingModule.js";
  * Interpolates through color gradient as particles age from birth to death.
  */
 export class UIRenderingColorOverLife extends UIRenderingModule {
-  /** @internal */
   public override readonly requiredProperties: Record<string, UIPropertyName> = {
     builtin: "Matrix4",
   } as const;
-  /** @internal */
   public readonly requiredUniforms: Record<string, UIProperty>;
-  /** @internal */
   public readonly source = source;
 
   /**

@@ -1,5 +1,4 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
-import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas.js";
@@ -10,6 +9,7 @@ import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
+import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
 import source from "../../shaders/UIImage.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import { detectIsRTL } from "./UIText.Bidi.js";
@@ -66,7 +66,7 @@ export class UIText extends UIElement {
    */
   constructor(layer: UILayer, content: UITextContent, options: Partial<UITextOptions> = {}) {
     const canvas = createCanvas(2, 2);
-    const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
+    const context = canvas.getContext("2d");
 
     if (!context) {
       throw new Error("UIText.constructor: failed to create canvas context");
@@ -81,7 +81,7 @@ export class UIText extends UIElement {
       source,
       {
         texture: texture,
-        textureTransform: new Matrix3(),
+        textureTransform: new UIAffineMatrix3(),
         color,
       },
       options,

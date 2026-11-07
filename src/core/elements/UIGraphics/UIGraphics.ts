@@ -1,10 +1,10 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
-import { Matrix3 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas.js";
 import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
 import source from "../../shaders/UIImage.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import type { UIGraphicsOptions } from "./UIGraphics.Internal.js";
@@ -33,7 +33,7 @@ export class UIGraphics extends UIElement {
     const color = new UIColor(options?.color);
 
     const canvas = createCanvas(w, h);
-    const context = canvas.getContext("2d") as UICanvasRenderingContext2D | null;
+    const context = canvas.getContext("2d");
 
     if (!context) {
       throw new Error("UIGraphics.constructor: failed to get 2D context from canvas");
@@ -47,7 +47,7 @@ export class UIGraphics extends UIElement {
       source,
       {
         texture: texture,
-        textureTransform: new Matrix3(),
+        textureTransform: new UIAffineMatrix3(),
         color,
       },
       options,

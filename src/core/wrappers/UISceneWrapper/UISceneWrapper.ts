@@ -71,6 +71,10 @@ export class UISceneWrapper implements UISceneWrapperView {
     this.planeRegistry.setHSL(handler, hsl);
   }
 
+  public setMask(handler: number, mask: Readonly<Float32Array> | null): void {
+    this.planeRegistry.setMask(handler, mask);
+  }
+
   /** Adds an object drawn between planes by depth, on the same scale as plane zIndex */
   public insertOrderedObject(object: Object3D, depth: number): this {
     this.planeRegistry.insertOrderedObject(object, depth);

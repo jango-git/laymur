@@ -1,8 +1,8 @@
 import type { WebGLRenderer } from "three";
 import { Matrix4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { computeTransformMatrix } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import { UIMicro } from "../../miscellaneous/micro/UIMicro.js";
 import type { UIBlendMode } from "../../miscellaneous/UIBlendMode.js";
 import type { UIMode } from "../../miscellaneous/UIMode.js";
@@ -21,7 +21,15 @@ import {
   packHSL,
 } from "./UIElement.Internal.js";
 
-/** Base class for renderable UI elements */
+const TEMP_TRANSFORM = new Matrix4();
+
+/**
+ * Base class for renderable UI elements: a quad drawn with a custom fragment shader.
+ *
+ * The source defines `vec4 draw()` and reads `p_uv` and each property as `p_<name>`.
+ * Textures are uniforms, other properties are per instance, so elements sharing the source
+ * and textures batch together. Update properties with `sceneWrapper.setProperties`.
+ */
 export abstract class UIElement extends UIDummy {
   /** Transforms that don't affect constraints */
   public readonly micro: UIMicro;
@@ -39,6 +47,11 @@ export abstract class UIElement extends UIDummy {
   private hslDirty = false;
   private readonly hslValue = { h: 0, s: 0, l: 0 };
   private visibilityDirty = false;
+
+  /** Mask as last applied to the plane; compared every frame, see applyMask */
+  private appliedMask: UIMask | null = null;
+  private appliedMaskVersion = -1;
+  private appliedMaskHandler = -1;
 
   /**
    * Creates a new UIElement instance.
@@ -167,28 +180,40 @@ export abstract class UIElement extends UIDummy {
     super.destroyInternal();
   }
 
+  protected override getMicro(): UIMicro {
+    return this.micro;
+  }
+
   protected setPlaneTransform(): void {
     if (this.micro.dirty || this.inputWrapper.dirty || this.solverWrapper.dirty) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
-        computeTransformMatrix(
-          this.x,
-          this.y,
-          this.width,
-          this.height,
-          this.renderDepth,
-          this.micro.x,
-          this.micro.y,
-          this.micro.anchorX,
-          this.micro.anchorY,
-          this.micro.scaleX,
-          this.micro.scaleY,
-          this.micro.rotation,
-          this.micro.anchorMode,
-        ),
+        this.computeVisualTransform(true, TEMP_TRANSFORM, this.renderDepth),
       );
       this.micro.setDirtyFalse();
     }
+  }
+
+  /**
+   * Replaces the plane with one drawn by another shader source, keeping the visibility,
+   * transparency, blend, color adjustment and mask of the element.
+   */
+  protected recreatePlane(
+    source: string,
+    properties: Record<string, UIProperty>,
+    transform: Matrix4,
+  ): void {
+    this.sceneWrapper.destroyPlane(this.planeHandler);
+    this.planeHandler = this.sceneWrapper.createPlane(
+      source,
+      properties,
+      transform,
+      isUIModeVisible(this.modeInternal),
+      this.transparencyModeInternal,
+      blendModeToFactor(this.blendModeInternal),
+      packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
+    );
+    this.applyMask();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
@@ -216,7 +241,35 @@ export abstract class UIElement extends UIDummy {
       this.visibilityDirty = false;
     }
 
+    this.applyMask();
     this.setPlaneTransform();
+  }
+
+  /**
+   * Brings the plane mask up to date. Pulled every frame rather than pushed: the mask data
+   * depends on the layout and micro of the mask source, whose dirty flags belong to the source.
+   */
+  private applyMask(): void {
+    const mask = this.mask;
+    const planeChanged = this.appliedMaskHandler !== this.planeHandler;
+
+    if (mask !== this.appliedMask || planeChanged) {
+      this.appliedMask = mask;
+      this.appliedMaskHandler = this.planeHandler;
+      this.appliedMaskVersion = -1;
+      if (mask === null) {
+        this.sceneWrapper.setMask(this.planeHandler, null);
+        return;
+      }
+    }
+
+    if (mask !== null) {
+      mask.resolve();
+      if (mask.version !== this.appliedMaskVersion) {
+        this.sceneWrapper.setMask(this.planeHandler, mask.data);
+        this.appliedMaskVersion = mask.version;
+      }
+    }
   }
 
   private readonly handleWillRender = (renderer: WebGLRenderer, deltaTime: number): void => {

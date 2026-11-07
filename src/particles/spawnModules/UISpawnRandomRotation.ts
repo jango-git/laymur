@@ -11,7 +11,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * Initial rotation is chosen uniformly from the specified range.
  */
 export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public requiredProperties = { builtin: "Matrix4" } as const;
   private rotationInternal: UIRange;
 
@@ -37,7 +36,6 @@ export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }>
     assertValidNumber(this.rotationInternal.max, "UISpawnRandomRotation.rotation.max");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

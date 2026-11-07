@@ -16,7 +16,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * Base scale is chosen uniformly from the range. Aspect ratio is applied to X scale.
  */
 export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public requiredProperties = { builtin: "Matrix4" } as const;
   private scaleInternal: UIRange;
   private aspectInternal: number;
@@ -57,7 +56,6 @@ export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidPositiveNumber(this.aspectInternal, "UISpawnRandomScale.aspect");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

@@ -15,7 +15,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
  * All particles spawned with this module start at the specified position.
  */
 export class UISpawnOffset extends UISpawnModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private offsetInternal: Vector2Like;
 
@@ -41,7 +40,6 @@ export class UISpawnOffset extends UISpawnModule<{ builtin: "Matrix4" }> {
     assertValidNumber(this.offsetInternal.y, "UISpawnOffset.offset.y");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

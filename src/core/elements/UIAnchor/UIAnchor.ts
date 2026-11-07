@@ -76,8 +76,8 @@ export class UIAnchor implements UILayerElement, UIPointElement {
   }
 
   /**
-   * Removes element from its layer together with the constraints that refer to it.
-   * Does nothing if the element is already destroyed.
+   * Removes element from its layer together with the constraints that refer to it and the
+   * masks that follow it. Does nothing if the element is already destroyed.
    */
   public destroy(): void {
     if (this.destroyedInternal) {
@@ -85,6 +85,7 @@ export class UIAnchor implements UILayerElement, UIPointElement {
     }
     this.destroyedInternal = true;
     this.layer.destroyConstraintsUsingVariables(this.getSolverVariables());
+    this.layer.destroyMasksUsingSource(this);
     this.destroyInternal();
     this.layer.removeElement(this);
   }

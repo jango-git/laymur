@@ -35,7 +35,6 @@ export class UIProgressMaskFunctionDirectional extends UIProgressMaskFunction {
     super.setDirtyFalse();
   }
 
-  /** @internal */
   public enumerateProperties(): Record<string, UIProperty> {
     this.ensureDirectionNormalized();
     return { direction: this.direction };

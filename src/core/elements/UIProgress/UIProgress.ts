@@ -10,10 +10,8 @@ import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/U
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional.js";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
-import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
 import source from "../../shaders/UIProgress.js";
 import { UIElement } from "../UIElement/UIElement.js";
-import { blendModeToFactor, packHSL } from "../UIElement/UIElement.Internal.js";
 import type { UIProgressOptions } from "./UIProgress.Internal.js";
 import { PROGRESS_DEFAULT_VALUE } from "./UIProgress.Internal.js";
 
@@ -217,12 +215,10 @@ export class UIProgress extends UIElement {
   };
 
   private rebuildPlane(): void {
-    this.sceneWrapper.destroyPlane(this.planeHandler);
-
     const micro = this.micro;
     const textureTrim = this.texture.trim;
 
-    this.planeHandler = this.sceneWrapper.createPlane(
+    this.recreatePlane(
       this.maskFunctionInternal.source + source,
       {
         texture: this.texture.texture,
@@ -251,10 +247,6 @@ export class UIProgress extends UIElement {
         textureTrim.top,
         textureTrim.bottom,
       ),
-      isUIModeVisible(this.mode),
-      this.transparencyMode,
-      blendModeToFactor(this.blendMode),
-      packHSL({ h: 0, s: 0, l: 0 }, this.hue, this.saturation, this.lightness),
     );
 
     this.colorInternal.setDirtyFalse();

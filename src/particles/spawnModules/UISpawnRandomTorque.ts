@@ -13,7 +13,6 @@ import { UISpawnModule } from "./UISpawnModule.js";
 export class UISpawnRandomTorque extends UISpawnModule<{
   builtin: "Matrix4";
 }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private torqueInternal: UIRange;
 
@@ -39,7 +38,6 @@ export class UISpawnRandomTorque extends UISpawnModule<{
     assertValidNumber(this.torqueInternal.max, "UISpawnRandomTorque.torque.max");
   }
 
-  /** @internal */
   public spawn(
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,

@@ -24,7 +24,6 @@ export class UIAreaRectangle extends UIArea {
     assertValidNonNegativeNumber(height, "UIAreaRectangle.constructor.height");
   }
 
-  /** @internal */
   public contains(pointX: number, pointY: number): boolean {
     assertValidNumber(pointX, "UIAreaRectangle.contains.pointX");
     assertValidNumber(pointY, "UIAreaRectangle.contains.pointY");

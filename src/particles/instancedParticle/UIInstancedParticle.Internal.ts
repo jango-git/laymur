@@ -13,7 +13,30 @@ import type {
   UIPropertyName,
 } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
+import type { VaryingFieldSpec } from "../../core/miscellaneous/generic-plane/varyingPacking.js";
+import {
+  isIdentifierReferenced,
+  packVaryings,
+} from "../../core/miscellaneous/generic-plane/varyingPacking.js";
 import { checkSRGBSupport } from "../../core/miscellaneous/webglCapabilities.js";
+import {
+  BUILTIN_OFFSET_AGE,
+  BUILTIN_OFFSET_LIFETIME,
+  BUILTIN_OFFSET_POSITION_X,
+  BUILTIN_OFFSET_POSITION_Y,
+  BUILTIN_OFFSET_RANDOM_A,
+  BUILTIN_OFFSET_RANDOM_B,
+  BUILTIN_OFFSET_RANDOM_C,
+  BUILTIN_OFFSET_RANDOM_D,
+  BUILTIN_OFFSET_RANDOM_E,
+  BUILTIN_OFFSET_RANDOM_F,
+  BUILTIN_OFFSET_ROTATION,
+  BUILTIN_OFFSET_SCALE_X,
+  BUILTIN_OFFSET_SCALE_Y,
+  BUILTIN_OFFSET_TORQUE,
+  BUILTIN_OFFSET_VELOCITY_X,
+  BUILTIN_OFFSET_VELOCITY_Y,
+} from "../miscellaneous/miscellaneous.js";
 
 export const INSTANCED_PARTICLE_GEOMETRY = ((): InstancedBufferGeometry => {
   const geometry = new InstancedBufferGeometry();
@@ -30,6 +53,28 @@ export const INSTANCED_PARTICLE_GEOMETRY = ((): InstancedBufferGeometry => {
   return geometry;
 })();
 
+const BUILTIN_PROPERTY = "builtin";
+
+/** Macros of the builtin particle values and their offsets in the builtin mat4 */
+const PARTICLE_BUILTIN_MACROS: readonly (readonly [string, number])[] = [
+  ["PARTICLE_POSITION_X", BUILTIN_OFFSET_POSITION_X],
+  ["PARTICLE_POSITION_Y", BUILTIN_OFFSET_POSITION_Y],
+  ["PARTICLE_VELOCITY_X", BUILTIN_OFFSET_VELOCITY_X],
+  ["PARTICLE_VELOCITY_Y", BUILTIN_OFFSET_VELOCITY_Y],
+  ["PARTICLE_SCALE_X", BUILTIN_OFFSET_SCALE_X],
+  ["PARTICLE_SCALE_Y", BUILTIN_OFFSET_SCALE_Y],
+  ["PARTICLE_ROTATION", BUILTIN_OFFSET_ROTATION],
+  ["PARTICLE_TORQUE", BUILTIN_OFFSET_TORQUE],
+  ["PARTICLE_LIFETIME", BUILTIN_OFFSET_LIFETIME],
+  ["PARTICLE_AGE", BUILTIN_OFFSET_AGE],
+  ["PARTICLE_RANDOM_A", BUILTIN_OFFSET_RANDOM_A],
+  ["PARTICLE_RANDOM_B", BUILTIN_OFFSET_RANDOM_B],
+  ["PARTICLE_RANDOM_C", BUILTIN_OFFSET_RANDOM_C],
+  ["PARTICLE_RANDOM_D", BUILTIN_OFFSET_RANDOM_D],
+  ["PARTICLE_RANDOM_E", BUILTIN_OFFSET_RANDOM_E],
+  ["PARTICLE_RANDOM_F", BUILTIN_OFFSET_RANDOM_F],
+];
+
 export function collectProperties(
   keeper: Record<string, GLTypeInfo>,
   modules: readonly { requiredProperties?: Record<string, UIPropertyName> }[],
@@ -43,6 +88,11 @@ export function collectProperties(
     for (const key in module.requiredProperties) {
       const existingTypeInfo = keeper[key] as GLTypeInfo | undefined;
       const newTypeInfo = resolveGLSLTypeInfo(module.requiredProperties[key]);
+      if (newTypeInfo.affine === true) {
+        throw new Error(
+          `${debugContext}: "${key}" cannot be UIAffineMatrix3 per particle, use Matrix3`,
+        );
+      }
 
       if (existingTypeInfo === undefined) {
         keeper[key] = newTypeInfo;
@@ -79,6 +129,16 @@ export function collectUniforms(
   }
 }
 
+function builtinComponent(base: string, index: number): string {
+  return `${base}[${Math.floor(index / 4)}].${"xyzw"[index % 4]}`;
+}
+
+function buildBuiltinMacros(base: string): string {
+  return PARTICLE_BUILTIN_MACROS.map(
+    ([name, index]) => `#define ${name} ${builtinComponent(base, index)}`,
+  ).join("\n");
+}
+
 export function buildParticleVertexShader(
   uniformDeclarations: string[],
   attributeDeclarations: string[],
@@ -86,28 +146,7 @@ export function buildParticleVertexShader(
   vertexAssignments: string[],
 ): string {
   return `
-
-    #define PARTICLE_POSITION_X a_builtin[0][0]
-    #define PARTICLE_POSITION_Y a_builtin[0][1]
-
-    #define PARTICLE_VELOCITY_X a_builtin[0][2]
-    #define PARTICLE_VELOCITY_Y a_builtin[0][3]
-
-    #define PARTICLE_SCALE_X a_builtin[1][0]
-    #define PARTICLE_SCALE_Y a_builtin[1][1]
-
-    #define PARTICLE_ROTATION a_builtin[1][2]
-    #define PARTICLE_TORQUE a_builtin[1][3]
-
-    #define PARTICLE_LIFETIME a_builtin[2][0]
-    #define PARTICLE_AGE a_builtin[2][1]
-
-    #define PARTICLE_RANDOM_A a_builtin[2][2]
-    #define PARTICLE_RANDOM_B a_builtin[2][3]
-    #define PARTICLE_RANDOM_C a_builtin[3][0]
-    #define PARTICLE_RANDOM_D a_builtin[3][1]
-    #define PARTICLE_RANDOM_E a_builtin[3][2]
-    #define PARTICLE_RANDOM_F a_builtin[3][3]
+    ${buildBuiltinMacros("a_builtin")}
 
     // User attributes
     ${attributeDeclarations.join("\n")}
@@ -115,16 +154,11 @@ export function buildParticleVertexShader(
     // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Builtin varyings
-    varying vec2 p_uv;
-
-    // User varyings
+    // Packed varyings
     ${varyingDeclarations.join("\n")}
 
     void main() {
       ${vertexAssignments.join("\n")}
-
-      p_uv = uv;
 
       vec2 transformedPosition = position.xy;
       transformedPosition.x *= PARTICLE_SCALE_X;
@@ -147,9 +181,16 @@ export function buildParticleVertexShader(
   `;
 }
 
+/**
+ * Builds the fragment shader of a particle mesh. Sources read particle values through the
+ * PARTICLE_* macros and properties as p_* globals, all filled from packed varyings.
+ * @param fieldDeclarations Packed varyings, p_* globals and PARTICLE_* macros
+ * @param fieldAssignments Statements filling the p_* globals at the start of main
+ */
 export function buildParticleFragmentShader(
   uniformDeclarations: string[],
-  varyingDeclarations: string[],
+  fieldDeclarations: string[],
+  fieldAssignments: string[],
   sources: string[],
 ): string {
   const renamedSources = sources.map((source, index) => {
@@ -167,38 +208,11 @@ export function buildParticleFragmentShader(
     #define PI 3.14159265359
     #define SRGB_SUPPORTED ${checkSRGBSupport() ? "1" : "0"}
 
-    #define PARTICLE_POSITION_X p_builtin[0][0]
-    #define PARTICLE_POSITION_Y p_builtin[0][1]
-
-    #define PARTICLE_VELOCITY_X p_builtin[0][2]
-    #define PARTICLE_VELOCITY_Y p_builtin[0][3]
-
-    #define PARTICLE_SCALE_X p_builtin[1][0]
-    #define PARTICLE_SCALE_Y p_builtin[1][1]
-
-    #define PARTICLE_ROTATION p_builtin[1][2]
-    #define PARTICLE_TORQUE p_builtin[1][3]
-
-    #define PARTICLE_LIFETIME p_builtin[2][0]
-    #define PARTICLE_AGE p_builtin[2][1]
-
-    #define PARTICLE_RANDOM_A p_builtin[2][2]
-    #define PARTICLE_RANDOM_B p_builtin[2][3]
-    #define PARTICLE_RANDOM_C p_builtin[3][0]
-    #define PARTICLE_RANDOM_D p_builtin[3][1]
-    #define PARTICLE_RANDOM_E p_builtin[3][2]
-    #define PARTICLE_RANDOM_F p_builtin[3][3]
-
     // Uniforms
     ${uniformDeclarations.join("\n")}
 
-    // Builtin varyings
-    varying vec2 p_uv;
-
-    // User varyings
-    ${varyingDeclarations.join("\n")}
-
-    #include <alphahash_pars_fragment>
+    // Packed varyings and the fields read from them
+    ${fieldDeclarations.join("\n")}
 
     // sRGB decode helper
     vec4 srgbTexture2D(sampler2D textureSampler, vec2 uv) {
@@ -214,15 +228,12 @@ export function buildParticleFragmentShader(
     ${renamedSources.join("\n")}
 
     void main() {
+      ${fieldAssignments.join("\n")}
+
       vec4 diffuseColor = ${drawCalls};
       if (diffuseColor.a < 0.0035) {
         discard;
       }
-      #ifdef USE_ALPHAHASH
-        if (diffuseColor.a < getAlphaHashThreshold(p_position)) {
-          discard;
-        }
-      #endif
       gl_FragColor = linearToOutputTexel(diffuseColor);
     }
   `;
@@ -232,13 +243,11 @@ export function buildParticleMaterial(
   sources: string[],
   uniformProperties: Record<string, GLProperty>,
   varyingProperties: Record<string, GLTypeInfo>,
-): ShaderMaterial {
+): { material: ShaderMaterial; varyingRowCount: number } {
   const uniforms: Record<string, { value: unknown }> = {};
 
   const uniformDeclarations: string[] = [];
   const attributeDeclarations: string[] = [];
-  const varyingDeclarations: string[] = [];
-  const vertexAssignments: string[] = [];
 
   for (const name in uniformProperties) {
     const { value, glslTypeInfo } = uniformProperties[name];
@@ -247,25 +256,88 @@ export function buildParticleMaterial(
   }
 
   for (const name in varyingProperties) {
-    const { glslTypeName } = varyingProperties[name];
-    attributeDeclarations.push(`attribute ${glslTypeName} a_${name};`);
-    varyingDeclarations.push(`varying ${glslTypeName} p_${name};`);
-    vertexAssignments.push(`p_${name} = a_${name};`);
+    attributeDeclarations.push(`attribute ${varyingProperties[name].glslTypeName} a_${name};`);
   }
 
-  return new ShaderMaterial({
+  // Only what the fragment shader reads takes varyings. Most sources read a couple of builtin
+  // values through the PARTICLE_* macros, so those are passed one by one rather than as the
+  // whole builtin mat4; a source naming p_builtin itself gets the whole matrix.
+  const unpackedFragment = buildParticleFragmentShader(uniformDeclarations, [], [], sources);
+  const fields: VaryingFieldSpec[] = [];
+  const macroFields: string[] = [];
+  const wholeBuiltin = isIdentifierReferenced(unpackedFragment, `p_${BUILTIN_PROPERTY}`);
+
+  if (isIdentifierReferenced(unpackedFragment, "p_uv")) {
+    fields.push({ name: "p_uv", glslTypeName: "vec2", components: ["uv.x", "uv.y"] });
+  }
+
+  for (const name in varyingProperties) {
+    const { glslTypeName, bufferSize, columnCount } = varyingProperties[name];
+
+    if (name === BUILTIN_PROPERTY && !wholeBuiltin) {
+      for (const [macro, index] of PARTICLE_BUILTIN_MACROS) {
+        if (isIdentifierReferenced(unpackedFragment, macro)) {
+          fields.push({
+            name: macro,
+            glslTypeName: "float",
+            components: [builtinComponent(`a_${name}`, index)],
+          });
+          macroFields.push(macro);
+        }
+      }
+      continue;
+    }
+
+    if (!isIdentifierReferenced(unpackedFragment, `p_${name}`)) {
+      continue;
+    }
+
+    const columnSize = bufferSize / columnCount;
+    const components: string[] = [];
+    for (let i = 0; i < bufferSize; i++) {
+      const column = columnCount > 1 ? `a_${name}[${Math.floor(i / columnSize)}]` : `a_${name}`;
+      components.push(bufferSize > 1 ? `${column}.${"xyzw"[i % columnSize]}` : column);
+    }
+    fields.push({ name: `p_${name}`, glslTypeName, components });
+  }
+
+  const packed = packVaryings(fields);
+  const fieldDeclarations = [...packed.declarations];
+  const fieldAssignments: string[] = [];
+
+  for (const { name, glslTypeName } of fields) {
+    const expression = packed.fragmentExpressions.get(name) ?? "";
+    if (macroFields.includes(name)) {
+      fieldDeclarations.push(`#define ${name} ${expression}`);
+    } else {
+      fieldDeclarations.push(`${glslTypeName} ${name};`);
+      fieldAssignments.push(`${name} = ${expression};`);
+    }
+  }
+  if (wholeBuiltin) {
+    fieldDeclarations.push(buildBuiltinMacros(`p_${BUILTIN_PROPERTY}`));
+  }
+
+  const material = new ShaderMaterial({
     uniforms,
     vertexShader: buildParticleVertexShader(
       uniformDeclarations,
       attributeDeclarations,
-      varyingDeclarations,
-      vertexAssignments,
+      packed.declarations,
+      packed.vertexAssignments,
     ),
-    fragmentShader: buildParticleFragmentShader(uniformDeclarations, varyingDeclarations, sources),
+    fragmentShader: buildParticleFragmentShader(
+      uniformDeclarations,
+      fieldDeclarations,
+      fieldAssignments,
+      sources,
+    ),
     transparent: true,
     side: DoubleSide,
     forceSinglePass: true,
     depthWrite: false,
     depthTest: true,
   });
+
+  return { material, varyingRowCount: packed.rowCount };
 }

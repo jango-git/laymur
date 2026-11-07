@@ -16,7 +16,6 @@ import { UIBehaviorModule } from "./UIBehaviorModule.js";
  * Applies exponential decay to velocity. Damping of 0 means no effect, 1 means instant stop.
  */
 export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matrix4" }> {
-  /** @internal */
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
   private dampingInternal: UIRange;
 
@@ -48,7 +47,6 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matr
     assertValidNonNegativeNumber(this.dampingInternal.max, `UIBehaviorVelocityDamping.damping.max`);
   }
 
-  /** @internal */
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,

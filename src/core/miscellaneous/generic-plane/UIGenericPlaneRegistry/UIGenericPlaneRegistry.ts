@@ -1,6 +1,7 @@
 import type { Matrix4, Object3D, Scene } from "three";
+import { Matrix3 } from "three";
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
-import type { HSLAdjustment, UIProperty } from "../shared.js";
+import type { GLProperty, HSLAdjustment, UIProperty } from "../shared.js";
 import {
   cloneGLProperties,
   cloneProperties,
@@ -70,6 +71,7 @@ export class UIPlaneRegistry {
       transparency,
       blend,
       hsl: { h: hsl.h, s: hsl.s, l: hsl.l },
+      mask: null,
       zIndex,
     };
 
@@ -116,7 +118,12 @@ export class UIPlaneRegistry {
     let textureChanged = false;
     for (const name in glProperties) {
       const newProp = glProperties[name];
-      const oldProp = state.properties[name];
+      const oldProp = state.properties[name] as GLProperty | undefined;
+      if (oldProp === undefined) {
+        throw new Error(
+          `UIPlaneRegistry.setProperties.properties: unknown property "${name}" for handler ${handler}`,
+        );
+      }
 
       if (!newProp.glslTypeInfo.instantiable) {
         if (oldProp.value !== newProp.value) {
@@ -126,7 +133,12 @@ export class UIPlaneRegistry {
 
       state.properties[name] = {
         value: newProp.value,
-        glslTypeInfo: newProp.glslTypeInfo,
+        // A mat3 field keeps the layout it was created with for any Matrix3, affine or full,
+        // see UIAffineMatrix3; the element stays in its batch
+        glslTypeInfo:
+          oldProp.glslTypeInfo.glslTypeName === "mat3" && newProp.value instanceof Matrix3
+            ? oldProp.glslTypeInfo
+            : newProp.glslTypeInfo,
       };
     }
 
@@ -206,6 +218,39 @@ export class UIPlaneRegistry {
     const descriptor = this.handlerToDescriptor.get(handler);
     if (descriptor) {
       descriptor.mesh.setHSLAt(descriptor.instanceIndex, hsl);
+    }
+  }
+
+  /**
+   * Updates plane mask; null removes it. Data is copied.
+   * Masked and unmasked planes are different shader variants, so adding or removing the mask
+   * relocates the element on flush(); changing the data of a masked plane is applied immediately.
+   */
+  public setMask(handler: number, mask: Readonly<Float32Array> | null): void {
+    const state = this.resolveState(handler);
+    const wasMasked = state.mask !== null;
+
+    if (mask === null) {
+      state.mask = null;
+    } else if (state.mask === null) {
+      state.mask = new Float32Array(mask);
+    } else {
+      state.mask.set(mask);
+    }
+
+    if (wasMasked !== (mask !== null)) {
+      if (!this.pendingCreate.has(handler)) {
+        this.pendingRelocate.add(handler);
+        this.needsFlush = true;
+      }
+      return;
+    }
+
+    if (state.mask !== null) {
+      const descriptor = this.handlerToDescriptor.get(handler);
+      if (descriptor && !this.pendingRelocate.has(handler)) {
+        descriptor.mesh.setMaskAt(descriptor.instanceIndex, state.mask);
+      }
     }
   }
 
@@ -380,7 +425,9 @@ export class UIPlaneRegistry {
   }
 
   private insertSingleElement(handler: number, state: PlaneState): void {
-    const { source, properties, transform, visibility, transparency, blend, hsl, zIndex } = state;
+    const { source, properties, transform, visibility, transparency, blend, hsl, mask, zIndex } =
+      state;
+    const masked = mask !== null;
 
     let newMeshIndex = this.orderedMeshes.length;
 
@@ -399,9 +446,9 @@ export class UIPlaneRegistry {
       }
 
       if (zIndex <= meshMaxZ) {
-        if (mesh.isCompatibleWith(source, properties, transparency)) {
+        if (mesh.isCompatibleWith(source, properties, transparency, masked)) {
           const instanceIndex = this.findInstanceIndexInMesh(mesh, zIndex);
-          mesh.insertAt(instanceIndex, properties, transform, visibility, blend, hsl);
+          mesh.insertAt(instanceIndex, properties, transform, visibility, blend, hsl, mask);
           this.shiftHandlerIndices(mesh, instanceIndex, 1);
           this.handlerToDescriptor.set(handler, { mesh, instanceIndex });
           return;
@@ -423,8 +470,13 @@ export class UIPlaneRegistry {
       newMeshIndex = i + 1;
     }
 
-    const mesh = new UIGenericInstancedPlane(source, cloneGLProperties(properties), transparency);
-    mesh.insertAt(0, properties, transform, visibility, blend, hsl);
+    const mesh = new UIGenericInstancedPlane(
+      source,
+      cloneGLProperties(properties),
+      transparency,
+      masked,
+    );
+    mesh.insertAt(0, properties, transform, visibility, blend, hsl, mask);
 
     this.orderedMeshes.splice(newMeshIndex, 0, mesh);
     this.scene.add(mesh);

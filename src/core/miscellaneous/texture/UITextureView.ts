@@ -1,7 +1,9 @@
 import type { FerrsignView3 } from "ferrsign";
 import { Ferrsign3 } from "ferrsign";
-import { Matrix3, Texture, Vector2 } from "three";
+import type { Matrix3 } from "three";
+import { Texture, Vector2 } from "three";
 import { assertValidNonNegativeNumber, assertValidPositiveNumber } from "../asserts.js";
+import { UIAffineMatrix3 } from "../UIAffineMatrix3.js";
 import type {
   UITextureAtlasConfig,
   UITextureConfig,
@@ -131,7 +133,7 @@ export class UITextureView {
    * @param result Matrix to store result in
    * @returns UV transform matrix
    */
-  public calculateUVTransform(result = new Matrix3()): Matrix3 {
+  public calculateUVTransform(result: Matrix3 = new UIAffineMatrix3()): Matrix3 {
     const { w: atlasWidth, h: atlasHeight } = getTextureImageSize(this.textureInternal);
 
     if (this.rotatedInternal) {
