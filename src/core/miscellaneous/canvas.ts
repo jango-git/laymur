@@ -15,8 +15,7 @@ export type UICanvas = HTMLCanvasElement | OffscreenCanvas;
 
 /** 2D rendering context type for UICanvas */
 export type UICanvasRenderingContext2D =
-  | CanvasRenderingContext2D
-  | OffscreenCanvasRenderingContext2D;
+  CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
 /**
  * Creates a canvas using OffscreenCanvas if available, otherwise falls back to HTMLCanvasElement.

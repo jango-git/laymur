@@ -7,7 +7,10 @@ import {
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolvePropertyUniform } from "../../core/miscellaneous/generic-plane/shared.js";
 import { BUILTIN_OFFSET_AGE, BUILTIN_OFFSET_LIFETIME } from "../miscellaneous/miscellaneous.js";
-import { buildParticleMaterial, INSTANCED_PARTICLE_GEOMETRY } from "./UIInstancedParticle.Internal.js";
+import {
+  buildParticleMaterial,
+  INSTANCED_PARTICLE_GEOMETRY,
+} from "./UIInstancedParticle.Internal.js";
 
 export class UIInstancedParticle extends Mesh {
   public readonly propertyBuffers: Record<string, InstancedBufferAttribute> = {};

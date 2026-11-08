@@ -5,14 +5,7 @@ import { UIAffineMatrix3 } from "../UIAffineMatrix3.js";
 import { checkSRGBSupport } from "../webglCapabilities.js";
 
 export type UIProperty =
-  | Texture
-  | UIColor
-  | Vector2
-  | Vector3
-  | Vector4
-  | Matrix3
-  | Matrix4
-  | number;
+  Texture | UIColor | Vector2 | Vector3 | Vector4 | Matrix3 | Matrix4 | number;
 
 export type UIPropertyName =
   | "Texture"

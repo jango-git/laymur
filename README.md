@@ -15,14 +15,14 @@
 
 ## Features
 
-* **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
-* **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
-* **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
-* **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
-* **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
-* **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
-* **Modular particles** - separate `laymur/particles` entry point, import only if needed
-* **Debug overlay** - separate `laymur/debug` entry point, constraint visualization
+- **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
+- **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
+- **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
+- **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
+- **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
+- **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
+- **Modular particles** - separate `laymur/particles` entry point, import only if needed
+- **Debug overlay** - separate `laymur/debug` entry point, constraint visualization
 
 ## Installation
 
@@ -32,10 +32,10 @@ npm install laymur
 
 Peer Dependencies:
 
-* `three` (>=0.157.0 <0.180.0)
-* `@lume/kiwi` (^0.4.4)
-* `ferrsign` (^0.0.4)
-* `fast-simplex-noise` (^4.0.0) - only required when using `laymur/particles`
+- `three` (>=0.157.0 <0.180.0)
+- `@lume/kiwi` (^0.4.4)
+- `ferrsign` (^0.0.4)
+- `fast-simplex-noise` (^4.0.0) - only required when using `laymur/particles`
 
 ## Visual Editor & Live Examples
 
@@ -45,7 +45,6 @@ Check out visual editor and interactive examples at:
 
 **[EXAMPLES](https://jango-git.github.io/laymur/examples/index.html)**
 
-
 ## Core Concepts
 
 ### 1. Layers & Elements
@@ -53,12 +52,12 @@ Check out visual editor and interactive examples at:
 `UIFullscreenLayer` manages coordinate system, canvas scaling, and input. All UI elements attach to a layer.
 
 ```typescript
-import { UIFullscreenLayer, UIImage, UIMode, UIResizePolicyFixedHeight } from 'laymur';
+import { UIFullscreenLayer, UIImage, UIMode, UIResizePolicyFixedHeight } from "laymur";
 
-const layer = new UIFullscreenLayer({ 
-  name: "MainHUD", 
+const layer = new UIFullscreenLayer({
+  name: "MainHUD",
   mode: UIMode.VISIBLE,
-  resizePolicy: new UIResizePolicyFixedHeight(1080, 1920)
+  resizePolicy: new UIResizePolicyFixedHeight(1080, 1920),
 });
 ```
 
@@ -67,14 +66,14 @@ const layer = new UIFullscreenLayer({
 Cassowary-based constraint solver. Supports priorities, element relationships, orientation-specific rules, and inequality relations.
 
 ```typescript
-import { 
-  UIHorizontalDistanceConstraint, 
+import {
+  UIHorizontalDistanceConstraint,
   UIVerticalProportionConstraint,
   UIAspectConstraint,
-  UIOrientation, 
+  UIOrientation,
   UIPriority,
-  UIRelation 
-} from 'laymur';
+  UIRelation,
+} from "laymur";
 
 // Lock aspect ratio
 new UIAspectConstraint(element);
@@ -119,7 +118,7 @@ button.micro.affectsInput = false;
 `UIMask` follows the rectangle of a source element or of the layer, so it is laid out with constraints. Masks are computed in the shader: edges can be soft and masked elements keep batching together.
 
 ```typescript
-import { UIDummy, UIMask, UIMaskShape } from 'laymur';
+import { UIDummy, UIMask, UIMaskShape } from "laymur";
 
 // Scroll view: content moves, the viewport stays
 const viewport = new UIDummy(layer);
@@ -132,7 +131,11 @@ for (const item of items) {
 avatar.mask = new UIMask(avatarFrame, { shape: UIMaskShape.ELLIPSE, softness: 2 });
 
 // Tutorial spotlight: taps inside the hole reach the button below the overlay
-dimOverlay.mask = new UIMask(ctaButton, { shape: UIMaskShape.ELLIPSE, inverted: true, softness: 40 });
+dimOverlay.mask = new UIMask(ctaButton, {
+  shape: UIMaskShape.ELLIPSE,
+  inverted: true,
+  softness: 40,
+});
 ```
 
 A mask also clips input and lives as long as its source. Particles are not clipped; three.js materials of your own can be, through `UIMaskMaterialPatch`.
@@ -142,11 +145,11 @@ A mask also clips input and lives as long as its source. Particles are not clipp
 Every element supports per-element color tweaks that run in the shader, independent of the layout solver.
 
 ```typescript
-import { UIBlendMode } from 'laymur';
+import { UIBlendMode } from "laymur";
 
-element.hue = 180;        // hue shift in degrees
+element.hue = 180; // hue shift in degrees
 element.saturation = 0.5; // multiplier (1 = unchanged, 0 = grayscale)
-element.lightness = 0.1;  // offset (0 = unchanged)
+element.lightness = 0.1; // offset (0 = unchanged)
 
 // Additive blending (light accumulation), only affects BLEND transparency
 element.blendMode = UIBlendMode.ADDITIVE;
@@ -157,14 +160,19 @@ element.blendMode = UIBlendMode.ADDITIVE;
 Modular pipeline: Spawn -> Behavior -> Rendering.
 
 ```typescript
-import { UIEmitter, UISpawnRectangle, UIBehaviorDirectionalGravity, UIRenderingTexture } from 'laymur/particles';
+import {
+  UIEmitter,
+  UISpawnRectangle,
+  UIBehaviorDirectionalGravity,
+  UIRenderingTexture,
+} from "laymur/particles";
 
 const emitter = new UIEmitter(
   layer,
   [new UISpawnRectangle([-500, 0], [500, 0])],
   [new UIBehaviorDirectionalGravity({ x: 0, y: 100 })],
   [new UIRenderingTexture(particleTexture)],
-  { expectedCapacity: 1024 } // Pre-allocation hint, not a hard limit
+  { expectedCapacity: 1024 }, // Pre-allocation hint, not a hard limit
 );
 
 emitter.play(60); // particles/sec
@@ -177,7 +185,7 @@ emitter.play(60); // particles/sec
 `UILayerDebug` automatically tracks all constraints on a layer and creates the corresponding overlays. Individual constraint types can be toggled on/off.
 
 ```typescript
-import { UILayerDebug } from 'laymur/debug';
+import { UILayerDebug } from "laymur/debug";
 
 const debug = new UILayerDebug(layer, {
   showAspect: true,
