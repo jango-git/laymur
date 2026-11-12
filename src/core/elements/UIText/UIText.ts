@@ -1,12 +1,17 @@
 import type { CanvasTexture, WebGLRenderer } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
-import { createCanvas, createCanvasTexture } from "../../miscellaneous/canvas.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import {
+  createCanvas,
+  createCanvasTexture,
+  getCanvas2DContext,
+} from "../../miscellaneous/canvas.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
-import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
 import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
@@ -66,7 +71,7 @@ export class UIText extends UIElement {
    */
   constructor(layer: UILayer, content: UITextContent, options: Partial<UITextOptions> = {}) {
     const canvas = createCanvas(2, 2);
-    const context = canvas.getContext("2d");
+    const context = getCanvas2DContext(canvas);
 
     if (!context) {
       throw new Error("UIText.constructor: failed to create canvas context");
@@ -261,7 +266,7 @@ export class UIText extends UIElement {
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
       !(
-        this.solverWrapper.dirty &&
+        this.consumeLayoutChange() &&
         this.lastWidth / this.lastHeight !== Math.round(this.width) / Math.round(this.height)
       ) &&
       !this.checkContentDirty()
@@ -326,7 +331,7 @@ export class UIText extends UIElement {
       !this.directionDirty &&
       !this.maxLineWidthDirty &&
       !this.paddingInternal.dirty &&
-      !this.checkDimensionsDirty() &&
+      !this.consumeDimensionsChange() &&
       !this.checkContentDirty()
     ) {
       return;
@@ -448,9 +453,9 @@ export class UIText extends UIElement {
     return this.textChunks;
   }
 
-  private checkDimensionsDirty(): boolean {
+  private consumeDimensionsChange(): boolean {
     return (
-      this.solverWrapper.dirty &&
+      this.consumeLayoutChange() &&
       (this.lastWidth !== Math.round(this.width) || this.lastHeight !== Math.round(this.height))
     );
   }

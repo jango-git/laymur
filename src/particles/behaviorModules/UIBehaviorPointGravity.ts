@@ -1,15 +1,15 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
+
+import { assertValidNumber, assertValidPositiveNumber } from "../../core/miscellaneous/asserts.js";
 import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
-  BUILTIN_OFFSET_RANDOM_A,
-  BUILTIN_OFFSET_RANDOM_B,
-  BUILTIN_OFFSET_RANDOM_C,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
+  particleRandom,
+  particleRandomStream,
   resolveUIRangeConfig,
   resolveUIVector2Config,
   type UIRange,
@@ -37,7 +37,7 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
    * @param threshold - Minimum distance range. Accepts number, tuple, or range object
    */
   constructor(
-    center: Vector2Like,
+    center: UIVector2Config,
     strength: UIRangeConfig,
     exponent: UIRangeConfig = 2,
     threshold: UIRangeConfig = 1,
@@ -56,11 +56,11 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
     assertValidNumber(this.exponentInternal.max, "UIBehaviorPointGravity.constructor.exponent.max");
 
     this.thresholdInternal = resolveUIRangeConfig(threshold);
-    assertValidNumber(
+    assertValidPositiveNumber(
       this.thresholdInternal.min,
       "UIBehaviorPointGravity.constructor.threshold.min",
     );
-    assertValidNumber(
+    assertValidPositiveNumber(
       this.thresholdInternal.max,
       "UIBehaviorPointGravity.constructor.threshold.max",
     );
@@ -110,17 +110,22 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
   /** Minimum distance range */
   public set threshold(value: UIRangeConfig) {
     this.thresholdInternal = resolveUIRangeConfig(value);
-    assertValidNumber(this.thresholdInternal.min, "UIBehaviorPointGravity.threshold.min");
-    assertValidNumber(this.thresholdInternal.max, "UIBehaviorPointGravity.threshold.max");
+    assertValidPositiveNumber(this.thresholdInternal.min, "UIBehaviorPointGravity.threshold.min");
+    assertValidPositiveNumber(this.thresholdInternal.max, "UIBehaviorPointGravity.threshold.max");
   }
 
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
+
+    const thresholdStream = particleRandomStream(randomSalt, 0);
+    const strengthStream = particleRandomStream(randomSalt, 1);
+    const exponentStream = particleRandomStream(randomSalt, 2);
 
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
@@ -128,7 +133,7 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
       const dx = this.centerInternal.x - array[itemOffset + BUILTIN_OFFSET_POSITION_X];
       const dy = this.centerInternal.y - array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
-      const thresholdT = array[itemOffset + BUILTIN_OFFSET_RANDOM_A];
+      const thresholdT = particleRandom(array, itemOffset, thresholdStream);
       const threshold = MathUtils.lerp(this.threshold.min, this.threshold.max, thresholdT);
 
       const thresholdSquared = threshold * threshold;
@@ -137,14 +142,14 @@ export class UIBehaviorPointGravity extends UIBehaviorModule<{ builtin: "Matrix4
         continue;
       }
 
-      const strengthT = array[itemOffset + BUILTIN_OFFSET_RANDOM_B];
+      const strengthT = particleRandom(array, itemOffset, strengthStream);
       const strength = MathUtils.lerp(
         this.strengthInternal.min,
         this.strengthInternal.max,
         strengthT,
       );
 
-      const exponentT = array[itemOffset + BUILTIN_OFFSET_RANDOM_C];
+      const exponentT = particleRandom(array, itemOffset, exponentStream);
       const exponent = MathUtils.lerp(
         this.exponentInternal.min,
         this.exponentInternal.max,

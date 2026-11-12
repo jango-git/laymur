@@ -1,4 +1,5 @@
 import { Vector2 } from "three";
+
 import source from "../../shaders/UIProgressMaskFunctionDirectional.js";
 import type { UIProperty } from "../generic-plane/shared.js";
 import type { Vector2Like } from "../math.js";

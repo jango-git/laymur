@@ -1,11 +1,12 @@
 import type { Constraint, Variable } from "@lume/kiwi";
+
 import type { UIExpression } from "../../miscellaneous/UIExpression.js";
 import type { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UIRelation } from "../../miscellaneous/UIRelation.js";
 
 export interface UISolverWrapperView {
-  /** @internal */
-  get dirty(): boolean;
+  /** Bumped by every change to the variables or constraints; compare with the last seen value */
+  readonly version: number;
   createVariable(value: number, priority: UIPriority): number;
   removeVariable(index: number): void;
   hasVariable(index: number): boolean;

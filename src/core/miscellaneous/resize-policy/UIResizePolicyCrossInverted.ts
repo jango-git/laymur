@@ -42,7 +42,7 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyCrossInverted.fixedHeightLandscape");
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 
@@ -51,7 +51,7 @@ export class UIResizePolicyCrossInverted extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyCrossInverted.fixedWidthPortrait");
     if (value !== this.fixedWidthPortraitInternal) {
       this.fixedWidthPortraitInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 

@@ -1,15 +1,16 @@
 import type { Matrix3, Vector2 } from "three";
 import { MathUtils } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidNumber } from "../../miscellaneous/asserts.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import { computeTrimmedTransformMatrix, scaleTrim } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
 import type { UIProgressMaskFunction } from "../../miscellaneous/mask-function/UIProgressMaskFunction.js";
 import { UIProgressMaskFunctionDirectional } from "../../miscellaneous/mask-function/UIProgressMaskFunctionDirectional.js";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import source from "../../shaders/UIProgress.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import type { UIProgressOptions } from "./UIProgress.Internal.js";
@@ -48,8 +49,12 @@ export class UIProgress extends UIElement {
     const textureTransform = textureView.calculateUVTransform();
     const textureResolution = textureView.getResolution();
 
-    options.width = options.width ?? textureView.width;
-    options.height = options.height ?? textureView.height;
+    // A copy: the caller may pass the same options to several elements
+    options = {
+      ...options,
+      width: options.width ?? textureView.width,
+      height: options.height ?? textureView.height,
+    };
 
     const progress = MathUtils.clamp(options.progress ?? PROGRESS_DEFAULT_VALUE, 0, 1);
 
@@ -169,15 +174,17 @@ export class UIProgress extends UIElement {
       this.sceneWrapper.setProperties(this.planeHandler, properties);
     }
 
-    const isTransformDirty =
-      this.micro.dirty ||
-      this.texture.trimDirty ||
-      this.inputWrapper.dirty ||
-      this.solverWrapper.dirty;
+    const isTransformDirty = this.micro.dirty || this.texture.trimDirty || this.placementDirty;
 
     if (isTransformDirty) {
       const micro = this.micro;
-      const textureTrim = this.texture.trim;
+      const textureTrim = scaleTrim(
+        this.texture.trim,
+        this.width,
+        this.height,
+        this.texture.width,
+        this.texture.height,
+      );
 
       this.sceneWrapper.setTransform(
         this.planeHandler,
@@ -203,20 +210,29 @@ export class UIProgress extends UIElement {
       );
       this.micro.setDirtyFalse();
       this.texture.setTrimDirtyFalse();
+      this.setPlacementDirtyFalse();
     }
   }
 
   private readonly onTextureDimensionsChanged = (width: number, height: number): void => {
+    // The resolution follows the texture even when constraints already hold the element at
+    // its size
+    this.textureResolutionDirty = true;
     if (this.width !== width || this.height !== height) {
       this.width = width;
       this.height = height;
-      this.textureResolutionDirty = true;
     }
   };
 
   private rebuildPlane(): void {
     const micro = this.micro;
-    const textureTrim = this.texture.trim;
+    const textureTrim = scaleTrim(
+      this.texture.trim,
+      this.width,
+      this.height,
+      this.texture.width,
+      this.texture.height,
+    );
 
     this.recreatePlane(
       this.maskFunctionInternal.source + source,
@@ -257,5 +273,6 @@ export class UIProgress extends UIElement {
     this.textureResolutionDirty = false;
     this.maskFunctionInternal.setDirtyFalse();
     this.micro.setDirtyFalse();
+    this.setPlacementDirtyFalse();
   }
 }

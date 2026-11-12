@@ -1,6 +1,6 @@
 import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
-import { UITextureView } from "../../core/miscellaneous/texture/UITextureView.js";
 import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
+import { UITextureView } from "../../core/miscellaneous/texture/UITextureView.js";
 import source from "../shaders/UIRenderingTexture.js";
 import { UIRenderingModule } from "./UIRenderingModule.js";
 
@@ -18,7 +18,8 @@ function buildMultiTextureShader(count: number): string {
 
   return [
     "vec4 draw() {",
-    `  int idx = int(PARTICLE_RANDOM_A * ${count}.0);`,
+    // Clamped: at mediump precision a value just below 1 can round up to 1
+    `  int idx = int(min(PARTICLE_RANDOM_A * ${count}.0, ${count}.0 - 0.5));`,
     "  mat3 t;",
     ...branches,
     "  vec2 transformedUV = (t * vec3(p_uv, 1.0)).xy;",

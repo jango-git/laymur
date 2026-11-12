@@ -1,7 +1,7 @@
 import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
-import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
 import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
 import { detectBidiClass, reorderChunksVisually } from "./UIText.Bidi.js";
 import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UIText.Interfaces.js";
 

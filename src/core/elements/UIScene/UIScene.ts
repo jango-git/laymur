@@ -9,10 +9,11 @@ import {
   UnsignedByteType,
   WebGLRenderTarget,
 } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
 import source from "../../shaders/UIImage.js";
 import { DUMMY_DEFAULT_HEIGHT, DUMMY_DEFAULT_WIDTH } from "../UIDummy/UIDummy.Internal.js";
@@ -46,7 +47,6 @@ export class UIScene extends UIElement {
   private evenFrame = true;
 
   private updateRequired = false;
-  private resolutionFactorDirty = false;
   private propertyDirty = false;
 
   /**
@@ -110,6 +110,8 @@ export class UIScene extends UIElement {
     this.resolutionFactorInternal = resolutionFactor;
     this.updateModeInternal = options.updateMode ?? SCENE_DEFAULT_UPDATE_MODE;
     this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
+
+    this.layer.signalContextRestored.on(this.onContextRestored);
   }
 
   /** Camera used for rendering */
@@ -166,7 +168,6 @@ export class UIScene extends UIElement {
     value = MathUtils.clamp(value, SCENE_MIN_RESOLUTION_FACTOR, SCENE_MAX_RESOLUTION_FACTOR);
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
-      this.resolutionFactorDirty = true;
     }
   }
 
@@ -193,12 +194,20 @@ export class UIScene extends UIElement {
 
   /** Frees resources of the scene */
   protected override destroyInternal(): void {
+    this.layer.signalContextRestored.off(this.onContextRestored);
     this.renderTarget.dispose();
     super.destroyInternal();
   }
 
   protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
     this.evenFrame = !this.evenFrame;
+
+    // Compared every frame rather than on layout changes, so a size change is kept until a frame
+    // that renders the scene applies it
+    const targetWidth = this.width * this.resolutionFactorInternal;
+    const targetHeight = this.height * this.resolutionFactorInternal;
+    const isSizeDirty =
+      this.renderTarget.width !== targetWidth || this.renderTarget.height !== targetHeight;
 
     const isFramebufferDirty =
       this.updateRequired ||
@@ -207,16 +216,11 @@ export class UIScene extends UIElement {
       (this.updateModeInternal === UISceneUpdateMode.ON_PROPERTIES_CHANGE && this.propertyDirty) ||
       this.colorInternal.dirty ||
       this.clearColorInternal.dirty ||
-      (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE &&
-        (this.resolutionFactorDirty || this.solverWrapper.dirty));
+      (this.updateModeInternal === UISceneUpdateMode.ON_DIMENSIONS_CHANGE && isSizeDirty);
 
     if (isFramebufferDirty) {
-      if (this.resolutionFactorDirty || this.solverWrapper.dirty) {
-        this.renderTarget.setSize(
-          this.width * this.resolutionFactorInternal,
-          this.height * this.resolutionFactorInternal,
-        );
-        this.resolutionFactorDirty = false;
+      if (isSizeDirty) {
+        this.renderTarget.setSize(targetWidth, targetHeight);
       }
 
       if (this.colorInternal.dirty) {
@@ -238,9 +242,15 @@ export class UIScene extends UIElement {
       renderer.setRenderTarget(previousRenderTarget);
       renderer.setClearColor(previousClearColor, previousClearAlpha);
 
+      this.clearColorInternal.setDirtyFalse();
       this.propertyDirty = false;
       this.updateRequired = false;
     }
     super.onWillRender(renderer, deltaTime);
   }
+
+  /** Render target contents live on the GPU only and are gone after a context loss */
+  private readonly onContextRestored = (): void => {
+    this.requestUpdate();
+  };
 }

@@ -1,19 +1,30 @@
+/** WebGL capabilities the library adapts to */
+interface WebGLCapabilities {
+  /** OffscreenCanvas works as a texture source */
+  offscreenCanvas: boolean;
+  /** sRGB textures are supported */
+  srgb: boolean;
+}
+
+type ProbeContext = WebGLRenderingContext | WebGL2RenderingContext;
+
+/** Discards errors left by earlier calls, so that the next getError reports only the next call */
+function clearErrors(gl: ProbeContext): void {
+  while (gl.getError() !== gl.NO_ERROR) {
+    // Drain the error queue
+  }
+}
+
 /**
  * Checks real OffscreenCanvas support as a texture source
  */
-function checkOffscreenCanvasSupportInternal(): boolean {
+function probeOffscreenCanvas(gl: ProbeContext): boolean {
   if (typeof OffscreenCanvas === "undefined") {
     return false;
   }
 
-  const testCanvasElement = document.createElement("canvas");
-  testCanvasElement.width = 4;
-  testCanvasElement.height = 4;
-
-  const gl = testCanvasElement.getContext("webgl") ?? testCanvasElement.getContext("webgl2");
-  if (!gl) {
-    return false;
-  }
+  const texture = gl.createTexture();
+  const framebuffer = gl.createFramebuffer();
 
   try {
     const offscreenCanvas = new OffscreenCanvas(4, 4);
@@ -25,104 +36,107 @@ function checkOffscreenCanvasSupportInternal(): boolean {
     offscreenContext.fillStyle = "#ff0000";
     offscreenContext.fillRect(0, 0, 4, 4);
 
-    const texture = gl.createTexture();
+    clearErrors(gl);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, offscreenCanvas);
-
     if (gl.getError() !== gl.NO_ERROR) {
-      gl.deleteTexture(texture);
       return false;
     }
 
-    const framebuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-      gl.deleteFramebuffer(framebuffer);
-      gl.deleteTexture(texture);
       return false;
     }
 
     const pixelData = new Uint8Array(4);
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelData);
 
+    return pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
+  } catch {
+    return false;
+  } finally {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
     gl.deleteFramebuffer(framebuffer);
     gl.deleteTexture(texture);
-
-    const isRedPixel =
-      pixelData[0] > 200 && pixelData[1] < 50 && pixelData[2] < 50 && pixelData[3] > 200;
-    if (!isRedPixel) {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    void error;
-    return false;
   }
 }
 
 /**
  * Checks sRGB support
  */
-function checkSRGBSupportInternal(): boolean {
-  const canvasElement = document.createElement("canvas");
-  const gl = canvasElement.getContext("webgl2") ?? canvasElement.getContext("webgl");
-  if (!gl) {
+function probeSRGB(gl: ProbeContext): boolean {
+  const isWebGL2 =
+    typeof WebGL2RenderingContext !== "undefined" && gl instanceof WebGL2RenderingContext;
+  const extension = isWebGL2 ? null : gl.getExtension("EXT_sRGB");
+  if (!isWebGL2 && !extension) {
     return false;
   }
 
-  if (gl instanceof WebGL2RenderingContext) {
-    try {
-      const texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, 2, 2);
-      const errorCode = gl.getError();
-      gl.deleteTexture(texture);
-      return errorCode === gl.NO_ERROR;
-    } catch {
-      return false;
-    }
-  }
-
-  const extension = gl.getExtension("EXT_sRGB");
-  if (!extension) {
-    return false;
-  }
+  const texture = gl.createTexture();
 
   try {
-    const texture = gl.createTexture();
+    clearErrors(gl);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0,
-      extension.SRGB_ALPHA_EXT,
-      2,
-      2,
-      0,
-      extension.SRGB_ALPHA_EXT,
-      gl.UNSIGNED_BYTE,
-      null,
-    );
-    const errorCode = gl.getError();
-    gl.deleteTexture(texture);
-    return errorCode === gl.NO_ERROR;
+
+    if (isWebGL2) {
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.SRGB8_ALPHA8, 2, 2);
+    } else if (extension) {
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        extension.SRGB_ALPHA_EXT,
+        2,
+        2,
+        0,
+        extension.SRGB_ALPHA_EXT,
+        gl.UNSIGNED_BYTE,
+        null,
+      );
+    }
+
+    return gl.getError() === gl.NO_ERROR;
   } catch {
     return false;
+  } finally {
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.deleteTexture(texture);
   }
 }
 
-let OFFSCREEN_CANVAS_SUPPORTED_INTERNAL: boolean | undefined;
-let SRGB_SUPPORTED_INTERNAL: boolean | undefined;
+/**
+ * Runs all checks on one temporary context and releases it right away. Browsers keep a limited
+ * number of live WebGL contexts and lose the oldest one when the limit is exceeded, so a probe
+ * context left for the garbage collector can cost the application its own context.
+ */
+function probeCapabilities(): WebGLCapabilities {
+  const canvasElement = document.createElement("canvas");
+  canvasElement.width = 4;
+  canvasElement.height = 4;
 
-export const checkOffscreenCanvasSupport = (): boolean => {
-  OFFSCREEN_CANVAS_SUPPORTED_INTERNAL ??= checkOffscreenCanvasSupportInternal();
-  return OFFSCREEN_CANVAS_SUPPORTED_INTERNAL;
-};
+  const gl = canvasElement.getContext("webgl2") ?? canvasElement.getContext("webgl");
+  if (!gl) {
+    return { offscreenCanvas: false, srgb: false };
+  }
 
-export const checkSRGBSupport = (): boolean => {
-  SRGB_SUPPORTED_INTERNAL ??= checkSRGBSupportInternal();
-  return SRGB_SUPPORTED_INTERNAL;
-};
+  try {
+    return {
+      offscreenCanvas: probeOffscreenCanvas(gl),
+      srgb: probeSRGB(gl),
+    };
+  } finally {
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+  }
+}
+
+let CAPABILITIES_INTERNAL: WebGLCapabilities | undefined;
+
+function getCapabilities(): WebGLCapabilities {
+  CAPABILITIES_INTERNAL ??= probeCapabilities();
+  return CAPABILITIES_INTERNAL;
+}
+
+export const checkOffscreenCanvasSupport = (): boolean => getCapabilities().offscreenCanvas;
+
+export const checkSRGBSupport = (): boolean => getCapabilities().srgb;

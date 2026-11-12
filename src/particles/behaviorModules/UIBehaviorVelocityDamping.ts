@@ -1,11 +1,13 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
-import { assertValidNonNegativeNumber } from "../../core/miscellaneous/asserts.js";
+
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
-  BUILTIN_OFFSET_RANDOM_B,
+  assertValidUnitNumber,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
+  particleRandom,
+  particleRandomStream,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
 import { UIBehaviorModule } from "./UIBehaviorModule.js";
@@ -25,11 +27,11 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matr
   constructor(damping: UIRangeConfig) {
     super();
     this.dampingInternal = resolveUIRangeConfig(damping);
-    assertValidNonNegativeNumber(
+    assertValidUnitNumber(
       this.dampingInternal.min,
       `UIBehaviorVelocityDamping.constructor.damping.min`,
     );
-    assertValidNonNegativeNumber(
+    assertValidUnitNumber(
       this.dampingInternal.max,
       `UIBehaviorVelocityDamping.constructor.damping.max`,
     );
@@ -43,22 +45,25 @@ export class UIBehaviorVelocityDamping extends UIBehaviorModule<{ builtin: "Matr
   /** Damping coefficient range (0-1) */
   public set damping(value: UIRangeConfig) {
     this.dampingInternal = resolveUIRangeConfig(value);
-    assertValidNonNegativeNumber(this.dampingInternal.min, `UIBehaviorVelocityDamping.damping.min`);
-    assertValidNonNegativeNumber(this.dampingInternal.max, `UIBehaviorVelocityDamping.damping.max`);
+    assertValidUnitNumber(this.dampingInternal.min, `UIBehaviorVelocityDamping.damping.min`);
+    assertValidUnitNumber(this.dampingInternal.max, `UIBehaviorVelocityDamping.damping.max`);
   }
 
   public update(
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
 
+    const dampingStream = particleRandomStream(randomSalt, 0);
+
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      const dampingT = array[itemOffset + BUILTIN_OFFSET_RANDOM_B];
+      const dampingT = particleRandom(array, itemOffset, dampingStream);
       const dampingFactor = Math.pow(
         1 - MathUtils.lerp(this.dampingInternal.min, this.dampingInternal.max, dampingT),
         deltaTime,

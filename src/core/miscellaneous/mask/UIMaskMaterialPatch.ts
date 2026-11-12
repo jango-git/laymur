@@ -1,7 +1,7 @@
 import type { IUniform, WebGLRenderer } from "three";
 import { GLSL3, Material, RawShaderMaterial, ShaderMaterial, Vector3, Vector4 } from "three";
+
 import maskSource from "../../shaders/UIMask.js";
-import type { UIMask } from "./UIMask.js";
 import {
   MASK_DATA_MODE_OFFSET,
   MASK_DATA_ROW0_OFFSET,
@@ -9,6 +9,7 @@ import {
   MASK_DATA_SHAPE_OFFSET,
   MASK_MODE_DISABLED,
 } from "./UIMask.Internal.js";
+import type { UIMask } from "./UIMask.js";
 
 /** The part of the three.js shader object the patch rewrites */
 interface PatchedShader {

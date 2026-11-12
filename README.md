@@ -37,6 +37,25 @@ Peer Dependencies:
 - `ferrsign` (^0.0.4)
 - `fast-simplex-noise` (^4.0.0) - only required when using `laymur/particles`
 
+### Development checks
+
+Laymur validates arguments (finite numbers, ranges, destroyed objects) unless
+`process.env.NODE_ENV` is `"production"`. A bundler replaces that expression with a string, and
+the minifier then removes the checks from the production build:
+
+- Vite and webpack set it for you (`"production"` in production builds).
+- esbuild: `--define:process.env.NODE_ENV='"production"'`.
+- Rollup: `@rollup/plugin-replace` with `"process.env.NODE_ENV": JSON.stringify("production")`.
+
+Without a bundler (an import map, a CDN), `process` does not exist: define it before importing
+laymur.
+
+```html
+<script>
+  globalThis.process = { env: { NODE_ENV: "development" } }; // or "production"
+</script>
+```
+
 ## Visual Editor & Live Examples
 
 Check out visual editor and interactive examples at:
@@ -49,16 +68,26 @@ Check out visual editor and interactive examples at:
 
 ### 1. Layers & Elements
 
-`UIFullscreenLayer` manages coordinate system, canvas scaling, and input. All UI elements attach to a layer.
+`UIViewportLayer` manages coordinate system, canvas scaling, and input. All UI elements attach to a layer.
 
 ```typescript
-import { UIFullscreenLayer, UIImage, UIMode, UIResizePolicyFixedHeight } from "laymur";
+import { UIViewportLayer, UIImage, UIMode, UIResizePolicyFixedHeight } from "laymur";
 
-const layer = new UIFullscreenLayer({
+const layer = new UIViewportLayer({
   name: "MainHUD",
   mode: UIMode.VISIBLE,
   resizePolicy: new UIResizePolicyFixedHeight(1080, 1920),
 });
+```
+
+The layer covers the whole window by default. For a canvas that does not fill the window (an editor preview, a page with margins), pass the area it covers; the layer then takes its size and the origin of input positions from that element:
+
+```typescript
+import { UIElementViewport, UIViewportLayer } from "laymur";
+
+const viewport = new UIElementViewport(renderer.domElement);
+const layer = new UIViewportLayer({ viewport });
+// The viewport belongs to the caller and may serve several layers: destroy it after them
 ```
 
 ### 2. Constraint System
@@ -163,13 +192,20 @@ Modular pipeline: Spawn -> Behavior -> Rendering.
 import {
   UIEmitter,
   UISpawnRectangle,
+  UISpawnRandomLifetime,
+  UISpawnRandomScale,
   UIBehaviorDirectionalGravity,
   UIRenderingTexture,
 } from "laymur/particles";
 
+// Unset, a particle lives 1 second at scale 1 (1 px)
 const emitter = new UIEmitter(
   layer,
-  [new UISpawnRectangle([-500, 0], [500, 0])],
+  [
+    new UISpawnRectangle([-500, 0], [500, 0]),
+    new UISpawnRandomLifetime([2, 3]), // seconds
+    new UISpawnRandomScale([24, 48], particleTexture), // px, aspect from the texture
+  ],
   [new UIBehaviorDirectionalGravity({ x: 0, y: 100 })],
   [new UIRenderingTexture(particleTexture)],
   { expectedCapacity: 1024 }, // Pre-allocation hint, not a hard limit
@@ -212,7 +248,7 @@ Most commonly used exports (not exhaustive):
 
 ### Core
 
-UIFullscreenLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIMask
+UIViewportLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIMask
 
 ### Constraints
 
@@ -220,7 +256,7 @@ UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
 
 ### Extension Points
 
-UIElement, UIArea, UIResizePolicy, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
+UIElement, UIArea, UIResizePolicy, UIViewport, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
 
 UIRenderingModule, UISpawnModule, UIBehaviorModule (laymur/particles)
 

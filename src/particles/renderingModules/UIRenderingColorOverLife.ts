@@ -1,8 +1,9 @@
 import type { DataTexture } from "three";
+
 import type { UIColor } from "../../core/index.js";
 import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 import { buildGradientTexture } from "../miscellaneous/miscellaneous.js";
-import source from "../shaders/UIRenderingColorOverLife.js";
+import { buildColorOverLifeSource } from "../shaders/UIRenderingColorOverLife.js";
 import { UIRenderingModule } from "./UIRenderingModule.js";
 
 /**
@@ -15,7 +16,7 @@ export class UIRenderingColorOverLife extends UIRenderingModule {
     builtin: "Matrix4",
   } as const;
   public readonly requiredUniforms: Record<string, UIProperty>;
-  public readonly source = source;
+  public readonly source: string;
 
   /**
    * @param colors - Color gradient stops from birth to death
@@ -28,6 +29,7 @@ export class UIRenderingColorOverLife extends UIRenderingModule {
     }
 
     this.requiredUniforms = { colorOverLifeTexture: buildGradientTexture(colors) };
+    this.source = buildColorOverLifeSource(colors.length);
   }
 
   public override destroy(): void {

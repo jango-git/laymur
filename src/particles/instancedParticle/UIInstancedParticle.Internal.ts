@@ -5,6 +5,7 @@ import {
   InstancedBufferGeometry,
   ShaderMaterial,
 } from "three";
+
 import { UIColor } from "../../core/index.js";
 import type {
   GLProperty,
@@ -105,28 +106,34 @@ export function collectProperties(
   }
 }
 
-export function collectUniforms(
+/**
+ * Collects the uniforms of rendering modules under per-module names, `p_<name>` of module i
+ * becoming `p_m<i>_<name>`, so modules of one type keep their own values.
+ * @returns Sources with their uniform references renamed accordingly
+ */
+export function collectRenderingUniforms(
   keeper: Record<string, GLProperty>,
-  modules: readonly { requiredUniforms: Record<string, UIProperty> }[],
+  modules: readonly { requiredUniforms: Record<string, UIProperty>; source: string }[],
   debugContext: string,
-): void {
-  for (const module of modules) {
-    for (const key in module.requiredUniforms) {
-      const value = module.requiredUniforms[key];
-      const existingGLProperty = keeper[key] as GLProperty | undefined;
-      const newPropertyTypeInfo = resolveGLSLTypeInfo(value);
+): string[] {
+  return modules.map((module, index) => {
+    let { source } = module;
 
-      if (existingGLProperty === undefined) {
-        keeper[key] = { value, glslTypeInfo: newPropertyTypeInfo };
-      } else if (
-        existingGLProperty.glslTypeInfo.glslTypeName !== newPropertyTypeInfo.glslTypeName
-      ) {
+    for (const key in module.requiredUniforms) {
+      if (!/^\w+$/.test(key)) {
         throw new Error(
-          `${debugContext}: uniform conflict for "${key}" (${existingGLProperty.glslTypeInfo.glslTypeName} and ${newPropertyTypeInfo.glslTypeName})`,
+          `${debugContext}[${index}]: uniform name "${key}" is not a GLSL identifier`,
         );
       }
+
+      const value = module.requiredUniforms[key];
+      const name = `m${index}_${key}`;
+      keeper[name] = { value, glslTypeInfo: resolveGLSLTypeInfo(value) };
+      source = source.replace(new RegExp(`\\bp_${key}\\b`, "g"), `p_${name}`);
     }
-  }
+
+    return source;
+  });
 }
 
 function builtinComponent(base: string, index: number): string {

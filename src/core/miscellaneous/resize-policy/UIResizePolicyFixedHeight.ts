@@ -42,7 +42,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.fixedHeightLandscape");
     if (value !== this.fixedHeightLandscapeInternal) {
       this.fixedHeightLandscapeInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 
@@ -51,7 +51,7 @@ export class UIResizePolicyFixedHeight extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyFixedHeight.fixedHeightPortrait");
     if (value !== this.fixedHeightPortraitInternal) {
       this.fixedHeightPortraitInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 

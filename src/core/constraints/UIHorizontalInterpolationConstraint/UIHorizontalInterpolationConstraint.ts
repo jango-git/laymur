@@ -73,7 +73,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
     );
 
     this.anchorAInternal = anchorA;
-    this.anchorBInternal = anchorA;
+    this.anchorBInternal = anchorB;
     this.anchorCInternal = options.anchorC ?? DEFAULT_ANCHOR;
     this.tInternal = options.t ?? DEFAULT_T;
 

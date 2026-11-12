@@ -1,5 +1,6 @@
 import type { WebGLRenderer } from "three";
 import { Matrix4 } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
@@ -48,6 +49,12 @@ export abstract class UIElement extends UIDummy {
   private readonly hslValue = { h: 0, s: 0, l: 0 };
   private visibilityDirty = false;
 
+  /** Layout and draw-order versions the plane was last placed by */
+  private placedSolverVersion = -1;
+  private placedInputVersion = -1;
+  /** Layout version content sized by the element was last measured at */
+  private measuredSolverVersion = -1;
+
   /** Mask as last applied to the plane; compared every frame, see applyMask */
   private appliedMask: UIMask | null = null;
   private appliedMaskVersion = -1;
@@ -80,7 +87,9 @@ export abstract class UIElement extends UIDummy {
     this.planeHandler = this.sceneWrapper.createPlane(
       source,
       properties,
-      new Matrix4().identity(),
+      // A plane created during a frame is placed on the next one. Until then it is collapsed to
+      // nothing, at its own depth: planes may not share one
+      new Matrix4().makeScale(0, 0, 1).setPosition(0, 0, this.renderDepth),
       isUIModeVisible(options?.mode ?? this.mode),
       this.transparencyModeInternal,
       blendModeToFactor(this.blendModeInternal),
@@ -123,6 +132,14 @@ export abstract class UIElement extends UIDummy {
    */
   public override get mode(): UIMode {
     return this.modeInternal;
+  }
+
+  /** Whether the layout or the draw order changed since the plane was last placed */
+  protected get placementDirty(): boolean {
+    return (
+      this.solverWrapper.version !== this.placedSolverVersion ||
+      this.inputWrapper.version !== this.placedInputVersion
+    );
   }
 
   /** Alpha blending mode */
@@ -168,7 +185,7 @@ export abstract class UIElement extends UIDummy {
   /** Controls visibility and interactivity */
   public override set mode(value: UIMode) {
     if (this.modeInternal !== value) {
-      this.visibilityDirty = isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
+      this.visibilityDirty ||= isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
       super.mode = value;
     }
   }
@@ -185,13 +202,33 @@ export abstract class UIElement extends UIDummy {
   }
 
   protected setPlaneTransform(): void {
-    if (this.micro.dirty || this.inputWrapper.dirty || this.solverWrapper.dirty) {
+    if (this.micro.dirty || this.placementDirty) {
       this.sceneWrapper.setTransform(
         this.planeHandler,
         this.computeVisualTransform(true, TEMP_TRANSFORM, this.renderDepth),
       );
       this.micro.setDirtyFalse();
+      this.setPlacementDirtyFalse();
     }
+  }
+
+  /**
+   * Whether the layout changed since the last call. Content that depends on the element size,
+   * such as text or nine-slice regions, reads the size only then: a read runs the solver.
+   */
+  protected consumeLayoutChange(): boolean {
+    const version = this.solverWrapper.version;
+    if (version === this.measuredSolverVersion) {
+      return false;
+    }
+    this.measuredSolverVersion = version;
+    return true;
+  }
+
+  /** Records the layout and draw order the plane is placed by */
+  protected setPlacementDirtyFalse(): void {
+    this.placedSolverVersion = this.solverWrapper.version;
+    this.placedInputVersion = this.inputWrapper.version;
   }
 
   /**

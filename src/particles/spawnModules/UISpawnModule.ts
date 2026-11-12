@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+
 import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 
 /**
@@ -14,13 +15,17 @@ export abstract class UISpawnModule<
   /** Per-particle properties the module writes, by name and type */
   public abstract readonly requiredProperties: T;
   /**
-   * Initializes the particles in [instanceBegin, instanceEnd).
+   * Initializes the particles in [instanceBegin, instanceEnd). They come zeroed, except builtin
+   * scale 1 and lifetime 1 second, and with their seed set.
    * @param properties Per-particle buffers of the required properties
+   * @param randomSalt Salt for `particleRandomStream`: random values of the module are
+   * independent of those of other modules, also of another instance of the same module
    */
   public abstract spawn(
     properties: { [K in keyof T]: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void;
 
   public destroy?(): void;

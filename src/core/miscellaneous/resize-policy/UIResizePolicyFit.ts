@@ -36,7 +36,7 @@ export class UIResizePolicyFit extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyFit.rectWidth");
     if (value !== this.rectWidthInternal) {
       this.rectWidthInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 
@@ -45,7 +45,7 @@ export class UIResizePolicyFit extends UIResizePolicy {
     assertValidPositiveNumber(value, "UIResizePolicyFit.rectHeight");
     if (value !== this.rectHeightInternal) {
       this.rectHeightInternal = value;
-      this.dirty = true;
+      this.markChanged();
     }
   }
 

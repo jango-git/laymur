@@ -1,11 +1,12 @@
 import type { Matrix3 } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import { computeTrimmedTransformMatrix, scaleTrim } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import source from "../../shaders/UIImage.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import type { UIImageOptions } from "./UIImage.Internal.js";
@@ -32,8 +33,12 @@ export class UIImage extends UIElement {
     const textureView = new UITextureView(texture);
     const textureTransform = textureView.calculateUVTransform();
 
-    options.width = options.width ?? textureView.width;
-    options.height = options.height ?? textureView.height;
+    // A copy: the caller may pass the same options to several elements
+    options = {
+      ...options,
+      width: options.width ?? textureView.width,
+      height: options.height ?? textureView.height,
+    };
 
     super(
       layer,
@@ -94,15 +99,17 @@ export class UIImage extends UIElement {
       this.sceneWrapper.setProperties(this.planeHandler, properties);
     }
 
-    const isTransformDirty =
-      this.micro.dirty ||
-      this.texture.trimDirty ||
-      this.inputWrapper.dirty ||
-      this.solverWrapper.dirty;
+    const isTransformDirty = this.micro.dirty || this.texture.trimDirty || this.placementDirty;
 
     if (isTransformDirty) {
       const micro = this.micro;
-      const textureTrim = this.texture.trim;
+      const textureTrim = scaleTrim(
+        this.texture.trim,
+        this.width,
+        this.height,
+        this.texture.width,
+        this.texture.height,
+      );
 
       this.sceneWrapper.setTransform(
         this.planeHandler,
@@ -128,6 +135,7 @@ export class UIImage extends UIElement {
       );
       this.micro.setDirtyFalse();
       this.texture.setTrimDirtyFalse();
+      this.setPlacementDirtyFalse();
     }
   }
 

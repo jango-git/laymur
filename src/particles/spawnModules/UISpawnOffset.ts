@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import type { UIVector2Config } from "../miscellaneous/miscellaneous.js";

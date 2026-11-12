@@ -3,6 +3,7 @@ import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three"
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
 import type { UIHeightConstraint } from "../core/index.js";
 import { UIColor, UIOrientation } from "../core/index.js";
 import {
@@ -94,6 +95,8 @@ export class UIHeightDebug implements UIConstraintDebug {
 
     this.lineGeometry.dispose();
     this.textTexture.dispose();
+    this.lineMaterial.dispose();
+    this.spriteMaterial.dispose();
   }
 
   private updateContainerVisibility(): void {
@@ -108,6 +111,8 @@ export class UIHeightDebug implements UIConstraintDebug {
   };
 
   private readonly onRendering = (renderer: WebGLRenderer): void => {
+    // Also on creation: a constraint is announced before its orientation is set
+    this.updateContainerVisibility();
     const tintDirty = this.tint.dirty;
 
     if (tintDirty) {

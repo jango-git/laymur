@@ -1,14 +1,15 @@
 import type { FerrsignView0 } from "ferrsign";
 import { Ferrsign0 } from "ferrsign";
 import type { Matrix3, WebGLRenderer } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
-import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import { computeTrimmedTransformMatrix, scaleTrim } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import source from "../../shaders/UIImage.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import type { UIAnimatedImageOptions } from "./UIAnimatedImage.Internal.js";
@@ -52,12 +53,17 @@ export class UIAnimatedImage extends UIElement {
     sequence: UITextureConfig[],
     options: Partial<UIAnimatedImageOptions> = {},
   ) {
+    assertNonEmptySequence(sequence, "UIAnimatedImage.constructor.sequence");
     const color = new UIColor(options.color);
     const uiTextures = sequence.map((textureConfig) => new UITextureView(textureConfig));
 
     const frame = uiTextures[0];
-    options.width = options.width ?? frame.width;
-    options.height = options.height ?? frame.height;
+    // A copy: the caller may pass the same options to several elements
+    options = {
+      ...options,
+      width: options.width ?? frame.width,
+      height: options.height ?? frame.height,
+    };
 
     const textureTransform = frame.calculateUVTransform();
 
@@ -149,25 +155,29 @@ export class UIAnimatedImage extends UIElement {
 
   /** Replaces animation frames. Stops playback. */
   public set sequence(sequence: UITextureConfig[]) {
+    assertNonEmptySequence(sequence, "UIAnimatedImage.sequence");
     this.stop();
-    this.unsubscribeSequenceEvents();
 
     const newLength = sequence.length;
     const currentLength = this.sequenceInternal.length;
 
+    // Kept subscribed while set, so that the element follows the size of the new first frame
     for (let i = 0; i < Math.min(newLength, currentLength); i++) {
       this.sequenceInternal[i].set(sequence[i]);
     }
 
     if (newLength < currentLength) {
+      for (let i = newLength; i < currentLength; i++) {
+        this.sequenceInternal[i].signalDimensionsChanged.off(this.onTextureDimensionsChanged);
+      }
       this.sequenceInternal.length = newLength;
     } else if (newLength > currentLength) {
       for (let i = currentLength; i < newLength; i++) {
-        this.sequenceInternal.push(new UITextureView(sequence[i]));
+        const frame = new UITextureView(sequence[i]);
+        frame.signalDimensionsChanged.on(this.onTextureDimensionsChanged);
+        this.sequenceInternal.push(frame);
       }
     }
-
-    this.subscribeSequenceEvents();
   }
 
   /** Playback speed multiplier. Can be negative for reverse playback. */
@@ -291,15 +301,11 @@ export class UIAnimatedImage extends UIElement {
     }
 
     const isTransformDirty =
-      this.currentFrameIndexDirty ||
-      this.micro.dirty ||
-      frame.trimDirty ||
-      this.inputWrapper.dirty ||
-      this.solverWrapper.dirty;
+      this.currentFrameIndexDirty || this.micro.dirty || frame.trimDirty || this.placementDirty;
 
     if (isTransformDirty) {
       const micro = this.micro;
-      const textureTrim = frame.trim;
+      const textureTrim = scaleTrim(frame.trim, this.width, this.height, frame.width, frame.height);
 
       this.sceneWrapper.setTransform(
         this.planeHandler,
@@ -327,6 +333,7 @@ export class UIAnimatedImage extends UIElement {
       this.currentFrameIndexDirty = false;
       this.micro.setDirtyFalse();
       frame.setTrimDirtyFalse();
+      this.setPlacementDirtyFalse();
     }
   }
 
@@ -351,5 +358,11 @@ export class UIAnimatedImage extends UIElement {
     for (const frame of this.sequenceInternal) {
       frame.signalDimensionsChanged.off(this.onTextureDimensionsChanged);
     }
+  }
+}
+
+function assertNonEmptySequence(sequence: UITextureConfig[], subject: string): void {
+  if (sequence.length === 0) {
+    throw new Error(`${subject}: sequence must have at least one frame`);
   }
 }

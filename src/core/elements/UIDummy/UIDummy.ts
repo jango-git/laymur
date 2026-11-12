@@ -1,6 +1,7 @@
 import type { FerrsignView1 } from "ferrsign";
 import { Ferrsign1 } from "ferrsign";
 import { MathUtils, Matrix4 } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UIArea } from "../../miscellaneous/area/UIArea.js";
 import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle.js";
@@ -13,7 +14,7 @@ import { isUIModeInteractive, UIMode } from "../../miscellaneous/UIMode.js";
 import { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal.js";
 import { UIAnchor } from "../UIAnchor/UIAnchor.js";
-import type { UIDummyOptions, UIInputEventData } from "./UIDummy.Internal.js";
+import type { UIDummyOptions, UIDummyPointerState, UIInputEventData } from "./UIDummy.Internal.js";
 import {
   DUMMY_DEFAULT_HEIGHT,
   DUMMY_DEFAULT_MODE,
@@ -37,7 +38,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   protected modeInternal: UIMode;
   protected readonly inputWrapper: UIInputWrapperView;
   private readonly catcherHandler: number;
-  private wasPointerInside = false;
+  private readonly pointers = new Map<number, UIDummyPointerState>();
   private maskInternal: UIMask | null = null;
 
   private readonly signalPointerPressedInternal = new Ferrsign1<UIInputEventData>();
@@ -45,6 +46,9 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   private readonly signalPointerReleasedInternal = new Ferrsign1<UIInputEventData>();
   private readonly signalPointerEnteredInternal = new Ferrsign1<UIInputEventData>();
   private readonly signalPointerLeftInternal = new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerCancelledInternal = new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerClickedInternal = new Ferrsign1<UIInputEventData>();
+  private readonly signalPointerDraggedInternal = new Ferrsign1<UIInputEventData>();
 
   /**
    * Creates a new UIDummy instance.
@@ -69,9 +73,12 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     this.hVariable = this.solverWrapper.createVariable(h, UIPriority.P6);
 
     this.catcherHandler = this.inputWrapper.createInputCatcher(
-      this.catchPointerDown,
-      this.catchPointerMove,
-      this.catchPointerUp,
+      {
+        catchPointerDown: this.catchPointerDown,
+        catchPointerMove: this.catchPointerMove,
+        catchPointerUp: this.catchPointerUp,
+        catchPointerCancel: this.catchPointerCancel,
+      },
       DUMMY_DEFAULT_Z_INDEX,
     );
 
@@ -133,7 +140,11 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     return this.maskInternal;
   }
 
-  /** Signal fired when pointer is pressed */
+  /**
+   * Signal fired when pointer is pressed over the element. An element that catches the press
+   * (any interactive mode but INTERACTIVE_TRANSPARENT) holds the pointer until it is released:
+   * then exactly one of `signalPointerClicked` and `signalPointerCancelled` follows.
+   */
   public get signalPointerPressed(): FerrsignView1<UIInputEventData> {
     return this.signalPointerPressedInternal;
   }
@@ -153,9 +164,31 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     return this.signalPointerEnteredInternal;
   }
 
-  /** Signal fired when pointer leaves element */
+  /**
+   * Signal fired when pointer leaves element. A released or cancelled pointer leaves too: a
+   * mouse still over the element enters again on its next move.
+   */
   public get signalPointerLeft(): FerrsignView1<UIInputEventData> {
     return this.signalPointerLeftInternal;
+  }
+
+  /** Signal fired when a pointer pressed on the element is released over it */
+  public get signalPointerClicked(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerClickedInternal;
+  }
+
+  /** Signal fired when a pointer pressed on the element moves, over the element or not */
+  public get signalPointerDragged(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerDraggedInternal;
+  }
+
+  /**
+   * Signal fired when a press on the element ends without a click: released outside the
+   * element, cancelled by the browser (a system gesture, scrolling, a popup), or the element
+   * stopped taking input. Reset what was started on press. The position is the last known one.
+   */
+  public get signalPointerCancelled(): FerrsignView1<UIInputEventData> {
+    return this.signalPointerCancelledInternal;
   }
 
   /** Unique depth of the element among the elements of the layer, derived from `zIndex` */
@@ -212,6 +245,9 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
       const newInteractivity = isUIModeInteractive(value);
       this.inputWrapper.setActive(this.catcherHandler, newInteractivity);
       this.modeInternal = value;
+      if (!newInteractivity) {
+        this.dropPointers();
+      }
     }
   }
 
@@ -298,6 +334,8 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   }
 
   protected override destroyInternal(): void {
+    // A press held by the element still ends with a cancel, and its pointers leave it
+    this.dropPointers();
     this.maskInternal?.detach(this);
     this.maskInternal = null;
     this.solverWrapper.removeVariable(this.hVariable);
@@ -307,46 +345,121 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   }
 
   protected readonly catchPointerDown = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalPointerPressedInternal);
+    const state = this.trackPointer(x, y, identifier, this.signalPointerPressedInternal);
+    const caught = this.catches(state);
+    if (caught) {
+      state.pressed = true;
+    }
+    this.forgetIfUntracked(identifier, state);
+    return caught;
   };
 
   protected readonly catchPointerMove = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalPointerMovedInternal);
+    const state = this.trackPointer(x, y, identifier, this.signalPointerMovedInternal);
+    if (state.pressed) {
+      this.emitPointer(this.signalPointerDraggedInternal, state, identifier);
+    }
+    this.forgetIfUntracked(identifier, state);
+    return this.catches(state);
   };
 
   protected readonly catchPointerUp = (x: number, y: number, identifier: number): boolean => {
-    return this.handleInputEvent(x, y, identifier, this.signalPointerReleasedInternal);
+    const state = this.trackPointer(x, y, identifier, this.signalPointerReleasedInternal);
+    const caught = this.catches(state);
+    this.endPointer(identifier, state, state.inside);
+    return caught;
   };
 
-  protected handleInputEvent(
+  /** Signals of a cancel carry the last known position */
+  protected readonly catchPointerCancel = (identifier: number): void => {
+    const state = this.pointers.get(identifier);
+    if (state !== undefined) {
+      this.endPointer(identifier, state, false);
+    }
+  };
+
+  /**
+   * Updates what the element knows of a pointer: fires the signal of the event if the pointer
+   * is over the element, then entered or left if that changed.
+   */
+  private trackPointer(
     x: number,
     y: number,
     identifier: number,
     signal: Ferrsign1<UIInputEventData>,
-  ): boolean {
-    assertValidNumber(x, "UIDummy.handleInputEvent.x");
-    assertValidNumber(y, "UIDummy.handleInputEvent.y");
-    assertValidNumber(identifier, "UIDummy.handleInputEvent.identifier");
+  ): UIDummyPointerState {
+    assertValidNumber(x, "UIDummy.trackPointer.x");
+    assertValidNumber(y, "UIDummy.trackPointer.y");
+    assertValidNumber(identifier, "UIDummy.trackPointer.identifier");
 
-    const isPointerInside = this.isInputPointInside(x, y);
-
-    if (isPointerInside) {
-      signal.emit({ x, y, identifier, element: this });
+    let state = this.pointers.get(identifier);
+    if (state === undefined) {
+      state = { x, y, inside: false, pressed: false };
+      this.pointers.set(identifier, state);
     }
+    state.x = x;
+    state.y = y;
 
-    if (this.wasPointerInside && !isPointerInside) {
-      this.signalPointerLeftInternal.emit({ x, y, identifier, element: this });
-    } else if (!this.wasPointerInside && isPointerInside) {
-      this.signalPointerEnteredInternal.emit({
-        x,
-        y,
+    const inside = this.isInputPointInside(x, y);
+    if (inside) {
+      this.emitPointer(signal, state, identifier);
+    }
+    if (inside !== state.inside) {
+      state.inside = inside;
+      this.emitPointer(
+        inside ? this.signalPointerEnteredInternal : this.signalPointerLeftInternal,
+        state,
         identifier,
-        element: this,
-      });
+      );
     }
+    return state;
+  }
 
-    this.wasPointerInside = isPointerInside;
-    return this.modeInternal !== UIMode.INTERACTIVE_TRANSPARENT && isPointerInside;
+  /**
+   * Ends a pointer: a press on the element ends as a click or as cancelled, and the pointer
+   * leaves. A released or cancelled pointer is forgotten, so that a touch, which never comes
+   * back with the same identifier, does not stay over the element.
+   */
+  private endPointer(identifier: number, state: UIDummyPointerState, clicked: boolean): void {
+    this.pointers.delete(identifier);
+    if (state.pressed) {
+      state.pressed = false;
+      this.emitPointer(
+        clicked ? this.signalPointerClickedInternal : this.signalPointerCancelledInternal,
+        state,
+        identifier,
+      );
+    }
+    if (state.inside) {
+      state.inside = false;
+      this.emitPointer(this.signalPointerLeftInternal, state, identifier);
+    }
+  }
+
+  /** Ends every pointer, for an element that stops taking input */
+  private dropPointers(): void {
+    for (const [identifier, state] of [...this.pointers]) {
+      this.endPointer(identifier, state, false);
+    }
+  }
+
+  private forgetIfUntracked(identifier: number, state: UIDummyPointerState): void {
+    if (!state.inside && !state.pressed) {
+      this.pointers.delete(identifier);
+    }
+  }
+
+  /** Whether the event stops at the element: catchers below do not get it */
+  private catches(state: UIDummyPointerState): boolean {
+    return state.inside && this.modeInternal !== UIMode.INTERACTIVE_TRANSPARENT;
+  }
+
+  private emitPointer(
+    signal: Ferrsign1<UIInputEventData>,
+    state: UIDummyPointerState,
+    identifier: number,
+  ): void {
+    signal.emit({ x: state.x, y: state.y, identifier, element: this });
   }
 
   /**

@@ -1,10 +1,13 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
+  particleRandom,
+  particleRandomStream,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
 import { UISpawnModule } from "./UISpawnModule.js";
@@ -70,16 +73,28 @@ export class UISpawnRandomVelocity extends UISpawnModule<{ builtin: "Matrix4" }>
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { min: angleMin, max: angleMax } = this.angleInternal;
     const { min: magnitudeMin, max: magnitudeMax } = this.magnitudeInternal;
 
+    const angleStream = particleRandomStream(randomSalt, 0);
+    const magnitudeStream = particleRandomStream(randomSalt, 1);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * itemSize;
-      const angle = MathUtils.randFloat(angleMin, angleMax);
-      const magnitude = MathUtils.randFloat(magnitudeMin, magnitudeMax);
+      const angle = MathUtils.lerp(
+        angleMin,
+        angleMax,
+        particleRandom(array, itemOffset, angleStream),
+      );
+      const magnitude = MathUtils.lerp(
+        magnitudeMin,
+        magnitudeMax,
+        particleRandom(array, itemOffset, magnitudeStream),
+      );
       array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] = Math.cos(angle) * magnitude;
       array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] = Math.sin(angle) * magnitude;
     }

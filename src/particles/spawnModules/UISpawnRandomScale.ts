@@ -1,10 +1,13 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts.js";
 import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_SCALE_X,
   BUILTIN_OFFSET_SCALE_Y,
+  particleRandom,
+  particleRandomStream,
   resolveAspect,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
@@ -60,14 +63,21 @@ export class UISpawnRandomScale extends UISpawnModule<{ builtin: "Matrix4" }> {
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { min: scaleMin, max: scaleMax } = this.scaleInternal;
 
+    const scaleStream = particleRandomStream(randomSalt, 0);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * itemSize;
-      const randomScale = MathUtils.randFloat(scaleMin, scaleMax);
+      const randomScale = MathUtils.lerp(
+        scaleMin,
+        scaleMax,
+        particleRandom(array, itemOffset, scaleStream),
+      );
       array[itemOffset + BUILTIN_OFFSET_SCALE_X] = randomScale * this.aspectInternal;
       array[itemOffset + BUILTIN_OFFSET_SCALE_Y] = randomScale;
     }

@@ -1,4 +1,5 @@
 import { Vector4 } from "three";
+
 import { assertValidNonNegativeNumber } from "../asserts.js";
 import type { UIInsetsConfig } from "./UIInsets.Internal.js";
 import { INSETS_DEFAULT_VALUE } from "./UIInsets.Internal.js";

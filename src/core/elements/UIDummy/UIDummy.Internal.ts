@@ -16,6 +16,17 @@ export interface UIInputEventData {
   element: UIDummy;
 }
 
+/** What an element knows of a pointer: kept while it is over the element or pressed on it */
+export interface UIDummyPointerState {
+  /** Last position, for signals of a cancel, which comes with none */
+  x: number;
+  y: number;
+  /** Over the element as of the last event */
+  inside: boolean;
+  /** Pressed on the element and not released yet: the element holds the pointer */
+  pressed: boolean;
+}
+
 /** Configuration options for UIDummy */
 export interface UIDummyOptions extends UIAnchorOptions {
   /** Width in world units */

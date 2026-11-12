@@ -2,6 +2,7 @@ import type { FerrsignView3 } from "ferrsign";
 import { Ferrsign3 } from "ferrsign";
 import type { Matrix3 } from "three";
 import { Texture, Vector2 } from "three";
+
 import { assertValidNonNegativeNumber, assertValidPositiveNumber } from "../asserts.js";
 import { UIAffineMatrix3 } from "../UIAffineMatrix3.js";
 import type {
@@ -58,16 +59,17 @@ export class UITextureView {
     return this.sourceHeight / this.scaleInternal;
   }
 
-  /** Visible width after trimming in world units */
+  /**
+   * Visible width after trimming in world units. The frame size is the unrotated sprite size,
+   * also for a rotated frame, as in the UV transform
+   */
   public get trimmedWidth(): number {
-    const frameSize = this.rotatedInternal ? this.frameHeight : this.frameWidth;
-    return frameSize / this.scaleInternal;
+    return this.frameWidth / this.scaleInternal;
   }
 
   /** Visible height after trimming in world units */
   public get trimmedHeight(): number {
-    const frameSize = this.rotatedInternal ? this.frameWidth : this.frameHeight;
-    return frameSize / this.scaleInternal;
+    return this.frameHeight / this.scaleInternal;
   }
 
   /** Underlying Three.js texture */
@@ -268,14 +270,16 @@ export class UITextureView {
     if (this.texture !== config.texture) {
       this.textureInternal = config.texture;
       this.textureDirtyInternal = true;
+      // The UV transform divides by the atlas size, so a new atlas can change it under the same frame.
+      this.uvTransformDirtyInternal = true;
     }
 
     const scale = config.scale ?? 1;
     const rotated = config.rotated ?? false;
 
     if (
-      this.frameX !== 0 ||
-      this.frameY !== 0 ||
+      this.frameX !== config.frame.x ||
+      this.frameY !== config.frame.y ||
       this.frameWidth !== config.frame.w ||
       this.frameHeight !== config.frame.h ||
       this.scaleInternal !== scale ||

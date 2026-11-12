@@ -1,8 +1,14 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
-import { BUILTIN_OFFSET_ROTATION, resolveUIRangeConfig } from "../miscellaneous/miscellaneous.js";
+import {
+  BUILTIN_OFFSET_ROTATION,
+  particleRandom,
+  particleRandomStream,
+  resolveUIRangeConfig,
+} from "../miscellaneous/miscellaneous.js";
 import { UISpawnModule } from "./UISpawnModule.js";
 
 /**
@@ -40,13 +46,21 @@ export class UISpawnRandomRotation extends UISpawnModule<{ builtin: "Matrix4" }>
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { min: rotationMin, max: rotationMax } = this.rotationInternal;
 
+    const rotationStream = particleRandomStream(randomSalt, 0);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      array[i * itemSize + BUILTIN_OFFSET_ROTATION] = MathUtils.randFloat(rotationMin, rotationMax);
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_ROTATION] = MathUtils.lerp(
+        rotationMin,
+        rotationMax,
+        particleRandom(array, itemOffset, rotationStream),
+      );
     }
 
     builtin.needsUpdate = true;

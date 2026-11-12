@@ -1,13 +1,22 @@
 /**
  * Base class for viewport resize policies. Subclass it for a custom scaling rule and pass it to
- * `UIFullscreenLayer`.
+ * `UIViewportLayer`.
  */
 export abstract class UIResizePolicy {
+  private versionInternal = 0;
+
   /**
-   * Set it to true when a parameter of the policy changes; the layer then resizes on its next
-   * render and resets the flag.
+   * Bumped when a parameter of the policy changes; every layer using the policy resizes on its
+   * next render. One policy may serve several layers.
    */
-  public dirty = false;
+  public get version(): number {
+    return this.versionInternal;
+  }
+
+  /** Call it when a parameter of the policy changes */
+  protected markChanged(): void {
+    this.versionInternal++;
+  }
 
   /**
    * Scale from screen pixels to world units: the layer is the viewport size times this value.

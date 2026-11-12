@@ -1,11 +1,14 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import type { UIVector2Config } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
+  particleRandom,
+  particleRandomStream,
   resolveUIVector2Config,
 } from "../miscellaneous/miscellaneous.js";
 import { UISpawnModule } from "./UISpawnModule.js";
@@ -62,16 +65,28 @@ export class UISpawnRectangle extends UISpawnModule<{ builtin: "Matrix4" }> {
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { x: minX, y: minY } = this.minInternal;
     const { x: maxX, y: maxY } = this.maxInternal;
 
+    const xStream = particleRandomStream(randomSalt, 0);
+    const yStream = particleRandomStream(randomSalt, 1);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * itemSize;
-      array[itemOffset + BUILTIN_OFFSET_POSITION_X] = MathUtils.randFloat(minX, maxX);
-      array[itemOffset + BUILTIN_OFFSET_POSITION_Y] = MathUtils.randFloat(minY, maxY);
+      array[itemOffset + BUILTIN_OFFSET_POSITION_X] = MathUtils.lerp(
+        minX,
+        maxX,
+        particleRandom(array, itemOffset, xStream),
+      );
+      array[itemOffset + BUILTIN_OFFSET_POSITION_Y] = MathUtils.lerp(
+        minY,
+        maxY,
+        particleRandom(array, itemOffset, yStream),
+      );
     }
 
     builtin.needsUpdate = true;

@@ -1,5 +1,6 @@
 import type { Matrix4, Object3D, Scene } from "three";
 import { Matrix3 } from "three";
+
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
 import type { GLProperty, HSLAdjustment, UIProperty } from "../shared.js";
 import {

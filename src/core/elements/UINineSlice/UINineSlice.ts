@@ -1,14 +1,15 @@
 import type { Matrix3 } from "three";
 import { Vector4 } from "three";
+
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import { computeTrimmedTransformMatrix } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
-import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
-import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
+import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
+import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import source from "../../shaders/UINineSlice.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import type { UINineSliceOptions } from "./UINineSlice.Internal.js";
@@ -52,8 +53,12 @@ export class UINineSlice extends UIElement {
     const textureView = new UITextureView(texture);
     const textureTransform = textureView.calculateUVTransform();
 
-    options.width = options.width ?? textureView.width;
-    options.height = options.height ?? textureView.height;
+    // A copy: the caller may pass the same options to several elements
+    options = {
+      ...options,
+      width: options.width ?? textureView.width,
+      height: options.height ?? textureView.height,
+    };
 
     const sliceBorders = new UIInsets(options.sliceBorders ?? NINE_SLICE_DEFAULT_BORDER);
     const sliceRegions = new UIInsets(options.sliceRegions ?? NINE_SLICE_DEFAULT_BORDER);
@@ -158,7 +163,7 @@ export class UINineSlice extends UIElement {
       this.sliceRegionsInternal.dirty ||
       this.regionModeDirty ||
       (this.regionModeInternal === UINineSliceRegionMode.WORLD &&
-        this.checkElementDimensionsDirty());
+        this.consumeElementDimensionsChange());
 
     if (sliceRegionsDirty) {
       properties ??= {};
@@ -190,11 +195,7 @@ export class UINineSlice extends UIElement {
       this.sceneWrapper.setProperties(this.planeHandler, properties);
     }
 
-    const isTransformDirty =
-      this.micro.dirty ||
-      this.texture.trimDirty ||
-      this.inputWrapper.dirty ||
-      this.solverWrapper.dirty;
+    const isTransformDirty = this.micro.dirty || this.texture.trimDirty || this.placementDirty;
 
     if (isTransformDirty) {
       const micro = this.micro;
@@ -224,6 +225,7 @@ export class UINineSlice extends UIElement {
       );
       this.micro.setDirtyFalse();
       this.texture.setTrimDirtyFalse();
+      this.setPlacementDirtyFalse();
     }
   }
 
@@ -277,9 +279,9 @@ export class UINineSlice extends UIElement {
     );
   }
 
-  private checkElementDimensionsDirty(): boolean {
+  private consumeElementDimensionsChange(): boolean {
     return (
-      this.solverWrapper.dirty &&
+      this.consumeLayoutChange() &&
       (this.lastElementWidth !== Math.round(this.width) ||
         this.lastElementHeight !== Math.round(this.height))
     );

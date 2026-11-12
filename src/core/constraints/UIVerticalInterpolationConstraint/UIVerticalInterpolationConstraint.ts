@@ -73,7 +73,7 @@ export class UIVerticalInterpolationConstraint extends UISingleParameterConstrai
     );
 
     this.anchorAInternal = anchorA;
-    this.anchorBInternal = anchorA;
+    this.anchorBInternal = anchorB;
     this.anchorCInternal = options.anchorC ?? DEFAULT_ANCHOR;
     this.tInternal = options.t ?? DEFAULT_T;
 

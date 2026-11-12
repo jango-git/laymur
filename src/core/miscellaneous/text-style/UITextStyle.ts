@@ -212,7 +212,7 @@ export class UITextStyle {
 
   public set shadowOffsetX(value: number | undefined) {
     if (value !== undefined) {
-      assertValidNonNegativeNumber(value, "UITextStyle.shadowOffsetX");
+      assertValidNumber(value, "UITextStyle.shadowOffsetX");
     }
     if (value !== this.shadowOffsetXInternal) {
       this.shadowOffsetXInternal = value;
@@ -222,7 +222,7 @@ export class UITextStyle {
 
   public set shadowOffsetY(value: number | undefined) {
     if (value !== undefined) {
-      assertValidNonNegativeNumber(value, "UITextStyle.shadowOffsetY");
+      assertValidNumber(value, "UITextStyle.shadowOffsetY");
     }
     if (value !== this.shadowOffsetYInternal) {
       this.shadowOffsetYInternal = value;

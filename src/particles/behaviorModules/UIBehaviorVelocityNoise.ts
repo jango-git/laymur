@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
@@ -7,11 +8,11 @@ import {
 import {
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
-  BUILTIN_OFFSET_RANDOM_C,
-  BUILTIN_OFFSET_RANDOM_D,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
   generateNoise2D,
+  particleRandom,
+  particleRandomStream,
   resolveUIRangeConfig,
   type UIRange,
   type UIRangeConfig,
@@ -19,9 +20,11 @@ import {
 import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
- * Applies noise-based acceleration to particles.
+ * Applies noise-based acceleration to particles: a still flow field that particles drift through.
  *
- * Uses 2D noise based on particle position. Higher scale means finer noise detail.
+ * The noise is sampled at the particle position times scale, so 1 / scale is the size of a noise
+ * detail in layer units. A detail much smaller than the distance a particle moves in a frame
+ * turns the drift into jitter.
  */
 export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
@@ -29,10 +32,10 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
   private strengthInternal: UIRange;
 
   /**
-   * @param scale - Noise frequency range. Accepts number, tuple, or range object
+   * @param scale - Noise frequency range in 1 / layer units. Accepts number, tuple, or range object
    * @param strength - Force multiplier range. Accepts number, tuple, or range object
    */
-  constructor(scale = 100, strength = 500) {
+  constructor(scale: UIRangeConfig = 0.005, strength: UIRangeConfig = 500) {
     super();
     this.scaleInternal = resolveUIRangeConfig(scale);
     assertValidPositiveNumber(
@@ -83,9 +86,13 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
     properties: { builtin: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
+
+    const scaleStream = particleRandomStream(randomSalt, 0);
+    const strengthStream = particleRandomStream(randomSalt, 1);
 
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
@@ -93,13 +100,13 @@ export class UIBehaviorVelocityNoise extends UIBehaviorModule<{ builtin: "Matrix
       const x = array[itemOffset + BUILTIN_OFFSET_POSITION_X];
       const y = array[itemOffset + BUILTIN_OFFSET_POSITION_Y];
 
-      const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_C];
+      const scaleT = particleRandom(array, itemOffset, scaleStream);
       const scale = MathUtils.lerp(this.scaleInternal.min, this.scaleInternal.max, scaleT);
 
       const noiseX = generateNoise2D(x * scale, y * scale);
       const noiseY = generateNoise2D((x + 100) * scale, (y + 100) * scale);
 
-      const strengthT = array[itemOffset + BUILTIN_OFFSET_RANDOM_D];
+      const strengthT = particleRandom(array, itemOffset, strengthStream);
       const strength = MathUtils.lerp(
         this.strengthInternal.min,
         this.strengthInternal.max,

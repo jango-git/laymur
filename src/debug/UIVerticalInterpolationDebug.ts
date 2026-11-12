@@ -3,6 +3,7 @@ import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three"
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
 import type { UIVerticalInterpolationConstraint } from "../core/index.js";
 import { UIColor, UIOrientation } from "../core/index.js";
 import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
@@ -109,6 +110,9 @@ export class UIVerticalInterpolationDebug implements UIConstraintDebug {
     this.baseLineGeometry.dispose();
     this.markerGeometry.dispose();
     this.textTexture.dispose();
+    this.baseLineMaterial.dispose();
+    this.markerMaterial.dispose();
+    this.spriteMaterial.dispose();
   }
 
   private updateContainerVisibility(): void {
@@ -123,6 +127,8 @@ export class UIVerticalInterpolationDebug implements UIConstraintDebug {
   };
 
   private readonly onRendering = (renderer: WebGLRenderer): void => {
+    // Also on creation: a constraint is announced before its orientation is set
+    this.updateContainerVisibility();
     const tintDirty = this.tint.dirty;
 
     if (tintDirty) {

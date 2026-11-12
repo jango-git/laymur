@@ -1,4 +1,5 @@
 import { Matrix4 } from "three";
+
 import type { UIDummy } from "../../elements/UIDummy/UIDummy.js";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts.js";

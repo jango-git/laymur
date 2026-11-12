@@ -6,6 +6,7 @@ import type {
   WebGLRenderer,
 } from "three";
 import { Mesh } from "three";
+
 import { assertVaryingBudget, assertVertexAttributeBudget } from "../../asserts.js";
 import {
   MASK_DATA_MODE_OFFSET,
@@ -22,6 +23,9 @@ import {
   TRANSFORM_ZINDEX_OFFSET,
 } from "../shared.js";
 import {
+  buildMaterial,
+  buildPackedAttribute,
+  buildPlaneLayout,
   BUILTIN_BLEND,
   BUILTIN_HSL,
   BUILTIN_MASK_MODE,
@@ -30,9 +34,6 @@ import {
   BUILTIN_MASK_SHAPE,
   BUILTIN_TRANSFORM,
   BUILTIN_VISIBILITY,
-  buildMaterial,
-  buildPackedAttribute,
-  buildPlaneLayout,
   CAPACITY_STEP,
   copyBetweenBuffers,
   INITIAL_CAPACITY,

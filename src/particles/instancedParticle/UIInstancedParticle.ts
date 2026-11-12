@@ -1,5 +1,6 @@
 import type { InstancedBufferGeometry, ShaderMaterial, Vector2, WebGLRenderer } from "three";
 import { InstancedBufferAttribute, Mesh, StreamDrawUsage } from "three";
+
 import {
   assertVaryingBudget,
   assertVertexAttributeBudget,
@@ -11,6 +12,25 @@ import {
   buildParticleMaterial,
   INSTANCED_PARTICLE_GEOMETRY,
 } from "./UIInstancedParticle.Internal.js";
+
+/** Update-range API of InstancedBufferAttribute across the supported three.js versions */
+interface UpdateRangeAttribute {
+  addUpdateRange?: (start: number, count: number) => void;
+  clearUpdateRanges?: () => void;
+  updateRange?: { offset: number; count: number };
+}
+
+function setUpdateRange(attribute: InstancedBufferAttribute, count: number): void {
+  const ranged = attribute as unknown as UpdateRangeAttribute;
+  // Newer three.js replaced updateRange with addUpdateRange.
+  if (ranged.addUpdateRange !== undefined && ranged.clearUpdateRanges !== undefined) {
+    ranged.clearUpdateRanges();
+    ranged.addUpdateRange(0, count);
+  } else if (ranged.updateRange !== undefined) {
+    ranged.updateRange.offset = 0;
+    ranged.updateRange.count = count;
+  }
+}
 
 export class UIInstancedParticle extends Mesh {
   public readonly propertyBuffers: Record<string, InstancedBufferAttribute> = {};
@@ -84,6 +104,28 @@ export class UIInstancedParticle extends Mesh {
     this.instancedGeometry.instanceCount += count;
   }
 
+  /** Zeroes every property of the instances in [instanceBegin, instanceEnd) */
+  public resetInstances(instanceBegin: number, instanceEnd: number): void {
+    for (const name in this.propertyBuffers) {
+      const attribute = this.propertyBuffers[name];
+      const { array, itemSize } = attribute;
+      array.fill(0, instanceBegin * itemSize, instanceEnd * itemSize);
+      attribute.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Limits the next upload of each marked buffer to the live instances. Call only with live
+   * instances: an empty range uploads the whole buffer.
+   */
+  public limitUploadToLiveInstances(): void {
+    const { instanceCount } = this.instancedGeometry;
+    for (const name in this.propertyBuffers) {
+      const attribute = this.propertyBuffers[name];
+      setUpdateRange(attribute, instanceCount * attribute.itemSize);
+    }
+  }
+
   public setOrigin(x: number, y: number): void {
     const uniform = resolvePropertyUniform("origin", this.shaderMaterial);
     (uniform.value as Vector2).set(x, y);
@@ -140,7 +182,12 @@ export class UIInstancedParticle extends Mesh {
       return;
     }
 
-    const newCapacity = Math.ceil(requiredCapacity / this.capacityStep) * this.capacityStep;
+    const newCapacity =
+      Math.ceil(Math.max(this.capacity * 2, requiredCapacity) / this.capacityStep) *
+      this.capacityStep;
+
+    // Frees the GPU buffers of the replaced attributes; the renderer uploads the new ones.
+    this.instancedGeometry.dispose();
 
     for (const name in this.propertyBuffers) {
       const { itemSize, array, usage } = this.propertyBuffers[name];

@@ -1,11 +1,14 @@
 import { Matrix4, Quaternion, Vector3 } from "three";
+
 import { UIMicroAnchorMode } from "../miscellaneous/micro/UIMicro.Internal.js";
+import type { UITextureTrim } from "./texture/UITextureView.Internal.js";
 
 const TEMP_POSITION = new Vector3();
 const TEMP_QUATERNION = new Quaternion();
 const TEMP_SCALE = new Vector3();
 const TEMP_MATRIX = new Matrix4();
 const Z_AXIS = new Vector3(0, 0, 1);
+const TEMP_TRIM: UITextureTrim = { left: 0, right: 0, top: 0, bottom: 0 };
 
 /**
  * Computes element transform matrix.
@@ -124,4 +127,30 @@ export function computeTrimmedTransformMatrix(
 
   TEMP_MATRIX.compose(TEMP_POSITION, TEMP_QUATERNION, TEMP_SCALE);
   return TEMP_MATRIX;
+}
+
+/**
+ * Trim of a sprite drawn at a size other than its source size: the trim stretches with it.
+ * Returns a shared object, valid until the next call.
+ * @param trim Trim in source units
+ * @param width Drawn width
+ * @param height Drawn height
+ * @param sourceWidth Untrimmed source width
+ * @param sourceHeight Untrimmed source height
+ * @returns Trim in drawn units
+ */
+export function scaleTrim(
+  trim: Readonly<UITextureTrim>,
+  width: number,
+  height: number,
+  sourceWidth: number,
+  sourceHeight: number,
+): Readonly<UITextureTrim> {
+  const scaleX = sourceWidth > 0 ? width / sourceWidth : 1;
+  const scaleY = sourceHeight > 0 ? height / sourceHeight : 1;
+  TEMP_TRIM.left = trim.left * scaleX;
+  TEMP_TRIM.right = trim.right * scaleX;
+  TEMP_TRIM.top = trim.top * scaleY;
+  TEMP_TRIM.bottom = trim.bottom * scaleY;
+  return TEMP_TRIM;
 }

@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+
 import type { UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 
 /**
@@ -15,11 +16,16 @@ export abstract class UIBehaviorModule<
   /**
    * Advances the particles in [0, instanceCount) by deltaTime seconds.
    * @param properties Per-particle buffers of the required properties
+   * @param instanceCount Number of live particles
+   * @param deltaTime Frame step in seconds
+   * @param randomSalt Salt for `particleRandomStream`: random values of the module are
+   * independent of those of other modules, also of another instance of the same module
    */
   public abstract update(
     properties: { [K in keyof T]: InstancedBufferAttribute },
     instanceCount: number,
     deltaTime: number,
+    randomSalt: number,
   ): void;
 
   public destroy?(): void;

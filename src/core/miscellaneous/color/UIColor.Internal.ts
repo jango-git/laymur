@@ -1,4 +1,5 @@
 import type { Color } from "three";
+
 import type { UIColor } from "./UIColor.js";
 
 /** Color configuration as Three.js Color, hex number, hex string, or UIColor */

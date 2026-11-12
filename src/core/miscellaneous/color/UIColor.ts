@@ -1,4 +1,5 @@
 import { Color, MathUtils, Vector4 } from "three";
+
 import { assertValidNumber } from "../asserts.js";
 import { linearToSRGB, srgbToLinear } from "../math.js";
 import type { UIColorConfig, UIColorName } from "./UIColor.Internal.js";
@@ -497,11 +498,13 @@ export class UIColor {
   /** Returns RGBA as 32-bit hex (RRGGBBAA) */
   public getHexRGBA(): number {
     this.ensureRGBUpdatedFromHSL();
+    // Unsigned: a red of 128 or more sets the sign bit
     return (
-      (Math.round(this.rInternal * 255) << 24) |
-      (Math.round(this.gInternal * 255) << 16) |
-      (Math.round(this.bInternal * 255) << 8) |
-      Math.round(this.aInternal * 255)
+      ((Math.round(this.rInternal * 255) << 24) |
+        (Math.round(this.gInternal * 255) << 16) |
+        (Math.round(this.bInternal * 255) << 8) |
+        Math.round(this.aInternal * 255)) >>>
+      0
     );
   }
 

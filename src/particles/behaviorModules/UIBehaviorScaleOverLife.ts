@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
@@ -8,9 +9,10 @@ import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/mi
 import {
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
-  BUILTIN_OFFSET_RANDOM_D,
   BUILTIN_OFFSET_SCALE_X,
   BUILTIN_OFFSET_SCALE_Y,
+  particleRandom,
+  particleRandomStream,
   resolveAspect,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
@@ -67,9 +69,15 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOverLife.aspect");
   }
 
-  public update(properties: { builtin: InstancedBufferAttribute }, instanceCount: number): void {
+  public update(
+    properties: { builtin: InstancedBufferAttribute },
+    instanceCount: number,
+    deltaTime: number,
+    randomSalt: number,
+  ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
+    const scaleStream = particleRandomStream(randomSalt, 0);
 
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
@@ -81,7 +89,7 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
       const segment = (this.scales.length - 1) * lifeT;
       const index = Math.floor(segment);
 
-      const scaleT = array[itemOffset + BUILTIN_OFFSET_RANDOM_D];
+      const scaleT = particleRandom(array, itemOffset, scaleStream);
 
       const localT = segment - index;
       const scaleRange0 = this.scales[index];

@@ -1,21 +1,22 @@
-import type { FerrsignView2, FerrsignView3 } from "ferrsign";
-import { Ferrsign2, Ferrsign3 } from "ferrsign";
+import type { FerrsignView1, FerrsignView2, FerrsignView3 } from "ferrsign";
+import { Ferrsign1, Ferrsign2, Ferrsign3 } from "ferrsign";
 import type { WebGLRenderer } from "three";
-import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 
 import type { UIConstraint } from "../../constraints/UIConstraint.js";
 import type { UIAnchor } from "../../elements/UIAnchor/UIAnchor.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { UIContextMonitor } from "../../miscellaneous/context-monitor/UIContextMonitor.js";
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
-import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
+import type { UIPlaneElement } from "../../miscellaneous/shared.js";
+import { isUIModeInteractive, isUIModeVisible } from "../../miscellaneous/UIMode.js";
 import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 import { UIPriority } from "../../miscellaneous/UIPriority.js";
-import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper.js";
 import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal.js";
-import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper.js";
+import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper.js";
 import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWrapper.Internal.js";
-import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper.js";
+import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper.js";
 import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
+import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper.js";
 import type { UILayerMode, UILayerOptions, UILayerOrientation } from "./UILayer.Internal.js";
 import { LAYER_DEFAULT_MODE, LAYER_DEFAULT_NAME, LAYER_DEFAULT_SIZE } from "./UILayer.Internal.js";
 
@@ -43,6 +44,8 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
   private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
   private readonly signalResizedInternal = new Ferrsign3<number, number, UILayer>();
+  private readonly signalContextLostInternal = new Ferrsign1<UILayer>();
+  private readonly signalContextRestoredInternal = new Ferrsign1<UILayer>();
 
   private readonly signalConstraintAddedInternal = new Ferrsign2<UILayer, UIConstraint>();
   private readonly signalConstraintRemovedInternal = new Ferrsign2<UILayer, UIConstraint>();
@@ -50,6 +53,7 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly constraintRegistryInternal: UIConstraint[] = [];
   private readonly elementRegistryInternal: UIAnchor[] = [];
   private readonly maskRegistryInternal: UIMask[] = [];
+  private contextMonitor: UIContextMonitor | null = null;
   private destroyedInternal = false;
 
   constructor(options: Partial<UILayerOptions>) {
@@ -163,7 +167,26 @@ export abstract class UILayer implements UIPlaneElement {
     return this.signalResizedInternal;
   }
 
-  /** Signal fired when a constraint is added */
+  /**
+   * Signal fired when the WebGL context of the renderer the layer is drawn with is lost. The
+   * layer draws nothing until the context is restored; pause what depends on frames being shown.
+   */
+  public get signalContextLost(): FerrsignView1<UILayer> {
+    return this.signalContextLostInternal;
+  }
+
+  /**
+   * Signal fired when the WebGL context is restored. The renderer has recreated its GL state by
+   * then; content that lives on the GPU only, such as render targets, has to be redrawn.
+   */
+  public get signalContextRestored(): FerrsignView1<UILayer> {
+    return this.signalContextRestoredInternal;
+  }
+
+  /**
+   * Signal fired when a constraint is added. It fires from the base constructor, before the
+   * fields of the subclass are set: read them no sooner than in a microtask or on the next frame.
+   */
   public get signalConstraintAdded(): FerrsignView2<UILayer, UIConstraint> {
     return this.signalConstraintAddedInternal;
   }
@@ -193,10 +216,16 @@ export abstract class UILayer implements UIPlaneElement {
     return this.destroyedInternal;
   }
 
-  /** Updates visibility and interactivity mode */
+  /**
+   * Updates visibility and interactivity mode. A layer that stops taking input cancels the
+   * pressed pointers: their releases would never arrive.
+   */
   public set mode(value: UILayerMode) {
     if (value !== this.modeInternal) {
       this.modeInternal = value;
+      if (!isUIModeInteractive(value)) {
+        this.cancelPointers();
+      }
       this.signalModeChangedInternal.emit(this.modeInternal, this);
     }
   }
@@ -211,6 +240,7 @@ export abstract class UILayer implements UIPlaneElement {
       return;
     }
     this.destroyedInternal = true;
+    this.bindContextMonitor(null);
 
     for (const element of [...this.elementRegistryInternal]) {
       element.destroy();
@@ -303,17 +333,28 @@ export abstract class UILayer implements UIPlaneElement {
     this.solverWrapperInternal.suggestVariableValue(this.wVariable, width);
     this.solverWrapperInternal.suggestVariableValue(this.hVariable, height);
     this.sceneWrapperInternal.resize(width, height);
-    this.signalResizedInternal.emit(width, height, this);
 
+    // Updated before the signals, so that a resize handler reads the new orientation
     const orientation = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
-    if (orientation !== this.orientationInternal) {
-      this.orientationInternal = orientation;
+    const orientationChanged = orientation !== this.orientationInternal;
+    this.orientationInternal = orientation;
+
+    this.signalResizedInternal.emit(width, height, this);
+    if (orientationChanged) {
       this.signalOrientationChangedInternal.emit(this.orientationInternal, this);
     }
   }
 
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
     if (this.destroyedInternal) {
+      return;
+    }
+
+    // While the context is lost the frame is skipped as a whole: elements compare versions, so
+    // nothing changed meanwhile is lost once drawing resumes
+    const contextMonitor = UIContextMonitor.for(renderer);
+    this.bindContextMonitor(contextMonitor);
+    if (contextMonitor.lost) {
       return;
     }
 
@@ -324,10 +365,37 @@ export abstract class UILayer implements UIPlaneElement {
       }
       this.sceneWrapperInternal.render(renderer);
     }
-
-    this.solverWrapperInternal.dirty = false;
-    this.inputWrapperInternal.dirty = false;
   }
+
+  /**
+   * Cancels every pressed pointer, for its elements and for the layer: no release of those
+   * pointers will be reported.
+   */
+  protected cancelPointers(): void {
+    this.inputWrapperInternal.cancelPointers((x, y, identifier) => {
+      this.reportPointerCancelledByLayer(x, y, identifier);
+    });
+  }
+
+  /** Follows the context of the renderer the layer is drawn with; null to stop following */
+  private bindContextMonitor(monitor: UIContextMonitor | null): void {
+    if (monitor === this.contextMonitor) {
+      return;
+    }
+    this.contextMonitor?.signalLost.off(this.onContextLost);
+    this.contextMonitor?.signalRestored.off(this.onContextRestored);
+    this.contextMonitor = monitor;
+    monitor?.signalLost.on(this.onContextLost);
+    monitor?.signalRestored.on(this.onContextRestored);
+  }
+
+  private readonly onContextLost = (): void => {
+    this.signalContextLostInternal.emit(this);
+  };
+
+  private readonly onContextRestored = (): void => {
+    this.signalContextRestoredInternal.emit(this);
+  };
 
   /** A removal signal handler may destroy other constraints, so the registry is walked over a copy */
   private destroyConstraints(predicate: (constraint: UIConstraint) => boolean): void {
@@ -337,4 +405,13 @@ export abstract class UILayer implements UIPlaneElement {
       }
     }
   }
+
+  /**
+   * Called for each pointer the layer cancels, before its elements are told: the subclass that
+   * takes the input reports the cancel to the users of the layer.
+   * @param x Last known horizontal position in layer coordinates
+   * @param y Last known vertical position in layer coordinates
+   * @param identifier Pointer identifier
+   */
+  protected abstract reportPointerCancelledByLayer(x: number, y: number, identifier: number): void;
 }

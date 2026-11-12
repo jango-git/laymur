@@ -1,8 +1,8 @@
 import type { UILayer } from "../layers/UILayer/UILayer.js";
 import { assertValidConstraintExpressions } from "../miscellaneous/asserts.js";
 import type { UIExpression } from "../miscellaneous/UIExpression.js";
-import { UISingleParameterConstraint } from "./UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
+import { UISingleParameterConstraint } from "./UISingleParameterConstraint/UISingleParameterConstraint.js";
 
 /** Constraint with custom LHS and RHS expressions */
 export class UICustomConstraint extends UISingleParameterConstraint {

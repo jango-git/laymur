@@ -1,19 +1,22 @@
 import type { WebGLRenderer } from "three";
 import { Vector2 } from "three";
-import type { UILayer } from "../../core/index.js";
+
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor.js";
-import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
+import type { UILayer } from "../../core/index.js";
+import { assertValidNumber, assertValidPositiveNumber } from "../../core/miscellaneous/asserts.js";
 import type { GLProperty, GLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { resolveGLSLTypeInfo } from "../../core/miscellaneous/generic-plane/shared.js";
 import { isUIModeVisible } from "../../core/miscellaneous/UIMode.js";
 import type { UIBehaviorModule } from "../behaviorModules/UIBehaviorModule.js";
-import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle.js";
 import {
   collectProperties,
-  collectUniforms,
+  collectRenderingUniforms,
 } from "../instancedParticle/UIInstancedParticle.Internal.js";
+import { UIInstancedParticle } from "../instancedParticle/UIInstancedParticle.js";
 import {
+  assertValidNonNegativeInteger,
   BUILTIN_OFFSET_AGE,
+  BUILTIN_OFFSET_LIFETIME,
   BUILTIN_OFFSET_POSITION_X,
   BUILTIN_OFFSET_POSITION_Y,
   BUILTIN_OFFSET_RANDOM_A,
@@ -21,11 +24,16 @@ import {
   BUILTIN_OFFSET_RANDOM_C,
   BUILTIN_OFFSET_RANDOM_D,
   BUILTIN_OFFSET_RANDOM_E,
-  BUILTIN_OFFSET_RANDOM_F,
   BUILTIN_OFFSET_ROTATION,
+  BUILTIN_OFFSET_SCALE_X,
+  BUILTIN_OFFSET_SCALE_Y,
   BUILTIN_OFFSET_TORQUE,
   BUILTIN_OFFSET_VELOCITY_X,
   BUILTIN_OFFSET_VELOCITY_Y,
+  computeParticleSeed,
+  particleRandom,
+  particleRandomStream,
+  writeParticleSeed,
 } from "../miscellaneous/miscellaneous.js";
 import type { UIRenderingModule } from "../renderingModules/UIRenderingModule.js";
 import type { UISpawnModule } from "../spawnModules/UISpawnModule.js";
@@ -35,12 +43,29 @@ import type {
   UIEmitterPlayOptions,
 } from "./UIEmitter.Internal.js";
 import {
+  EMITTER_BEHAVIOR_SALT_BASE,
   EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES,
   EMITTER_DEFAULT_CAPACITY_STEP,
   EMITTER_DEFAULT_EXPECTED_CAPACITY,
+  EMITTER_DEFAULT_LIFETIME,
+  EMITTER_DEFAULT_MAX_DELTA_TIME,
   EMITTER_DEFAULT_MODE,
+  EMITTER_SHADER_SALT,
+  EMITTER_SPAWN_SALT_BASE,
   ignoreInput,
 } from "./UIEmitter.Internal.js";
+
+/** Builtin slots of the random values the shaders read, each with its stream */
+const SHADER_RANDOM_SLOTS = [
+  BUILTIN_OFFSET_RANDOM_A,
+  BUILTIN_OFFSET_RANDOM_B,
+  BUILTIN_OFFSET_RANDOM_C,
+  BUILTIN_OFFSET_RANDOM_D,
+  BUILTIN_OFFSET_RANDOM_E,
+].map((offset, channel) => ({
+  offset,
+  stream: particleRandomStream(EMITTER_SHADER_SALT, channel),
+}));
 
 /**
  * Particle emitter element.
@@ -60,6 +85,10 @@ export class UIEmitter extends UIAnchor {
   private emissionElapsed = 0;
 
   private modeInternal: UIEmitterMode;
+  private maxDeltaTimeInternal: number;
+  private seedInternal: number;
+  /** Particles spawned since the seed was set; picks the seed of the next particle */
+  private spawnedCount = 0;
 
   /**
    * @param layer - Layer containing this emitter
@@ -84,8 +113,8 @@ export class UIEmitter extends UIAnchor {
       // 4, 5   scaleX, scaleY
       // 6, 7   rotation, torque
       // 8, 9   lifetime, age
-      // 10, 11, 12   randomX, randomY, randomZ
-      // 13, 14, 16   reservedX, reservedY, reservedZ
+      // 10-14  random values A-E for shaders
+      // 15     seed, read by shaders as random value F
     };
     collectProperties(collectedProperties, spawnSequence, "UIEmitter.constructor.spawnSequence");
     collectProperties(
@@ -102,7 +131,7 @@ export class UIEmitter extends UIAnchor {
     const collectedUniforms: Record<string, GLProperty> = {
       origin: { value: new Vector2(), glslTypeInfo: resolveGLSLTypeInfo("Vector2") },
     };
-    collectUniforms(
+    const renderingSources = collectRenderingUniforms(
       collectedUniforms,
       renderingSequence,
       "UIEmitter.constructor.renderingSequence",
@@ -110,14 +139,17 @@ export class UIEmitter extends UIAnchor {
 
     const zIndex = 0;
     this.catcherHandler = this.layer.inputWrapper.createInputCatcher(
-      ignoreInput,
-      ignoreInput,
-      ignoreInput,
+      {
+        catchPointerDown: ignoreInput,
+        catchPointerMove: ignoreInput,
+        catchPointerUp: ignoreInput,
+        catchPointerCancel: ignoreInput,
+      },
       zIndex,
     );
 
     this.mesh = new UIInstancedParticle(
-      this.renderingSequence.map((module) => module.source),
+      renderingSources,
       collectedUniforms,
       collectedProperties,
       options.expectedCapacity ?? EMITTER_DEFAULT_EXPECTED_CAPACITY,
@@ -133,6 +165,21 @@ export class UIEmitter extends UIAnchor {
     this.automaticallyDestroyModules =
       options.automaticallyDestroyModules ?? EMITTER_DEFAULT_AUTOMATICALLY_DESTROY_MODULES;
     this.modeInternal = options.mode ?? EMITTER_DEFAULT_MODE;
+    this.mesh.visible = isUIModeVisible(this.modeInternal);
+    this.maxDeltaTimeInternal = options.maxDeltaTime ?? EMITTER_DEFAULT_MAX_DELTA_TIME;
+    assertValidPositiveNumber(this.maxDeltaTimeInternal, "UIEmitter.constructor.maxDeltaTime");
+    this.seedInternal = options.seed ?? Math.floor(Math.random() * 0x100000000);
+    assertValidNonNegativeInteger(this.seedInternal, "UIEmitter.constructor.seed");
+  }
+
+  /** Seed of the random values */
+  public get seed(): number {
+    return this.seedInternal;
+  }
+
+  /** Longest frame step in seconds; longer frames are clamped */
+  public get maxDeltaTime(): number {
+    return this.maxDeltaTimeInternal;
   }
 
   /** Visibility mode */
@@ -157,6 +204,24 @@ export class UIEmitter extends UIAnchor {
     }
   }
 
+  /** Longest frame step in seconds; longer frames are clamped */
+  public set maxDeltaTime(value: number) {
+    this.assertNotDestroyed("UIEmitter.maxDeltaTime");
+    assertValidPositiveNumber(value, "UIEmitter.maxDeltaTime");
+    this.maxDeltaTimeInternal = value;
+  }
+
+  /**
+   * Sets the seed and restarts its sequence: the next particles repeat those spawned after the
+   * same seed was set before
+   */
+  public set seed(value: number) {
+    this.assertNotDestroyed("UIEmitter.seed");
+    assertValidNonNegativeInteger(value, "UIEmitter.seed");
+    this.seedInternal = value;
+    this.spawnedCount = 0;
+  }
+
   /**
    * Rendering order among the elements of the layer. Higher values on top; elements with equal
    * values keep the order of creation, a later one on top.
@@ -168,36 +233,53 @@ export class UIEmitter extends UIAnchor {
   }
 
   /**
-   * Spawns a specific number of particles immediately.
+   * Spawns a specific number of particles immediately. Before the spawn modules run, every
+   * property of a new particle is 0, except scale 1 and lifetime 1 second.
    *
-   * @param count - Number of particles to create
+   * @param count - Number of particles to create, a non-negative integer
    */
   public burst(count: number): void {
     this.assertNotDestroyed("UIEmitter.burst");
+    assertValidNonNegativeInteger(count, "UIEmitter.burst.count");
+    if (count === 0) {
+      return;
+    }
+
     const instanceBegin = this.mesh.instanceCount;
     this.mesh.createInstances(count);
     const instanceEnd = this.mesh.instanceCount;
+    // A slot may hold a dead particle's values.
+    this.mesh.resetInstances(instanceBegin, instanceEnd);
 
     {
-      const { builtin } = this.mesh.propertyBuffers;
-      const { array, itemSize } = builtin;
+      const { array, itemSize } = this.mesh.propertyBuffers.builtin;
 
       for (let i = instanceBegin; i < instanceEnd; i++) {
         const itemOffset = i * itemSize;
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_A] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_B] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_C] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_D] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_E] = Math.random();
-        array[itemOffset + BUILTIN_OFFSET_RANDOM_F] = Math.random();
+        array[itemOffset + BUILTIN_OFFSET_SCALE_X] = 1;
+        array[itemOffset + BUILTIN_OFFSET_SCALE_Y] = 1;
+        array[itemOffset + BUILTIN_OFFSET_LIFETIME] = EMITTER_DEFAULT_LIFETIME;
+        writeParticleSeed(
+          array,
+          itemOffset,
+          computeParticleSeed(this.seedInternal, this.spawnedCount++),
+        );
+        for (const { offset, stream } of SHADER_RANDOM_SLOTS) {
+          array[itemOffset + offset] = particleRandom(array, itemOffset, stream);
+        }
       }
-
-      builtin.needsUpdate = true;
     }
 
-    for (const spawnModule of this.spawnSequence) {
-      spawnModule.spawn(this.mesh.propertyBuffers, instanceBegin, instanceEnd);
+    for (let index = 0; index < this.spawnSequence.length; index++) {
+      this.spawnSequence[index].spawn(
+        this.mesh.propertyBuffers,
+        instanceBegin,
+        instanceEnd,
+        EMITTER_SPAWN_SALT_BASE + index,
+      );
     }
+
+    this.mesh.limitUploadToLiveInstances();
   }
 
   /** Removes all active particles */
@@ -251,37 +333,38 @@ export class UIEmitter extends UIAnchor {
     super.destroyInternal();
   }
 
-  private readonly onRendering = (renderer: WebGLRenderer, deltaTime: number): void => {
+  private readonly onRendering = (renderer: WebGLRenderer, rawDeltaTime: number): void => {
     this.layer.sceneWrapper.setOrderedObjectDepth(
       this.mesh,
       this.layer.inputWrapper.getDepth(this.catcherHandler),
     );
 
-    {
-      const { builtin } = this.mesh.propertyBuffers;
-      const { array, itemSize } = builtin;
+    const deltaTime = Math.min(rawDeltaTime, this.maxDeltaTimeInternal);
+
+    if (this.mesh.instanceCount > 0) {
+      const { array, itemSize } = this.mesh.propertyBuffers.builtin;
 
       for (let i = 0; i < this.mesh.instanceCount; i++) {
         array[i * itemSize + BUILTIN_OFFSET_AGE] += deltaTime;
       }
 
-      builtin.needsUpdate = true;
       this.mesh.removeDeadParticles();
     }
 
     if (this.emissionRate > 0) {
+      const emittedBefore = this.emissionElapsed;
       this.emissionElapsed += deltaTime;
+      this.emissionAccumulator +=
+        this.emissionRate * (Math.min(this.emissionElapsed, this.emissionDuration) - emittedBefore);
+
+      const particlesToSpawn = Math.floor(this.emissionAccumulator);
+      if (particlesToSpawn > 0) {
+        this.burst(particlesToSpawn);
+        this.emissionAccumulator -= particlesToSpawn;
+      }
 
       if (this.emissionElapsed >= this.emissionDuration) {
         this.stop();
-      } else {
-        this.emissionAccumulator += this.emissionRate * deltaTime;
-
-        const particlesToSpawn = Math.floor(this.emissionAccumulator);
-        if (particlesToSpawn > 0) {
-          this.burst(particlesToSpawn);
-          this.emissionAccumulator -= particlesToSpawn;
-        }
       }
     }
 
@@ -294,34 +377,30 @@ export class UIEmitter extends UIAnchor {
     {
       const { propertyBuffers, instanceCount } = this.mesh;
 
-      for (const module of this.behaviorSequence) {
-        module.update(propertyBuffers, instanceCount, deltaTime);
+      for (let index = 0; index < this.behaviorSequence.length; index++) {
+        this.behaviorSequence[index].update(
+          propertyBuffers,
+          instanceCount,
+          deltaTime,
+          EMITTER_BEHAVIOR_SALT_BASE + index,
+        );
       }
     }
 
     const { builtin } = this.mesh.propertyBuffers;
     const { array, itemSize } = builtin;
 
-    {
-      for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const itemOffset = i * itemSize;
-        array[itemOffset + BUILTIN_OFFSET_POSITION_X] +=
-          array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] * deltaTime;
-        array[itemOffset + BUILTIN_OFFSET_POSITION_Y] +=
-          array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] * deltaTime;
-      }
-
-      builtin.needsUpdate = true;
+    for (let i = 0; i < this.mesh.instanceCount; i++) {
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_POSITION_X] +=
+        array[itemOffset + BUILTIN_OFFSET_VELOCITY_X] * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_POSITION_Y] +=
+        array[itemOffset + BUILTIN_OFFSET_VELOCITY_Y] * deltaTime;
+      array[itemOffset + BUILTIN_OFFSET_ROTATION] +=
+        array[itemOffset + BUILTIN_OFFSET_TORQUE] * deltaTime;
     }
 
-    {
-      for (let i = 0; i < this.mesh.instanceCount; i++) {
-        const itemOffset = i * itemSize;
-        array[itemOffset + BUILTIN_OFFSET_ROTATION] +=
-          array[itemOffset + BUILTIN_OFFSET_TORQUE] * deltaTime;
-      }
-
-      builtin.needsUpdate = true;
-    }
+    builtin.needsUpdate = true;
+    this.mesh.limitUploadToLiveInstances();
   };
 }

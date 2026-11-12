@@ -2,12 +2,13 @@ import {
   CanvasTexture,
   ClampToEdgeWrapping,
   LinearFilter,
+  NoColorSpace,
   RGBAFormat,
+  SRGBColorSpace,
   UnsignedByteType,
   UVMapping,
-  SRGBColorSpace,
-  NoColorSpace,
 } from "three";
+
 import { checkOffscreenCanvasSupport, checkSRGBSupport } from "./webglCapabilities.js";
 
 /** Canvas type that works both in main thread and workers */
@@ -41,7 +42,13 @@ export function createCanvas(width: number, height: number): UICanvas {
  * @returns 2D rendering context or null
  */
 export function getCanvas2DContext(canvas: UICanvas): UICanvasRenderingContext2D | null {
-  return canvas.getContext("2d");
+  // Each branch calls getContext on a concrete type: on the union, TypeScript picks the overload
+  // depending on the order it checks types in, and may return the generic RenderingContext
+  return isOffscreenCanvas(canvas) ? canvas.getContext("2d") : canvas.getContext("2d");
+}
+
+function isOffscreenCanvas(canvas: UICanvas): canvas is OffscreenCanvas {
+  return typeof OffscreenCanvas !== "undefined" && canvas instanceof OffscreenCanvas;
 }
 
 /**

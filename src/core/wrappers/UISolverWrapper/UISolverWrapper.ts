@@ -1,4 +1,5 @@
 import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
+
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
 import { convertPriority, UIPriority } from "../../miscellaneous/UIPriority.js";
 import { convertRelation, UIRelation } from "../../miscellaneous/UIRelation.js";
@@ -29,8 +30,7 @@ import type {
  * @see {@link UIRelation} - Relational operators for constraints
  */
 export class UISolverWrapper implements UISolverWrapperView {
-  /** @internal */
-  public dirty = false;
+  private versionInternal = 0;
 
   /** The underlying Kiwi solver instance, undefined when solver needs rebuilding. */
   private solver? = new Solver();
@@ -46,6 +46,11 @@ export class UISolverWrapper implements UISolverWrapperView {
   private readonly constraints = new Map<number, ConstraintDescription>();
   /** Counter for generating unique constraint indices. */
   private lastConstraintIndex = 0;
+
+  /** Bumped by every change to the variables or constraints; compare with the last seen value */
+  public get version(): number {
+    return this.versionInternal;
+  }
 
   /**
    * Creates a new solver variable with the specified value and priority.
@@ -89,7 +94,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     }
 
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
     return index;
   }
 
@@ -128,7 +133,7 @@ export class UISolverWrapper implements UISolverWrapperView {
 
     this.variables.delete(index);
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
   }
 
   /**
@@ -176,7 +181,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       }
 
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
   }
 
@@ -203,6 +208,14 @@ export class UISolverWrapper implements UISolverWrapperView {
       description.priority = priority;
 
       if (description.priority === UIPriority.P0) {
+        try {
+          if (this.solver?.hasEditVariable(description.variable) === true) {
+            this.solver.removeEditVariable(description.variable);
+          }
+        } catch {
+          this.solver = undefined;
+        }
+
         const lhs = new UIExpression().plus(index, 1);
         const rhs = new UIExpression(description.value);
 
@@ -232,7 +245,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       }
 
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
   }
 
@@ -303,7 +316,7 @@ export class UISolverWrapper implements UISolverWrapperView {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
     return index;
   }
@@ -335,7 +348,7 @@ export class UISolverWrapper implements UISolverWrapperView {
 
     this.constraints.delete(index);
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
   }
 
   /**
@@ -377,7 +390,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     description.lhs.copy(lhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
   }
 
   /**
@@ -401,7 +414,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     description.rhs.copy(rhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
   }
 
   /**
@@ -426,7 +439,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       description.relation = relation;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
   }
 
@@ -452,7 +465,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       description.priority = priority;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
   }
 
@@ -484,7 +497,7 @@ export class UISolverWrapper implements UISolverWrapperView {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
-      this.dirty = true;
+      this.versionInternal++;
     }
   }
 
@@ -509,8 +522,16 @@ export class UISolverWrapper implements UISolverWrapperView {
       }
     }
 
-    this.solver?.removeEditVariable(description.variable);
-    this.solver?.addEditVariable(description.variable, convertPriority(description.priority));
+    // A variable that was required (P0) has no edit variable yet
+    try {
+      if (this.solver?.hasEditVariable(description.variable) === true) {
+        this.solver.removeEditVariable(description.variable);
+      }
+      this.solver?.addEditVariable(description.variable, convertPriority(description.priority));
+      this.solver?.suggestValue(description.variable, description.value);
+    } catch {
+      this.solver = undefined;
+    }
 
     for (const cDescription of dependConstraints) {
       cDescription.constraint = this.buildConstraint(
@@ -668,6 +689,6 @@ export class UISolverWrapper implements UISolverWrapperView {
 
     this.solver = solver;
     this.recalculationRequired = true;
-    this.dirty = true;
+    this.versionInternal++;
   }
 }

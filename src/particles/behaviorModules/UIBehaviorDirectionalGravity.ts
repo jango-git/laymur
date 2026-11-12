@@ -1,4 +1,5 @@
 import type { InstancedBufferAttribute } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { Vector2Like } from "../../core/miscellaneous/math.js";
 import type { UIVector2Config } from "../miscellaneous/miscellaneous.js";
@@ -21,7 +22,7 @@ export class UIBehaviorDirectionalGravity extends UIBehaviorModule<{ builtin: "M
   /**
    * @param direction - Acceleration vector in units/second^2
    */
-  constructor(direction: Vector2Like) {
+  constructor(direction: UIVector2Config) {
     super();
     this.directionInternal = resolveUIVector2Config(direction);
     assertValidNumber(

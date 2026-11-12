@@ -11,6 +11,7 @@ import {
   Vector3,
   Vector4,
 } from "three";
+
 import maskSource from "../../../shaders/UIMask.js";
 import { UIColor } from "../../color/UIColor.js";
 import { UITransparencyMode } from "../../UITransparencyMode.js";

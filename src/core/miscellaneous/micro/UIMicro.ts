@@ -1,4 +1,5 @@
 import { MathUtils } from "three";
+
 import { assertValidNumber } from "../asserts.js";
 import type { UIMicroAnchorMode, UIMicroConfig } from "./UIMicro.Internal.js";
 import {

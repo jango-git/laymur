@@ -1,10 +1,12 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidPositiveNumber } from "../../core/miscellaneous/asserts.js";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
-  BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
+  particleRandom,
+  particleRandomStream,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
 import { UISpawnModule } from "./UISpawnModule.js";
@@ -12,7 +14,7 @@ import { UISpawnModule } from "./UISpawnModule.js";
 /**
  * Assigns random lifetime to particles.
  *
- * Lifetime is chosen uniformly from the specified range. Age is set to 0.
+ * Lifetime is chosen uniformly from the specified range.
  */
 export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }> {
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
@@ -50,15 +52,21 @@ export class UISpawnRandomLifetime extends UISpawnModule<{ builtin: "Matrix4" }>
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { min: lifetimeMin, max: lifetimeMax } = this.lifetimeInternal;
 
+    const lifetimeStream = particleRandomStream(randomSalt, 0);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
       const itemOffset = i * itemSize;
-      array[itemOffset + BUILTIN_OFFSET_LIFETIME] = MathUtils.randFloat(lifetimeMin, lifetimeMax);
-      array[itemOffset + BUILTIN_OFFSET_AGE] = 0;
+      array[itemOffset + BUILTIN_OFFSET_LIFETIME] = MathUtils.lerp(
+        lifetimeMin,
+        lifetimeMax,
+        particleRandom(array, itemOffset, lifetimeStream),
+      );
     }
 
     builtin.needsUpdate = true;

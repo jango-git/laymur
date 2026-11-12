@@ -1,3 +1,4 @@
+import type { UIConstraint } from "../core/constraints/UIConstraint.js";
 import type { UILayer } from "../core/index.js";
 import {
   UIAspectConstraint,
@@ -8,7 +9,6 @@ import {
   UIVerticalInterpolationConstraint,
   UIWidthConstraint,
 } from "../core/index.js";
-import type { UIConstraint } from "../core/constraints/UIConstraint.js";
 import { UIAspectDebug } from "./UIAspectDebug.js";
 import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 import { UIHeightDebug } from "./UIHeightDebug.js";
@@ -57,6 +57,34 @@ export class UILayerDebug {
 
     this.layer.signalConstraintAdded.on(this.onConstraintAdded);
     this.layer.signalConstraintRemoved.on(this.onConstraintRemoved);
+  }
+
+  public get showAspect(): boolean {
+    return this.showAspectInternal;
+  }
+
+  public get showHeight(): boolean {
+    return this.showHeightInternal;
+  }
+
+  public get showWidth(): boolean {
+    return this.showWidthInternal;
+  }
+
+  public get showHorizontalDistance(): boolean {
+    return this.showHorizontalDistanceInternal;
+  }
+
+  public get showHorizontalInterpolation(): boolean {
+    return this.showHorizontalInterpolationInternal;
+  }
+
+  public get showVerticalDistance(): boolean {
+    return this.showVerticalDistanceInternal;
+  }
+
+  public get showVerticalInterpolation(): boolean {
+    return this.showVerticalInterpolationInternal;
   }
 
   public set showAspect(value: boolean) {

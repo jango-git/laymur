@@ -1,8 +1,9 @@
 import type { DataTexture } from "three";
+
 import type { UIColor } from "../../core/index.js";
 import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 import { buildGradientTexture } from "../miscellaneous/miscellaneous.js";
-import source from "../shaders/UIRenderingColorOverVelocity.js";
+import { buildColorOverVelocitySource } from "../shaders/UIRenderingColorOverVelocity.js";
 import { UIRenderingModule } from "./UIRenderingModule.js";
 
 /**
@@ -15,7 +16,7 @@ export class UIRenderingColorOverVelocity extends UIRenderingModule {
     builtin: "Matrix4",
   } as const;
   public readonly requiredUniforms: Record<string, UIProperty>;
-  public readonly source = source;
+  public readonly source: string;
 
   /**
    * @param colors - Color gradient from slow to fast
@@ -36,12 +37,8 @@ export class UIRenderingColorOverVelocity extends UIRenderingModule {
       );
     }
 
-    this.source = source.replace(
-      "COLOR_OVER_VELOCITY_MAX",
-      `COLOR_OVER_VELOCITY_MAX ${maxVelocity.toFixed(2)}`,
-    );
-
-    this.requiredUniforms = { colorOverVelocityTexture: buildGradientTexture(colors) } as const;
+    this.requiredUniforms = { colorOverVelocityTexture: buildGradientTexture(colors) };
+    this.source = buildColorOverVelocitySource(colors.length, maxVelocity);
   }
 
   public override destroy(): void {

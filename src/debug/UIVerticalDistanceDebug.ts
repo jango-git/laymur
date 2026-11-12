@@ -5,6 +5,7 @@ import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
+
 import type { UIVerticalDistanceConstraint } from "../core/index.js";
 import { UIColor, UILayer, UIOrientation } from "../core/index.js";
 import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
@@ -114,6 +115,9 @@ export class UIVerticalDistanceDebug implements UIConstraintDebug {
     this.lineGeometry.dispose();
     this.tickGeometry.dispose();
     this.textTexture.dispose();
+    this.lineMaterial.dispose();
+    this.tickMaterial.dispose();
+    this.spriteMaterial.dispose();
   }
 
   private updateContainerVisibility(): void {
@@ -128,6 +132,8 @@ export class UIVerticalDistanceDebug implements UIConstraintDebug {
   };
 
   private readonly onRendering = (renderer: WebGLRenderer): void => {
+    // Also on creation: a constraint is announced before its orientation is set
+    this.updateContainerVisibility();
     const tintDirty = this.tint.dirty;
 
     if (tintDirty) {

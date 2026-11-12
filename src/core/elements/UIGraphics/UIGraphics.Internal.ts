@@ -1,5 +1,5 @@
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
+import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import type { UIElementOptions } from "../UIElement/UIElement.Internal.js";
 
 /** Configuration options for UIGraphics */

@@ -1,8 +1,14 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import { assertValidNumber } from "../../core/miscellaneous/asserts.js";
 import type { UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
-import { BUILTIN_OFFSET_TORQUE, resolveUIRangeConfig } from "../miscellaneous/miscellaneous.js";
+import {
+  BUILTIN_OFFSET_TORQUE,
+  particleRandom,
+  particleRandomStream,
+  resolveUIRangeConfig,
+} from "../miscellaneous/miscellaneous.js";
 import { UISpawnModule } from "./UISpawnModule.js";
 
 /**
@@ -42,13 +48,21 @@ export class UISpawnRandomTorque extends UISpawnModule<{
     properties: { builtin: InstancedBufferAttribute },
     instanceBegin: number,
     instanceEnd: number,
+    randomSalt: number,
   ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
     const { min: torqueMin, max: torqueMax } = this.torqueInternal;
 
+    const torqueStream = particleRandomStream(randomSalt, 0);
+
     for (let i = instanceBegin; i < instanceEnd; i++) {
-      array[i * itemSize + BUILTIN_OFFSET_TORQUE] = MathUtils.randFloat(torqueMin, torqueMax);
+      const itemOffset = i * itemSize;
+      array[itemOffset + BUILTIN_OFFSET_TORQUE] = MathUtils.lerp(
+        torqueMin,
+        torqueMax,
+        particleRandom(array, itemOffset, torqueStream),
+      );
     }
 
     builtin.needsUpdate = true;

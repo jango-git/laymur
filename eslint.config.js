@@ -1,5 +1,6 @@
 import tsPlugin from "@typescript-eslint/eslint-plugin";
 import tsParser from "@typescript-eslint/parser";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default [
   {
@@ -116,6 +117,14 @@ export default [
     files: ["src/**/shaders/*.ts"],
     rules: {
       "@typescript-eslint/no-inferrable-types": "off",
+    },
+  },
+  {
+    files: ["src/**/*.ts"],
+    plugins: { "simple-import-sort": simpleImportSort },
+    rules: {
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
     },
   },
 ];

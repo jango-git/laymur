@@ -1,4 +1,5 @@
 import type { WebGLRenderer } from "three";
+
 import { UILayer } from "../layers/UILayer/UILayer.js";
 import { EPSILON } from "./math.js";
 import type { UILayerElement } from "./shared.js";
@@ -300,5 +301,35 @@ function assertNotDestroyed(value: unknown, name: string, subject: string): void
     value.destroyed === true
   ) {
     throw new Error(`${subject}: ${name} is destroyed`);
+  }
+}
+
+/**
+ * Validates value is within [0, 1].
+ * @param value Number to validate
+ * @param subject Value name for error messages
+ * @throws If value is invalid or outside [0, 1]
+ */
+export function assertValidUnitNumber(value: number, subject: string): void {
+  if (process.env.NODE_ENV !== "production") {
+    assertValidNumber(value, subject);
+    if (value < 0 || value > 1) {
+      throw new Error(`${subject}: value must be between 0 and 1, got ${value}`);
+    }
+  }
+}
+
+/**
+ * Validates value is a non-negative integer.
+ * @param value Number to validate
+ * @param subject Value name for error messages
+ * @throws If value is invalid, negative or fractional
+ */
+export function assertValidNonNegativeInteger(value: number, subject: string): void {
+  if (process.env.NODE_ENV !== "production") {
+    assertValidNonNegativeNumber(value, subject);
+    if (!Number.isInteger(value)) {
+      throw new Error(`${subject}: value must be an integer, got ${value}`);
+    }
   }
 }

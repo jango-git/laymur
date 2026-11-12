@@ -1,5 +1,4 @@
-import type { UIElement } from "../../elements/UIElement/UIElement.js";
-import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
+import type { UILayerElement, UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
 import { UIHeightConstraint } from "../UIHeightConstraint/UIHeightConstraint.js";
 import { UIHorizontalDistanceConstraint } from "../UIHorizontalDistanceConstraint/UIHorizontalDistanceConstraint.js";
 import { UIHorizontalInterpolationConstraint } from "../UIHorizontalInterpolationConstraint/UIHorizontalInterpolationConstraint.js";
@@ -26,7 +25,7 @@ export class UIConstraint2DBuilder {
    * @returns Width and height constraints
    */
   public static size(
-    element: UIElement,
+    element: UIPlaneElement & UILayerElement,
     options: Partial<UIConstraintSize2DOptions> = {},
   ): UIConstraint2DResult<UIWidthConstraint, UIHeightConstraint> {
     const size = normalizeUIType2D(options.size);

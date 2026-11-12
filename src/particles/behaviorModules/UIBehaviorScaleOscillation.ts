@@ -1,5 +1,6 @@
 import type { InstancedBufferAttribute } from "three";
 import { MathUtils } from "three";
+
 import {
   assertValidNonNegativeNumber,
   assertValidPositiveNumber,
@@ -7,10 +8,10 @@ import {
 import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
   BUILTIN_OFFSET_AGE,
-  BUILTIN_OFFSET_RANDOM_E,
-  BUILTIN_OFFSET_RANDOM_F,
   BUILTIN_OFFSET_SCALE_X,
   BUILTIN_OFFSET_SCALE_Y,
+  particleRandom,
+  particleRandomStream,
   resolveAspect,
   resolveUIRangeConfig,
 } from "../miscellaneous/miscellaneous.js";
@@ -114,20 +115,28 @@ export class UIBehaviorScaleOscillation extends UIBehaviorModule<{ builtin: "Mat
     assertValidPositiveNumber(this.aspectInternal, "UIBehaviorScaleOscillation.aspect");
   }
 
-  public update(properties: { builtin: InstancedBufferAttribute }, instanceCount: number): void {
+  public update(
+    properties: { builtin: InstancedBufferAttribute },
+    instanceCount: number,
+    deltaTime: number,
+    randomSalt: number,
+  ): void {
     const { builtin } = properties;
     const { array, itemSize } = builtin;
+
+    const frequencyStream = particleRandomStream(randomSalt, 0);
+    const phaseStream = particleRandomStream(randomSalt, 1);
 
     for (let i = 0; i < instanceCount; i++) {
       const itemOffset = i * itemSize;
 
-      const frequencyT = array[itemOffset + BUILTIN_OFFSET_RANDOM_E];
+      const frequencyT = particleRandom(array, itemOffset, frequencyStream);
       const frequency = MathUtils.lerp(
         this.frequencyInternal.min,
         this.frequencyInternal.max,
         frequencyT,
       );
-      const phase = array[itemOffset + BUILTIN_OFFSET_RANDOM_F] * Math.PI * 2;
+      const phase = particleRandom(array, itemOffset, phaseStream) * Math.PI * 2;
       const angle = array[itemOffset + BUILTIN_OFFSET_AGE] * frequency * Math.PI * 2 + phase;
       const factor = 1 - this.depthInternal * (1 - Math.cos(angle));
 
