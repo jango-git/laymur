@@ -292,8 +292,9 @@ export function buildMaterial(
   });
 
   if (masked) {
-    // fwidth on WebGL1 (three.js before r163); WebGL2 has derivatives built in
-    material.extensions.derivatives = true;
+    // fwidth on WebGL1 (three.js before r163); WebGL2 has derivatives built in. The typings of
+    // r163 and later no longer declare the flag
+    (material.extensions as { derivatives?: boolean }).derivatives = true;
   }
 
   return { material, varyingRowCount: packed.rowCount };

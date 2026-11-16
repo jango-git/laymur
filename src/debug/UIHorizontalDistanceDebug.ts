@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three";
+import { CanvasTexture, Object3D, Sprite, SpriteMaterial } from "three";
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
@@ -17,6 +17,7 @@ import {
   DEBUG_LINE_WIDTH,
   DEBUG_RENDER_ORDER,
   debugResolutionVector,
+  updateDebugResolution,
 } from "./miscellaneous.js";
 import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 
@@ -145,7 +146,7 @@ export class UIHorizontalDistanceDebug implements UIConstraintDebug {
       this.tint.setDirtyFalse();
     }
 
-    renderer.getDrawingBufferSize(debugResolutionVector);
+    updateDebugResolution(renderer);
     this.lineMaterial.resolution.copy(debugResolutionVector);
     this.tickMaterial.resolution.copy(debugResolutionVector);
 
@@ -169,10 +170,7 @@ export class UIHorizontalDistanceDebug implements UIConstraintDebug {
           ? anchorAY
           : (anchorAY + anchorBY) / 2;
 
-    this.lineGeometry.setFromPoints([
-      new Vector3(anchorAX, midY, 0),
-      new Vector3(anchorBX, midY, 0),
-    ]);
+    this.lineGeometry.setPositions([anchorAX, midY, 0, anchorBX, midY, 0]);
 
     const tickSize = 10;
 

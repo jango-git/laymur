@@ -1,6 +1,6 @@
 {
   "name": "laymur",
-  "version": "0.27.0",
+  "version": "0.27.1",
   "description": "Constraint-based UI library for Three.js mobile advertisements",
   "keywords": [
     "ui",
@@ -11,29 +11,17 @@
     "layout",
     "typescript"
   ],
-  "author": "jango",
-  "license": "MIT",
+  "homepage": "https://github.com/jango-git/laymur#readme",
+  "bugs": {
+    "url": "https://github.com/jango-git/laymur/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jango-git/laymur.git"
   },
+  "license": "MIT",
+  "author": "jango",
   "type": "module",
-  "sideEffects": false,
-  "scripts": {
-    "clean": "rm -rf dist",
-    "build": "npm run clean && tsc -p tsconfig.json",
-    "lint": "eslint src",
-    "format": "prettier --write . && eslint src --fix",
-    "prepublishOnly": "npm run build"
-  },
-  "main": "./dist/core/index.js",
-  "module": "./dist/core/index.js",
-  "types": "./dist/core/index.d.ts",
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
   "exports": {
     ".": {
       "types": "./dist/core/index.d.ts",
@@ -49,11 +37,26 @@
     },
     "./package.json": "./package.json"
   },
+  "main": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "lint": "eslint src",
+    "format": "prettier --write . && eslint src --fix",
+    "prepublishOnly": "npm run build"
+  },
   "peerDependencies": {
     "@lume/kiwi": "^0.4.4",
     "fast-simplex-noise": "^4.0.0",
-    "ferrsign": "^0.0.4",
-    "three": ">=0.157.0 <0.180.0"
+    "ferrsign": "^0.0.6",
+    "three": ">=0.157.0 <0.188.0"
   },
   "peerDependenciesMeta": {
     "fast-simplex-noise": {

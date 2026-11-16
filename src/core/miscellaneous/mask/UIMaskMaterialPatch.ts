@@ -1,4 +1,4 @@
-import type { IUniform, WebGLRenderer } from "three";
+import type { IUniform } from "three";
 import { GLSL3, Material, RawShaderMaterial, ShaderMaterial, Vector3, Vector4 } from "three";
 
 import maskSource from "../../shaders/UIMask.js";
@@ -11,14 +11,11 @@ import {
 } from "./UIMask.Internal.js";
 import type { UIMask } from "./UIMask.js";
 
-/** The part of the three.js shader object the patch rewrites */
-interface PatchedShader {
-  uniforms: Record<string, IUniform>;
-  vertexShader: string;
-  fragmentShader: string;
-}
-
-type CompileCallback = (shader: PatchedShader, renderer: WebGLRenderer) => void;
+/**
+ * onBeforeCompile of the installed three.js. Its shader argument is `Shader` in the typings before
+ * 0.160 and `WebGLProgramParametersWithUniforms` from 0.160 on.
+ */
+type CompileCallback = Material["onBeforeCompile"];
 
 interface MaskUniforms {
   laymurMaskRow0: IUniform<Vector3>;
@@ -162,8 +159,9 @@ function install(
       : baseCacheKey.call(material)) + CACHE_KEY_SUFFIX;
 
   if (material instanceof ShaderMaterial) {
-    // fwidth on WebGL1 (three.js before r163); built-in materials fall back to world units
-    material.extensions.derivatives = true;
+    // fwidth on WebGL1 (three.js before r163); built-in materials fall back to world units.
+    // The typings of r163 and later no longer declare the flag
+    (material.extensions as { derivatives?: boolean }).derivatives = true;
     material.defines = { ...material.defines };
     material.defines["LAYMUR_MASK_DERIVATIVES"] = "";
   }

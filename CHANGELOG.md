@@ -3,6 +3,25 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## 0.27.1 - 2026-11-16
+
+### Changed
+
+- The `three` peer range is `>=0.157.0 <0.188.0`, up from `<0.180.0`. The library typechecks
+  against the typings of every version in the range.
+- The `ferrsign` peer is `^0.0.6`, up from `^0.0.4`. The `on` and `once` of laymur's signals return
+  a function that unsubscribes the callback. Code that uses ferrsign itself follows its
+  [changelog](https://github.com/jango-git/ferrsign/blob/main/CHANGELOG.md) from 0.0.5 on.
+
+### Fixed
+
+- Debug lines (`UIHorizontalDistanceDebug`, `UIVerticalDistanceDebug`, the interpolation, width,
+  height and aspect debugs) draw on three.js before 0.171. Before 0.170 the line was missing and
+  only its ticks were drawn. On 0.170 the debug threw on its first frame.
+- Debug lines take their pixel width from the current viewport, as three.js 0.165 and later do,
+  instead of the whole drawing buffer. On earlier versions lines in a layer smaller than the
+  canvas were thinner than set.
+
 ## 0.27.0 - 2026-11-12
 
 ### Changed

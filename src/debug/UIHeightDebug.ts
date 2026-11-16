@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three";
+import { CanvasTexture, Object3D, Sprite, SpriteMaterial } from "three";
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
@@ -14,6 +14,7 @@ import {
   DEBUG_LINE_WIDTH,
   DEBUG_RENDER_ORDER,
   debugResolutionVector,
+  updateDebugResolution,
 } from "./miscellaneous.js";
 import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 
@@ -122,7 +123,7 @@ export class UIHeightDebug implements UIConstraintDebug {
       this.tint.setDirtyFalse();
     }
 
-    renderer.getDrawingBufferSize(debugResolutionVector);
+    updateDebugResolution(renderer);
     this.lineMaterial.resolution.copy(debugResolutionVector);
 
     const { x, y, oppositeY, height, centerX, centerY } = this.constraint.element;
@@ -131,7 +132,7 @@ export class UIHeightDebug implements UIConstraintDebug {
       return;
     }
 
-    this.lineGeometry.setFromPoints([new Vector3(x, y, 0), new Vector3(x, oppositeY, 0)]);
+    this.lineGeometry.setPositions([x, y, 0, x, oppositeY, 0]);
 
     const nextText: string = "H: " + height.toFixed(0);
 

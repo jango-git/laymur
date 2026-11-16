@@ -1,7 +1,7 @@
 import { assertValidPositiveNumber } from "../asserts.js";
 import { UIResizePolicy } from "./UIResizePolicy.js";
 
-/** Scales area to cover rect preserving proportions */
+/** Scales area so the rect covers it preserving proportions (like CSS object-fit: cover) */
 export class UIResizePolicyCover extends UIResizePolicy {
   private rectWidthInternal: number;
   private rectHeightInternal: number;

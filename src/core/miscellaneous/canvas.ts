@@ -75,5 +75,8 @@ export function createCanvasTexture(canvas: UICanvas): CanvasTexture {
   );
   texture.colorSpace = checkSRGBSupport() ? SRGBColorSpace : NoColorSpace;
   texture.generateMipmaps = false;
-  return texture;
+  // The typings of three 0.181 and later make CanvasTexture generic over its image, with
+  // HTMLCanvasElement as the default; earlier ones have no type parameter to name UICanvas
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- needed from three 0.181 on
+  return texture as CanvasTexture;
 }

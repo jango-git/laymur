@@ -10,7 +10,7 @@
   <a href="https://www.npmjs.com/package/laymur"><img src="https://img.shields.io/npm/v/laymur.svg" alt="npm version"></a>
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-%5E5.8.0-blue" alt="TypeScript"></a>
-  <a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-0.157.0--0.180.0-green" alt="Three.js"></a>
+  <a href="https://threejs.org/"><img src="https://img.shields.io/badge/Three.js-0.157.0--0.187.0-green" alt="Three.js"></a>
 </p>
 
 ## Features
@@ -32,7 +32,7 @@ npm install laymur
 
 Peer Dependencies:
 
-- `three` (>=0.157.0 <0.180.0)
+- `three` (>=0.157.0 <0.188.0)
 - `@lume/kiwi` (^0.4.4)
 - `ferrsign` (^0.0.4)
 - `fast-simplex-noise` (^4.0.0) - only required when using `laymur/particles`

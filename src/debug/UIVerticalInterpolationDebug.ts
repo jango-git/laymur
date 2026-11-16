@@ -1,5 +1,5 @@
 import type { WebGLRenderer } from "three";
-import { CanvasTexture, Object3D, Sprite, SpriteMaterial, Vector3 } from "three";
+import { CanvasTexture, Object3D, Sprite, SpriteMaterial } from "three";
 import { Line2 } from "three/addons/lines/Line2.js";
 import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
@@ -15,6 +15,7 @@ import {
   DEBUG_LINE_WIDTH,
   DEBUG_RENDER_ORDER,
   debugResolutionVector,
+  updateDebugResolution,
 } from "./miscellaneous.js";
 import type { UIConstraintDebug } from "./UIConstraintDebug.js";
 
@@ -140,7 +141,7 @@ export class UIVerticalInterpolationDebug implements UIConstraintDebug {
       this.tint.setDirtyFalse();
     }
 
-    renderer.getDrawingBufferSize(debugResolutionVector);
+    updateDebugResolution(renderer);
     this.baseLineMaterial.resolution.copy(debugResolutionVector);
     this.markerMaterial.resolution.copy(debugResolutionVector);
 
@@ -164,16 +165,17 @@ export class UIVerticalInterpolationDebug implements UIConstraintDebug {
 
     const midX = (anchorAX + anchorBX) / 2;
 
-    this.baseLineGeometry.setFromPoints([
-      new Vector3(midX, anchorAY, 0),
-      new Vector3(midX, anchorBY, 0),
-    ]);
+    this.baseLineGeometry.setPositions([midX, anchorAY, 0, midX, anchorBY, 0]);
 
     const markerSize = 12;
 
-    this.markerGeometry.setFromPoints([
-      new Vector3(midX - markerSize, anchorCY, 0),
-      new Vector3(midX + markerSize, anchorCY, 0),
+    this.markerGeometry.setPositions([
+      midX - markerSize,
+      anchorCY,
+      0,
+      midX + markerSize,
+      anchorCY,
+      0,
     ]);
 
     const nextText: string = "vi: " + this.constraint.t.toFixed(2);
