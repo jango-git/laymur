@@ -1,88 +1,55 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Laymur</title>
-
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta
+      name="description"
+      content="Examples of laymur, a constraint-based UI layout library for three.js"
+    />
     <style>
-      :root {
-        --bg: #141414;
-        --card: #252525;
-        --card-hover: #2e2e2e;
-        --border: rgba(255, 255, 255, 0.07);
-        --text: #cccccc;
-        --text-muted: #666666;
-        --accent: #4d9fff;
-        --radius: 6px;
-        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      @font-face {
+        font-family: "Space Grotesk";
+        src: url(fonts/space-grotesk-400.woff2) format("woff2");
       }
-
-      * {
-        box-sizing: border-box;
+      @font-face {
+        font-family: "Ubuntu Sans Mono";
+        src: url(fonts/ubuntu-sans-mono-500.woff2) format("woff2");
+        font-weight: 500;
       }
-
+      html,
       body {
         margin: 0;
-        height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--bg);
-        font-family: var(--font);
-        color: var(--text);
+        height: 100%;
+        background: #050505;
+        overflow: hidden;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
       }
-
-      .container {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        width: 260px;
-      }
-
-      .card {
+      canvas {
         display: block;
-        text-decoration: none;
-        padding: 28px 20px;
-        border-radius: var(--radius);
-        background: var(--card);
-        border: 1px solid var(--border);
-        text-align: center;
-        transition: 0.15s ease;
-        color: var(--text);
-      }
-
-      .card:hover {
-        background: var(--card-hover);
-        border-color: var(--accent);
-        transform: translateY(-2px);
-      }
-
-      .title {
-        font-size: 16px;
-        font-weight: 600;
-        letter-spacing: 1px;
-      }
-
-      .subtitle {
-        margin-top: 6px;
-        font-size: 12px;
-        color: var(--text-muted);
       }
     </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.js",
+          "gsap": "./vendor/gsap.js",
+          "laymur": "./vendor/laymur.js",
+          "laymur-animations": "./vendor/laymur-animations.js",
+          "./src/kit.js": "./dist/kit.js",
+          "./src/space.js": "./dist/space.js",
+          "./src/style.js": "./dist/style.js",
+          "./src/textures.js": "./dist/textures.js",
+          "./dist/scenes/": "./src/scenes/"
+        }
+      }
+    </script>
   </head>
-
   <body>
-    <div class="container">
-      <a href="./editor/index.html" class="card">
-        <div class="title">EDITOR</div>
-        <div class="subtitle">Visual editor</div>
-      </a>
-
-      <a href="./examples/index.html" class="card">
-        <div class="title">EXAMPLES</div>
-        <div class="subtitle">Docs & usage</div>
-      </a>
-    </div>
+    <script type="module" src="dist/main.js"></script>
   </body>
 </html>

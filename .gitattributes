@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.woff2 binary
+*.png binary
+*.webp binary
+
+vendor/** linguist-generated
+dist/** linguist-generated
+package-lock.json linguist-generated

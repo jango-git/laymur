@@ -1,0 +1,22 @@
+{
+  "name": "laymur-pages",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "@lume/kiwi": "^0.4.4",
+    "fast-simplex-noise": "^4.0.0",
+    "ferrsign": "^0.0.6",
+    "gsap": "^3.13.0",
+    "laymur": "^0.27.1",
+    "laymur-animations": "^0.27.0",
+    "three": "~0.187.0"
+  },
+  "devDependencies": {
+    "@fontsource/space-grotesk": "^5.2.0",
+    "@fontsource/ubuntu-sans-mono": "^5.2.0",
+    "esbuild": "^0.25.0"
+  }
+}
