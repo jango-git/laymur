@@ -124,7 +124,11 @@ export class UIInputWrapper implements UIInputWrapperView {
     this.hoveringPointers.delete(identifier);
     const pointer: UIInputWrapperPointer = { catcher: null, x, y };
     this.pointers.set(identifier, pointer);
-    const caught = this.dispatch(x, y, identifier, "catchPointerDown", pointer);
+    const caught = this.dispatch(
+      identifier,
+      (catcher) => catcher.catchPointerDown(x, y, identifier),
+      pointer,
+    );
     if (this.pointers.get(identifier) !== pointer) {
       return;
     }
@@ -152,19 +156,32 @@ export class UIInputWrapper implements UIInputWrapperView {
     if (pointer === undefined) {
       this.hoveringPointers.add(identifier);
     }
-    this.cancelBelow(identifier, this.dispatch(x, y, identifier, "catchPointerMove"));
+    this.cancelBelow(
+      identifier,
+      this.dispatch(identifier, (catcher) => catcher.catchPointerMove(x, y, identifier)),
+    );
   }
 
-  /** @internal */
-  public onPointerUp(x: number, y: number, identifier: number): void {
+  /**
+   * @param hovering Whether the pointer stays over the page after the release, as a mouse does
+   * @internal
+   */
+  public onPointerUp(x: number, y: number, identifier: number, hovering: boolean): void {
     const pointer = this.pointers.get(identifier);
     this.pointers.delete(identifier);
-    this.hoveringPointers.delete(identifier);
+    if (hovering) {
+      this.hoveringPointers.add(identifier);
+    } else {
+      this.hoveringPointers.delete(identifier);
+    }
     if (pointer?.catcher) {
-      pointer.catcher.catchPointerUp(x, y, identifier);
+      pointer.catcher.catchPointerUp(x, y, identifier, hovering);
       return;
     }
-    this.cancelBelow(identifier, this.dispatch(x, y, identifier, "catchPointerUp"));
+    this.cancelBelow(
+      identifier,
+      this.dispatch(identifier, (catcher) => catcher.catchPointerUp(x, y, identifier, hovering)),
+    );
   }
 
   /**
@@ -208,14 +225,13 @@ export class UIInputWrapper implements UIInputWrapperView {
   /**
    * Passes a pointer event from the top catcher down until one catches it. A handler may
    * destroy elements, so the catchers are walked over a copy and a destroyed one is skipped.
+   * @param catchEvent Passes the event to a catcher; true if it caught it
    * @param pointer Pressed pointer the event belongs to: the walk stops once a handler ends it
    * @returns The catcher that caught the event, or null
    */
   private dispatch(
-    x: number,
-    y: number,
     identifier: number,
-    name: "catchPointerDown" | "catchPointerMove" | "catchPointerUp",
+    catchEvent: (catcher: UIInputWrapperCatcher) => boolean,
     pointer?: UIInputWrapperPointer,
   ): UIInputWrapperCatcher | null {
     this.ensureSorted();
@@ -225,7 +241,7 @@ export class UIInputWrapper implements UIInputWrapperView {
         return null;
       }
       const item = catchers[index];
-      if (item.active && item[name](x, y, identifier)) {
+      if (item.active && catchEvent(item)) {
         return item;
       }
     }

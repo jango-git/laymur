@@ -1,38 +1,14 @@
 import type { UIProperty, UIPropertyName } from "../../core/miscellaneous/generic-plane/shared.js";
 import type { UITextureConfig } from "../../core/miscellaneous/texture/UITextureView.Internal.js";
 import { UITextureView } from "../../core/miscellaneous/texture/UITextureView.js";
-import source from "../shaders/UIRenderingTexture.js";
+import { buildMultiTextureSource, textureSource } from "../shaders/UIRenderingTexture.js";
 import { UIRenderingModule } from "./UIRenderingModule.js";
-
-function buildMultiTextureShader(count: number): string {
-  const branches: string[] = [];
-  for (let i = 0; i < count; i++) {
-    if (i === 0) {
-      branches.push(`  if (idx == 0) t = p_textureTransform0;`);
-    } else if (i === count - 1) {
-      branches.push(`  else t = p_textureTransform${i};`);
-    } else {
-      branches.push(`  else if (idx == ${i}) t = p_textureTransform${i};`);
-    }
-  }
-
-  return [
-    "vec4 draw() {",
-    // Clamped: at mediump precision a value just below 1 can round up to 1
-    `  int idx = int(min(PARTICLE_RANDOM_A * ${count}.0, ${count}.0 - 0.5));`,
-    "  mat3 t;",
-    ...branches,
-    "  vec2 transformedUV = (t * vec3(p_uv, 1.0)).xy;",
-    "  return srgbTexture2D(p_texture, transformedUV);",
-    "}",
-  ].join("\n");
-}
 
 /**
  * Renders particles with a texture.
  *
  * Accepts a single texture config or an array of configs from the same atlas.
- * When an array is provided, each particle picks one texture randomly using PARTICLE_RANDOM_A.
+ * When an array is provided, each particle picks one texture randomly using PARTICLE_RANDOM.
  * All configs in the array must share the same underlying Three.js Texture object.
  */
 export class UIRenderingTexture extends UIRenderingModule {
@@ -48,7 +24,7 @@ export class UIRenderingTexture extends UIRenderingModule {
 
     if (!Array.isArray(config) || config.length === 1) {
       const view = new UITextureView(Array.isArray(config) ? config[0] : config);
-      this.source = source;
+      this.source = textureSource;
       this.requiredUniforms = {
         texture: view.texture,
         textureTransform: view.calculateUVTransform(),
@@ -78,6 +54,6 @@ export class UIRenderingTexture extends UIRenderingModule {
 
     this.requiredProperties = { builtin: "Matrix4" };
     this.requiredUniforms = uniforms;
-    this.source = buildMultiTextureShader(views.length);
+    this.source = buildMultiTextureSource(views.length);
   }
 }

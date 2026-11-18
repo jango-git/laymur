@@ -1,7 +1,8 @@
-import { assertValidConstraintArguments, assertValidNumber } from "../../miscellaneous/asserts.js";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
 import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
 import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { assertValidConstraintArguments } from "../constraintAsserts.js";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal.js";
 import { DEFAULT_ANCHOR } from "./UIVerticalDistanceConstraint.Internal.js";

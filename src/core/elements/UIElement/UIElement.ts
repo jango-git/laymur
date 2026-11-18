@@ -6,6 +6,7 @@ import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import { UIMicro } from "../../miscellaneous/micro/UIMicro.js";
 import type { UIBlendMode } from "../../miscellaneous/UIBlendMode.js";
+import { blendModeToFactor } from "../../miscellaneous/UIBlendMode.js";
 import type { UIMode } from "../../miscellaneous/UIMode.js";
 import { isUIModeVisible } from "../../miscellaneous/UIMode.js";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
@@ -13,7 +14,6 @@ import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWr
 import { UIDummy } from "../UIDummy/UIDummy.js";
 import type { UIElementOptions } from "./UIElement.Internal.js";
 import {
-  blendModeToFactor,
   ELEMENT_DEFAULT_BLEND_MODE,
   ELEMENT_DEFAULT_HUE,
   ELEMENT_DEFAULT_LIGHTNESS,
@@ -109,17 +109,20 @@ export abstract class UIElement extends UIDummy {
     return this.blendModeInternal;
   }
 
-  /** Hue shift in degrees */
+  /**
+   * Hue shift in degrees. Applied to the linear color, so the hue of a color is not the one a
+   * color picker shows for its sRGB value.
+   */
   public get hue(): number {
     return this.hueInternal;
   }
 
-  /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
+  /** Saturation multiplier (1 = unchanged, 0 = grayscale), applied to the linear color */
   public get saturation(): number {
     return this.saturationInternal;
   }
 
-  /** Lightness offset (0 = unchanged) */
+  /** Lightness offset (0 = unchanged), applied to the linear color */
   public get lightness(): number {
     return this.lightnessInternal;
   }
@@ -158,7 +161,10 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
-  /** Hue shift in degrees */
+  /**
+   * Hue shift in degrees. Applied to the linear color, so the hue of a color is not the one a
+   * color picker shows for its sRGB value.
+   */
   public set hue(value: number) {
     if (this.hueInternal !== value) {
       this.hueInternal = value;
@@ -166,7 +172,7 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
-  /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
+  /** Saturation multiplier (1 = unchanged, 0 = grayscale), applied to the linear color */
   public set saturation(value: number) {
     if (this.saturationInternal !== value) {
       this.saturationInternal = value;
@@ -174,7 +180,7 @@ export abstract class UIElement extends UIDummy {
     }
   }
 
-  /** Lightness offset (0 = unchanged) */
+  /** Lightness offset (0 = unchanged), applied to the linear color */
   public set lightness(value: number) {
     if (this.lightnessInternal !== value) {
       this.lightnessInternal = value;

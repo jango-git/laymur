@@ -1,10 +1,8 @@
-import {
-  assertValidInterpolationConstraintArguments,
-  assertValidNumber,
-} from "../../miscellaneous/asserts.js";
+import { assertValidNumber } from "../../miscellaneous/asserts.js";
 import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
 import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { assertValidInterpolationConstraintArguments } from "../constraintAsserts.js";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UIHorizontalInterpolationConstraintOptions } from "./UIHorizontalInterpolationConstraint.Internal.js";
 import { DEFAULT_ANCHOR, DEFAULT_T } from "./UIHorizontalInterpolationConstraint.Internal.js";

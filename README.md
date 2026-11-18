@@ -214,6 +214,51 @@ const emitter = new UIEmitter(
 emitter.play(60); // particles/sec
 ```
 
+A ring of sparkles drawn without a texture, and a trail that stays on the layer behind a moving
+emitter:
+
+```typescript
+const ring = new UIEmitter(
+  layer,
+  [
+    new UISpawnCircle(20, [-Math.PI, Math.PI], UICircleDistribution.EVEN),
+    new UISpawnRadialVelocity(260), // after the shape: reads the spawn position
+    new UISpawnRandomScale(26),
+  ],
+  [new UIBehaviorVelocityDamping(0.6)],
+  [new UIRenderingShape(UIParticleShape.SPARKLE), new UIRenderingColorOverLife(colors)],
+  { blendMode: UIBlendMode.ADDITIVE },
+);
+ring.burst(16);
+
+const trail = new UIEmitter(layer, spawnModules, behaviorModules, renderingModules, {
+  space: UIEmitterSpace.WORLD,
+});
+trail.play(240);
+```
+
+Coins that fly into a counter, which counts each one as it lands:
+
+```typescript
+const coins = new UIEmitter(
+  layer,
+  [new UISpawnRandomLifetime([0.9, 1.4]), new UISpawnRandomVelocity([-Math.PI, Math.PI], 300)],
+  [new UIBehaviorSeek(counterPosition, 0.25)], // last: arrives at the end of life
+  [new UIRenderingTexture(coinTexture)],
+  { space: UIEmitterSpace.WORLD },
+);
+coins.signalParticleDied.on((x, y) => {
+  counter.add(1);
+  sparks.burstAt(6, x, y);
+});
+coins.burst(20);
+```
+
+Spawn modules write positions relative to the emitter. In `UIEmitterSpace.WORLD` the emitter then
+places each particle where it was at the particle's moment within the frame, and particle
+positions and the points of behavior modules are layer coordinates. In `LOCAL` space, the default,
+live particles move with the emitter.
+
 ### 7. Debug Overlay
 
 `laymur/debug` renders visual overlays for constraints - useful during development to inspect layout relationships.
@@ -262,7 +307,7 @@ UIRenderingModule, UISpawnModule, UIBehaviorModule (laymur/particles)
 
 ### Particles (laymur/particles)
 
-UIEmitter, UISpawnRectangle, UISpawnRandomLifetime, UIBehaviorDirectionalGravity, UIBehaviorVelocityDamping, UIRenderingTexture, UIRenderingColorOverLife
+UIEmitter, UISpawnRectangle, UISpawnCircle, UISpawnRandomLifetime, UISpawnRadialVelocity, UIBehaviorDirectionalGravity, UIBehaviorVelocityDamping, UIBehaviorScaleOverLife, UIBehaviorAlignToVelocity, UIBehaviorOrbit, UIBehaviorBounce, UIBehaviorSeek, UIRenderingTexture, UIRenderingFlipbook, UIRenderingShape, UIRenderingColorOverLife, UIRenderingRandomColor
 
 ### Debug (laymur/debug)
 

@@ -1,9 +1,7 @@
-import {
-  assertValidConstraintElement,
-  assertValidPositiveNumber,
-} from "../../miscellaneous/asserts.js";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { assertValidConstraintElement } from "../constraintAsserts.js";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UIWidthConstraintOptions } from "./UIWidthConstraint.Internal.js";
 

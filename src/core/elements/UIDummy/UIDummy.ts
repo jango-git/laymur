@@ -165,8 +165,8 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   }
 
   /**
-   * Signal fired when pointer leaves element. A released or cancelled pointer leaves too: a
-   * mouse still over the element enters again on its next move.
+   * Signal fired when pointer leaves element. A released touch or pen and a cancelled pointer
+   * leave too; a released mouse stays over the element.
    */
   public get signalPointerLeft(): FerrsignView1<UIInputEventData> {
     return this.signalPointerLeftInternal;
@@ -363,10 +363,21 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     return this.catches(state);
   };
 
-  protected readonly catchPointerUp = (x: number, y: number, identifier: number): boolean => {
+  /** A mouse stays over the element after the release; a touch or a pen leaves it */
+  protected readonly catchPointerUp = (
+    x: number,
+    y: number,
+    identifier: number,
+    hovering: boolean,
+  ): boolean => {
     const state = this.trackPointer(x, y, identifier, this.signalPointerReleasedInternal);
     const caught = this.catches(state);
-    this.endPointer(identifier, state, state.inside);
+    if (hovering) {
+      this.endPress(identifier, state, state.inside);
+      this.forgetIfUntracked(identifier, state);
+    } else {
+      this.endPointer(identifier, state, state.inside);
+    }
     return caught;
   };
 
@@ -417,11 +428,20 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
 
   /**
    * Ends a pointer: a press on the element ends as a click or as cancelled, and the pointer
-   * leaves. A released or cancelled pointer is forgotten, so that a touch, which never comes
-   * back with the same identifier, does not stay over the element.
+   * leaves. The pointer is forgotten, so that a touch, which never comes back with the same
+   * identifier, does not stay over the element.
    */
   private endPointer(identifier: number, state: UIDummyPointerState, clicked: boolean): void {
     this.pointers.delete(identifier);
+    this.endPress(identifier, state, clicked);
+    if (state.inside) {
+      state.inside = false;
+      this.emitPointer(this.signalPointerLeftInternal, state, identifier);
+    }
+  }
+
+  /** Ends a press on the element, if there is one, as a click or as cancelled */
+  private endPress(identifier: number, state: UIDummyPointerState, clicked: boolean): void {
     if (state.pressed) {
       state.pressed = false;
       this.emitPointer(
@@ -429,10 +449,6 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
         state,
         identifier,
       );
-    }
-    if (state.inside) {
-      state.inside = false;
-      this.emitPointer(this.signalPointerLeftInternal, state, identifier);
     }
   }
 

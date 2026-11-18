@@ -16,7 +16,10 @@ export interface UITextStyleConfig {
   fontStyle: "normal" | "italic" | "oblique";
   /** Font weight */
   fontWeight: "normal" | "bold" | "bolder" | "lighter" | number;
-  /** Line height in pixels */
+  /**
+   * Line height in pixels: the distance between baselines, not a multiple of the font size.
+   * Defaults to 1.2 times the font size.
+   */
   lineHeight: number;
 
   /** Whether shadow is enabled */

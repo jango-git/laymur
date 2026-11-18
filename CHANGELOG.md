@@ -5,8 +5,67 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
 
 ## Unreleased
 
+### Changed
+
+- **Breaking:** a mouse released over an element stays over it. The element no longer fires
+  `signalPointerLeft` after the release and fires it when the mouse moves off. Hover effects stay
+  on after a click. A touch or a pen leaves on release as before. Code that reset press visuals on
+  `signalPointerLeft` should use `signalPointerClicked` and `signalPointerCancelled`.
+- **Breaking:** `UIEmitter.play` takes a non-negative rate and checks its options. A negative rate,
+  which emitted nothing, throws.
+- Continuous particle emission spreads the particles of a frame over it. Each one starts aged by
+  the part of the frame after its moment, so a stream stays even at any frame rate. Before, the
+  particles of a frame were spawned together at age 0.
+
+### Added
+
+- `UIEmitterOptions.blendMode` and `UIEmitter.blendMode`. With `UIBlendMode.ADDITIVE` the particles
+  add their light to what is drawn under them, as elements do.
+- `UIEmitterOptions.space` and `UIEmitter.space`, of type `UIEmitterSpace`. In `WORLD` space a
+  particle stays where it was spawned on the layer when the emitter moves, and a moving emitter
+  leaves an unbroken trail, as each particle starts where the emitter was at its moment within the
+  frame. Particle positions and the points of behavior modules, such as the center of
+  `UIBehaviorPointGravity`, are then layer coordinates. Spawn modules write positions relative to
+  the emitter in both spaces. Changing the space keeps live particles in place.
+- `UISpawnCircle` spawns particles in a circle, a ring or a sector, uniformly by area. With
+  `UICircleDistribution.EVEN` the particles of one spawn call, such as one burst, are evenly spaced
+  along the arc.
+- `UISpawnRadialVelocity` sets the velocity along the direction from a center to the spawn
+  position. It reads the position, so it goes after the shape module.
+- `UIRenderingFlipbook` draws frames of a sprite sheet, a grid of cells in one texture or atlas
+  region. `UIFlipbookMode` plays them over the particle's life, at a frame rate with an optional
+  random start, or picks one at random. The frame count costs no uniforms.
+- `UIRenderingShape` draws a circle, a ring or a four-point sparkle (`UIParticleShape`) with a soft
+  edge, without a texture. Color modules tint it.
+- `UIEasing` and the `easing` of `UIBehaviorScaleOverLife`, applied within each span between two
+  anchors.
+- `UIBehaviorAlignToVelocity` turns particles along their velocity and stretches them with speed,
+  for sparks and streaks. It derives the length from the Y scale, so it goes after the scale
+  modules.
+- `UIBehaviorOrbit` rotates the position and the velocity of particles around a center at an
+  angular speed. Particles at rest circle it, particles moving outward spiral.
+- `UIBehaviorBounce` keeps particles on one side of a line, as a floor or a wall, with restitution
+  and friction.
+- `UIRenderingRandomColor` colors each particle with a color picked from a palette.
+- `UIEmitter.prewarm(duration)` runs the simulation ahead without drawing, so an emission shows its
+  particles in full from the first frame.
+- The source of a particle rendering module can read `PARTICLE_RANDOM`, a random value of the
+  module's own, constant over the particle's life. Each module that reads it gets the next of
+  `PARTICLE_RANDOM_A`-`E` in module order, so two modules do not pick alike, as two flipbooks in
+  one emitter would. Up to five modules of an emitter can read it, more throw.
+- `UIBehaviorSeek` steers particles into a target point at the end of their life, keeping their
+  initial motion and curving into it, as coins flying into a counter.
+- `UIEmitter.signalParticleDied` fires for every particle that dies, with its position in layer
+  coordinates, and `UIEmitter.burstAt(count, x, y)` spawns particles at a point. Together they
+  chain emitters, as sparks where a coin lands.
+- `UIEmitterPlayOptions` take `ratePerDistance`, particles per unit the emitter moves, for trails
+  of even density at any speed, and `burstCount` with `burstInterval` for repeated bursts. The
+  rate of `play` may be 0 for an emission of bursts or distance only.
+
 ### Fixed
 
+- `UIText` with an empty or whitespace-only text no longer throws. Such text keeps the element at
+  least 1 world unit wide and high.
 - **Breaking:** `UIProgressMaskFunctionCircular.startAngle` is in radians from the right edge,
   counter-clockwise, so `Math.PI / 2` starts the fill at the top. Before, the shader read the value
   as turns from the left edge. A start angle chosen to work around this must be set again.

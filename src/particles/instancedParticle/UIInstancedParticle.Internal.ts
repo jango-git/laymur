@@ -76,6 +76,35 @@ const PARTICLE_BUILTIN_MACROS: readonly (readonly [string, number])[] = [
   ["PARTICLE_RANDOM_F", BUILTIN_OFFSET_RANDOM_F],
 ];
 
+/** Builtin random values handed out to rendering modules that read `PARTICLE_RANDOM`, in order */
+const RENDERING_RANDOM_MACROS = [
+  "PARTICLE_RANDOM_A",
+  "PARTICLE_RANDOM_B",
+  "PARTICLE_RANDOM_C",
+  "PARTICLE_RANDOM_D",
+  "PARTICLE_RANDOM_E",
+];
+
+/**
+ * Gives each rendering module that reads `PARTICLE_RANDOM` a random value of its own, the next of
+ * `PARTICLE_RANDOM_A`-`E` in module order, so two modules do not pick alike
+ * @returns Sources with `PARTICLE_RANDOM` renamed accordingly
+ */
+export function assignRenderingRandomValues(sources: string[], debugContext: string): string[] {
+  let next = 0;
+  return sources.map((source, index) => {
+    if (!isIdentifierReferenced(source, "PARTICLE_RANDOM")) {
+      return source;
+    }
+    if (next === RENDERING_RANDOM_MACROS.length) {
+      throw new Error(
+        `${debugContext}[${index}]: more than ${RENDERING_RANDOM_MACROS.length} rendering modules read PARTICLE_RANDOM`,
+      );
+    }
+    return source.replace(/\bPARTICLE_RANDOM\b/g, RENDERING_RANDOM_MACROS[next++]);
+  });
+}
+
 export function collectProperties(
   keeper: Record<string, GLTypeInfo>,
   modules: readonly { requiredProperties?: Record<string, UIPropertyName> }[],
@@ -242,6 +271,7 @@ export function buildParticleFragmentShader(
         discard;
       }
       gl_FragColor = linearToOutputTexel(diffuseColor);
+      gl_FragColor = vec4(gl_FragColor.rgb * gl_FragColor.a, gl_FragColor.a * p_blendFactor);
     }
   `;
 }
@@ -344,6 +374,7 @@ export function buildParticleMaterial(
     forceSinglePass: true,
     depthWrite: false,
     depthTest: true,
+    premultipliedAlpha: true,
   });
 
   return { material, varyingRowCount: packed.rowCount };

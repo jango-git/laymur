@@ -131,7 +131,18 @@ export class UIInstancedParticle extends Mesh {
     (uniform.value as Vector2).set(x, y);
   }
 
-  public removeDeadParticles(): void {
+  /** Output-alpha multiplier of the premultiplied shader, see `blendModeToFactor` */
+  public setBlendFactor(value: number): void {
+    resolvePropertyUniform("blendFactor", this.shaderMaterial).value = value;
+  }
+
+  /**
+   * Removes the particles whose age reached their lifetime, keeping the order of the others
+   * @param onDead Called for each dead particle before its slot is reused
+   */
+  public removeDeadParticles(
+    onDead: (builtinArray: ArrayLike<number>, itemOffset: number) => void,
+  ): void {
     const builtinBuffer = this.propertyBuffers.builtin as InstancedBufferAttribute | undefined;
     if (builtinBuffer === undefined) {
       return;
@@ -162,6 +173,8 @@ export class UIInstancedParticle extends Mesh {
         }
 
         writeIndex++;
+      } else {
+        onDead(builtinArray, offset);
       }
     }
 

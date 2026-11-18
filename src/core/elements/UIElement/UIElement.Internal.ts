@@ -12,11 +12,14 @@ export interface UIElementOptions extends UIDummyOptions {
   transparencyMode: UITransparencyMode;
   /** Color blending mode (only affects BLEND transparency) */
   blendMode: UIBlendMode;
-  /** Hue shift in degrees */
+  /**
+   * Hue shift in degrees. Applied to the linear color, so the hue of a color is not the one a
+   * color picker shows for its sRGB value.
+   */
   hue: number;
-  /** Saturation multiplier (1 = unchanged, 0 = grayscale) */
+  /** Saturation multiplier (1 = unchanged, 0 = grayscale), applied to the linear color */
   saturation: number;
-  /** Lightness offset (0 = unchanged) */
+  /** Lightness offset (0 = unchanged), applied to the linear color */
   lightness: number;
 }
 
@@ -27,11 +30,6 @@ export const ELEMENT_DEFAULT_BLEND_MODE = UIBlendMode.NORMAL;
 export const ELEMENT_DEFAULT_HUE = 0;
 export const ELEMENT_DEFAULT_SATURATION = 1;
 export const ELEMENT_DEFAULT_LIGHTNESS = 0;
-
-/** Maps a blend mode to the output-alpha multiplier used by the premultiplied shader. */
-export function blendModeToFactor(mode: UIBlendMode): number {
-  return mode === UIBlendMode.ADDITIVE ? 0 : 1;
-}
 
 /**
  * Packs HSL adjustment into the shader attribute layout (hue in turns, saturation

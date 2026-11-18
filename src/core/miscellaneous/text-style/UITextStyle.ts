@@ -91,7 +91,10 @@ export class UITextStyle {
     return this.fontWeightInternal;
   }
 
-  /** Line height in pixels */
+  /**
+   * Line height in pixels: the distance between baselines, not a multiple of the font size.
+   * Defaults to 1.2 times the font size.
+   */
   public get lineHeight(): number | undefined {
     return this.lineHeightInternal;
   }

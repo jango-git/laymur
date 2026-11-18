@@ -261,7 +261,12 @@ export class UIViewportLayer extends UILayer {
     }
     const position = this.reportPointer(event, this.signalPointerReleasedInternal);
     if (position !== null) {
-      this.inputWrapperInternal.onPointerUp(position.x, position.y, event.pointerId);
+      this.inputWrapperInternal.onPointerUp(
+        position.x,
+        position.y,
+        event.pointerId,
+        event.pointerType === "mouse",
+      );
     }
   };
 

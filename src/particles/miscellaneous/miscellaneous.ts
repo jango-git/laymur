@@ -29,10 +29,50 @@ export type UIRangeConfig = UIRange | [number, number] | number;
 export type UIVector2Config = Vector2Like | Vector2Tuple | number;
 export type UIAspectConfig = number | UITextureConfig;
 
+/** Easing of an interpolation between two values */
+export enum UIEasing {
+  /** Constant rate */
+  LINEAR = 0,
+  /** Starts slow, quadratic */
+  IN = 1,
+  /** Ends slow, quadratic */
+  OUT = 2,
+  /** Starts and ends slow, smoothstep */
+  IN_OUT = 3,
+}
+
+/**
+ * Eases an interpolation factor
+ * @param t Factor in [0, 1]
+ * @returns Eased factor, 0 at t = 0 and 1 at t = 1
+ */
+export function applyEasing(easing: UIEasing, t: number): number {
+  switch (easing) {
+    case UIEasing.LINEAR:
+      return t;
+    case UIEasing.IN:
+      return t * t;
+    case UIEasing.OUT:
+      return t * (2 - t);
+    case UIEasing.IN_OUT:
+      return t * t * (3 - 2 * t);
+  }
+}
+
 /** Formats a number as a GLSL float literal */
 export function toGLSLFloat(value: number): string {
   const literal = String(value);
   return /[.e]/.test(literal) ? literal : `${literal}.0`;
+}
+
+/**
+ * GLSL expression of a whole float in [0, count) from a fraction in [0, 1]: the index of the cell
+ * the fraction falls in, the last cell taking 1
+ */
+export function buildIndexExpression(fraction: string, count: number): string {
+  const size = toGLSLFloat(count);
+  // Clamped below the count: at mediump precision a value just below it can round up to it
+  return `floor(min(${fraction} * ${size}, ${size} - 0.5))`;
 }
 
 /** GLSL expression of the u that samples a gradient texture of `size` texels at t in [0, 1] */

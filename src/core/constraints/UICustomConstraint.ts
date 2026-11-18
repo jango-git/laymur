@@ -1,6 +1,6 @@
 import type { UILayer } from "../layers/UILayer/UILayer.js";
-import { assertValidConstraintExpressions } from "../miscellaneous/asserts.js";
 import type { UIExpression } from "../miscellaneous/UIExpression.js";
+import { assertValidConstraintExpressions } from "./constraintAsserts.js";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
 import { UISingleParameterConstraint } from "./UISingleParameterConstraint/UISingleParameterConstraint.js";
 

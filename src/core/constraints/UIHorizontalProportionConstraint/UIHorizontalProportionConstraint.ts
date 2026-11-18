@@ -1,9 +1,7 @@
-import {
-  assertValidConstraintArguments,
-  assertValidPositiveNumber,
-} from "../../miscellaneous/asserts.js";
+import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
+import { assertValidConstraintArguments } from "../constraintAsserts.js";
 import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
 import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal.js";
 

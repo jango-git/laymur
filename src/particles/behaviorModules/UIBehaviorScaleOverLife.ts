@@ -7,6 +7,7 @@ import {
 } from "../../core/miscellaneous/asserts.js";
 import type { UIAspectConfig, UIRange, UIRangeConfig } from "../miscellaneous/miscellaneous.js";
 import {
+  applyEasing,
   BUILTIN_OFFSET_AGE,
   BUILTIN_OFFSET_LIFETIME,
   BUILTIN_OFFSET_SCALE_X,
@@ -15,25 +16,35 @@ import {
   particleRandomStream,
   resolveAspect,
   resolveUIRangeConfig,
+  UIEasing,
 } from "../miscellaneous/miscellaneous.js";
 import { UIBehaviorModule } from "./UIBehaviorModule.js";
 
 /**
  * Animates particle scale over lifetime.
  *
- * Interpolates between scale anchors based on particle age. Requires at least 2 anchors.
+ * Interpolates between scale anchors based on particle age, with the easing within each span
+ * between two anchors. Requires at least 2 anchors.
  */
 export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix4" }> {
   public readonly requiredProperties = { builtin: "Matrix4" } as const;
+  /** Easing within each span between two anchors */
+  public easing: UIEasing;
   private readonly scales: UIRange[] = [];
   private aspectInternal: number;
 
   /**
    * @param scales - Scale anchor points. Each accepts number, tuple, or range object
    * @param aspect - Width/height ratio. Accepts number or texture
+   * @param easing - Easing within each span between two anchors
    */
-  constructor(scales: UIRangeConfig[], aspect: UIAspectConfig = 1) {
+  constructor(
+    scales: UIRangeConfig[],
+    aspect: UIAspectConfig = 1,
+    easing: UIEasing = UIEasing.LINEAR,
+  ) {
     super();
+    this.easing = easing;
 
     if (scales.length < 2) {
       throw new Error(
@@ -87,11 +98,12 @@ export class UIBehaviorScaleOverLife extends UIBehaviorModule<{ builtin: "Matrix
       );
 
       const segment = (this.scales.length - 1) * lifeT;
-      const index = Math.floor(segment);
+      // The last span also takes lifeT = 1, of a particle that outlives its lifetime this frame
+      const index = Math.min(Math.floor(segment), this.scales.length - 2);
 
       const scaleT = particleRandom(array, itemOffset, scaleStream);
 
-      const localT = segment - index;
+      const localT = applyEasing(this.easing, segment - index);
       const scaleRange0 = this.scales[index];
       const scaleRange1 = this.scales[index + 1];
       const scale0 = MathUtils.lerp(scaleRange0.min, scaleRange0.max, scaleT);

@@ -10,8 +10,12 @@ export interface UIInputCatcherCallbacks {
   catchPointerDown: (x: number, y: number, identifier: number) => boolean;
   /** Returns true to stop the event for catchers below; ignored for a captured pointer */
   catchPointerMove: (x: number, y: number, identifier: number) => boolean;
-  /** Returns true to stop the event for catchers below; ignored for a captured pointer */
-  catchPointerUp: (x: number, y: number, identifier: number) => boolean;
+  /**
+   * Returns true to stop the event for catchers below; ignored for a captured pointer.
+   * `hovering` is true for a pointer that stays over the page after the release, as a mouse
+   * does: its next events come with the same identifier.
+   */
+  catchPointerUp: (x: number, y: number, identifier: number, hovering: boolean) => boolean;
   /**
    * The pointer is gone for this catcher: drop what is known of it. Called when a pressed
    * pointer is cancelled (by the browser or by the layer), on the catcher that captured it, or

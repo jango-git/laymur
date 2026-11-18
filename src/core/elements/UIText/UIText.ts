@@ -18,7 +18,7 @@ import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
 import source from "../../shaders/UIImage.js";
 import { UIElement } from "../UIElement/UIElement.js";
 import { detectIsRTL } from "./UIText.Bidi.js";
-import type { UITextChunk, UITextContent } from "./UIText.Interfaces.js";
+import type { UITextChunk, UITextContent, UITextSize } from "./UIText.Interfaces.js";
 import type { UITextOptions } from "./UIText.Internal.js";
 import {
   TEXT_DEFAULT_DIRECTION,
@@ -29,6 +29,9 @@ import {
 } from "./UIText.Internal.js";
 import { buildTextChunks, calculateTextContentParameters } from "./UIText.Measuring.js";
 import { renderTextLines } from "./UIText.Rendering.js";
+
+/** Smallest width and height of the element, kept by empty and whitespace-only text */
+const TEXT_MIN_DIMENSION = 1;
 
 /** Canvas-based text rendering element */
 export class UIText extends UIElement {
@@ -164,7 +167,10 @@ export class UIText extends UIElement {
     this.colorInternal.set(value);
   }
 
-  /** Text content as string, span config, or array */
+  /**
+   * Text content as string, span config, or array. Text without visible characters keeps the
+   * element at least 1 world unit wide and high.
+   */
   public set content(value: UITextContent) {
     if (this.contentInternal !== value) {
       if (typeof value === "string") {
@@ -282,11 +288,7 @@ export class UIText extends UIElement {
       this.isRTL,
     );
 
-    const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
-    const paddingH = this.paddingInternal.left + this.paddingInternal.right;
-
-    const desiredHeight = size.height + paddingV;
-    const desiredWidth = size.width + paddingH;
+    const { width: desiredWidth, height: desiredHeight } = this.elementSize(size);
 
     this.width = desiredWidth;
     this.height = (desiredHeight / desiredWidth) * Math.round(this.width);
@@ -345,20 +347,19 @@ export class UIText extends UIElement {
       this.isRTL,
     );
 
-    const paddingV = this.paddingInternal.top + this.paddingInternal.bottom;
-    const paddingH = this.paddingInternal.left + this.paddingInternal.right;
-
-    this.height = desiredTextSize.height + paddingV;
-    this.width = desiredTextSize.width + paddingH;
+    const desiredSize = this.elementSize(desiredTextSize);
+    this.height = desiredSize.height;
+    this.width = desiredSize.width;
 
     const { lines: realTextLines, size: realTextSize } = calculateTextContentParameters(
       textChunks,
-      Math.round(this.width) - paddingH,
+      Math.round(this.width) - this.paddingInternal.left - this.paddingInternal.right,
       this.isRTL,
     );
 
-    this.height = realTextSize.height + paddingV;
-    this.width = realTextSize.width + paddingH;
+    const realSize = this.elementSize(realTextSize);
+    this.height = realSize.height;
+    this.width = realSize.width;
 
     const safeWidth = Math.max(Math.round(this.width), 2);
     const safeHeight = Math.max(Math.round(this.height), 2);
@@ -386,6 +387,15 @@ export class UIText extends UIElement {
     this.paddingInternal.setDirtyFalse();
     this.setDimensionsDirtyFalse();
     this.setContentDirtyFalse();
+  }
+
+  /** The element size for a text size: the padding added, at least the minimum each way */
+  private elementSize(textSize: UITextSize): UITextSize {
+    const { left, right, top, bottom } = this.paddingInternal;
+    return {
+      width: Math.max(textSize.width + left + right, TEXT_MIN_DIMENSION),
+      height: Math.max(textSize.height + top + bottom, TEXT_MIN_DIMENSION),
+    };
   }
 
   private updateProperties(resolutionDirty: boolean): void {
