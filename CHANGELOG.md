@@ -3,6 +3,14 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## Unreleased
+
+### Fixed
+
+- **Breaking:** `UIProgressMaskFunctionCircular.startAngle` is in radians from the right edge,
+  counter-clockwise, so `Math.PI / 2` starts the fill at the top. Before, the shader read the value
+  as turns from the left edge. A start angle chosen to work around this must be set again.
+
 ## 0.27.1 - 2026-11-16
 
 ### Changed
