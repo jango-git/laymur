@@ -3,7 +3,7 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
-## Unreleased
+## 0.28.0 - 2026-11-18
 
 ### Changed
 
