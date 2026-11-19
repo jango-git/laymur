@@ -3,140 +3,161 @@ import {
   assertValidNumber,
   assertValidPositiveNumber,
 } from "../asserts.js";
-import type { UITextAlign, UITextStyleConfig } from "./UITextStyle.Internal.js";
+import { toCanvasColor } from "../color/canvasColor.js";
+import type { UIPaint, UIPaintConfig } from "../paint/UIPaint.Internal.js";
+import { resolvePaint } from "../paint/UIPaint.js";
+import type {
+  UIResolvedTextStyle,
+  UITextAlign,
+  UITextFontStyle,
+  UITextFontWeight,
+  UITextPaintBox,
+  UITextShadow,
+  UITextShadowConfig,
+  UITextStroke,
+  UITextStrokeConfig,
+  UITextStyleConfig,
+} from "./UITextStyle.Internal.js";
 import {
   TEXT_STYLE_DEFAULT_ALIGN,
   TEXT_STYLE_DEFAULT_COLOR,
-  TEXT_STYLE_DEFAULT_ENABLE_SHADOW,
-  TEXT_STYLE_DEFAULT_ENABLE_STROKE,
   TEXT_STYLE_DEFAULT_FONT_FAMILY,
   TEXT_STYLE_DEFAULT_FONT_SIZE,
   TEXT_STYLE_DEFAULT_FONT_STYLE,
   TEXT_STYLE_DEFAULT_FONT_WEIGHT,
   TEXT_STYLE_DEFAULT_LINE_HEIGHT,
-  TEXT_STYLE_DEFAULT_SHADOW_BLUR,
-  TEXT_STYLE_DEFAULT_SHADOW_COLOR,
-  TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X,
-  TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y,
-  TEXT_STYLE_DEFAULT_STROKE_COLOR,
-  TEXT_STYLE_DEFAULT_STROKE_THICKNESS,
+  TEXT_STYLE_DEFAULT_PAINT_BOX,
+  TEXT_STYLE_DEFAULT_SHADOWS,
+  TEXT_STYLE_DEFAULT_STROKE_JOIN,
+  TEXT_STYLE_DEFAULT_STROKES,
 } from "./UITextStyle.Internal.js";
 
-/** Text style configuration for UI text rendering */
-export class UITextStyle {
-  private colorInternal?: string;
-  private alignInternal?: UITextAlign;
-  private fontFamilyInternal?: string;
-  private fontSizeInternal?: number;
-  private fontStyleInternal?: "normal" | "italic" | "oblique";
-  private fontWeightInternal?: "normal" | "bold" | "bolder" | "lighter" | number;
-  private lineHeightInternal?: number;
-  private enableShadowInternal?: boolean;
-  private shadowOffsetXInternal?: number;
-  private shadowOffsetYInternal?: number;
-  private shadowBlurInternal?: number;
-  private shadowColorInternal?: string;
-  private enableStrokeInternal?: boolean;
-  private strokeColorInternal?: string;
-  private strokeThicknessInternal?: number;
+type UITextStyleKey = keyof UIResolvedTextStyle;
 
+/** Value of every property after `setDefaults` */
+const TEXT_STYLE_DEFAULTS: Readonly<UIResolvedTextStyle> = {
+  color: TEXT_STYLE_DEFAULT_COLOR,
+  paintBox: TEXT_STYLE_DEFAULT_PAINT_BOX,
+  align: TEXT_STYLE_DEFAULT_ALIGN,
+  fontFamily: TEXT_STYLE_DEFAULT_FONT_FAMILY,
+  fontSize: TEXT_STYLE_DEFAULT_FONT_SIZE,
+  fontStyle: TEXT_STYLE_DEFAULT_FONT_STYLE,
+  fontWeight: TEXT_STYLE_DEFAULT_FONT_WEIGHT,
+  lineHeight: TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT,
+  strokes: TEXT_STYLE_DEFAULT_STROKES,
+  shadows: TEXT_STYLE_DEFAULT_SHADOWS,
+};
+
+const TEXT_STYLE_KEYS = Object.keys(TEXT_STYLE_DEFAULTS) as UITextStyleKey[];
+
+/**
+ * Converts outline configs to stored outlines.
+ * @param strokes Outline configs
+ * @returns Frozen outlines with colors as CSS strings
+ */
+function resolveStrokes(strokes: readonly UITextStrokeConfig[]): readonly UITextStroke[] {
+  return Object.freeze(
+    strokes.map((stroke) => {
+      assertValidNonNegativeNumber(stroke.thickness, "UITextStyle.strokes.thickness");
+      return Object.freeze({
+        paint: resolvePaint(stroke.paint),
+        thickness: stroke.thickness,
+        join: stroke.join ?? TEXT_STYLE_DEFAULT_STROKE_JOIN,
+      });
+    }),
+  );
+}
+
+/**
+ * Converts shadow configs to stored shadows.
+ * @param shadows Shadow configs
+ * @returns Frozen shadows with colors as CSS strings
+ */
+function resolveShadows(shadows: readonly UITextShadowConfig[]): readonly UITextShadow[] {
+  return Object.freeze(
+    shadows.map((shadow) => {
+      const offsetX = shadow.offsetX ?? 0;
+      const offsetY = shadow.offsetY ?? 0;
+      const blur = shadow.blur ?? 0;
+      assertValidNumber(offsetX, "UITextStyle.shadows.offsetX");
+      assertValidNumber(offsetY, "UITextStyle.shadows.offsetY");
+      assertValidNonNegativeNumber(blur, "UITextStyle.shadows.blur");
+      return Object.freeze({ color: toCanvasColor(shadow.color), offsetX, offsetY, blur });
+    }),
+  );
+}
+
+/**
+ * Text style of a span or of a whole text. Properties left undefined are taken from the
+ * fallback style, the common style of the text for a span, then from the defaults. Lists of
+ * strokes and shadows are taken as a whole.
+ */
+export class UITextStyle {
+  private readonly values: Partial<UIResolvedTextStyle> = {};
   private dirtyInternal = true;
 
   /** @param config Partial style configuration. Unspecified properties remain undefined. */
   constructor(config?: Partial<UITextStyleConfig>) {
-    this.colorInternal = config?.color;
-    this.alignInternal = config?.align;
-    this.fontFamilyInternal = config?.fontFamily;
-    this.fontSizeInternal = config?.fontSize;
-    this.fontStyleInternal = config?.fontStyle;
-    this.fontWeightInternal = config?.fontWeight;
-    this.lineHeightInternal = config?.lineHeight;
-    this.enableShadowInternal = config?.enableShadow;
-    this.shadowOffsetXInternal = config?.shadowOffsetX;
-    this.shadowOffsetYInternal = config?.shadowOffsetY;
-    this.shadowBlurInternal = config?.shadowBlur;
-    this.shadowColorInternal = config?.shadowColor;
-    this.enableStrokeInternal = config?.enableStroke;
-    this.strokeColorInternal = config?.strokeColor;
-    this.strokeThicknessInternal = config?.strokeThickness;
+    this.color = config?.color;
+    this.paintBox = config?.paintBox;
+    this.align = config?.align;
+    this.fontFamily = config?.fontFamily;
+    this.fontSize = config?.fontSize;
+    this.fontStyle = config?.fontStyle;
+    this.fontWeight = config?.fontWeight;
+    this.lineHeight = config?.lineHeight;
+    this.strokes = config?.strokes;
+    this.shadows = config?.shadows;
   }
 
-  /** Text color */
-  public get color(): string | undefined {
-    return this.colorInternal;
+  /** Color or gradient of the glyphs. A color is kept as a CSS string. */
+  public get color(): UIPaint | undefined {
+    return this.values.color;
+  }
+
+  /** Box the gradients of the fill and of the strokes are laid over */
+  public get paintBox(): UITextPaintBox | undefined {
+    return this.values.paintBox;
   }
 
   /** Text alignment */
   public get align(): UITextAlign | undefined {
-    return this.alignInternal;
+    return this.values.align;
   }
 
   /** Font family name */
   public get fontFamily(): string | undefined {
-    return this.fontFamilyInternal;
+    return this.values.fontFamily;
   }
 
   /** Font size in pixels */
   public get fontSize(): number | undefined {
-    return this.fontSizeInternal;
+    return this.values.fontSize;
   }
 
   /** Font style */
-  public get fontStyle(): "normal" | "italic" | "oblique" | undefined {
-    return this.fontStyleInternal;
+  public get fontStyle(): UITextFontStyle | undefined {
+    return this.values.fontStyle;
   }
 
   /** Font weight */
-  public get fontWeight(): "normal" | "bold" | "bolder" | "lighter" | number | undefined {
-    return this.fontWeightInternal;
+  public get fontWeight(): UITextFontWeight | undefined {
+    return this.values.fontWeight;
   }
 
-  /**
-   * Line height in pixels: the distance between baselines, not a multiple of the font size.
-   * Defaults to 1.2 times the font size.
-   */
+  /** Line height in pixels, the distance between baselines */
   public get lineHeight(): number | undefined {
-    return this.lineHeightInternal;
+    return this.values.lineHeight;
   }
 
-  /** Whether shadow is enabled */
-  public get enableShadow(): boolean | undefined {
-    return this.enableShadowInternal;
+  /** Outlines from the innermost to the outermost */
+  public get strokes(): readonly UITextStroke[] | undefined {
+    return this.values.strokes;
   }
 
-  /** Shadow horizontal offset in pixels */
-  public get shadowOffsetX(): number | undefined {
-    return this.shadowOffsetXInternal;
-  }
-
-  /** Shadow vertical offset in pixels */
-  public get shadowOffsetY(): number | undefined {
-    return this.shadowOffsetYInternal;
-  }
-
-  /** Shadow blur radius in pixels */
-  public get shadowBlur(): number | undefined {
-    return this.shadowBlurInternal;
-  }
-
-  /** Shadow color */
-  public get shadowColor(): string | undefined {
-    return this.shadowColorInternal;
-  }
-
-  /** Whether stroke is enabled */
-  public get enableStroke(): boolean | undefined {
-    return this.enableStrokeInternal;
-  }
-
-  /** Stroke color */
-  public get strokeColor(): string | undefined {
-    return this.strokeColorInternal;
-  }
-
-  /** Stroke thickness in pixels */
-  public get strokeThickness(): number | undefined {
-    return this.strokeThicknessInternal;
+  /** Shadows and glows, the first one on top */
+  public get shadows(): readonly UITextShadow[] | undefined {
+    return this.values.shadows;
   }
 
   /**
@@ -148,213 +169,119 @@ export class UITextStyle {
     return this.dirtyInternal;
   }
 
-  public set color(value: string | undefined) {
-    if (value !== this.colorInternal) {
-      this.colorInternal = value;
-      this.dirtyInternal = true;
-    }
+  /** Color or gradient of the glyphs. A string is a CSS color. */
+  public set color(value: UIPaintConfig | undefined) {
+    this.setValue("color", value === undefined ? undefined : resolvePaint(value));
   }
 
+  /** Box the gradients of the fill and of the strokes are laid over */
+  public set paintBox(value: UITextPaintBox | undefined) {
+    this.setValue("paintBox", value);
+  }
+
+  /** Text alignment */
   public set align(value: UITextAlign | undefined) {
-    if (value !== this.alignInternal) {
-      this.alignInternal = value;
-      this.dirtyInternal = true;
-    }
+    this.setValue("align", value);
   }
 
+  /** Font family name */
   public set fontFamily(value: string | undefined) {
-    if (value !== this.fontFamilyInternal) {
-      this.fontFamilyInternal = value;
-      this.dirtyInternal = true;
-    }
+    this.setValue("fontFamily", value);
   }
 
+  /** Font size in pixels */
   public set fontSize(value: number | undefined) {
     if (value !== undefined) {
       assertValidPositiveNumber(value, "UITextStyle.fontSize");
     }
-    if (value !== this.fontSizeInternal) {
-      this.fontSizeInternal = value;
-      this.dirtyInternal = true;
-    }
+    this.setValue("fontSize", value);
   }
 
-  public set fontStyle(value: "normal" | "italic" | "oblique" | undefined) {
-    if (value !== this.fontStyleInternal) {
-      this.fontStyleInternal = value;
-      this.dirtyInternal = true;
-    }
+  /** Font style */
+  public set fontStyle(value: UITextFontStyle | undefined) {
+    this.setValue("fontStyle", value);
   }
 
-  public set fontWeight(value: "normal" | "bold" | "bolder" | "lighter" | number | undefined) {
+  /** Font weight */
+  public set fontWeight(value: UITextFontWeight | undefined) {
     if (typeof value === "number") {
       assertValidPositiveNumber(value, "UITextStyle.fontWeight");
     }
-    if (value !== this.fontWeightInternal) {
-      this.fontWeightInternal = value;
-      this.dirtyInternal = true;
-    }
+    this.setValue("fontWeight", value);
   }
 
+  /** Line height in pixels, the distance between baselines */
   public set lineHeight(value: number | undefined) {
     if (value !== undefined) {
       assertValidNumber(value, "UITextStyle.lineHeight");
     }
-    if (value !== this.lineHeightInternal) {
-      this.lineHeightInternal = value;
-      this.dirtyInternal = true;
-    }
+    this.setValue("lineHeight", value);
   }
 
-  public set enableShadow(value: boolean | undefined) {
-    if (value !== this.enableShadowInternal) {
-      this.enableShadowInternal = value;
-      this.dirtyInternal = true;
-    }
+  /**
+   * Outlines from the innermost to the outermost. Each one lies outside the previous one. An
+   * empty list draws no outline, undefined takes the outlines of the fallback style.
+   */
+  public set strokes(value: readonly UITextStrokeConfig[] | undefined) {
+    this.setValue("strokes", value === undefined ? undefined : resolveStrokes(value));
   }
 
-  public set shadowOffsetX(value: number | undefined) {
-    if (value !== undefined) {
-      assertValidNumber(value, "UITextStyle.shadowOffsetX");
-    }
-    if (value !== this.shadowOffsetXInternal) {
-      this.shadowOffsetXInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set shadowOffsetY(value: number | undefined) {
-    if (value !== undefined) {
-      assertValidNumber(value, "UITextStyle.shadowOffsetY");
-    }
-    if (value !== this.shadowOffsetYInternal) {
-      this.shadowOffsetYInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set shadowBlur(value: number | undefined) {
-    if (value !== undefined) {
-      assertValidNonNegativeNumber(value, "UITextStyle.shadowBlur");
-    }
-    if (value !== this.shadowBlurInternal) {
-      this.shadowBlurInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set shadowColor(value: string | undefined) {
-    if (value !== this.shadowColorInternal) {
-      this.shadowColorInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set enableStroke(value: boolean | undefined) {
-    if (value !== this.enableStrokeInternal) {
-      this.enableStrokeInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set strokeColor(value: string | undefined) {
-    if (value !== this.strokeColorInternal) {
-      this.strokeColorInternal = value;
-      this.dirtyInternal = true;
-    }
-  }
-
-  public set strokeThickness(value: number | undefined) {
-    if (value !== undefined) {
-      assertValidNonNegativeNumber(value, "UITextStyle.strokeThickness");
-    }
-    if (value !== this.strokeThicknessInternal) {
-      this.strokeThicknessInternal = value;
-      this.dirtyInternal = true;
-    }
+  /**
+   * Shadows and glows, the first one on top. An empty list draws no shadow, undefined takes the
+   * shadows of the fallback style.
+   */
+  public set shadows(value: readonly UITextShadowConfig[] | undefined) {
+    this.setValue("shadows", value === undefined ? undefined : resolveShadows(value));
   }
 
   /**
    * Resolves complete style from primary and fallback sources.
    * @param primary First style to check for each property
    * @param fallback Second style to check if primary is undefined
-   * @returns Complete style configuration with all defaults applied
+   * @returns Complete style with all defaults applied
+   * @internal
    */
-  public static resolve(primary?: UITextStyle, fallback?: UITextStyle): UITextStyleConfig {
-    const fontSize =
-      primary?.fontSizeInternal ?? fallback?.fontSizeInternal ?? TEXT_STYLE_DEFAULT_FONT_SIZE;
+  public static resolve(primary?: UITextStyle, fallback?: UITextStyle): UIResolvedTextStyle {
+    const pick = <K extends UITextStyleKey>(key: K): UIResolvedTextStyle[K] | undefined =>
+      primary?.values[key] ?? fallback?.values[key];
+
+    const fontSize = pick("fontSize") ?? TEXT_STYLE_DEFAULT_FONT_SIZE;
 
     return {
-      color: primary?.colorInternal ?? fallback?.colorInternal ?? TEXT_STYLE_DEFAULT_COLOR,
-      align: primary?.alignInternal ?? fallback?.alignInternal ?? TEXT_STYLE_DEFAULT_ALIGN,
-      fontFamily:
-        primary?.fontFamilyInternal ??
-        fallback?.fontFamilyInternal ??
-        TEXT_STYLE_DEFAULT_FONT_FAMILY,
+      color: pick("color") ?? TEXT_STYLE_DEFAULT_COLOR,
+      paintBox: pick("paintBox") ?? TEXT_STYLE_DEFAULT_PAINT_BOX,
+      align: pick("align") ?? TEXT_STYLE_DEFAULT_ALIGN,
+      fontFamily: pick("fontFamily") ?? TEXT_STYLE_DEFAULT_FONT_FAMILY,
       fontSize,
-      fontStyle:
-        primary?.fontStyleInternal ?? fallback?.fontStyleInternal ?? TEXT_STYLE_DEFAULT_FONT_STYLE,
-      fontWeight:
-        primary?.fontWeightInternal ??
-        fallback?.fontWeightInternal ??
-        TEXT_STYLE_DEFAULT_FONT_WEIGHT,
-      lineHeight:
-        primary?.lineHeightInternal ??
-        fallback?.lineHeightInternal ??
-        fontSize * TEXT_STYLE_DEFAULT_LINE_HEIGHT,
-      enableShadow:
-        primary?.enableShadowInternal ??
-        fallback?.enableShadowInternal ??
-        TEXT_STYLE_DEFAULT_ENABLE_SHADOW,
-      shadowOffsetX:
-        primary?.shadowOffsetXInternal ??
-        fallback?.shadowOffsetXInternal ??
-        TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X,
-      shadowOffsetY:
-        primary?.shadowOffsetYInternal ??
-        fallback?.shadowOffsetYInternal ??
-        TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y,
-      shadowBlur:
-        primary?.shadowBlurInternal ??
-        fallback?.shadowBlurInternal ??
-        TEXT_STYLE_DEFAULT_SHADOW_BLUR,
-      shadowColor:
-        primary?.shadowColorInternal ??
-        fallback?.shadowColorInternal ??
-        TEXT_STYLE_DEFAULT_SHADOW_COLOR,
-      enableStroke:
-        primary?.enableStrokeInternal ??
-        fallback?.enableStrokeInternal ??
-        TEXT_STYLE_DEFAULT_ENABLE_STROKE,
-      strokeColor:
-        primary?.strokeColorInternal ??
-        fallback?.strokeColorInternal ??
-        TEXT_STYLE_DEFAULT_STROKE_COLOR,
-      strokeThickness:
-        primary?.strokeThicknessInternal ??
-        fallback?.strokeThicknessInternal ??
-        TEXT_STYLE_DEFAULT_STROKE_THICKNESS,
+      fontStyle: pick("fontStyle") ?? TEXT_STYLE_DEFAULT_FONT_STYLE,
+      fontWeight: pick("fontWeight") ?? TEXT_STYLE_DEFAULT_FONT_WEIGHT,
+      lineHeight: pick("lineHeight") ?? fontSize * TEXT_STYLE_DEFAULT_LINE_HEIGHT,
+      strokes: pick("strokes") ?? TEXT_STYLE_DEFAULT_STROKES,
+      shadows: pick("shadows") ?? TEXT_STYLE_DEFAULT_SHADOWS,
     };
   }
 
   /**
-   * Calculates maximum padding required for stroke and shadow of a resolved style.
-   * The stroke is centered on the glyph outline, so only half of it is outside.
-   * The shadow is cast by the stroke as well as by the fill.
+   * Calculates the padding a resolved style needs on every side for its outlines and shadows.
+   * The outlines add up outside the glyphs. A shadow is cast by the outlined glyphs and spreads
+   * by its offset and about twice its blur radius.
    * @param style Resolved style
-   * @returns Padding in pixels needed on all sides
+   * @returns Padding in pixels
+   * @internal
    */
-  public static calculatePadding(style: UITextStyleConfig): number {
-    let padding = style.enableStroke ? style.strokeThickness / 2 : 0;
-
-    if (style.enableShadow) {
-      const shadowSpread = style.shadowBlur * 2;
-      const shadowMaxX = Math.abs(style.shadowOffsetX) + shadowSpread;
-      const shadowMaxY = Math.abs(style.shadowOffsetY) + shadowSpread;
-      padding += Math.max(shadowMaxX, shadowMaxY);
+  public static calculatePadding(style: UIResolvedTextStyle): number {
+    let outline = 0;
+    for (const stroke of style.strokes) {
+      outline += stroke.thickness;
     }
 
-    return Math.ceil(padding);
+    let shadowSpread = 0;
+    for (const shadow of style.shadows) {
+      const offset = Math.max(Math.abs(shadow.offsetX), Math.abs(shadow.offsetY));
+      shadowSpread = Math.max(shadowSpread, offset + shadow.blur * 2);
+    }
+
+    return Math.ceil(outline + shadowSpread);
   }
 
   /** @internal */
@@ -364,126 +291,43 @@ export class UITextStyle {
 
   /** Sets all properties to default values */
   public setDefaults(): void {
-    if (
-      this.colorInternal !== TEXT_STYLE_DEFAULT_COLOR ||
-      this.alignInternal !== TEXT_STYLE_DEFAULT_ALIGN ||
-      this.fontFamilyInternal !== TEXT_STYLE_DEFAULT_FONT_FAMILY ||
-      this.fontSizeInternal !== TEXT_STYLE_DEFAULT_FONT_SIZE ||
-      this.fontStyleInternal !== TEXT_STYLE_DEFAULT_FONT_STYLE ||
-      this.fontWeightInternal !== TEXT_STYLE_DEFAULT_FONT_WEIGHT ||
-      this.lineHeightInternal !== TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT ||
-      this.enableShadowInternal !== TEXT_STYLE_DEFAULT_ENABLE_SHADOW ||
-      this.shadowOffsetXInternal !== TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X ||
-      this.shadowOffsetYInternal !== TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y ||
-      this.shadowBlurInternal !== TEXT_STYLE_DEFAULT_SHADOW_BLUR ||
-      this.shadowColorInternal !== TEXT_STYLE_DEFAULT_SHADOW_COLOR ||
-      this.enableStrokeInternal !== TEXT_STYLE_DEFAULT_ENABLE_STROKE ||
-      this.strokeColorInternal !== TEXT_STYLE_DEFAULT_STROKE_COLOR ||
-      this.strokeThicknessInternal !== TEXT_STYLE_DEFAULT_STROKE_THICKNESS
-    ) {
-      this.colorInternal = TEXT_STYLE_DEFAULT_COLOR;
-      this.alignInternal = TEXT_STYLE_DEFAULT_ALIGN;
-      this.fontFamilyInternal = TEXT_STYLE_DEFAULT_FONT_FAMILY;
-      this.fontSizeInternal = TEXT_STYLE_DEFAULT_FONT_SIZE;
-      this.fontStyleInternal = TEXT_STYLE_DEFAULT_FONT_STYLE;
-      this.fontWeightInternal = TEXT_STYLE_DEFAULT_FONT_WEIGHT;
-      this.lineHeightInternal = TEXT_STYLE_DEFAULT_FONT_SIZE * TEXT_STYLE_DEFAULT_LINE_HEIGHT;
-      this.enableShadowInternal = TEXT_STYLE_DEFAULT_ENABLE_SHADOW;
-      this.shadowOffsetXInternal = TEXT_STYLE_DEFAULT_SHADOW_OFFSET_X;
-      this.shadowOffsetYInternal = TEXT_STYLE_DEFAULT_SHADOW_OFFSET_Y;
-      this.shadowBlurInternal = TEXT_STYLE_DEFAULT_SHADOW_BLUR;
-      this.shadowColorInternal = TEXT_STYLE_DEFAULT_SHADOW_COLOR;
-      this.enableStrokeInternal = TEXT_STYLE_DEFAULT_ENABLE_STROKE;
-      this.strokeColorInternal = TEXT_STYLE_DEFAULT_STROKE_COLOR;
-      this.strokeThicknessInternal = TEXT_STYLE_DEFAULT_STROKE_THICKNESS;
-      this.dirtyInternal = true;
+    for (const key of TEXT_STYLE_KEYS) {
+      this.setValue(key, TEXT_STYLE_DEFAULTS[key]);
     }
   }
 
   /** Sets all properties to undefined */
   public clear(): void {
-    if (
-      this.colorInternal !== undefined ||
-      this.alignInternal !== undefined ||
-      this.fontFamilyInternal !== undefined ||
-      this.fontSizeInternal !== undefined ||
-      this.fontStyleInternal !== undefined ||
-      this.fontWeightInternal !== undefined ||
-      this.lineHeightInternal !== undefined ||
-      this.enableShadowInternal !== undefined ||
-      this.shadowOffsetXInternal !== undefined ||
-      this.shadowOffsetYInternal !== undefined ||
-      this.shadowBlurInternal !== undefined ||
-      this.shadowColorInternal !== undefined ||
-      this.enableStrokeInternal !== undefined ||
-      this.strokeColorInternal !== undefined ||
-      this.strokeThicknessInternal !== undefined
-    ) {
-      this.colorInternal = undefined;
-      this.alignInternal = undefined;
-      this.fontFamilyInternal = undefined;
-      this.fontSizeInternal = undefined;
-      this.fontStyleInternal = undefined;
-      this.fontWeightInternal = undefined;
-      this.lineHeightInternal = undefined;
-      this.enableShadowInternal = undefined;
-      this.shadowOffsetXInternal = undefined;
-      this.shadowOffsetYInternal = undefined;
-      this.shadowBlurInternal = undefined;
-      this.shadowColorInternal = undefined;
-      this.enableStrokeInternal = undefined;
-      this.strokeColorInternal = undefined;
-      this.strokeThicknessInternal = undefined;
-      this.dirtyInternal = true;
+    for (const key of TEXT_STYLE_KEYS) {
+      this.setValue(key, undefined);
     }
   }
 
   /** Copies from another style instance */
   public copy(value: UITextStyle): void {
-    if (
-      this.colorInternal !== value.colorInternal ||
-      this.alignInternal !== value.alignInternal ||
-      this.fontFamilyInternal !== value.fontFamilyInternal ||
-      this.fontSizeInternal !== value.fontSizeInternal ||
-      this.fontStyleInternal !== value.fontStyleInternal ||
-      this.fontWeightInternal !== value.fontWeightInternal ||
-      this.lineHeightInternal !== value.lineHeightInternal ||
-      this.enableShadowInternal !== value.enableShadowInternal ||
-      this.shadowOffsetXInternal !== value.shadowOffsetXInternal ||
-      this.shadowOffsetYInternal !== value.shadowOffsetYInternal ||
-      this.shadowBlurInternal !== value.shadowBlurInternal ||
-      this.shadowColorInternal !== value.shadowColorInternal ||
-      this.enableStrokeInternal !== value.enableStrokeInternal ||
-      this.strokeColorInternal !== value.strokeColorInternal ||
-      this.strokeThicknessInternal !== value.strokeThicknessInternal
-    ) {
-      this.colorInternal = value.colorInternal;
-      this.alignInternal = value.alignInternal;
-      this.fontFamilyInternal = value.fontFamilyInternal;
-      this.fontSizeInternal = value.fontSizeInternal;
-      this.fontStyleInternal = value.fontStyleInternal;
-      this.fontWeightInternal = value.fontWeightInternal;
-      this.lineHeightInternal = value.lineHeightInternal;
-      this.enableShadowInternal = value.enableShadowInternal;
-      this.shadowOffsetXInternal = value.shadowOffsetXInternal;
-      this.shadowOffsetYInternal = value.shadowOffsetYInternal;
-      this.shadowBlurInternal = value.shadowBlurInternal;
-      this.shadowColorInternal = value.shadowColorInternal;
-      this.enableStrokeInternal = value.enableStrokeInternal;
-      this.strokeColorInternal = value.strokeColorInternal;
-      this.strokeThicknessInternal = value.strokeThicknessInternal;
-      this.dirtyInternal = true;
+    for (const key of TEXT_STYLE_KEYS) {
+      this.setValue(key, value.values[key]);
     }
   }
 
   /**
-   * Calculates maximum padding required for stroke and shadow.
+   * Calculates the padding needed on every side for outlines and shadows.
    * Properties left undefined here are taken from `fallback`, then from defaults,
-   * so a span style is measured with the stroke and shadow it is drawn with.
+   * so a span style is measured with the outlines and shadows it is drawn with.
    * @param fallback Style that supplies undefined properties (usually the common style)
-   * @returns Padding in pixels needed on all sides
+   * @returns Padding in pixels
    */
   public calculatePadding(fallback?: UITextStyle): number {
     return UITextStyle.calculatePadding(UITextStyle.resolve(this, fallback));
+  }
+
+  private setValue<K extends UITextStyleKey>(
+    key: K,
+    value: UIResolvedTextStyle[K] | undefined,
+  ): void {
+    if (this.values[key] !== value) {
+      this.values[key] = value;
+      this.dirtyInternal = true;
+    }
   }
 }

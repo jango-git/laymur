@@ -21,6 +21,17 @@ export enum UITextResizeMode {
   SCALE = 1,
 }
 
+/** What sets the height of a line */
+export enum UITextLineBox {
+  /** The glyphs the line holds, so a line without ascenders or descenders is lower */
+  GLYPHS = 0,
+  /**
+   * The ascent and descent of its font, so lines of one font are as high whatever glyphs they
+   * hold, and texts of one font aligned by an edge share the baseline
+   */
+  FONT = 1,
+}
+
 /** Configuration options for UIText */
 export interface UITextOptions extends UIElementOptions {
   /** Multiplicative tint */
@@ -35,8 +46,11 @@ export interface UITextOptions extends UIElementOptions {
   maxLineWidth: number;
   /** Base direction used for bidirectional text reordering */
   direction: UITextDirection;
+  /** What sets the height of a line */
+  lineBox: UITextLineBox;
 }
 
 export const TEXT_DEFAULT_MAX_LINE_WIDTH = 1024;
 export const TEXT_DEFAULT_RESIZE_MODE = UITextResizeMode.SCALE;
 export const TEXT_DEFAULT_DIRECTION = UITextDirection.AUTO;
+export const TEXT_DEFAULT_LINE_BOX = UITextLineBox.GLYPHS;

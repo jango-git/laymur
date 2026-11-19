@@ -19,6 +19,7 @@
 - **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
 - **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
 - **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
+- **Text effects** - gradient fills, stacked outlines, shadows and glows, drawn at screen resolution
 - **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
 - **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
 - **Modular particles** - separate `laymur/particles` entry point, import only if needed
@@ -184,7 +185,55 @@ element.lightness = 0.1; // offset (0 = unchanged)
 element.blendMode = UIBlendMode.ADDITIVE;
 ```
 
-### 6. Particle System
+### 6. Text and Graphics
+
+`UIText` and `UIGraphics` draw on a canvas. Both redraw it at the size the element takes on the
+screen, so they stay sharp on high-DPI screens and when constraints enlarge them.
+
+```typescript
+import { UIGraphics, UILinearGradient, UIText } from "laymur";
+
+const title = new UIText(layer, "WELL DONE!", {
+  commonStyle: {
+    fontSize: 64,
+    fontWeight: "bold",
+    color: new UILinearGradient([
+      { offset: 0, color: "#fff6b0" },
+      { offset: 1, color: "#ff7a00" },
+    ]),
+    strokes: [
+      { paint: "#7a2a00", thickness: 4 },
+      { paint: "#ffffff", thickness: 4 },
+    ],
+    shadows: [
+      { color: "rgba(0, 0, 0, 0.6)", offsetY: 6 },
+      { color: "rgba(255, 230, 0, 0.9)", blur: 12 },
+    ],
+  },
+});
+
+const panel = new UIGraphics(layer, { width: 300, height: 200 });
+panel.drawRoundedRect(0, 0, 300, 200, 24, {
+  fill: "#2060ff",
+  stroke: { paint: "#ffffff", width: 4 },
+});
+```
+
+- Text is laid out in pixels of its style. Scaling the element with constraints does not change
+  the line breaks.
+- A gradient is laid over the box of what it fills, in fractions of that box from its top left
+  corner. For text the box is each line or the whole text (`paintBox`), for a shape its bounds.
+- Strokes stack outward from the glyphs in list order. Shadows are cast by the outlined glyphs,
+  the first one on top, and a shadow without an offset is a glow.
+- `UIGraphics` keeps its shapes until `clear()`. They are drawn in a box as large as the width and
+  height the element is created with, y pointing down, and the box is stretched over the element.
+- With `lineBox: UITextLineBox.FONT` the height of a line comes from the font metrics, so texts
+  of one font aligned by an edge share the baseline.
+- A `UIAspectConstraint` without an aspect follows the aspect of the text as it rewraps, and the
+  aspect of the texture of a `UIImage`.
+- Micro transforms do not redraw the canvas.
+
+### 7. Particle System
 
 Modular pipeline: Spawn -> Behavior -> Rendering.
 
@@ -259,7 +308,7 @@ places each particle where it was at the particle's moment within the frame, and
 positions and the points of behavior modules are layer coordinates. In `LOCAL` space, the default,
 live particles move with the emitter.
 
-### 7. Debug Overlay
+### 8. Debug Overlay
 
 `laymur/debug` renders visual overlays for constraints - useful during development to inspect layout relationships.
 
@@ -293,7 +342,7 @@ Most commonly used exports (not exhaustive):
 
 ### Core
 
-UIViewportLayer, UIImage, UIAnimatedImage, UIText, UINineSlice, UIProgress, UIMask
+UIViewportLayer, UIImage, UIAnimatedImage, UIText, UIGraphics, UINineSlice, UIProgress, UIMask, UILinearGradient, UIRadialGradient
 
 ### Constraints
 
@@ -301,7 +350,7 @@ UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
 
 ### Extension Points
 
-UIElement, UIArea, UIResizePolicy, UIViewport, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
+UIElement, UIArea, UIGradient, UIResizePolicy, UIViewport, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
 
 UIRenderingModule, UISpawnModule, UIBehaviorModule (laymur/particles)
 

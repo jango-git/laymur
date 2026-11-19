@@ -28,7 +28,10 @@ export interface UISceneOptions extends UIElementOptions {
   camera: Camera;
   /** When to re-render */
   updateMode: UISceneUpdateMode;
-  /** Render target resolution multiplier. Range 0.1 to 2.0. */
+  /**
+   * Render target resolution multiplier over the pixel density of the layer, so 1 renders as
+   * many pixels as the element covers on the screen. Range 0.1 to 2.0.
+   */
   resolutionFactor: number;
   /** Background color */
   clearColor: UIColorConfig;

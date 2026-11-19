@@ -129,7 +129,10 @@ export class UIScene extends UIElement {
     return this.colorInternal;
   }
 
-  /** Render target resolution multiplier. Range 0.1 to 2.0. */
+  /**
+   * Render target resolution multiplier over the pixel density of the layer, so 1 renders as
+   * many pixels as the element covers on the screen. Range 0.1 to 2.0.
+   */
   public get resolutionFactor(): number {
     return this.resolutionFactorInternal;
   }
@@ -204,8 +207,9 @@ export class UIScene extends UIElement {
 
     // Compared every frame rather than on layout changes, so a size change is kept until a frame
     // that renders the scene applies it
-    const targetWidth = this.width * this.resolutionFactorInternal;
-    const targetHeight = this.height * this.resolutionFactorInternal;
+    const pixelsPerUnit = this.layer.pixelDensity * this.resolutionFactorInternal;
+    const targetWidth = Math.max(Math.round(this.width * pixelsPerUnit), 1);
+    const targetHeight = Math.max(Math.round(this.height * pixelsPerUnit), 1);
     const isSizeDirty =
       this.renderTarget.width !== targetWidth || this.renderTarget.height !== targetHeight;
 

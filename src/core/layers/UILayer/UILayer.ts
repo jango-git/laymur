@@ -39,6 +39,7 @@ export abstract class UILayer implements UIPlaneElement {
 
   private modeInternal: UILayerMode;
   private orientationInternal: UILayerOrientation;
+  private pixelDensityInternal = 1;
 
   private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
@@ -217,6 +218,15 @@ export abstract class UILayer implements UIPlaneElement {
   }
 
   /**
+   * Screen pixels per world unit, as of the last render. Canvas-drawn elements and `UIScene`
+   * rasterize at this density, so their content stays sharp on high-DPI screens. 1 for a layer
+   * that does not know its screen size.
+   */
+  public get pixelDensity(): number {
+    return this.pixelDensityInternal;
+  }
+
+  /**
    * Updates visibility and interactivity mode. A layer that stops taking input cancels the
    * pressed pointers: their releases would never arrive.
    */
@@ -343,6 +353,12 @@ export abstract class UILayer implements UIPlaneElement {
     if (orientationChanged) {
       this.signalOrientationChangedInternal.emit(this.orientationInternal, this);
     }
+  }
+
+  /** Sets the screen pixels per world unit, read by elements on their next render */
+  protected setPixelDensity(value: number): void {
+    assertValidPositiveNumber(value, "UILayer.setPixelDensity.value");
+    this.pixelDensityInternal = value;
   }
 
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {

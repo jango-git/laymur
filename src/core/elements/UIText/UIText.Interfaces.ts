@@ -1,5 +1,5 @@
 import type { UITextSpanConfig } from "../../miscellaneous/text-span/UITextSpan.Internal.js";
-import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import type { UIResolvedTextStyle } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
 
 /** Text content configuration */
 export type UITextContent = (UITextSpanConfig | string)[] | UITextSpanConfig | string;
@@ -29,7 +29,7 @@ export interface UITextChunk {
   /** Text content */
   text: string;
   /** Resolved style */
-  style: UITextStyleConfig;
+  style: UIResolvedTextStyle;
   /** Chunk metrics */
   metrics: UIChunkMetrics;
   /** Resolved bidirectional class used for visual reordering */

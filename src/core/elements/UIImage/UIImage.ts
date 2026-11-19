@@ -1,3 +1,5 @@
+import type { FerrsignView1 } from "ferrsign";
+import { Ferrsign1 } from "ferrsign";
 import type { Matrix3 } from "three";
 
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
@@ -5,6 +7,7 @@ import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.j
 import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import { computeTrimmedTransformMatrix, scaleTrim } from "../../miscellaneous/computeTransform.js";
 import type { UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import type { UIContentAspectElement } from "../../miscellaneous/shared.js";
 import type { UITextureConfig } from "../../miscellaneous/texture/UITextureView.Internal.js";
 import { UITextureView } from "../../miscellaneous/texture/UITextureView.js";
 import source from "../../shaders/UIImage.js";
@@ -12,12 +15,13 @@ import { UIElement } from "../UIElement/UIElement.js";
 import type { UIImageOptions } from "./UIImage.Internal.js";
 
 /** Textured image element */
-export class UIImage extends UIElement {
+export class UIImage extends UIElement implements UIContentAspectElement {
   /** Texture displayed by this image */
   public readonly texture: UITextureView;
 
   private readonly colorInternal: UIColor;
   private readonly textureTransform: Matrix3;
+  private readonly signalContentAspectChangedInternal = new Ferrsign1<number>();
 
   /**
    * Creates a new UIImage instance.
@@ -61,6 +65,19 @@ export class UIImage extends UIElement {
   /** Multiplicative tint. Alpha channel controls opacity. */
   public get color(): UIColor {
     return this.colorInternal;
+  }
+
+  /**
+   * Aspect of the texture. A `UIAspectConstraint` created without an aspect follows it when the
+   * texture changes size.
+   */
+  public get contentAspect(): number {
+    return this.texture.width / this.texture.height;
+  }
+
+  /** Signal fired with the new aspect when the texture changes size */
+  public get signalContentAspectChanged(): FerrsignView1<number> {
+    return this.signalContentAspectChangedInternal;
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -142,5 +159,6 @@ export class UIImage extends UIElement {
   private readonly onTextureDimensionsChanged = (width: number, height: number): void => {
     this.width = width;
     this.height = height;
+    this.signalContentAspectChangedInternal.emit(width / height);
   };
 }

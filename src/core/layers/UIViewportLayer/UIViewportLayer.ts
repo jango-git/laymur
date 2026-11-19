@@ -29,6 +29,8 @@ export class UIViewportLayer extends UILayer {
   private resizePolicyInternal: UIResizePolicy;
   /** Policy version the layer was last sized by; -1 forces a resize */
   private appliedPolicyVersion: number;
+  /** World units per viewport pixel the layer was last sized by */
+  private appliedScale: number;
 
   /** Pointers the layer cancelled while pressed: their late release is not reported */
   private readonly abandonedPointers = new Set<number>();
@@ -59,6 +61,7 @@ export class UIViewportLayer extends UILayer {
     this.ownsViewport = options?.viewport === undefined;
     this.resizePolicyInternal = resizePolicy;
     this.appliedPolicyVersion = hasSize ? resizePolicy.version : -1;
+    this.appliedScale = scale;
     viewport.signalResized.on(this.onResize);
     window.addEventListener("pointerdown", this.onPointerDown);
     window.addEventListener("pointermove", this.onPointerMove);
@@ -146,6 +149,7 @@ export class UIViewportLayer extends UILayer {
     if (this.resizePolicy.version !== this.appliedPolicyVersion) {
       this.onResize();
     }
+    this.setPixelDensity(renderer.getPixelRatio() / this.appliedScale);
     super.renderInternal(renderer, deltaTime);
   }
 
@@ -214,6 +218,7 @@ export class UIViewportLayer extends UILayer {
     }
     const scale = this.resizePolicy.calculateScale(width, height);
     this.appliedPolicyVersion = this.resizePolicy.version;
+    this.appliedScale = scale;
     this.resizeInternal(width * scale, height * scale);
   };
 

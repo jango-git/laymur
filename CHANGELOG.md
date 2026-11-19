@@ -3,6 +3,59 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## Unreleased
+
+### Changed
+
+- **Breaking:** `UITextStyle` takes outlines as a list. `strokes` replaces `enableStroke`,
+  `strokeColor` and `strokeThickness`. Each outline lies outside the previous one, and its
+  `thickness` is the width visible outside the glyphs. The old stroke showed half its thickness,
+  so `{ strokeColor: c, strokeThickness: t }` becomes `strokes: [{ paint: c, thickness: t / 2 }]`.
+  Outline corners are round by default, and `join: "miter"` gives the old corners.
+- **Breaking:** `UITextStyle` takes shadows as a list. `shadows` replaces `enableShadow`,
+  `shadowOffsetX`, `shadowOffsetY`, `shadowBlur` and `shadowColor`. A shadow is cast once by the
+  outlined glyphs. Before, the stroke and the fill each cast one, and the shadow was darker where
+  they overlap.
+- **Breaking:** the `color` of `UITextStyle` accepts any `UIColorConfig` or a gradient and reads
+  back as a CSS string or the gradient. `UITextStyle.resolve` and the static
+  `UITextStyle.calculatePadding` are no longer public.
+- **Breaking:** `UIGraphics` keeps its shapes until `clear()` and draws them again when needed.
+  The drawing methods take a style instead of a color. `drawRect(x, y, w, h, color)` becomes
+  `drawRect(x, y, w, h, { fill: color })`, and `drawPolyline(points, color, width)` becomes
+  `drawPolyline(points, { paint: color, width })` with points as `{ x, y }` objects. A string
+  color is a CSS color, so `rgba(...)` works.
+- **Breaking:** `UIAspectConstraint` created without an aspect follows the content aspect of a
+  `UIText` or a `UIImage`. A text that rewraps, for example after `maxLineWidth` changes with the
+  orientation, keeps its proportions without a constraint per orientation. Other elements keep
+  their ratio at creation as before. Setting `aspect` stops following the content.
+- **Breaking:** `UIScene.resolutionFactor` multiplies the pixel density of the layer, so 1 renders
+  as many pixels as the element covers on the screen. With a renderer pixel ratio of 2 the render
+  target has four times the pixels it had. Dividing the old factor by `layer.pixelDensity` keeps
+  the old size.
+- `UIText` and `UIGraphics` draw their canvas at the size the element takes on the screen, times
+  the pixel density of the layer. Text stays sharp on high-DPI screens and when constraints
+  enlarge it, and the canvas takes more memory there, four times as much at a pixel ratio of 2.
+  The canvas is redrawn when the size crosses a step of about 19%, and its longer side is kept
+  within 4096 pixels. Micro transforms do not redraw it.
+- Outlines and shadows of text are drawn in layers over all spans. An outline of one span no
+  longer covers the glyphs of the span before it.
+- Changing the `color` tint of a `UIText` no longer redraws its canvas.
+
+### Added
+
+- `UILinearGradient` and `UIRadialGradient`, the paint of text, its outlines and the shapes of
+  `UIGraphics`. A gradient is laid over the box of what it fills. `UITextStyle.paintBox`
+  (`UITextPaintBox`) lays it over each line or over the whole text.
+- Several outlines and several shadows per text style. A shadow without an offset is a glow.
+- `UITextOptions.lineBox` and `UIText.lineBox`, of type `UITextLineBox`. With `FONT` the height
+  of a line comes from the ascent and descent of its font, so texts of one font aligned by an edge
+  share the baseline.
+- `UILayer.pixelDensity`, screen pixels per world unit as of the last render.
+- `contentAspect` and `signalContentAspectChanged` on `UIText` and `UIImage`, described by
+  `UIContentAspectElement`.
+- `UIGraphics.drawRoundedRect` and `UIGraphics.drawPolygon`, a stroke on every shape, and
+  gradient fills. `clear` fills with a color or a gradient.
+
 ## 0.28.0 - 2026-11-18
 
 ### Changed

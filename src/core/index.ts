@@ -44,7 +44,12 @@ export type { UIDummyOptions, UIInputEventData } from "./elements/UIDummy/UIDumm
 export { UIDummy } from "./elements/UIDummy/UIDummy.js";
 export type { UIElementOptions } from "./elements/UIElement/UIElement.Internal.js";
 export { UIElement } from "./elements/UIElement/UIElement.js";
-export type { UIGraphicsOptions } from "./elements/UIGraphics/UIGraphics.Internal.js";
+export type {
+  UIGraphicsCornerRadius,
+  UIGraphicsOptions,
+  UIGraphicsStrokeConfig,
+  UIGraphicsStyle,
+} from "./elements/UIGraphics/UIGraphics.Internal.js";
 export { UIGraphics } from "./elements/UIGraphics/UIGraphics.js";
 export type { UIImageOptions } from "./elements/UIImage/UIImage.Internal.js";
 export { UIImage } from "./elements/UIImage/UIImage.js";
@@ -58,7 +63,11 @@ export { UISceneUpdateMode } from "./elements/UIScene/UIScene.Internal.js";
 export { UIScene } from "./elements/UIScene/UIScene.js";
 export type { UITextContent } from "./elements/UIText/UIText.Interfaces.js";
 export type { UITextOptions } from "./elements/UIText/UIText.Internal.js";
-export { UITextDirection, UITextResizeMode } from "./elements/UIText/UIText.Internal.js";
+export {
+  UITextDirection,
+  UITextLineBox,
+  UITextResizeMode,
+} from "./elements/UIText/UIText.Internal.js";
 export { UIText } from "./elements/UIText/UIText.js";
 export type {
   UILayerMode,
@@ -98,6 +107,21 @@ export type { Vector2Like } from "./miscellaneous/math.js";
 export type { UIMicroConfig } from "./miscellaneous/micro/UIMicro.Internal.js";
 export { UIMicroAnchorMode } from "./miscellaneous/micro/UIMicro.Internal.js";
 export { UIMicro } from "./miscellaneous/micro/UIMicro.js";
+export type {
+  UIGradientStop,
+  UILinearGradientOptions,
+  UIRadialGradientOptions,
+} from "./miscellaneous/paint/UIGradient.Internal.js";
+export { UIGradient } from "./miscellaneous/paint/UIGradient.js";
+export { UILinearGradient } from "./miscellaneous/paint/UILinearGradient.js";
+export type {
+  UILineCap,
+  UILineJoin,
+  UIPaint,
+  UIPaintBox,
+  UIPaintConfig,
+} from "./miscellaneous/paint/UIPaint.Internal.js";
+export { UIRadialGradient } from "./miscellaneous/paint/UIRadialGradient.js";
 export { UIResizePolicy } from "./miscellaneous/resize-policy/UIResizePolicy.js";
 export { UIResizePolicyCover } from "./miscellaneous/resize-policy/UIResizePolicyCover.js";
 export { UIResizePolicyCross } from "./miscellaneous/resize-policy/UIResizePolicyCross.js";
@@ -106,13 +130,25 @@ export { UIResizePolicyFit } from "./miscellaneous/resize-policy/UIResizePolicyF
 export { UIResizePolicyFixedHeight } from "./miscellaneous/resize-policy/UIResizePolicyFixedHeight.js";
 export { UIResizePolicyFixedWidth } from "./miscellaneous/resize-policy/UIResizePolicyFixedWidth.js";
 export { UIResizePolicyNone } from "./miscellaneous/resize-policy/UIResizePolicyNone.js";
-export type { UILayerElement, UIPlaneElement, UIPointElement } from "./miscellaneous/shared.js";
+export type {
+  UIContentAspectElement,
+  UILayerElement,
+  UIPlaneElement,
+  UIPointElement,
+} from "./miscellaneous/shared.js";
 export type { UITextSpanConfig } from "./miscellaneous/text-span/UITextSpan.Internal.js";
 export { UITextSpan } from "./miscellaneous/text-span/UITextSpan.js";
 export type {
   UITextAlign,
+  UITextFontStyle,
+  UITextFontWeight,
+  UITextShadow,
+  UITextShadowConfig,
+  UITextStroke,
+  UITextStrokeConfig,
   UITextStyleConfig,
 } from "./miscellaneous/text-style/UITextStyle.Internal.js";
+export { UITextPaintBox } from "./miscellaneous/text-style/UITextStyle.Internal.js";
 export { UITextStyle } from "./miscellaneous/text-style/UITextStyle.js";
 export type {
   UITextureAtlasConfig,

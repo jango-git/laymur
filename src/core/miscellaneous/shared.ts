@@ -1,3 +1,5 @@
+import type { FerrsignView1 } from "ferrsign";
+
 import { UILayer } from "../layers/UILayer/UILayer.js";
 
 /** Objects that belong to a UI layer */
@@ -40,6 +42,28 @@ export interface UIPlaneElement extends UIPointElement {
   readonly centerX: number;
   /** Center Y coordinate in world units */
   readonly centerY: number;
+}
+
+/** UI elements whose content has its own aspect ratio, such as a picture or laid out text */
+export interface UIContentAspectElement {
+  /** Width of the content divided by its height */
+  readonly contentAspect: number;
+  /** Signal fired with the new aspect when the content changes it */
+  readonly signalContentAspectChanged: FerrsignView1<number>;
+}
+
+/**
+ * Checks if object implements UIContentAspectElement.
+ * @param obj Object to check
+ * @returns True if object reports the aspect of its content
+ */
+export function isUIContentAspectElement(obj: unknown): obj is UIContentAspectElement {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "contentAspect" in obj &&
+    "signalContentAspectChanged" in obj
+  );
 }
 
 /**

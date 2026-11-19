@@ -1,9 +1,10 @@
 import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import type { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
-import type { UITextStyleConfig } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import type { UIResolvedTextStyle } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
 import { detectBidiClass, reorderChunksVisually } from "./UIText.Bidi.js";
 import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UIText.Interfaces.js";
+import { UITextLineBox } from "./UIText.Internal.js";
 
 /**
  * Applies font of a resolved style to a canvas context.
@@ -13,7 +14,7 @@ import type { UIChunkMetrics, UITextChunk, UITextLine, UITextSize } from "./UITe
  */
 export function applyFontStyle(
   context: UICanvasRenderingContext2D,
-  textStyle: UITextStyleConfig,
+  textStyle: UIResolvedTextStyle,
 ): void {
   context.font = `${textStyle.fontStyle} ${textStyle.fontWeight} ${textStyle.fontSize}px "${textStyle.fontFamily}"`;
 }
@@ -49,15 +50,19 @@ function ceilOverhang(value: number): number {
 
 /**
  * Measures single text chunk.
+ * With `UITextLineBox.FONT` the chunk reaches the ascent and descent of its font, or further
+ * where its glyphs do. A browser without font metrics measures the glyphs.
  * @param context Canvas context for measurement
  * @param text Chunk text
  * @param textStyle Resolved text style
+ * @param lineBox What the height of the chunk follows
  * @returns Chunk metrics
  */
 export function measureTextChunk(
   context: UICanvasRenderingContext2D,
   text: string,
-  textStyle: UITextStyleConfig,
+  textStyle: UIResolvedTextStyle,
+  lineBox: UITextLineBox,
 ): UIChunkMetrics {
   applyFontStyle(context, textStyle);
 
@@ -73,9 +78,18 @@ export function measureTextChunk(
   }
 
   const metrics = context.measureText(text);
-  const ascent = Math.ceil(metrics.actualBoundingBoxAscent);
-  const descent = Math.ceil(metrics.actualBoundingBoxDescent);
+  let ascent = Math.ceil(metrics.actualBoundingBoxAscent);
+  let descent = Math.ceil(metrics.actualBoundingBoxDescent);
   const width = Math.ceil(metrics.width);
+
+  if (
+    lineBox === UITextLineBox.FONT &&
+    Number.isFinite(metrics.fontBoundingBoxAscent) &&
+    Number.isFinite(metrics.fontBoundingBoxDescent)
+  ) {
+    ascent = Math.max(ascent, Math.ceil(metrics.fontBoundingBoxAscent));
+    descent = Math.max(descent, Math.ceil(metrics.fontBoundingBoxDescent));
+  }
 
   return {
     width,
@@ -239,6 +253,7 @@ export function calculateTextSize(lines: UITextLine[]): UITextSize {
  * @param textSpans Text spans with styles
  * @param commonStyle Fallback style
  * @param isRTL Whether the paragraph reads right to left
+ * @param lineBox What the height of a line follows
  * @returns Measured text chunks
  */
 export function buildTextChunks(
@@ -246,6 +261,7 @@ export function buildTextChunks(
   textSpans: UITextSpan[],
   commonStyle: UITextStyle,
   isRTL: boolean,
+  lineBox: UITextLineBox,
 ): UITextChunk[] {
   context.direction = isRTL ? "rtl" : "ltr";
   context.textAlign = "left";
@@ -256,7 +272,7 @@ export function buildTextChunks(
     const textStyle = UITextStyle.resolve(textSpan.style, commonStyle);
 
     for (const textChunk of splitTextIntoChunks(textSpan.text)) {
-      const textChunkMetrics = measureTextChunk(context, textChunk, textStyle);
+      const textChunkMetrics = measureTextChunk(context, textChunk, textStyle, lineBox);
       textChunks.push({
         text: textChunk,
         style: textStyle,
