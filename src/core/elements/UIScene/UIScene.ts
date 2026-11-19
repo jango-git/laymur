@@ -11,7 +11,10 @@ import {
 } from "three";
 
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import {
+  assertValidNonNegativeInteger,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
 import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
@@ -25,6 +28,7 @@ import {
   SCENE_DEFAULT_CAMERA_NEAR,
   SCENE_DEFAULT_CLEAR_COLOR,
   SCENE_DEFAULT_RESOLUTION_FACTOR,
+  SCENE_DEFAULT_SAMPLES,
   SCENE_DEFAULT_UPDATE_MODE,
   SCENE_DEFAULT_USE_DEPTH,
   SCENE_MAX_RESOLUTION_FACTOR,
@@ -67,6 +71,9 @@ export class UIScene extends UIElement {
       SCENE_MAX_RESOLUTION_FACTOR,
     );
 
+    const samples = options.samples ?? SCENE_DEFAULT_SAMPLES;
+    assertValidNonNegativeInteger(samples, "UIScene.constructor.options.samples");
+
     const w = options.width ?? DUMMY_DEFAULT_WIDTH;
     const h = options.height ?? DUMMY_DEFAULT_HEIGHT;
 
@@ -77,6 +84,7 @@ export class UIScene extends UIElement {
       type: UnsignedByteType,
       depthBuffer: options.enableDepthBuffer ?? SCENE_DEFAULT_USE_DEPTH,
       stencilBuffer: false,
+      samples,
     });
 
     const color = new UIColor(options.color);
@@ -137,6 +145,11 @@ export class UIScene extends UIElement {
     return this.resolutionFactorInternal;
   }
 
+  /** Multisample antialiasing samples of the render target, 0 for none. WebGL1 ignores it. */
+  public get samples(): number {
+    return this.renderTarget.samples;
+  }
+
   /** Three.js scene to render */
   public get scene(): Scene {
     return this.sceneInternal;
@@ -171,6 +184,20 @@ export class UIScene extends UIElement {
     value = MathUtils.clamp(value, SCENE_MIN_RESOLUTION_FACTOR, SCENE_MAX_RESOLUTION_FACTOR);
     if (this.resolutionFactorInternal !== value) {
       this.resolutionFactorInternal = value;
+    }
+  }
+
+  /**
+   * Multisample antialiasing samples of the render target, 0 for none. WebGL1 ignores it. A change
+   * frees the render target, which is allocated again and rendered on the next frame.
+   */
+  public set samples(value: number) {
+    this.assertNotDestroyed("UIScene.samples");
+    assertValidNonNegativeInteger(value, "UIScene.samples");
+    if (this.renderTarget.samples !== value) {
+      this.renderTarget.samples = value;
+      this.renderTarget.dispose();
+      this.updateRequired = true;
     }
   }
 

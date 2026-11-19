@@ -1,7 +1,7 @@
 import type { UIColorConfig } from "../color/UIColor.Internal.js";
 import type { UIGradient } from "./UIGradient.js";
 
-/** Fill of text, a stroke or a shape, either a color or a gradient. A string is a CSS color. */
+/** Fill of text, a stroke or a shape, either a color or a gradient. A string is a `UIColor` name or a CSS color. */
 export type UIPaintConfig = UIColorConfig | UIGradient;
 
 /** Paint as it is stored, a CSS color string or a gradient */

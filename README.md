@@ -219,8 +219,8 @@ panel.drawRoundedRect(0, 0, 300, 200, 24, {
 });
 ```
 
-- Text is laid out in pixels of its style. Scaling the element with constraints does not change
-  the line breaks.
+- Text is laid out in pixels of its style. With `UITextResizeMode.SCALE`, scaling the element with
+  constraints does not change the line breaks. With `BREAK` the text rewraps to the width.
 - A gradient is laid over the box of what it fills, in fractions of that box from its top left
   corner. For text the box is each line or the whole text (`paintBox`), for a shape its bounds.
 - Strokes stack outward from the glyphs in list order. Shadows are cast by the outlined glyphs,

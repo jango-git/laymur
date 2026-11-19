@@ -59,6 +59,7 @@ import {
   EMITTER_DEFAULT_MODE,
   EMITTER_DEFAULT_PREWARM_STEP,
   EMITTER_DEFAULT_SPACE,
+  EMITTER_DEFAULT_Z_INDEX,
   EMITTER_SHADER_SALT,
   EMITTER_SPAWN_SALT_BASE,
   ignoreInput,
@@ -169,7 +170,8 @@ export class UIEmitter extends UIAnchor {
       "UIEmitter.constructor.renderingSequence",
     );
 
-    const zIndex = 0;
+    const zIndex = options.zIndex ?? EMITTER_DEFAULT_Z_INDEX;
+    assertValidNumber(zIndex, "UIEmitter.constructor.options.zIndex");
     this.catcherHandler = this.layer.inputWrapper.createInputCatcher(
       {
         catchPointerDown: ignoreInput,

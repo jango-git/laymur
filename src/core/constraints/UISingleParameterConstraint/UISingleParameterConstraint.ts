@@ -46,6 +46,15 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     return this.orientationInternal;
   }
 
+  /**
+   * Whether the solver applies the constraint. False while the orientation of the layer disables
+   * it, or while it conflicts with other required (P0) constraints, the later created of which is
+   * not applied. A conflict throws in development builds and warns in production builds.
+   */
+  public get applied(): boolean {
+    return !this.destroyed && this.solverWrapper.isConstraintApplied(this.constraint);
+  }
+
   /** Updates constraint priority */
   public set priority(value: UIPriority) {
     this.assertNotDestroyed("UISingleParameterConstraint.priority");

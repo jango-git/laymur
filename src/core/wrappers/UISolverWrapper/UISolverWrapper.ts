@@ -1,5 +1,6 @@
 import { Constraint, Expression, Solver, Variable } from "@lume/kiwi";
 
+import type { UIConstraint } from "../../constraints/UIConstraint.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
 import { convertPriority, UIPriority } from "../../miscellaneous/UIPriority.js";
 import { convertRelation, UIRelation } from "../../miscellaneous/UIRelation.js";
@@ -22,7 +23,7 @@ import type {
  * - Index-based variable and constraint management
  * - Required variables with P0 priority (always satisfied)
  * - Dynamic constraint modification without full rebuilds
- * - Automatic solver recovery on constraint conflicts
+ * - Automatic solver recovery on constraint conflicts, with rejected constraints reported
  * - Lazy evaluation with recalculation flags
  *
  * @see {@link UIExpression} - Expression system for constraint definitions
@@ -47,7 +48,26 @@ export class UISolverWrapper implements UISolverWrapperView {
   /** Counter for generating unique constraint indices. */
   private lastConstraintIndex = 0;
 
-  /** Bumped by every change to the variables or constraints; compare with the last seen value */
+  /** Enabled constraints the last rebuild could not add, see isConstraintApplied */
+  private readonly rejectedConstraints = new Set<number>();
+  /**
+   * Bumped by the changes that can resolve a conflict of required constraints: any change of a
+   * constraint and of a required variable. Suggested values of other variables are not required
+   * and cannot.
+   */
+  private structureVersion = 0;
+  /** Structure version as of the last rebuild */
+  private rebuiltStructureVersion = -1;
+
+  /**
+   * @param onConstraintsRejected - Called after a rebuild with the constraints it newly found in
+   * conflict with required constraints. The solver is complete by then, so it may throw.
+   */
+  constructor(
+    private readonly onConstraintsRejected: (constraints: readonly UIConstraint[]) => void,
+  ) {}
+
+  /** Bumped by every change to the variables or constraints, to compare with a value seen before */
   public get version(): number {
     return this.versionInternal;
   }
@@ -94,6 +114,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     }
 
     this.recalculationRequired = true;
+    this.structureVersion++;
     this.versionInternal++;
     return index;
   }
@@ -133,6 +154,7 @@ export class UISolverWrapper implements UISolverWrapperView {
 
     this.variables.delete(index);
     this.recalculationRequired = true;
+    this.structureVersion++;
     this.versionInternal++;
   }
 
@@ -181,6 +203,9 @@ export class UISolverWrapper implements UISolverWrapperView {
       }
 
       this.recalculationRequired = true;
+      if (description.constraint) {
+        this.structureVersion++;
+      }
       this.versionInternal++;
     }
   }
@@ -245,6 +270,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       }
 
       this.recalculationRequired = true;
+      this.structureVersion++;
       this.versionInternal++;
     }
   }
@@ -267,16 +293,28 @@ export class UISolverWrapper implements UISolverWrapperView {
       );
     }
 
-    if (this.solver === undefined) {
-      this.rebuildSolver();
-    }
-
-    if (this.recalculationRequired) {
-      this.solver?.updateVariables();
-      this.recalculationRequired = false;
-    }
-
+    this.ensureSolved();
     return description.variable.value();
+  }
+
+  /**
+   * Whether the solver applies a constraint, that is, it is enabled and not rejected. A required
+   * constraint that conflicts with other required ones is rejected, the later created of them.
+   * Rejected constraints are tried again after any change of a constraint or a required variable.
+   *
+   * @param index - Index of the constraint
+   * @returns True if the constraint takes part in solving
+   * @throws Will throw an error if the constraint doesn't exist
+   */
+  public isConstraintApplied(index: number): boolean {
+    const description = this.constraints.get(index);
+    if (description === undefined) {
+      throw new Error(
+        `UISolverWrapper.isConstraintApplied.index: constraint ${index} does not exist; it may be destroyed`,
+      );
+    }
+    this.ensureSolved();
+    return description.enabled && !this.rejectedConstraints.has(index);
   }
 
   /**
@@ -290,6 +328,7 @@ export class UISolverWrapper implements UISolverWrapperView {
    * @param relation - Relational operator (equal, less than, greater than)
    * @param priority - Priority level for constraint solving
    * @param enabled - Whether the constraint is initially active
+   * @param owner - Constraint the solver constraint belongs to, named when it is rejected
    * @returns Unique index identifier for the created constraint
    */
   public createConstraint(
@@ -298,6 +337,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     relation: UIRelation,
     priority: UIPriority,
     enabled: boolean,
+    owner: UIConstraint,
   ): number {
     const index = this.lastConstraintIndex++;
     const constraint = this.buildConstraint(lhs, rhs, relation, priority);
@@ -308,6 +348,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       priority,
       relation,
       enabled,
+      owner,
     });
     if (enabled) {
       try {
@@ -316,6 +357,7 @@ export class UISolverWrapper implements UISolverWrapperView {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
+      this.structureVersion++;
       this.versionInternal++;
     }
     return index;
@@ -338,7 +380,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       );
     }
 
-    if (description.enabled) {
+    if (description.enabled && !this.rejectedConstraints.has(index)) {
       try {
         this.solver?.removeConstraint(description.constraint);
       } catch {
@@ -347,7 +389,9 @@ export class UISolverWrapper implements UISolverWrapperView {
     }
 
     this.constraints.delete(index);
+    this.rejectedConstraints.delete(index);
     this.recalculationRequired = true;
+    this.structureVersion++;
     this.versionInternal++;
   }
 
@@ -390,6 +434,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     description.lhs.copy(lhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
+    this.structureVersion++;
     this.versionInternal++;
   }
 
@@ -414,6 +459,7 @@ export class UISolverWrapper implements UISolverWrapperView {
     description.rhs.copy(rhs);
     this.rebuildConstraintByDescription(description);
     this.recalculationRequired = true;
+    this.structureVersion++;
     this.versionInternal++;
   }
 
@@ -439,6 +485,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       description.relation = relation;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
+      this.structureVersion++;
       this.versionInternal++;
     }
   }
@@ -465,6 +512,7 @@ export class UISolverWrapper implements UISolverWrapperView {
       description.priority = priority;
       this.rebuildConstraintByDescription(description);
       this.recalculationRequired = true;
+      this.structureVersion++;
       this.versionInternal++;
     }
   }
@@ -497,6 +545,7 @@ export class UISolverWrapper implements UISolverWrapperView {
         this.solver = undefined;
       }
       this.recalculationRequired = true;
+      this.structureVersion++;
       this.versionInternal++;
     }
   }
@@ -645,17 +694,35 @@ export class UISolverWrapper implements UISolverWrapperView {
   }
 
   /**
+   * Brings the solver up to date. Rebuilds it when it was dropped, or when rejected constraints
+   * exist and the structure changed since the last rebuild, so that they are tried again. Then
+   * recalculates the variables.
+   */
+  private ensureSolved(): void {
+    if (
+      this.solver === undefined ||
+      (this.rejectedConstraints.size > 0 && this.rebuiltStructureVersion !== this.structureVersion)
+    ) {
+      this.solver = undefined;
+      this.rebuildSolver();
+    }
+
+    if (this.recalculationRequired) {
+      this.solver?.updateVariables();
+      this.recalculationRequired = false;
+    }
+  }
+
+  /**
    * Completely rebuilds the solver from scratch.
    *
    * Re-adds all variables and constraints to a fresh solver instance.
    * Used for recovery when the solver enters an invalid state.
    *
-   * The solver is normally dropped because some constraint was rejected by kiwi,
-   * and that same constraint is still registered here. Replaying it would throw
-   * again, so every replay is guarded individually: a constraint kiwi refuses is
-   * skipped and stays registered but unapplied, which is exactly the state it was
-   * already in. The fresh solver is only published once the replay is complete,
-   * so a rejection can never leave a half-built solver in place.
+   * The solver is normally dropped because kiwi rejected a constraint, and that constraint is
+   * still registered here. Each constraint kiwi refuses on replay is recorded as rejected and
+   * skipped, and the rest are added in order of creation. The fresh solver is published once the
+   * replay is complete, then the newly rejected constraints are reported.
    */
   private rebuildSolver(): void {
     if (this.solver) {
@@ -665,24 +732,27 @@ export class UISolverWrapper implements UISolverWrapperView {
     const solver = new Solver();
 
     for (const description of this.variables.values()) {
-      try {
-        if (description.constraint) {
-          solver.addConstraint(description.constraint);
-        } else {
-          solver.addEditVariable(description.variable, convertPriority(description.priority));
-          solver.suggestValue(description.variable, description.value);
-        }
-      } catch {
-        continue;
+      if (description.constraint) {
+        solver.addConstraint(description.constraint);
+      } else {
+        solver.addEditVariable(description.variable, convertPriority(description.priority));
+        solver.suggestValue(description.variable, description.value);
       }
     }
 
-    for (const description of this.constraints.values()) {
-      if (description.enabled) {
-        try {
-          solver.addConstraint(description.constraint);
-        } catch {
-          continue;
+    const newlyRejected: UIConstraint[] = [];
+    for (const [index, description] of this.constraints) {
+      if (!description.enabled) {
+        this.rejectedConstraints.delete(index);
+        continue;
+      }
+      try {
+        solver.addConstraint(description.constraint);
+        this.rejectedConstraints.delete(index);
+      } catch {
+        if (!this.rejectedConstraints.has(index)) {
+          this.rejectedConstraints.add(index);
+          newlyRejected.push(description.owner);
         }
       }
     }
@@ -690,5 +760,10 @@ export class UISolverWrapper implements UISolverWrapperView {
     this.solver = solver;
     this.recalculationRequired = true;
     this.versionInternal++;
+    this.rebuiltStructureVersion = this.structureVersion;
+
+    if (newlyRejected.length > 0) {
+      this.onConstraintsRejected(newlyRejected);
+    }
   }
 }

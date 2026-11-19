@@ -1,11 +1,12 @@
 import type { Constraint, Variable } from "@lume/kiwi";
 
+import type { UIConstraint } from "../../constraints/UIConstraint.js";
 import type { UIExpression } from "../../miscellaneous/UIExpression.js";
 import type { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UIRelation } from "../../miscellaneous/UIRelation.js";
 
 export interface UISolverWrapperView {
-  /** Bumped by every change to the variables or constraints; compare with the last seen value */
+  /** Bumped by every change to the variables or constraints, to compare with a value seen before */
   readonly version: number;
   createVariable(value: number, priority: UIPriority): number;
   removeVariable(index: number): void;
@@ -19,6 +20,7 @@ export interface UISolverWrapperView {
     relation: UIRelation,
     priority: UIPriority,
     enabled: boolean,
+    owner: UIConstraint,
   ): number;
   removeConstraint(index: number): void;
   isConstraintUsingVariable(constraintIndex: number, variableIndex: number): boolean;
@@ -27,6 +29,7 @@ export interface UISolverWrapperView {
   setConstraintRelation(index: number, relation: UIRelation): void;
   setConstraintPriority(index: number, priority: UIPriority): void;
   setConstraintEnabled(index: number, enabled: boolean): void;
+  isConstraintApplied(index: number): boolean;
 }
 
 /**
@@ -59,4 +62,6 @@ export interface ConstraintDescription {
   relation: UIRelation;
   /** Whether the constraint is currently active. */
   enabled: boolean;
+  /** Constraint that created it, named when it is rejected */
+  owner: UIConstraint;
 }

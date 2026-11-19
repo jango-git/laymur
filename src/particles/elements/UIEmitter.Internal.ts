@@ -23,6 +23,8 @@ export interface UIEmitterOptions extends UIAnchorOptions {
   mode: UIEmitterMode;
   /** Color blending of the particles with what is drawn under them */
   blendMode: UIBlendMode;
+  /** Rendering order among the elements of the layer, see UIEmitter.zIndex */
+  zIndex: number;
   /**
    * Coordinate space of particle positions, and of the points behavior modules take, such as a
    * gravity center. Spawn modules always write positions relative to the emitter.
@@ -75,6 +77,7 @@ export type UIEmitterMode = UIMode.HIDDEN | UIMode.VISIBLE;
 
 export const EMITTER_DEFAULT_MODE: UIEmitterMode = UIMode.VISIBLE;
 export const EMITTER_DEFAULT_BLEND_MODE = UIBlendMode.NORMAL;
+export const EMITTER_DEFAULT_Z_INDEX = 0;
 export const EMITTER_DEFAULT_SPACE = UIEmitterSpace.LOCAL;
 export const EMITTER_DEFAULT_EXPECTED_CAPACITY = 32;
 export const EMITTER_DEFAULT_CAPACITY_STEP = 32;

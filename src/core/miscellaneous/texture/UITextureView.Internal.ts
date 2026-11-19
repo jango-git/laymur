@@ -17,16 +17,26 @@ interface UITextureImageSize {
 }
 
 /**
+ * First of the sizes that is known, that is, positive.
+ * @param sizes Candidate sizes in order of preference
+ * @returns The size, or the default size when none is known
+ */
+function firstKnownSize(...sizes: (number | undefined)[]): number {
+  return sizes.find((size) => size !== undefined && size > 0) ?? TEXTURE_DEFAULT_SIZE;
+}
+
+/**
  * Reads the pixel size of a texture image: an image, a video, a canvas, a bitmap
- * or the data of a DataTexture.
+ * or the data of a DataTexture. An image or video that is not loaded yet reports 0, which is
+ * taken as unknown.
  * @param texture Texture to measure
  * @returns Width and height in pixels
  */
 export function getTextureImageSize(texture: Texture): UITextureSize {
   const image = texture.image as UITextureImageSize | null | undefined;
   return {
-    w: image?.naturalWidth ?? image?.videoWidth ?? image?.width ?? TEXTURE_DEFAULT_SIZE,
-    h: image?.naturalHeight ?? image?.videoHeight ?? image?.height ?? TEXTURE_DEFAULT_SIZE,
+    w: firstKnownSize(image?.naturalWidth, image?.videoWidth, image?.width),
+    h: firstKnownSize(image?.naturalHeight, image?.videoHeight, image?.height),
   };
 }
 

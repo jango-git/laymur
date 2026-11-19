@@ -12,6 +12,7 @@ export class UIInsets {
   private bInternal = INSETS_DEFAULT_VALUE;
 
   private dirtyInternal = false;
+  private versionInternal = 0;
 
   /**
    * Creates UIInsets instance.
@@ -42,6 +43,11 @@ export class UIInsets {
     return this.bInternal;
   }
 
+  /** Bumped by every change of a value, to compare with a value seen before */
+  public get version(): number {
+    return this.versionInternal;
+  }
+
   /** @internal */
   public get dirty(): boolean {
     return this.dirtyInternal;
@@ -53,6 +59,7 @@ export class UIInsets {
     if (this.lInternal !== value) {
       this.lInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -62,6 +69,7 @@ export class UIInsets {
     if (this.rInternal !== value) {
       this.rInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -71,6 +79,7 @@ export class UIInsets {
     if (this.tInternal !== value) {
       this.tInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -80,6 +89,7 @@ export class UIInsets {
     if (this.bInternal !== value) {
       this.bInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -90,6 +100,7 @@ export class UIInsets {
       this.lInternal = value;
       this.rInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -100,6 +111,7 @@ export class UIInsets {
       this.tInternal = value;
       this.bInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -117,6 +129,7 @@ export class UIInsets {
       this.tInternal = value;
       this.bInternal = value;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -193,6 +206,7 @@ export class UIInsets {
       this.bInternal !== bOld
     ) {
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -213,6 +227,7 @@ export class UIInsets {
       this.tInternal = vector.z;
       this.bInternal = vector.w;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 
@@ -239,6 +254,7 @@ export class UIInsets {
       this.tInternal = other.tInternal;
       this.bInternal = other.bInternal;
       this.dirtyInternal = true;
+      this.versionInternal++;
     }
   }
 

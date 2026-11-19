@@ -3,7 +3,7 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
-## Unreleased
+## 0.29.0 - 2026-11-19
 
 ### Changed
 
@@ -14,8 +14,8 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   Outline corners are round by default, and `join: "miter"` gives the old corners.
 - **Breaking:** `UITextStyle` takes shadows as a list. `shadows` replaces `enableShadow`,
   `shadowOffsetX`, `shadowOffsetY`, `shadowBlur` and `shadowColor`. A shadow is cast once by the
-  outlined glyphs. Before, the stroke and the fill each cast one, and the shadow was darker where
-  they overlap.
+  outlined glyphs of all spans that have it. Before, the stroke and the fill of each span cast one,
+  and a translucent shadow was darker where they overlap.
 - **Breaking:** the `color` of `UITextStyle` accepts any `UIColorConfig` or a gradient and reads
   back as a CSS string or the gradient. `UITextStyle.resolve` and the static
   `UITextStyle.calculatePadding` are no longer public.
@@ -23,7 +23,7 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   The drawing methods take a style instead of a color. `drawRect(x, y, w, h, color)` becomes
   `drawRect(x, y, w, h, { fill: color })`, and `drawPolyline(points, color, width)` becomes
   `drawPolyline(points, { paint: color, width })` with points as `{ x, y }` objects. A string
-  color is a CSS color, so `rgba(...)` works.
+  color is a `UIColor` name or any CSS color, so `rgba(...)` works.
 - **Breaking:** `UIAspectConstraint` created without an aspect follows the content aspect of a
   `UIText` or a `UIImage`. A text that rewraps, for example after `maxLineWidth` changes with the
   orientation, keeps its proportions without a constraint per orientation. Other elements keep
@@ -40,6 +40,12 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
 - Outlines and shadows of text are drawn in layers over all spans. An outline of one span no
   longer covers the glyphs of the span before it.
 - Changing the `color` tint of a `UIText` no longer redraws its canvas.
+- **Breaking:** a required (P0) constraint that conflicts with other required constraints throws
+  in development builds, naming the constraint, and warns in production builds, where the layout
+  goes on without it. Of the conflicting constraints, the later created is not applied. Before, it
+  was skipped without a message.
+- A constraint rejected for a conflict is applied once the conflict is gone, for example after
+  the constraint it conflicted with is destroyed. Before, it stayed unapplied.
 
 ### Added
 
@@ -55,7 +61,19 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   `UIContentAspectElement`.
 - `UIGraphics.drawRoundedRect` and `UIGraphics.drawPolygon`, a stroke on every shape, and
   gradient fills. `clear` fills with a color or a gradient.
+- `applied` on the built-in constraints, those derived from `UISingleParameterConstraint`. It
+  tells whether the solver applies the constraint.
+- `zIndex` in the options of every element and of `UIEmitter`.
+- `UIColor.lerp` and `UIColor.lerpColors`, interpolating RGBA in sRGB.
+- `UISceneOptions.samples` and `UIScene.samples`, multisample antialiasing of the render target.
+  Ignored on WebGL1.
 
+### Fixed
+
+- A texture whose image or video is not loaded yet measures as the default size instead of 0, so
+  a `UIImage` created from it gets a valid size and aspect.
+- `UIText.autoPadding` reads false as soon as the padding is changed through `UIText.padding`.
+  Before, it read true until the next style change.
 ## 0.28.0 - 2026-11-18
 
 ### Changed

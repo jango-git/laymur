@@ -36,7 +36,7 @@ export enum UITextLineBox {
 export interface UITextOptions extends UIElementOptions {
   /** Multiplicative tint */
   color: UIColorConfig;
-  /** Text padding in world units */
+  /** Text padding in pixels of the style */
   padding: UIInsetsConfig;
   /** Default style applied to all spans */
   commonStyle: Partial<UITextStyleConfig>;

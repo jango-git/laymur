@@ -39,6 +39,7 @@ export class UIHorizontalProportionConstraint extends UISingleParameterConstrain
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
+      this,
     );
   }
 

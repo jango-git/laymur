@@ -37,6 +37,11 @@ export interface UISceneOptions extends UIElementOptions {
   clearColor: UIColorConfig;
   /** Whether to use depth buffer */
   enableDepthBuffer: boolean;
+  /**
+   * Multisample antialiasing samples of the render target, 0 for none. WebGL1 has no multisampled
+   * render targets and ignores it. three.js clamps it to the maximum the device supports.
+   */
+  samples: number;
 }
 
 export const SCENE_DEFAULT_RESOLUTION_FACTOR = 0.5;
@@ -48,3 +53,4 @@ export const SCENE_DEFAULT_CAMERA_FAR = 100;
 export const SCENE_DEFAULT_UPDATE_MODE = UISceneUpdateMode.ON_PROPERTIES_CHANGE;
 export const SCENE_DEFAULT_CLEAR_COLOR = new UIColor(0, 0, 0, 1);
 export const SCENE_DEFAULT_USE_DEPTH = true;
+export const SCENE_DEFAULT_SAMPLES = 0;

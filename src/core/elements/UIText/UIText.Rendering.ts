@@ -1,7 +1,11 @@
-import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
+import type { UICanvas, UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
+import { createCanvas, getCanvas2DContext } from "../../miscellaneous/canvas.js";
 import type { UIPaintBox } from "../../miscellaneous/paint/UIPaint.Internal.js";
 import { toCanvasPaint } from "../../miscellaneous/paint/UIPaint.js";
-import type { UITextAlign } from "../../miscellaneous/text-style/UITextStyle.Internal.js";
+import type {
+  UITextAlign,
+  UITextShadow,
+} from "../../miscellaneous/text-style/UITextStyle.Internal.js";
 import {
   TEXT_STYLE_DEFAULT_ALIGN,
   UITextPaintBox,
@@ -13,6 +17,10 @@ import { applyFontStyle, calculateTextSize } from "./UIText.Measuring.js";
 /** Color the silhouette casting a shadow is drawn with. The shadow takes only its alpha. */
 const SILHOUETTE_COLOR = "#000000";
 
+/** Canvas the silhouettes are drawn on, shared by all texts, created on first use and shrunk after */
+let silhouetteCanvas: UICanvas | undefined;
+let silhouetteContext: UICanvasRenderingContext2D | undefined;
+
 /** Chunk with the place it is drawn at */
 interface UIPlacedChunk {
   /** Measured chunk */
@@ -23,14 +31,6 @@ interface UIPlacedChunk {
   y: number;
   /** Box gradients of the chunk are laid over */
   paintBox: UIPaintBox;
-}
-
-/** Canvas pixels per text pixel along each axis */
-export interface UITextRasterScale {
-  /** Horizontal scale */
-  x: number;
-  /** Vertical scale */
-  y: number;
 }
 
 /**
@@ -134,18 +134,61 @@ function outlineWidth(chunk: UITextChunk, depth: number): number {
 }
 
 /**
- * Draws the shadows. Each one is cast by the silhouette of the outlined glyphs. The silhouette is
- * drawn outside the canvas and the shadow offset brings the shadow back, so only the shadow
- * lands. Shadow offsets and blur ignore the canvas transform and are scaled by hand.
+ * Gives the shared silhouette canvas, cleared and sized like the target, with its transform.
+ * @param target Canvas context the shadows are drawn on
+ * @returns Silhouette canvas context
+ * @throws If the browser gives no 2D context
+ */
+function prepareSilhouette(target: UICanvasRenderingContext2D): UICanvasRenderingContext2D {
+  const { width, height } = target.canvas;
+  if (silhouetteCanvas === undefined || silhouetteContext === undefined) {
+    silhouetteCanvas = createCanvas(width, height);
+    const context = getCanvas2DContext(silhouetteCanvas);
+    if (!context) {
+      throw new Error("UIText.renderTextLines: failed to create canvas context for shadows");
+    }
+    silhouetteContext = context;
+  } else if (silhouetteCanvas.width !== width || silhouetteCanvas.height !== height) {
+    silhouetteCanvas.width = width;
+    silhouetteCanvas.height = height;
+  }
+  silhouetteContext.setTransform(1, 0, 0, 1, 0, 0);
+  silhouetteContext.clearRect(0, 0, width, height);
+  silhouetteContext.setTransform(target.getTransform());
+  silhouetteContext.fillStyle = SILHOUETTE_COLOR;
+  silhouetteContext.strokeStyle = SILHOUETTE_COLOR;
+  return silhouetteContext;
+}
+
+/**
+ * Draws the outlined glyphs of chunks in one color, as one shape.
+ * @param context Silhouette canvas context
+ * @param chunks Placed chunks
+ */
+function drawSilhouette(context: UICanvasRenderingContext2D, chunks: UIPlacedChunk[]): void {
+  for (const { chunk, x, y } of chunks) {
+    applyFontStyle(context, chunk.style);
+    const strokeCount = chunk.style.strokes.length;
+    if (strokeCount > 0) {
+      context.lineWidth = outlineWidth(chunk, strokeCount - 1) * 2;
+      context.lineJoin = chunk.style.strokes[strokeCount - 1].join;
+      context.strokeText(chunk.text, x, y);
+    }
+    context.fillText(chunk.text, x, y);
+  }
+}
+
+/**
+ * Draws the shadows. A shadow is cast by one silhouette of all the outlined glyphs that have it,
+ * so overlapping glyphs, outlines and neighbouring spans cast it once. The silhouette is drawn
+ * one canvas width to the left of the target and the shadow offset brings the shadow back, so
+ * only the shadow lands. Shadow offsets and blur ignore the canvas transform and are scaled by
+ * hand. The shared silhouette canvas is shrunk afterwards, since a canvas keeps its memory while
+ * it is large.
  * @param context Canvas context
  * @param placed Placed chunks
- * @param scale Canvas pixels per text pixel
  */
-function drawShadows(
-  context: UICanvasRenderingContext2D,
-  placed: UIPlacedChunk[],
-  scale: UITextRasterScale,
-): void {
+function drawShadows(context: UICanvasRenderingContext2D, placed: UIPlacedChunk[]): void {
   let depthCount = 0;
   for (const { chunk } of placed) {
     depthCount = Math.max(depthCount, chunk.style.shadows.length);
@@ -154,37 +197,44 @@ function drawShadows(
     return;
   }
 
-  const shift = (context.canvas.width / scale.x) * 2;
-  context.fillStyle = SILHOUETTE_COLOR;
-  context.strokeStyle = SILHOUETTE_COLOR;
+  const { a: scaleX, d: scaleY } = context.getTransform();
+  const { width, height } = context.canvas;
 
   for (let depth = depthCount - 1; depth >= 0; depth--) {
-    for (const { chunk, x, y } of placed) {
-      if (depth >= chunk.style.shadows.length) {
+    const groups = new Map<string, { shadow: UITextShadow; chunks: UIPlacedChunk[] }>();
+    for (const item of placed) {
+      const shadow = item.chunk.style.shadows[depth] as UITextShadow | undefined;
+      if (shadow === undefined) {
         continue;
       }
-      const shadow = chunk.style.shadows[depth];
-
-      applyFontStyle(context, chunk.style);
-      context.shadowColor = shadow.color;
-      context.shadowOffsetX = (shift + shadow.offsetX) * scale.x;
-      context.shadowOffsetY = shadow.offsetY * scale.y;
-      context.shadowBlur = (shadow.blur * (scale.x + scale.y)) / 2;
-
-      const strokeCount = chunk.style.strokes.length;
-      if (strokeCount > 0) {
-        context.lineWidth = outlineWidth(chunk, strokeCount - 1) * 2;
-        context.lineJoin = chunk.style.strokes[strokeCount - 1].join;
-        context.strokeText(chunk.text, x - shift, y);
+      const key = `${shadow.color}|${shadow.offsetX}|${shadow.offsetY}|${shadow.blur}`;
+      const group = groups.get(key);
+      if (group === undefined) {
+        groups.set(key, { shadow, chunks: [item] });
+      } else {
+        group.chunks.push(item);
       }
-      context.fillText(chunk.text, x - shift, y);
+    }
+
+    for (const { shadow, chunks } of groups.values()) {
+      const silhouette = prepareSilhouette(context);
+      drawSilhouette(silhouette, chunks);
+
+      context.save();
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.shadowColor = shadow.color;
+      context.shadowOffsetX = width + shadow.offsetX * scaleX;
+      context.shadowOffsetY = shadow.offsetY * scaleY;
+      context.shadowBlur = (shadow.blur * (scaleX + scaleY)) / 2;
+      context.drawImage(silhouette.canvas, -width, 0, width, height);
+      context.restore();
     }
   }
 
-  context.shadowColor = "transparent";
-  context.shadowOffsetX = 0;
-  context.shadowOffsetY = 0;
-  context.shadowBlur = 0;
+  if (silhouetteCanvas !== undefined) {
+    silhouetteCanvas.width = 1;
+    silhouetteCanvas.height = 1;
+  }
 }
 
 /**
@@ -242,7 +292,6 @@ function drawFills(context: UICanvasRenderingContext2D, placed: UIPlacedChunk[])
  * @param isRTL Whether the paragraph reads right to left
  * @param paddingTop Top padding in pixels
  * @param paddingLeft Left padding in pixels
- * @param scale Canvas pixels per text pixel
  */
 export function renderTextLines(
   context: UICanvasRenderingContext2D,
@@ -250,13 +299,12 @@ export function renderTextLines(
   isRTL: boolean,
   paddingTop: number,
   paddingLeft: number,
-  scale: UITextRasterScale,
 ): void {
   context.direction = isRTL ? "rtl" : "ltr";
   context.textAlign = "left";
 
   const placed = placeChunks(lines, isRTL, paddingTop, paddingLeft);
-  drawShadows(context, placed, scale);
+  drawShadows(context, placed);
   drawStrokes(context, placed);
   drawFills(context, placed);
 }

@@ -51,6 +51,22 @@ const TEXT_STYLE_DEFAULTS: Readonly<UIResolvedTextStyle> = {
 const TEXT_STYLE_KEYS = Object.keys(TEXT_STYLE_DEFAULTS) as UITextStyleKey[];
 
 /**
+ * Sets a property of a resolved style when the value is defined.
+ * @param style Style to change
+ * @param key Property
+ * @param value Value, or undefined to keep the current one
+ */
+function assignDefined<K extends UITextStyleKey>(
+  style: UIResolvedTextStyle,
+  key: K,
+  value: UIResolvedTextStyle[K] | undefined,
+): void {
+  if (value !== undefined) {
+    style[key] = value;
+  }
+}
+
+/**
  * Converts outline configs to stored outlines.
  * @param strokes Outline configs
  * @returns Frozen outlines with colors as CSS strings
@@ -169,7 +185,7 @@ export class UITextStyle {
     return this.dirtyInternal;
   }
 
-  /** Color or gradient of the glyphs. A string is a CSS color. */
+  /** Color or gradient of the glyphs. A string is a `UIColor` name or a CSS color. */
   public set color(value: UIPaintConfig | undefined) {
     this.setValue("color", value === undefined ? undefined : resolvePaint(value));
   }
@@ -238,27 +254,19 @@ export class UITextStyle {
    * Resolves complete style from primary and fallback sources.
    * @param primary First style to check for each property
    * @param fallback Second style to check if primary is undefined
-   * @returns Complete style with all defaults applied
+   * @returns Complete style, with defaults for what neither defines. The default line height
+   * follows the resolved font size.
    * @internal
    */
   public static resolve(primary?: UITextStyle, fallback?: UITextStyle): UIResolvedTextStyle {
-    const pick = <K extends UITextStyleKey>(key: K): UIResolvedTextStyle[K] | undefined =>
-      primary?.values[key] ?? fallback?.values[key];
-
-    const fontSize = pick("fontSize") ?? TEXT_STYLE_DEFAULT_FONT_SIZE;
-
-    return {
-      color: pick("color") ?? TEXT_STYLE_DEFAULT_COLOR,
-      paintBox: pick("paintBox") ?? TEXT_STYLE_DEFAULT_PAINT_BOX,
-      align: pick("align") ?? TEXT_STYLE_DEFAULT_ALIGN,
-      fontFamily: pick("fontFamily") ?? TEXT_STYLE_DEFAULT_FONT_FAMILY,
-      fontSize,
-      fontStyle: pick("fontStyle") ?? TEXT_STYLE_DEFAULT_FONT_STYLE,
-      fontWeight: pick("fontWeight") ?? TEXT_STYLE_DEFAULT_FONT_WEIGHT,
-      lineHeight: pick("lineHeight") ?? fontSize * TEXT_STYLE_DEFAULT_LINE_HEIGHT,
-      strokes: pick("strokes") ?? TEXT_STYLE_DEFAULT_STROKES,
-      shadows: pick("shadows") ?? TEXT_STYLE_DEFAULT_SHADOWS,
-    };
+    const resolved: UIResolvedTextStyle = { ...TEXT_STYLE_DEFAULTS };
+    for (const key of TEXT_STYLE_KEYS) {
+      assignDefined(resolved, key, primary?.values[key] ?? fallback?.values[key]);
+    }
+    if (primary?.values.lineHeight === undefined && fallback?.values.lineHeight === undefined) {
+      resolved.lineHeight = resolved.fontSize * TEXT_STYLE_DEFAULT_LINE_HEIGHT;
+    }
+    return resolved;
   }
 
   /**

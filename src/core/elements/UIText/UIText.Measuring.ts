@@ -39,7 +39,7 @@ function isBreakableSpace(textChunk: UITextChunk): boolean {
 }
 
 /**
- * Rounds an overhang up; a negative or missing value means none, so a line never gets narrower
+ * Rounds an overhang up. A negative or missing value means none, so a line never gets narrower
  * than its advances.
  * @param value Overhang in pixels
  * @returns Overhang in whole pixels, at least 0

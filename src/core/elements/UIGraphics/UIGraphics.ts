@@ -1,19 +1,10 @@
-import type { WebGLRenderer } from "three";
-
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import { assertValidNonNegativeNumber, assertValidNumber } from "../../miscellaneous/asserts.js";
-import {
-  calculateRasterScale,
-  UICanvasSurface,
-} from "../../miscellaneous/canvas-surface/UICanvasSurface.js";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import type { Vector2Like } from "../../miscellaneous/math.js";
 import type { UIPaintBox, UIPaintConfig } from "../../miscellaneous/paint/UIPaint.Internal.js";
 import { resolvePaint, toCanvasPaint } from "../../miscellaneous/paint/UIPaint.js";
-import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
-import source from "../../shaders/UIImage.js";
-import { UIElement } from "../UIElement/UIElement.js";
+import { UICanvasElement } from "../UICanvasElement/UICanvasElement.js";
 import type {
   UIGraphicsCornerRadius,
   UIGraphicsOptions,
@@ -48,24 +39,44 @@ function boundPoints(points: readonly Vector2Like[]): UIPaintBox {
 }
 
 /**
- * Canvas-based 2D vector drawing element. Shapes are drawn in a drawing box as large as the
- * width and height the element is created with, from its top left corner with y pointing down,
- * and the box is stretched over the element. The shapes are kept until `clear` and drawn again
- * at the size the element takes on the screen, so they stay sharp when constraints enlarge it
- * and on high-DPI screens.
+ * Copies points, so later changes of the given objects do not change the shape.
+ * @param points Points to copy
+ * @param subject Name of the method, used in errors
+ * @returns Copied points
  */
-export class UIGraphics extends UIElement {
-  private readonly colorInternal: UIColor;
-  private readonly surface: UICanvasSurface;
-  private readonly drawingWidth: number;
-  private readonly drawingHeight: number;
+function copyPoints(points: readonly Vector2Like[], subject: string): Vector2Like[] {
+  return points.map((point) => {
+    assertValidNumber(point.x, `${subject}.points.x`);
+    assertValidNumber(point.y, `${subject}.points.y`);
+    return { x: point.x, y: point.y };
+  });
+}
+
+/**
+ * Adds lines through points to the current path, from the first point on.
+ * @param context Path to add to
+ * @param points Points in order, at least one
+ */
+function tracePoints(context: CanvasPath, points: readonly Vector2Like[]): void {
+  context.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    context.lineTo(points[i].x, points[i].y);
+  }
+}
+
+/**
+ * 2D vector drawing element. Shapes are drawn in a drawing box as large as the width and height
+ * the element is created with, from its top left corner with y pointing down, and the box is
+ * stretched over the element. The shapes are kept until `clear`.
+ */
+export class UIGraphics extends UICanvasElement {
+  /** Width of the drawing box */
+  protected readonly contentWidth: number;
+  /** Height of the drawing box */
+  protected readonly contentHeight: number;
 
   private readonly shapes: UIGraphicsShape[] = [];
   private shapesDirty = true;
-
-  /** Raster scale the canvas holds, NaN before the first drawing */
-  private rasterScale = Number.NaN;
-  private rasterPixelDensity = Number.NaN;
 
   /**
    * Creates a new UIGraphics instance.
@@ -74,34 +85,9 @@ export class UIGraphics extends UIElement {
    * @param options - Configuration options. The width and height also set the drawing box.
    */
   constructor(layer: UILayer, options?: Partial<UIGraphicsOptions>) {
-    const color = new UIColor(options?.color);
-    const surface = new UICanvasSurface("UIGraphics.constructor");
-
-    super(
-      layer,
-      source,
-      {
-        texture: surface.texture,
-        textureTransform: new UIAffineMatrix3(),
-        color,
-      },
-      options,
-    );
-
-    this.surface = surface;
-    this.colorInternal = color;
-    this.drawingWidth = options?.width ?? GRAPHICS_DEFAULT_WIDTH;
-    this.drawingHeight = options?.height ?? GRAPHICS_DEFAULT_HEIGHT;
-  }
-
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public get color(): UIColor {
-    return this.colorInternal;
-  }
-
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public set color(value: UIColorConfig) {
-    this.colorInternal.set(value);
+    super(layer, "UIGraphics.constructor", options);
+    this.contentWidth = options?.width ?? GRAPHICS_DEFAULT_WIDTH;
+    this.contentHeight = options?.height ?? GRAPHICS_DEFAULT_HEIGHT;
   }
 
   /**
@@ -113,7 +99,7 @@ export class UIGraphics extends UIElement {
     this.shapes.length = 0;
     this.shapesDirty = true;
     if (fill !== undefined) {
-      this.drawRect(0, 0, this.drawingWidth, this.drawingHeight, { fill });
+      this.drawRect(0, 0, this.contentWidth, this.contentHeight, { fill });
     }
     return this;
   }
@@ -220,12 +206,9 @@ export class UIGraphics extends UIElement {
     if (points.length < 3) {
       return this;
     }
-    const corners = points.map((point) => ({ x: point.x, y: point.y }));
+    const corners = copyPoints(points, "UIGraphics.drawPolygon");
     return this.addShape(boundPoints(corners), style, (context) => {
-      context.moveTo(corners[0].x, corners[0].y);
-      for (let i = 1; i < corners.length; i++) {
-        context.lineTo(corners[i].x, corners[i].y);
-      }
+      tracePoints(context, corners);
       context.closePath();
     });
   }
@@ -239,45 +222,43 @@ export class UIGraphics extends UIElement {
     if (points.length < 2) {
       return this;
     }
-    const vertices = points.map((point) => ({ x: point.x, y: point.y }));
+    const vertices = copyPoints(points, "UIGraphics.drawPolyline");
     return this.addShape(boundPoints(vertices), { stroke }, (context) => {
-      context.moveTo(vertices[0].x, vertices[0].y);
-      for (let i = 1; i < vertices.length; i++) {
-        context.lineTo(vertices[i].x, vertices[i].y);
-      }
+      tracePoints(context, vertices);
     });
   }
 
-  /** Frees resources of the graphics */
-  protected override destroyInternal(): void {
-    this.surface.dispose();
-    super.destroyInternal();
+  protected override updateContent(): boolean {
+    const changed = this.shapesDirty;
+    this.shapesDirty = false;
+    return changed;
   }
 
-  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
-    const layoutChanged = this.consumeLayoutChange();
-    const pixelDensity = this.layer.pixelDensity;
+  protected override drawContent(context: UICanvasRenderingContext2D): void {
+    for (const shape of this.shapes) {
+      context.beginPath();
+      shape.buildPath(context);
 
-    if (this.shapesDirty || layoutChanged || pixelDensity !== this.rasterPixelDensity) {
-      this.rasterPixelDensity = pixelDensity;
-      const rasterScale = calculateRasterScale(
-        this.drawingWidth,
-        this.drawingHeight,
-        pixelDensity * Math.max(this.width / this.drawingWidth, this.height / this.drawingHeight),
-      );
-      if (this.shapesDirty || rasterScale !== this.rasterScale) {
-        this.rasterScale = rasterScale;
-        this.shapesDirty = false;
-        this.draw();
+      if (shape.fill !== undefined) {
+        context.fillStyle = toCanvasPaint(context, shape.fill, shape.box);
+        context.fill();
+      }
+
+      if (shape.stroke !== undefined && shape.stroke.width > 0) {
+        const halfWidth = shape.stroke.width / 2;
+        const strokeBox = {
+          x: shape.box.x - halfWidth,
+          y: shape.box.y - halfWidth,
+          width: shape.box.width + shape.stroke.width,
+          height: shape.box.height + shape.stroke.width,
+        };
+        context.strokeStyle = toCanvasPaint(context, shape.stroke.paint, strokeBox);
+        context.lineWidth = shape.stroke.width;
+        context.lineJoin = shape.stroke.join;
+        context.lineCap = shape.stroke.cap;
+        context.stroke();
       }
     }
-
-    if (this.colorInternal.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, { color: this.colorInternal });
-      this.colorInternal.setDirtyFalse();
-    }
-
-    super.onWillRender(renderer, deltaTime);
   }
 
   private addShape(
@@ -309,44 +290,5 @@ export class UIGraphics extends UIElement {
     });
     this.shapesDirty = true;
     return this;
-  }
-
-  /** Draws the kept shapes at the current raster scale */
-  private draw(): void {
-    const textureReplaced = this.surface.begin(
-      this.drawingWidth,
-      this.drawingHeight,
-      this.rasterScale,
-    );
-    const context = this.surface.context;
-
-    for (const shape of this.shapes) {
-      context.beginPath();
-      shape.buildPath(context);
-
-      if (shape.fill !== undefined) {
-        context.fillStyle = toCanvasPaint(context, shape.fill, shape.box);
-        context.fill();
-      }
-
-      if (shape.stroke !== undefined && shape.stroke.width > 0) {
-        const halfWidth = shape.stroke.width / 2;
-        const strokeBox = {
-          x: shape.box.x - halfWidth,
-          y: shape.box.y - halfWidth,
-          width: shape.box.width + shape.stroke.width,
-          height: shape.box.height + shape.stroke.width,
-        };
-        context.strokeStyle = toCanvasPaint(context, shape.stroke.paint, strokeBox);
-        context.lineWidth = shape.stroke.width;
-        context.lineJoin = shape.stroke.join;
-        context.lineCap = shape.stroke.cap;
-        context.stroke();
-      }
-    }
-
-    if (textureReplaced) {
-      this.sceneWrapper.setProperties(this.planeHandler, { texture: this.surface.texture });
-    }
   }
 }

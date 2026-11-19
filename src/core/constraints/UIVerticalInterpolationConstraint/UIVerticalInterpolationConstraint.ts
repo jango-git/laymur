@@ -81,6 +81,7 @@ export class UIVerticalInterpolationConstraint extends UISingleParameterConstrai
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
+      this,
     );
   }
 

@@ -28,7 +28,7 @@ export interface UIInputCatcherCallbacks {
 }
 
 export interface UIInputWrapperView {
-  /** Bumped by every change to the draw order; compare with the last seen value */
+  /** Bumped by every change to the draw order, to compare with a value seen before */
   readonly version: number;
   createInputCatcher(callbacks: UIInputCatcherCallbacks, zIndex: number): number;
   destroyInputCatcher(handler: number): void;

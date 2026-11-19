@@ -37,6 +37,8 @@ export interface UIDummyOptions extends UIAnchorOptions {
   interactionArea: UIArea;
   /** Controls visibility and interactivity */
   mode: UIMode;
+  /** Rendering and input priority, see UIDummy.zIndex */
+  zIndex: number;
   /** Mask clipping the element, see UIDummy.mask */
   mask: UIMask | null;
 }

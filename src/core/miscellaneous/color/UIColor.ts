@@ -495,6 +495,35 @@ export class UIColor {
     return this;
   }
 
+  /**
+   * Moves toward another color by a fraction, componentwise in RGBA as the components are stored
+   * (sRGB, like CSS transitions)
+   *
+   * @param color - Target color
+   * @param t - Fraction of the way, 0 keeps this color and 1 gives the target
+   */
+  public lerp(color: UIColor, t: number): this {
+    return this.lerpColors(this, color, t);
+  }
+
+  /**
+   * Sets to a color between two others, componentwise in RGBA as the components are stored
+   * (sRGB, like CSS transitions)
+   *
+   * @param from - Color at 0
+   * @param to - Color at 1
+   * @param t - Fraction of the way from `from` to `to`
+   */
+  public lerpColors(from: UIColor, to: UIColor, t: number): this {
+    assertValidNumber(t, "UIColor.lerpColors.t");
+    return this.setRGBA(
+      MathUtils.lerp(from.r, to.r, t),
+      MathUtils.lerp(from.g, to.g, t),
+      MathUtils.lerp(from.b, to.b, t),
+      MathUtils.lerp(from.a, to.a, t),
+    );
+  }
+
   /** Returns RGBA as 32-bit hex (RRGGBBAA) */
   public getHexRGBA(): number {
     this.ensureRGBUpdatedFromHSL();

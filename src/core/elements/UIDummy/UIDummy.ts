@@ -62,6 +62,8 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
 
     assertValidPositiveNumber(w, "UIDummy.constructor.width");
     assertValidPositiveNumber(h, "UIDummy.constructor.height");
+    const zIndex = options?.zIndex ?? DUMMY_DEFAULT_Z_INDEX;
+    assertValidNumber(zIndex, "UIDummy.constructor.options.zIndex");
 
     super(layer, options);
 
@@ -79,7 +81,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
         catchPointerUp: this.catchPointerUp,
         catchPointerCancel: this.catchPointerCancel,
       },
-      DUMMY_DEFAULT_Z_INDEX,
+      zIndex,
     );
 
     this.inputWrapper.setActive(this.catcherHandler, isUIModeInteractive(this.modeInternal));

@@ -34,6 +34,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
+      this,
     );
   }
 

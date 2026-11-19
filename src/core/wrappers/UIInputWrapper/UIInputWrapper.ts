@@ -16,7 +16,7 @@ export class UIInputWrapper implements UIInputWrapperView {
   private readonly hoveringPointers = new Set<number>();
   private lastHandler = 0;
 
-  /** Bumped by every change to the draw order; compare with the last seen value */
+  /** Bumped by every change to the draw order, to compare with a value seen before */
   public get version(): number {
     return this.versionInternal;
   }

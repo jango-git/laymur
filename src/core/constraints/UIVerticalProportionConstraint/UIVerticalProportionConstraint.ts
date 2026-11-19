@@ -39,6 +39,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
       this.relation,
       this.priority,
       this.isConstraintEnabled(),
+      this,
     );
   }
 

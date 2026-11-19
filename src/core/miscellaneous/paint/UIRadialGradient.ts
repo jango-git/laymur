@@ -6,8 +6,8 @@ import { UIGradient } from "./UIGradient.js";
 import type { UIPaintBox } from "./UIPaint.Internal.js";
 
 /**
- * Circular gradient between two radii around a center, from the center to the middle of the
- * longer side by default. The circle stays round in a box that is not square.
+ * Circular gradient between two radii around a center, by default from the center to the ends of
+ * the longer axis of the box. The circle stays round in a box that is not square.
  */
 export class UIRadialGradient extends UIGradient {
   private readonly options: UIRadialGradientOptions;

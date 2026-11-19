@@ -1,22 +1,14 @@
 import type { FerrsignView1 } from "ferrsign";
 import { Ferrsign1 } from "ferrsign";
-import type { WebGLRenderer } from "three";
 
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import {
-  calculateRasterScale,
-  UICanvasSurface,
-} from "../../miscellaneous/canvas-surface/UICanvasSurface.js";
-import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
-import { UIColor } from "../../miscellaneous/color/UIColor.js";
+import type { UICanvasRenderingContext2D } from "../../miscellaneous/canvas.js";
 import type { UIInsetsConfig } from "../../miscellaneous/insets/UIInsets.Internal.js";
 import { UIInsets } from "../../miscellaneous/insets/UIInsets.js";
 import type { UIContentAspectElement } from "../../miscellaneous/shared.js";
 import { UITextSpan } from "../../miscellaneous/text-span/UITextSpan.js";
 import { UITextStyle } from "../../miscellaneous/text-style/UITextStyle.js";
-import { UIAffineMatrix3 } from "../../miscellaneous/UIAffineMatrix3.js";
-import source from "../../shaders/UIImage.js";
-import { UIElement } from "../UIElement/UIElement.js";
+import { UICanvasElement } from "../UICanvasElement/UICanvasElement.js";
 import { detectIsRTL } from "./UIText.Bidi.js";
 import type { UITextChunk, UITextContent, UITextLine, UITextSize } from "./UIText.Interfaces.js";
 import type { UITextLineBox, UITextOptions } from "./UIText.Internal.js";
@@ -35,20 +27,21 @@ import { renderTextLines } from "./UIText.Rendering.js";
 const TEXT_MIN_DIMENSION = 1;
 
 /**
- * Canvas-based text rendering element. The text is laid out in pixels of its style and drawn at
- * the size the element takes on the screen, so it stays sharp when constraints enlarge it and on
- * high-DPI screens. Micro transforms do not redraw it.
+ * Text element. The text is laid out in pixels of its style, which are the content units of the
+ * canvas it is drawn on.
  */
-export class UIText extends UIElement implements UIContentAspectElement {
+export class UIText extends UICanvasElement implements UIContentAspectElement {
   /** Default style applied to all text spans */
   public readonly commonStyle: UITextStyle;
 
-  private readonly colorInternal: UIColor;
+  /** Size of the laid out text with its padding, in pixels of the style */
+  protected contentWidth = TEXT_MIN_DIMENSION;
+  protected contentHeight = TEXT_MIN_DIMENSION;
+
   private readonly paddingInternal: UIInsets;
   private autoPaddingInternal: boolean;
-  /** Padding last set by auto padding; any other value means it was changed by hand */
-  private lastAutoPadding = 0;
-  private readonly surface: UICanvasSurface;
+  /** Version of the padding as auto padding last set it. Any other version is a change by hand. */
+  private autoPaddingVersion: number;
 
   private contentInternal: UITextSpan[] = [];
   private contentDirty = false;
@@ -71,15 +64,8 @@ export class UIText extends UIElement implements UIContentAspectElement {
 
   private textChunks: UITextChunk[] = [];
   private textLines: UITextLine[] = [];
-  /** Size of the laid out text with its padding, in pixels of the style */
-  private contentWidth = TEXT_MIN_DIMENSION;
-  private contentHeight = TEXT_MIN_DIMENSION;
   private contentAspectInternal = 1;
   private readonly signalContentAspectChangedInternal = new Ferrsign1<number>();
-
-  /** Raster scale the canvas holds, NaN before the first drawing */
-  private rasterScale = Number.NaN;
-  private rasterPixelDensity = Number.NaN;
 
   /**
    * Creates a new UIText instance.
@@ -89,41 +75,23 @@ export class UIText extends UIElement implements UIContentAspectElement {
    * @param options - Configuration options
    */
   constructor(layer: UILayer, content: UITextContent, options: Partial<UITextOptions> = {}) {
-    const surface = new UICanvasSurface("UIText.constructor");
-    const color = new UIColor(options.color);
+    super(layer, "UIText.constructor", options);
 
-    super(
-      layer,
-      source,
-      {
-        texture: surface.texture,
-        textureTransform: new UIAffineMatrix3(),
-        color,
-      },
-      options,
-    );
-
-    this.colorInternal = color;
     this.paddingInternal = new UIInsets(options.padding);
     this.autoPaddingInternal = options.padding === undefined;
+    this.autoPaddingVersion = this.paddingInternal.version;
     this.commonStyle = new UITextStyle(options.commonStyle);
     this.maxLineWidthInternal = options.maxLineWidth ?? TEXT_DEFAULT_MAX_LINE_WIDTH;
     this.resizeModeInternal = options.resizeMode ?? TEXT_DEFAULT_RESIZE_MODE;
     this.directionInternal = options.direction ?? TEXT_DEFAULT_DIRECTION;
     this.lineBoxInternal = options.lineBox ?? TEXT_DEFAULT_LINE_BOX;
 
-    this.surface = surface;
     this.content = content;
 
     this.lastWidth = this.width;
     this.lastHeight = this.height;
 
     this.layout(false);
-  }
-
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public get color(): UIColor {
-    return this.colorInternal;
   }
 
   /** Text content as array of styled spans */
@@ -136,7 +104,7 @@ export class UIText extends UIElement implements UIContentAspectElement {
     return this.maxLineWidthInternal;
   }
 
-  /** Text padding in world units */
+  /** Text padding in pixels of the style */
   public get padding(): UIInsets {
     return this.paddingInternal;
   }
@@ -146,7 +114,7 @@ export class UIText extends UIElement implements UIContentAspectElement {
    * the padding is set by hand.
    */
   public get autoPadding(): boolean {
-    return this.autoPaddingInternal;
+    return this.autoPaddingInternal && this.paddingInternal.version === this.autoPaddingVersion;
   }
 
   /** Controls how text adapts to element size */
@@ -175,11 +143,6 @@ export class UIText extends UIElement implements UIContentAspectElement {
   /** Signal fired with the new aspect when the content aspect changes */
   public get signalContentAspectChanged(): FerrsignView1<number> {
     return this.signalContentAspectChangedInternal;
-  }
-
-  /** Multiplicative tint. Alpha channel controls opacity. */
-  public set color(value: UIColorConfig) {
-    this.colorInternal.set(value);
   }
 
   /**
@@ -219,7 +182,7 @@ export class UIText extends UIElement implements UIContentAspectElement {
     }
   }
 
-  /** Text padding in world units. Turns auto padding off. */
+  /** Text padding in pixels of the style. Turns auto padding off. */
   public set padding(value: UIInsetsConfig) {
     this.autoPaddingInternal = false;
     this.paddingInternal.set(value);
@@ -230,10 +193,10 @@ export class UIText extends UIElement implements UIContentAspectElement {
    * the padding is set by hand.
    */
   public set autoPadding(value: boolean) {
-    if (this.autoPaddingInternal !== value) {
+    if (this.autoPadding !== value) {
       this.autoPaddingInternal = value;
       if (value) {
-        this.lastAutoPadding = Number.NaN;
+        this.autoPaddingVersion = this.paddingInternal.version;
         this.updateAutoPadding();
       }
     }
@@ -263,36 +226,18 @@ export class UIText extends UIElement implements UIContentAspectElement {
     }
   }
 
-  /** Frees resources of the text */
-  protected override destroyInternal(): void {
-    this.surface.dispose();
-    super.destroyInternal();
+  protected override updateContent(layoutChanged: boolean): boolean {
+    return this.layout(layoutChanged);
   }
 
-  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
-    const layoutChanged = this.consumeLayoutChange();
-    const laidOut = this.layout(layoutChanged);
-    const pixelDensity = this.layer.pixelDensity;
-
-    if (laidOut || layoutChanged || pixelDensity !== this.rasterPixelDensity) {
-      this.rasterPixelDensity = pixelDensity;
-      const rasterScale = calculateRasterScale(
-        this.contentWidth,
-        this.contentHeight,
-        pixelDensity * Math.max(this.width / this.contentWidth, this.height / this.contentHeight),
-      );
-      if (laidOut || rasterScale !== this.rasterScale) {
-        this.rasterScale = rasterScale;
-        this.draw();
-      }
-    }
-
-    if (this.colorInternal.dirty) {
-      this.sceneWrapper.setProperties(this.planeHandler, { color: this.colorInternal });
-      this.colorInternal.setDirtyFalse();
-    }
-
-    super.onWillRender(renderer, deltaTime);
+  protected override drawContent(context: UICanvasRenderingContext2D): void {
+    renderTextLines(
+      context,
+      this.textLines,
+      this.isRTL,
+      this.paddingInternal.top,
+      this.paddingInternal.left,
+    );
   }
 
   /**
@@ -425,28 +370,6 @@ export class UIText extends UIElement implements UIContentAspectElement {
     this.contentHeight = Math.max(Math.round(height), TEXT_MIN_DIMENSION);
   }
 
-  /** Draws the laid out text at the current raster scale */
-  private draw(): void {
-    const textureReplaced = this.surface.begin(
-      this.contentWidth,
-      this.contentHeight,
-      this.rasterScale,
-    );
-
-    renderTextLines(
-      this.surface.context,
-      this.textLines,
-      this.isRTL,
-      this.paddingInternal.top,
-      this.paddingInternal.left,
-      { x: this.surface.scaleX, y: this.surface.scaleY },
-    );
-
-    if (textureReplaced) {
-      this.sceneWrapper.setProperties(this.planeHandler, { texture: this.surface.texture });
-    }
-  }
-
   /** The element size for a text size: the padding added, at least the minimum each way */
   private elementSize(textSize: UITextSize): UITextSize {
     const { left, right, top, bottom } = this.paddingInternal;
@@ -457,16 +380,7 @@ export class UIText extends UIElement implements UIContentAspectElement {
   }
 
   private updateAutoPadding(): void {
-    if (!this.autoPaddingInternal) {
-      return;
-    }
-
-    const { left, right, top, bottom } = this.paddingInternal;
-    const last = this.lastAutoPadding;
-    if (
-      !Number.isNaN(last) &&
-      (left !== last || right !== last || top !== last || bottom !== last)
-    ) {
+    if (!this.autoPadding) {
       this.autoPaddingInternal = false;
       return;
     }
@@ -476,7 +390,7 @@ export class UIText extends UIElement implements UIContentAspectElement {
       this.commonStyle.calculatePadding(),
     );
     this.paddingInternal.setUnified(padding);
-    this.lastAutoPadding = padding;
+    this.autoPaddingVersion = this.paddingInternal.version;
   }
 
   private buildTextChunks(): UITextChunk[] {

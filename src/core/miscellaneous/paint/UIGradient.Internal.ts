@@ -4,7 +4,7 @@ import type { UIColorConfig } from "../color/UIColor.Internal.js";
 export interface UIGradientStop {
   /** Position along the gradient, from 0 to 1 */
   offset: number;
-  /** Color at the position. A string is a CSS color. */
+  /** Color at the position. A string is a `UIColor` name or a CSS color. */
   color: UIColorConfig;
 }
 
@@ -43,7 +43,7 @@ export const LINEAR_GRADIENT_DEFAULT_OPTIONS: UILinearGradientOptions = {
   endY: 1,
 };
 
-/** From the center to the middle of the longer side */
+/** From the center to the ends of the longer axis, the middles of the shorter sides */
 export const RADIAL_GRADIENT_DEFAULT_OPTIONS: UIRadialGradientOptions = {
   centerX: 0.5,
   centerY: 0.5,

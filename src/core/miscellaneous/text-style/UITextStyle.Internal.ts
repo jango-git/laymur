@@ -12,7 +12,7 @@ export type UITextFontWeight = "normal" | "bold" | "bolder" | "lighter" | number
 
 /** Box a gradient of the fill or of a stroke is laid over */
 export enum UITextPaintBox {
-  /** Each line, from the top of its highest glyph to the bottom of its lowest one */
+  /** Each line, as high as its line box (see `UIText.lineBox`) */
   LINE = 0,
   /** The whole text without its padding */
   TEXT = 1,
@@ -43,7 +43,7 @@ export interface UITextStroke {
  * blur is a glow.
  */
 export interface UITextShadowConfig {
-  /** Shadow color. A string is a CSS color. */
+  /** Shadow color. A string is a `UIColor` name or a CSS color. */
   color: UIColorConfig;
   /** Horizontal offset in pixels, 0 by default */
   offsetX?: number;
@@ -67,7 +67,7 @@ export interface UITextShadow {
 
 /** Text style configuration */
 export interface UITextStyleConfig {
-  /** Color or gradient of the glyphs. A string is a CSS color. */
+  /** Color or gradient of the glyphs. A string is a `UIColor` name or a CSS color. */
   color: UIPaintConfig;
   /** Box the gradients of the fill and of the strokes are laid over */
   paintBox: UITextPaintBox;

@@ -34,7 +34,9 @@ export abstract class UILayer implements UIPlaneElement {
   public readonly hVariable: number;
 
   protected readonly inputWrapperInternal = new UIInputWrapper();
-  private readonly solverWrapperInternal = new UISolverWrapper();
+  private readonly solverWrapperInternal = new UISolverWrapper((constraints) => {
+    this.reportRejectedConstraints(constraints);
+  });
   private readonly sceneWrapperInternal: UISceneWrapper;
 
   private modeInternal: UILayerMode;
@@ -170,7 +172,7 @@ export abstract class UILayer implements UIPlaneElement {
 
   /**
    * Signal fired when the WebGL context of the renderer the layer is drawn with is lost. The
-   * layer draws nothing until the context is restored; pause what depends on frames being shown.
+   * layer draws nothing until the context is restored, so pause what depends on frames being shown.
    */
   public get signalContextLost(): FerrsignView1<UILayer> {
     return this.signalContextLostInternal;
@@ -178,7 +180,7 @@ export abstract class UILayer implements UIPlaneElement {
 
   /**
    * Signal fired when the WebGL context is restored. The renderer has recreated its GL state by
-   * then; content that lives on the GPU only, such as render targets, has to be redrawn.
+   * then. Content that lives on the GPU only, such as render targets, has to be redrawn.
    */
   public get signalContextRestored(): FerrsignView1<UILayer> {
     return this.signalContextRestoredInternal;
@@ -393,7 +395,7 @@ export abstract class UILayer implements UIPlaneElement {
     });
   }
 
-  /** Follows the context of the renderer the layer is drawn with; null to stop following */
+  /** Follows the context of the renderer the layer is drawn with, or stops following with null */
   private bindContextMonitor(monitor: UIContextMonitor | null): void {
     if (monitor === this.contextMonitor) {
       return;
@@ -420,6 +422,24 @@ export abstract class UILayer implements UIPlaneElement {
         constraint.destroy();
       }
     }
+  }
+
+  /**
+   * Reports constraints the solver rejected for conflicting with required constraints. Throws in
+   * development builds. Warns in production builds, where the layout goes on without them.
+   */
+  private reportRejectedConstraints(constraints: readonly UIConstraint[]): void {
+    const names = constraints.map((constraint) =>
+      constraint.name === ""
+        ? constraint.constructor.name
+        : `${constraint.constructor.name} "${constraint.name}"`,
+    );
+    const message = `UILayer "${this.name}": constraints conflict with required (P0) constraints and are not applied: ${names.join(", ")}`;
+    if (process.env.NODE_ENV !== "production") {
+      throw new Error(message);
+    }
+    // eslint-disable-next-line no-console -- The only report of a broken layout in production builds
+    console.warn(message);
   }
 
   /**
