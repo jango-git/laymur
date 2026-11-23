@@ -191,6 +191,7 @@ export class UIEmitter extends UIAnchor {
     );
 
     this.layer.signalRendering.on(this.onRendering);
+    this.layer.signalCompiling.on(this.onCompiling);
     this.layer.sceneWrapper.insertOrderedObject(
       this.mesh,
       this.layer.inputWrapper.getDepth(this.catcherHandler),
@@ -408,6 +409,7 @@ export class UIEmitter extends UIAnchor {
   /** Frees the particles and the input catcher, optionally destroys modules */
   protected override destroyInternal(): void {
     this.layer.signalRendering.off(this.onRendering);
+    this.layer.signalCompiling.off(this.onCompiling);
     this.layer.sceneWrapper.removeOrderedObject(this.mesh);
     this.mesh.destroy();
     this.layer.inputWrapper.destroyInputCatcher(this.catcherHandler);
@@ -593,10 +595,7 @@ export class UIEmitter extends UIAnchor {
   }
 
   private readonly onRendering = (renderer: WebGLRenderer, rawDeltaTime: number): void => {
-    this.layer.sceneWrapper.setOrderedObjectDepth(
-      this.mesh,
-      this.layer.inputWrapper.getDepth(this.catcherHandler),
-    );
+    this.updateDepth();
 
     this.simulate(Math.min(rawDeltaTime, this.maxDeltaTimeInternal));
 
@@ -608,4 +607,17 @@ export class UIEmitter extends UIAnchor {
     // The only upload of a frame: bursts and prewarm between frames are drawn by the next one.
     this.mesh.limitUploadToLiveInstances();
   };
+
+  /** Places the particles at the current depth before the programs are built */
+  private readonly onCompiling = (): void => {
+    this.updateDepth();
+  };
+
+  /** Moves the particles to the depth of the emitter among the elements of the layer */
+  private updateDepth(): void {
+    this.layer.sceneWrapper.setOrderedObjectDepth(
+      this.mesh,
+      this.layer.inputWrapper.getDepth(this.catcherHandler),
+    );
+  }
 }

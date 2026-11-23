@@ -200,6 +200,7 @@ export abstract class UILayer implements UIPlaneElement {
   /**
    * Signal fired by `compile` before the programs are built. An element whose objects are created
    * on its first frame creates them here, for the current state and without advancing in time.
+   * An element drawn among the planes moves to its current depth here, as on a frame.
    * An element drawing a scene apart from the layer passes it to `compileScene`.
    */
   public get signalCompiling(): FerrsignView2<UILayerCompilation, UILayer> {

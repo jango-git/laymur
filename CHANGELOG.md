@@ -3,6 +3,14 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## 0.30.1 - 2026-11-23
+
+### Fixed
+
+- `UILayer.compile` no longer throws "duplicate zIndex" on a layer whose elements were created
+  with `zIndex` values out of creation order and have not been drawn yet. Elements and emitters
+  take their current depth before the programs are built.
+
 ## 0.30.0 - 2026-11-23
 
 ### Changed
@@ -106,6 +114,7 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   a `UIImage` created from it gets a valid size and aspect.
 - `UIText.autoPadding` reads false as soon as the padding is changed through `UIText.padding`.
   Before, it read true until the next style change.
+
 ## 0.28.0 - 2026-11-18
 
 ### Changed

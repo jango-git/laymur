@@ -89,6 +89,7 @@ export abstract class UIElement extends UIDummy {
     );
     this.applyMask();
     this.layer.signalRendering.on(this.handleWillRender);
+    this.layer.signalCompiling.on(this.handleCompiling);
   }
 
   /** Alpha blending mode */
@@ -194,6 +195,7 @@ export abstract class UIElement extends UIDummy {
   /** Frees resources of the element */
   protected override destroyInternal(): void {
     this.layer.signalRendering.off(this.handleWillRender);
+    this.layer.signalCompiling.off(this.handleCompiling);
     this.sceneWrapper.destroyPlane(this.planeHandler);
     super.destroyInternal();
   }
@@ -310,5 +312,14 @@ export abstract class UIElement extends UIDummy {
 
   private readonly handleWillRender = (renderer: WebGLRenderer, deltaTime: number): void => {
     this.onWillRender(renderer, deltaTime);
+  };
+
+  /**
+   * Places the plane at the current depth before the programs are built. A plane keeps the depth
+   * it was created at until its first frame, and elements created later may have shifted it.
+   */
+  private readonly handleCompiling = (): void => {
+    this.applyMask();
+    this.setPlaneTransform();
   };
 }
