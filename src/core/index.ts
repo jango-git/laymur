@@ -71,6 +71,7 @@ export {
 export { UIText } from "./elements/UIText/UIText.js";
 export type {
   UIAspectRange,
+  UILayerCompilation,
   UILayerMode,
   UILayerOptions,
   UILayerOrientation,

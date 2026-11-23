@@ -353,6 +353,25 @@ debug.destroy();
 
 Overlays respect orientation - they hide automatically when their constraint's orientation is inactive.
 
+### 9. Compiling Ahead
+
+Shader programs are built on the first frame an element is drawn in, and that frame can stall. `compile()` builds them ahead, for example behind a loading screen:
+
+```typescript
+await layer.compile(renderer);
+```
+
+It covers every element of the layer, hidden ones and a hidden layer included, and the scene a `UIScene` draws into its texture. It draws nothing.
+
+- Programs depend on the state of the renderer. Call `compile()` with the render target, color space and tone mapping the layer is drawn with.
+- Programs are built for the current state of the elements. A mask added later, another mask function of a `UIProgress` or another transparency mode builds a program on its next frame.
+- On three r157 `compile()` builds the programs synchronously and stalls until they are built. From r158 it waits without stalling.
+- Without `KHR_parallel_shader_compile` a program still stalls its first frame until the driver finishes it.
+- Turn `renderer.debug.checkShaderErrors` off in production. With it on, three reads the logs of every program it builds.
+- Three deletes a program together with the last material using it. Once every element of one kind is destroyed, the next such element builds it again.
+
+An element of your own whose scene objects appear on its first frame creates them in a `signalCompiling` handler, for the current state and without advancing in time. A scene it draws apart from the layer goes to `compileScene` of the handler argument.
+
 ## API Overview
 
 Most commonly used exports (not exhaustive):

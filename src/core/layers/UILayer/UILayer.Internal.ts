@@ -1,3 +1,5 @@
+import type { Camera, Object3D, WebGLRenderTarget } from "three";
+
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import { UIMode } from "../../miscellaneous/UIMode.js";
 import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
@@ -15,6 +17,21 @@ export interface UIAspectRange {
   min: number;
   /** Highest aspect, at least 1 */
   max: number;
+}
+
+/**
+ * Compilation of a layer, passed to the handlers of `UILayer.signalCompiling`. Valid only while
+ * the signal is being emitted.
+ */
+export interface UILayerCompilation {
+  /**
+   * Compiles a scene an element draws apart from the layer, such as into its own render target.
+   * The layer waits for it together with its own programs.
+   * @param scene Scene to compile
+   * @param camera Camera the scene is drawn with
+   * @param renderTarget Target the scene is drawn into
+   */
+  compileScene(scene: Object3D, camera: Camera, renderTarget: WebGLRenderTarget): void;
 }
 
 /** Configuration options for UILayer */

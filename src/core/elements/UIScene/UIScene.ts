@@ -10,6 +10,7 @@ import {
   WebGLRenderTarget,
 } from "three";
 
+import type { UILayerCompilation } from "../../layers/UILayer/UILayer.Internal.js";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import {
   assertValidNonNegativeInteger,
@@ -120,6 +121,7 @@ export class UIScene extends UIElement {
     this.propertyDirty = options.updateMode !== UISceneUpdateMode.MANUAL;
 
     this.layer.signalContextRestored.on(this.onContextRestored);
+    this.layer.signalCompiling.on(this.onCompiling);
   }
 
   /** Camera used for rendering */
@@ -225,6 +227,7 @@ export class UIScene extends UIElement {
   /** Frees resources of the scene */
   protected override destroyInternal(): void {
     this.layer.signalContextRestored.off(this.onContextRestored);
+    this.layer.signalCompiling.off(this.onCompiling);
     this.renderTarget.dispose();
     super.destroyInternal();
   }
@@ -283,5 +286,9 @@ export class UIScene extends UIElement {
   /** Render target contents live on the GPU only and are gone after a context loss */
   private readonly onContextRestored = (): void => {
     this.requestUpdate();
+  };
+
+  private readonly onCompiling = (compilation: UILayerCompilation): void => {
+    compilation.compileScene(this.sceneInternal, this.cameraInternal, this.renderTarget);
   };
 }

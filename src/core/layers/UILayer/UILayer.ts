@@ -5,6 +5,7 @@ import type { WebGLRenderer } from "three";
 import type { UIConstraint } from "../../constraints/UIConstraint.js";
 import type { UIAnchor } from "../../elements/UIAnchor/UIAnchor.js";
 import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { compileObject } from "../../miscellaneous/compileObject.js";
 import { UIContextMonitor } from "../../miscellaneous/context-monitor/UIContextMonitor.js";
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import type { UIPlaneElement } from "../../miscellaneous/shared.js";
@@ -18,6 +19,7 @@ import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolve
 import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper.js";
 import type {
   UIAspectRange,
+  UILayerCompilation,
   UILayerMode,
   UILayerOptions,
   UILayerOrientation,
@@ -57,6 +59,7 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
   private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
+  private readonly signalCompilingInternal = new Ferrsign2<UILayerCompilation, UILayer>();
   private readonly signalResizedInternal = new Ferrsign3<number, number, UILayer>();
   private readonly signalContextLostInternal = new Ferrsign1<UILayer>();
   private readonly signalContextRestoredInternal = new Ferrsign1<UILayer>();
@@ -194,6 +197,15 @@ export abstract class UILayer implements UIPlaneElement {
     return this.signalRenderingInternal;
   }
 
+  /**
+   * Signal fired by `compile` before the programs are built. An element whose objects are created
+   * on its first frame creates them here, for the current state and without advancing in time.
+   * An element drawing a scene apart from the layer passes it to `compileScene`.
+   */
+  public get signalCompiling(): FerrsignView2<UILayerCompilation, UILayer> {
+    return this.signalCompilingInternal;
+  }
+
   /** Signal fired when layer resized */
   public get signalResized(): FerrsignView3<number, number, UILayer> {
     return this.signalResizedInternal;
@@ -276,6 +288,42 @@ export abstract class UILayer implements UIPlaneElement {
     this.squareAspectRangeInternal =
       value === null ? null : copyValidAspectRange(value, "UILayer.squareAspectRange");
     this.refreshOrientation();
+  }
+
+  /**
+   * Builds the shader programs of all elements of the layer, hidden ones and a hidden layer
+   * included, without drawing anything. Programs are built for the current state of the elements
+   * and of the renderer: call it with the render target, color space and tone mapping the layer
+   * is drawn with. Does nothing if the layer is destroyed or the WebGL context is lost.
+   * @param renderer Renderer the layer is drawn with
+   * @returns Resolves once the programs are ready. On three r157 the programs are built during
+   *   the call and it resolves at once
+   */
+  public compile(renderer: WebGLRenderer): Promise<void> {
+    if (!this.canUseRenderer(renderer)) {
+      return Promise.resolve();
+    }
+
+    const pending: Promise<void>[] = [];
+    this.signalCompilingInternal.emit(
+      {
+        compileScene: (scene, camera, renderTarget): void => {
+          const previousRenderTarget = renderer.getRenderTarget();
+          renderer.setRenderTarget(renderTarget);
+          try {
+            pending.push(compileObject(renderer, scene, camera));
+          } finally {
+            renderer.setRenderTarget(previousRenderTarget);
+          }
+        },
+      },
+      this,
+    );
+
+    if (!this.destroyed) {
+      pending.push(this.sceneWrapperInternal.compile(renderer));
+    }
+    return Promise.all(pending).then(() => undefined);
   }
 
   /**
@@ -426,15 +474,9 @@ export abstract class UILayer implements UIPlaneElement {
   }
 
   protected renderInternal(renderer: WebGLRenderer, deltaTime: number): void {
-    if (this.destroyedInternal) {
-      return;
-    }
-
     // While the context is lost the frame is skipped as a whole: elements compare versions, so
     // nothing changed meanwhile is lost once drawing resumes
-    const contextMonitor = UIContextMonitor.for(renderer);
-    this.bindContextMonitor(contextMonitor);
-    if (contextMonitor.lost) {
+    if (!this.canUseRenderer(renderer)) {
       return;
     }
 
@@ -455,6 +497,19 @@ export abstract class UILayer implements UIPlaneElement {
     this.inputWrapperInternal.cancelPointers((x, y, identifier) => {
       this.reportPointerCancelledByLayer(x, y, identifier);
     });
+  }
+
+  /**
+   * Follows the context of the renderer and tells whether the layer can use it.
+   * @returns False if the layer is destroyed or the context is lost
+   */
+  private canUseRenderer(renderer: WebGLRenderer): boolean {
+    if (this.destroyedInternal) {
+      return false;
+    }
+    const contextMonitor = UIContextMonitor.for(renderer);
+    this.bindContextMonitor(contextMonitor);
+    return !contextMonitor.lost;
   }
 
   /** Follows the context of the renderer the layer is drawn with, or stops following with null */

@@ -278,6 +278,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
     this.maskInternal?.detach(this);
     this.maskInternal = value;
     value?.attach(this);
+    this.onMaskChanged();
   }
 
   /**
@@ -320,8 +321,14 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   public releaseMask(mask: UIMask): void {
     if (this.maskInternal === mask) {
       this.maskInternal = null;
+      if (!this.destroyed) {
+        this.onMaskChanged();
+      }
     }
   }
+
+  /** Called after the mask of a live element is set or taken off */
+  protected onMaskChanged(): void {}
 
   /**
    * Micro transform the element is drawn with. Elements that have one override this, so that

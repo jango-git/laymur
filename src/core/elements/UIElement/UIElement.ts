@@ -39,15 +39,11 @@ export abstract class UIElement extends UIDummy {
   protected planeHandler: number;
 
   private transparencyModeInternal: UITransparencyMode;
-  private transparencyModeDirty = false;
   private blendModeInternal: UIBlendMode;
-  private blendModeDirty = false;
   private hueInternal: number;
   private saturationInternal: number;
   private lightnessInternal: number;
-  private hslDirty = false;
   private readonly hslValue = { h: 0, s: 0, l: 0 };
-  private visibilityDirty = false;
 
   /** Layout and draw-order versions the plane was last placed by */
   private placedSolverVersion = -1;
@@ -84,18 +80,14 @@ export abstract class UIElement extends UIDummy {
     this.lightnessInternal = options?.lightness ?? ELEMENT_DEFAULT_LIGHTNESS;
 
     this.sceneWrapper = this.layer.sceneWrapper;
-    this.planeHandler = this.sceneWrapper.createPlane(
+    this.planeHandler = this.createPlane(
       source,
       properties,
       // A plane created during a frame is placed on the next one. Until then it is collapsed to
       // nothing, at its own depth: planes may not share one
       new Matrix4().makeScale(0, 0, 1).setPosition(0, 0, this.renderDepth),
-      isUIModeVisible(options?.mode ?? this.mode),
-      this.transparencyModeInternal,
-      blendModeToFactor(this.blendModeInternal),
-      packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
     );
-
+    this.applyMask();
     this.layer.signalRendering.on(this.handleWillRender);
   }
 
@@ -149,7 +141,7 @@ export abstract class UIElement extends UIDummy {
   public set transparencyMode(value: UITransparencyMode) {
     if (this.transparencyModeInternal !== value) {
       this.transparencyModeInternal = value;
-      this.transparencyModeDirty = true;
+      this.sceneWrapper.setTransparency(this.planeHandler, value);
     }
   }
 
@@ -157,7 +149,7 @@ export abstract class UIElement extends UIDummy {
   public set blendMode(value: UIBlendMode) {
     if (this.blendModeInternal !== value) {
       this.blendModeInternal = value;
-      this.blendModeDirty = true;
+      this.sceneWrapper.setBlend(this.planeHandler, blendModeToFactor(value));
     }
   }
 
@@ -168,7 +160,7 @@ export abstract class UIElement extends UIDummy {
   public set hue(value: number) {
     if (this.hueInternal !== value) {
       this.hueInternal = value;
-      this.hslDirty = true;
+      this.applyHSL();
     }
   }
 
@@ -176,7 +168,7 @@ export abstract class UIElement extends UIDummy {
   public set saturation(value: number) {
     if (this.saturationInternal !== value) {
       this.saturationInternal = value;
-      this.hslDirty = true;
+      this.applyHSL();
     }
   }
 
@@ -184,15 +176,18 @@ export abstract class UIElement extends UIDummy {
   public set lightness(value: number) {
     if (this.lightnessInternal !== value) {
       this.lightnessInternal = value;
-      this.hslDirty = true;
+      this.applyHSL();
     }
   }
 
   /** Controls visibility and interactivity */
   public override set mode(value: UIMode) {
     if (this.modeInternal !== value) {
-      this.visibilityDirty ||= isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
+      const visibilityChanged = isUIModeVisible(this.modeInternal) !== isUIModeVisible(value);
       super.mode = value;
+      if (visibilityChanged) {
+        this.sceneWrapper.setVisibility(this.planeHandler, isUIModeVisible(value));
+      }
     }
   }
 
@@ -205,6 +200,10 @@ export abstract class UIElement extends UIDummy {
 
   protected override getMicro(): UIMicro {
     return this.micro;
+  }
+
+  protected override onMaskChanged(): void {
+    this.applyMask();
   }
 
   protected setPlaneTransform(): void {
@@ -247,7 +246,23 @@ export abstract class UIElement extends UIDummy {
     transform: Matrix4,
   ): void {
     this.sceneWrapper.destroyPlane(this.planeHandler);
-    this.planeHandler = this.sceneWrapper.createPlane(
+    this.planeHandler = this.createPlane(source, properties, transform);
+    this.applyMask();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
+  protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
+    this.applyMask();
+    this.setPlaneTransform();
+  }
+
+  /** Creates a plane with the visibility, transparency, blend and color adjustment of the element */
+  private createPlane(
+    source: string,
+    properties: Record<string, UIProperty>,
+    transform: Matrix4,
+  ): number {
+    return this.sceneWrapper.createPlane(
       source,
       properties,
       transform,
@@ -256,41 +271,19 @@ export abstract class UIElement extends UIDummy {
       blendModeToFactor(this.blendModeInternal),
       packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
     );
-    this.applyMask();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
-  protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
-    if (this.transparencyModeDirty) {
-      this.sceneWrapper.setTransparency(this.planeHandler, this.transparencyModeInternal);
-      this.transparencyModeDirty = false;
-    }
-
-    if (this.blendModeDirty) {
-      this.sceneWrapper.setBlend(this.planeHandler, blendModeToFactor(this.blendModeInternal));
-      this.blendModeDirty = false;
-    }
-
-    if (this.hslDirty) {
-      this.sceneWrapper.setHSL(
-        this.planeHandler,
-        packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
-      );
-      this.hslDirty = false;
-    }
-
-    if (this.visibilityDirty) {
-      this.sceneWrapper.setVisibility(this.planeHandler, isUIModeVisible(this.modeInternal));
-      this.visibilityDirty = false;
-    }
-
-    this.applyMask();
-    this.setPlaneTransform();
+  private applyHSL(): void {
+    this.sceneWrapper.setHSL(
+      this.planeHandler,
+      packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
+    );
   }
 
   /**
-   * Brings the plane mask up to date. Pulled every frame rather than pushed: the mask data
-   * depends on the layout and micro of the mask source, whose dirty flags belong to the source.
+   * Brings the plane mask up to date. Called when the mask is set or taken off, since masked
+   * planes are another shader variant, and every frame: the mask data depends on the layout and
+   * micro of the mask source, whose dirty flags belong to the source.
    */
   private applyMask(): void {
     const mask = this.mask;

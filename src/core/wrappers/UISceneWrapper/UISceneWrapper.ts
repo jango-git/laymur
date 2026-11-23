@@ -1,6 +1,7 @@
 import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
 
+import { compileObject } from "../../miscellaneous/compileObject.js";
 import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared.js";
 import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry.js";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
@@ -114,6 +115,16 @@ export class UISceneWrapper implements UISceneWrapperView {
     this.camera.top = height;
     this.camera.updateProjectionMatrix();
     return this;
+  }
+
+  /**
+   * Compiles the programs of the planes and of the objects in the scene, hidden ones included,
+   * as drawn into the current render target.
+   * @returns Resolves once the programs are ready
+   */
+  public compile(renderer: WebGLRenderer): Promise<void> {
+    this.planeRegistry.flush();
+    return compileObject(renderer, this.scene, this.camera);
   }
 
   public render(renderer: WebGLRenderer): this {

@@ -27,6 +27,11 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   `UIResizePolicyCross` (the longer side) and `UIResizePolicyCrossInverted` (the shorter side),
   as an optional third constructor argument and a property. Without it a square layer is scaled
   by the portrait rule.
+- `UILayer.compile(renderer)` builds the shader programs of the layer ahead of its first frame,
+  hidden elements and a hidden layer included, and the scenes `UIScene` elements draw. It
+  returns a promise, which on three r157 is resolved after a synchronous build.
+- `UILayer.signalCompiling` with `UILayerCompilation`, for elements outside laymur whose scene
+  objects appear on their first frame or that draw a scene of their own.
 - `enabled` on the built-in constraints, those derived from `UISingleParameterConstraint`. It
   tells whether the orientation of the layer is among those of the constraint.
 
