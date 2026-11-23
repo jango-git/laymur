@@ -8,6 +8,7 @@ import type { UIResizePolicy } from "../../miscellaneous/resize-policy/UIResizeP
 import { isUIModeInteractive } from "../../miscellaneous/UIMode.js";
 import type { UIViewport } from "../../miscellaneous/viewport/UIViewport.js";
 import { UIWindowViewport } from "../../miscellaneous/viewport/UIWindowViewport.js";
+import { calculateLayerOrientation } from "../UILayer/UILayer.Internal.js";
 import { UILayer } from "../UILayer/UILayer.js";
 import type {
   UIViewportLayerInputEventData,
@@ -50,12 +51,25 @@ export class UIViewportLayer extends UILayer {
     // A viewport not laid out yet has no size: the layer starts with the default one and
     // resizes once the viewport gets its size
     const hasSize = viewport.width > 0 && viewport.height > 0;
-    const scale = hasSize ? resizePolicy.calculateScale(viewport.width, viewport.height) : 1;
+    const orientation = hasSize
+      ? calculateLayerOrientation(
+          viewport.width,
+          viewport.height,
+          options?.squareAspectRange ?? null,
+        )
+      : undefined;
+    const scale =
+      orientation === undefined
+        ? 1
+        : resizePolicy.calculateScale(viewport.width, viewport.height, orientation);
 
-    super({
-      ...(hasSize ? { width: viewport.width * scale, height: viewport.height * scale } : {}),
-      ...options,
-    });
+    super(
+      {
+        ...(hasSize ? { width: viewport.width * scale, height: viewport.height * scale } : {}),
+        ...options,
+      },
+      orientation,
+    );
 
     this.viewportInternal = viewport;
     this.ownsViewport = options?.viewport === undefined;
@@ -203,6 +217,14 @@ export class UIViewportLayer extends UILayer {
     return result.set(near, far.sub(near).normalize());
   }
 
+  protected override refreshOrientation(): void {
+    if (this.viewportInternal.width > 0 && this.viewportInternal.height > 0) {
+      this.onResize();
+    } else {
+      super.refreshOrientation();
+    }
+  }
+
   protected override reportPointerCancelledByLayer(x: number, y: number, identifier: number): void {
     this.abandonedPointers.add(identifier);
     this.signalPointerCancelledInternal.emit({ x, y, identifier, layer: this });
@@ -216,10 +238,11 @@ export class UIViewportLayer extends UILayer {
       this.cancelPointers();
       return;
     }
-    const scale = this.resizePolicy.calculateScale(width, height);
+    const orientation = this.calculateOrientation(width, height);
+    const scale = this.resizePolicy.calculateScale(width, height, orientation);
     this.appliedPolicyVersion = this.resizePolicy.version;
     this.appliedScale = scale;
-    this.resizeInternal(width * scale, height * scale);
+    this.resizeInternal(width * scale, height * scale, orientation);
   };
 
   /**

@@ -58,7 +58,7 @@ export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
       new UIExpression(this.distanceInternal),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

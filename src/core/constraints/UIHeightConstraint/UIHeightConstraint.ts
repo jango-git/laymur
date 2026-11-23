@@ -33,7 +33,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
       new UIExpression(this.heightInternal),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

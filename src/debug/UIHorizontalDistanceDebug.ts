@@ -7,7 +7,7 @@ import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
 import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 
 import type { UIHorizontalDistanceConstraint } from "../core/index.js";
-import { UIColor, UILayer, UIOrientation } from "../core/index.js";
+import { UIColor, UILayer } from "../core/index.js";
 import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
 import {
   DEBUG_BADGE_BACKGROUND_COLOR,
@@ -122,10 +122,7 @@ export class UIHorizontalDistanceDebug implements UIConstraintDebug {
   }
 
   private updateContainerVisibility(): void {
-    const orientationActive =
-      this.constraint.orientation === UIOrientation.ALWAYS ||
-      this.constraint.orientation === this.constraint.layer.orientation;
-    this.container.visible = this.visibleInternal && orientationActive;
+    this.container.visible = this.visibleInternal && this.constraint.enabled;
   }
 
   private readonly onOrientationChanged = (): void => {

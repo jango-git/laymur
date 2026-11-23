@@ -9,7 +9,6 @@ import { UIContextMonitor } from "../../miscellaneous/context-monitor/UIContextM
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import type { UIPlaneElement } from "../../miscellaneous/shared.js";
 import { isUIModeInteractive, isUIModeVisible } from "../../miscellaneous/UIMode.js";
-import { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 import { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UIInputWrapperView } from "../../wrappers/UIInputWrapper/UIInputWrapper.Internal.js";
 import { UIInputWrapper } from "../../wrappers/UIInputWrapper/UIInputWrapper.js";
@@ -17,8 +16,19 @@ import type { UISceneWrapperView } from "../../wrappers/UISceneWrapper/UISceneWr
 import { UISceneWrapper } from "../../wrappers/UISceneWrapper/UISceneWrapper.js";
 import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
 import { UISolverWrapper } from "../../wrappers/UISolverWrapper/UISolverWrapper.js";
-import type { UILayerMode, UILayerOptions, UILayerOrientation } from "./UILayer.Internal.js";
-import { LAYER_DEFAULT_MODE, LAYER_DEFAULT_NAME, LAYER_DEFAULT_SIZE } from "./UILayer.Internal.js";
+import type {
+  UIAspectRange,
+  UILayerMode,
+  UILayerOptions,
+  UILayerOrientation,
+} from "./UILayer.Internal.js";
+import {
+  calculateLayerOrientation,
+  copyValidAspectRange,
+  LAYER_DEFAULT_MODE,
+  LAYER_DEFAULT_NAME,
+  LAYER_DEFAULT_SIZE,
+} from "./UILayer.Internal.js";
 
 /** Base layer for UI rendering and layout management */
 export abstract class UILayer implements UIPlaneElement {
@@ -41,6 +51,7 @@ export abstract class UILayer implements UIPlaneElement {
 
   private modeInternal: UILayerMode;
   private orientationInternal: UILayerOrientation;
+  private squareAspectRangeInternal: UIAspectRange | null;
   private pixelDensityInternal = 1;
 
   private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
@@ -59,7 +70,12 @@ export abstract class UILayer implements UIPlaneElement {
   private contextMonitor: UIContextMonitor | null = null;
   private destroyedInternal = false;
 
-  constructor(options: Partial<UILayerOptions>) {
+  /**
+   * @param options Layer configuration
+   * @param orientation Orientation the subclass sized the layer for; classified from the size if
+   *   omitted
+   */
+  constructor(options: Partial<UILayerOptions>, orientation?: UILayerOrientation) {
     if (options.width !== undefined) {
       assertValidPositiveNumber(options.width, "UILayer.constructor.options.width");
     }
@@ -74,7 +90,12 @@ export abstract class UILayer implements UIPlaneElement {
     this.sceneWrapperInternal = new UISceneWrapper(width, height);
     this.name = options.name ?? LAYER_DEFAULT_NAME;
     this.modeInternal = options.mode ?? LAYER_DEFAULT_MODE;
-    this.orientationInternal = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
+    const squareAspectRange = options.squareAspectRange ?? null;
+    this.squareAspectRangeInternal =
+      squareAspectRange === null
+        ? null
+        : copyValidAspectRange(squareAspectRange, "UILayer.constructor.options.squareAspectRange");
+    this.orientationInternal = orientation ?? this.calculateOrientation(width, height);
 
     this.xVariable = this.solverWrapperInternal.createVariable(0, UIPriority.P0);
     this.yVariable = this.solverWrapperInternal.createVariable(0, UIPriority.P0);
@@ -148,6 +169,14 @@ export abstract class UILayer implements UIPlaneElement {
   /** Current orientation based on aspect ratio */
   public get orientation(): UILayerOrientation {
     return this.orientationInternal;
+  }
+
+  /**
+   * Aspects, width divided by height, the layer counts as square. Null when the layer has no
+   * square orientation: then a layer as wide as high is VERTICAL.
+   */
+  public get squareAspectRange(): Readonly<UIAspectRange> | null {
+    return this.squareAspectRangeInternal;
   }
 
   /** Signal fired when orientation changes */
@@ -240,6 +269,13 @@ export abstract class UILayer implements UIPlaneElement {
       }
       this.signalModeChangedInternal.emit(this.modeInternal, this);
     }
+  }
+
+  /** Updates the aspects counted as square. The orientation and the size follow at once. */
+  public set squareAspectRange(value: Readonly<UIAspectRange> | null) {
+    this.squareAspectRangeInternal =
+      value === null ? null : copyValidAspectRange(value, "UILayer.squareAspectRange");
+    this.refreshOrientation();
   }
 
   /**
@@ -341,18 +377,44 @@ export abstract class UILayer implements UIPlaneElement {
     this.signalConstraintRemovedInternal.emit(this, constraint);
   }
 
-  protected resizeInternal(width: number, height: number): void {
+  /**
+   * @param width New width in world units
+   * @param height New height in world units
+   * @param orientation Orientation the size was chosen for
+   */
+  protected resizeInternal(width: number, height: number, orientation: UILayerOrientation): void {
     this.solverWrapperInternal.suggestVariableValue(this.wVariable, width);
     this.solverWrapperInternal.suggestVariableValue(this.hVariable, height);
     this.sceneWrapperInternal.resize(width, height);
 
     // Updated before the signals, so that a resize handler reads the new orientation
-    const orientation = width > height ? UIOrientation.HORIZONTAL : UIOrientation.VERTICAL;
     const orientationChanged = orientation !== this.orientationInternal;
     this.orientationInternal = orientation;
 
     this.signalResizedInternal.emit(width, height, this);
     if (orientationChanged) {
+      this.signalOrientationChangedInternal.emit(this.orientationInternal, this);
+    }
+  }
+
+  /**
+   * Orientation of an area under the `squareAspectRange` of the layer.
+   * @param width Area width
+   * @param height Area height
+   * @returns Orientation of the area
+   */
+  protected calculateOrientation(width: number, height: number): UILayerOrientation {
+    return calculateLayerOrientation(width, height, this.squareAspectRangeInternal);
+  }
+
+  /**
+   * Classifies the orientation again after `squareAspectRange` changes. A subclass whose size
+   * depends on the orientation resizes here.
+   */
+  protected refreshOrientation(): void {
+    const orientation = this.calculateOrientation(this.width, this.height);
+    if (orientation !== this.orientationInternal) {
+      this.orientationInternal = orientation;
       this.signalOrientationChangedInternal.emit(this.orientationInternal, this);
     }
   }

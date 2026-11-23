@@ -33,7 +33,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
       new UIExpression(this.widthInternal),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

@@ -16,7 +16,7 @@
 ## Features
 
 - **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
-- **Orientation-aware** - define portrait and landscape rules in one layout, solver toggles automatically
+- **Orientation-aware** - define portrait, landscape and optional square rules in one layout, solver toggles automatically
 - **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
 - **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
 - **Text effects** - gradient fills, stacked outlines, shadows and glows, drawn at screen resolution
@@ -91,6 +91,17 @@ const layer = new UIViewportLayer({ viewport });
 // The viewport belongs to the caller and may serve several layers: destroy it after them
 ```
 
+A layer is landscape when wider than high, and portrait otherwise. It is square only when given the aspects, width divided by height, it counts as square:
+
+```typescript
+const layer = new UIViewportLayer({
+  squareAspectRange: { min: 0.8, max: 1.25 },
+  resizePolicy: new UIResizePolicyFixedHeight(1080, 1920, 1440),
+});
+```
+
+Inside the range, constraints for only landscape or only portrait are disabled, so the layout needs rules for the square orientation. Resize policies take an optional square target, and without it a square layer is scaled like a portrait one.
+
 ### 2. Constraint System
 
 Cassowary-based constraint solver. Supports priorities, element relationships, orientation-specific rules, and inequality relations.
@@ -119,6 +130,12 @@ new UIVerticalProportionConstraint(layer, element, {
   proportion: 0.4,
   orientation: UIOrientation.HORIZONTAL,
   priority: UIPriority.P1,
+});
+
+// Portrait and square
+new UIVerticalProportionConstraint(layer, element, {
+  proportion: 0.3,
+  orientation: UIOrientation.VERTICAL | UIOrientation.SQUARE,
 });
 
 // Max width constraint

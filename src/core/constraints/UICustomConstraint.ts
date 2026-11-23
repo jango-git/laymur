@@ -38,7 +38,7 @@ export class UICustomConstraint extends UISingleParameterConstraint {
       this.rhsInternal,
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

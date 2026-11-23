@@ -53,7 +53,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
       new UIExpression(0),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

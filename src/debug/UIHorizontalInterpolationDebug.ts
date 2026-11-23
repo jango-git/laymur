@@ -5,7 +5,7 @@ import { LineGeometry } from "three/addons/lines/LineGeometry.js";
 import { LineMaterial } from "three/addons/lines/LineMaterial.js";
 
 import type { UIHorizontalInterpolationConstraint } from "../core/index.js";
-import { UIColor, UIOrientation } from "../core/index.js";
+import { UIColor } from "../core/index.js";
 import { isUIPlaneElement } from "../core/miscellaneous/shared.js";
 import {
   DEBUG_BADGE_BACKGROUND_COLOR,
@@ -117,10 +117,7 @@ export class UIHorizontalInterpolationDebug implements UIConstraintDebug {
   }
 
   private updateContainerVisibility(): void {
-    const orientationActive =
-      this.constraint.orientation === UIOrientation.ALWAYS ||
-      this.constraint.orientation === this.constraint.layer.orientation;
-    this.container.visible = this.visibleInternal && orientationActive;
+    this.container.visible = this.visibleInternal && this.constraint.enabled;
   }
 
   private readonly onOrientationChanged = (): void => {

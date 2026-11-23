@@ -1,5 +1,6 @@
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { resolveOrientation, UIOrientation } from "../../miscellaneous/UIOrientation.js";
+import type { UIOrientation } from "../../miscellaneous/UIOrientation.js";
+import { isOrientationIncluded, resolveOrientation } from "../../miscellaneous/UIOrientation.js";
 import type { UIPriority } from "../../miscellaneous/UIPriority.js";
 import { resolvePriority } from "../../miscellaneous/UIPriority.js";
 import type { UIRelation } from "../../miscellaneous/UIRelation.js";
@@ -41,9 +42,14 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     return this.relationInternal;
   }
 
-  /** When constraint is active */
+  /** Orientations of the layer the constraint is active in, as combined flags */
   public get orientation(): UIOrientation {
     return this.orientationInternal;
+  }
+
+  /** Whether the current orientation of the layer is among those of the constraint */
+  public get enabled(): boolean {
+    return isOrientationIncluded(this.orientationInternal, this.layer.orientation);
   }
 
   /**
@@ -73,7 +79,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     }
   }
 
-  /** Updates when constraint is active */
+  /** Updates the orientations the constraint is active in */
   public set orientation(value: UIOrientation) {
     this.assertNotDestroyed("UISingleParameterConstraint.orientation");
     if (value !== this.orientationInternal) {
@@ -97,19 +103,8 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
     this.solverWrapper.removeConstraint(this.constraint);
   }
 
-  /**
-   * Checks if constraint should be active for current orientation.
-   * @returns True if orientation is ALWAYS or matches layer orientation
-   */
-  protected isConstraintEnabled(): boolean {
-    return (
-      this.orientationInternal === UIOrientation.ALWAYS ||
-      this.orientationInternal === this.layer.orientation
-    );
-  }
-
   /** Updates constraint enabled state when layer orientation changes */
   private readonly onOrientationChange = (): void => {
-    this.solverWrapper.setConstraintEnabled(this.constraint, this.isConstraintEnabled());
+    this.solverWrapper.setConstraintEnabled(this.constraint, this.enabled);
   };
 }

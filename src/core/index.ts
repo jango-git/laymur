@@ -70,6 +70,7 @@ export {
 } from "./elements/UIText/UIText.Internal.js";
 export { UIText } from "./elements/UIText/UIText.js";
 export type {
+  UIAspectRange,
   UILayerMode,
   UILayerOptions,
   UILayerOrientation,

@@ -62,7 +62,7 @@ export class UIHorizontalDistanceConstraint extends UISingleParameterConstraint 
       new UIExpression(this.distanceInternal),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

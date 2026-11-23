@@ -80,7 +80,7 @@ export class UIHorizontalInterpolationConstraint extends UISingleParameterConstr
       new UIExpression(0),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

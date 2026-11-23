@@ -38,7 +38,7 @@ export class UIVerticalProportionConstraint extends UISingleParameterConstraint 
       this.buildRHS(),
       this.relation,
       this.priority,
-      this.isConstraintEnabled(),
+      this.enabled,
       this,
     );
   }

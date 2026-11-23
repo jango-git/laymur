@@ -1,3 +1,5 @@
+import type { UILayerOrientation } from "../../layers/UILayer/UILayer.Internal.js";
+
 /**
  * Base class for viewport resize policies. Subclass it for a custom scaling rule and pass it to
  * `UIViewportLayer`.
@@ -22,7 +24,12 @@ export abstract class UIResizePolicy {
    * Scale from screen pixels to world units: the layer is the viewport size times this value.
    * @param width Viewport width in pixels
    * @param height Viewport height in pixels
+   * @param orientation Orientation of the layer at this size
    * @returns World units per pixel
    */
-  public abstract calculateScale(width: number, height: number): number;
+  public abstract calculateScale(
+    width: number,
+    height: number,
+    orientation: UILayerOrientation,
+  ): number;
 }

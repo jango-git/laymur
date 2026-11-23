@@ -3,6 +3,33 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## Unreleased
+
+### Changed
+
+- **Breaking:** `UIOrientation` values are flags and combine with `|`, so a constraint with
+  `orientation: UIOrientation.VERTICAL | UIOrientation.SQUARE` is active in portrait and square.
+  Code that uses the names is unaffected, and stored numbers change.
+- **Breaking:** `UIResizePolicy.calculateScale` takes the orientation of the layer as a third
+  argument. The built-in policies follow the orientation of the layer instead of comparing the
+  width and the height themselves, and a custom policy can do the same.
+- **Breaking:** a subclass of `UILayer` passes the orientation to `resizeInternal`, so the
+  orientation the size was chosen for and the one the layer reports are the same.
+
+### Added
+
+- Square orientation. `UILayerOptions.squareAspectRange` and `UILayer.squareAspectRange` (a
+  `UIAspectRange`) set the aspects, width divided by height, the layer counts as square. Inside
+  the range `UILayer.orientation` is `UIOrientation.SQUARE`, and constraints for only
+  `HORIZONTAL` or only `VERTICAL` are disabled there. Without a range a layer has no square
+  orientation and behaves as before.
+- A square target in `UIResizePolicyFixedWidth`, `UIResizePolicyFixedHeight`,
+  `UIResizePolicyCross` (the longer side) and `UIResizePolicyCrossInverted` (the shorter side),
+  as an optional third constructor argument and a property. Without it a square layer is scaled
+  by the portrait rule.
+- `enabled` on the built-in constraints, those derived from `UISingleParameterConstraint`. It
+  tells whether the orientation of the layer is among those of the constraint.
+
 ## 0.29.0 - 2026-11-19
 
 ### Changed
