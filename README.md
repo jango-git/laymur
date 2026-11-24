@@ -57,6 +57,18 @@ laymur.
 </script>
 ```
 
+### Private members
+
+The published code prefixes the names of class members outside the API with `_private_`, for
+example `_private_dirtyInternal`. A minifier does not shorten property names unless told which
+ones are safe, so give it the prefix:
+
+- terser: `mangle: { properties: { regex: /^_private_/ } }`
+- esbuild: `--mangle-props=^_private_`
+
+With the rule the minified library is about 28% smaller than without it. The type declarations
+keep the names of the sources.
+
 ## Visual Editor & Live Examples
 
 Check out visual editor and interactive examples at:

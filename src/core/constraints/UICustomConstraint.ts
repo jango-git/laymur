@@ -1,4 +1,5 @@
 import type { UILayer } from "../layers/UILayer/UILayer.js";
+import { assertNotDestroyed } from "../miscellaneous/asserts.js";
 import type { UIExpression } from "../miscellaneous/UIExpression.js";
 import { assertValidConstraintExpressions } from "./constraintAsserts.js";
 import type { UISingleParameterConstraintOptions } from "./UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
@@ -55,14 +56,14 @@ export class UICustomConstraint extends UISingleParameterConstraint {
 
   /** Updates left-hand side expression */
   public setLHS(value: UIExpression): void {
-    this.assertNotDestroyed("UICustomConstraint.setLHS");
+    assertNotDestroyed(this, "constraint", "UICustomConstraint.setLHS");
     this.lhsInternal = value;
     this.solverWrapper.setConstraintLHS(this.constraint, this.lhsInternal);
   }
 
   /** Updates right-hand side expression */
   public setRHS(value: UIExpression): void {
-    this.assertNotDestroyed("UICustomConstraint.setRHS");
+    assertNotDestroyed(this, "constraint", "UICustomConstraint.setRHS");
     this.rhsInternal = value;
     this.solverWrapper.setConstraintRHS(this.constraint, this.rhsInternal);
   }

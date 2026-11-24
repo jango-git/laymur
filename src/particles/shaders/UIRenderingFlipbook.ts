@@ -11,7 +11,7 @@ export function buildFlipbookSource(
 ): string {
   const columnCount = toGLSLFloat(columns);
   const rowCount = toGLSLFloat(rows);
-  return `
+  return /* glsl */ `
 vec4 draw() {
   float frame = ${frameExpression};
   // Offset by half a frame, so that floor does not drop a whole quotient computed just below it

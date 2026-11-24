@@ -1,4 +1,4 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { assertNotDestroyed, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
 import { assertValidConstraintElement } from "../constraintAsserts.js";
@@ -21,7 +21,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
     public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIHeightConstraintOptions> = {},
   ) {
-    if (options.height !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.height !== undefined) {
       assertValidPositiveNumber(options.height, "UIHeightConstraint.constructor.options.height");
     }
 
@@ -45,7 +45,7 @@ export class UIHeightConstraint extends UISingleParameterConstraint {
 
   /** Updates height */
   public set height(value: number) {
-    this.assertNotDestroyed("UIHeightConstraint.height");
+    assertNotDestroyed(this, "constraint", "UIHeightConstraint.height");
     assertValidPositiveNumber(value, "UIHeightConstraint.height");
     if (this.heightInternal !== value) {
       this.heightInternal = value;

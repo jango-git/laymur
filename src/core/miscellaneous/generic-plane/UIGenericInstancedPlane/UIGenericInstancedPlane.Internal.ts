@@ -213,7 +213,7 @@ export function buildMaterial(
       components: ["maskLocal.x", "maskLocal.y"],
     });
     // worldPosition.z carries the zIndex, the mask map only takes the plane position
-    maskVertex = `
+    maskVertex = /* glsl */ `
       vec3 maskPoint = vec3(worldPosition.xy, 1.0);
       vec2 maskLocal = vec2(dot(${row0}, maskPoint), dot(${row1}, maskPoint));
     `;
@@ -244,7 +244,7 @@ export function buildMaterial(
     fieldAssignments.push(`${name} = ${packed.fragmentExpressions.get(name) ?? ""};`);
   }
 
-  const vertexShader = `
+  const vertexShader = /* glsl */ `
     ${buildPackedAttributeDeclarations(layout).join("\n")}
 
     // Uniforms

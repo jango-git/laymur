@@ -1,4 +1,4 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { assertNotDestroyed, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type {
   UIContentAspectElement,
   UILayerElement,
@@ -33,7 +33,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
     public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIAspectConstraintOptions> = {},
   ) {
-    if (options.aspect !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.aspect !== undefined) {
       assertValidPositiveNumber(options.aspect, "UIAspectConstraint.constructor.options.aspect");
     }
 
@@ -65,7 +65,7 @@ export class UIAspectConstraint extends UISingleParameterConstraint {
 
   /** Updates aspect ratio. The constraint stops following the content aspect of the element. */
   public set aspect(value: number) {
-    this.assertNotDestroyed("UIAspectConstraint.aspect");
+    assertNotDestroyed(this, "constraint", "UIAspectConstraint.aspect");
     assertValidPositiveNumber(value, "UIAspectConstraint.aspect");
     this.stopFollowingContent();
     this.applyAspect(value);

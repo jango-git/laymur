@@ -1,68 +1,19 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type { UIPlaneElement } from "../../miscellaneous/shared.js";
-import { UIExpression } from "../../miscellaneous/UIExpression.js";
-import { assertValidConstraintArguments } from "../constraintAsserts.js";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
+import { UIProportionConstraint } from "../UIProportionConstraint/UIProportionConstraint.js";
 import type { UIHorizontalProportionConstraintOptions } from "./UIHorizontalProportionConstraint.Internal.js";
 
 /** Maintains proportional width relationship (A.width * proportion = B.width) */
-export class UIHorizontalProportionConstraint extends UISingleParameterConstraint {
-  protected override readonly constraint: number;
-  private proportionInternal: number;
-
+export class UIHorizontalProportionConstraint extends UIProportionConstraint {
   /**
    * @param a First element
    * @param b Second element
    * @param options Proportion configuration
    */
   constructor(
-    public readonly a: UIPlaneElement,
-    public readonly b: UIPlaneElement,
+    a: UIPlaneElement,
+    b: UIPlaneElement,
     options: Partial<UIHorizontalProportionConstraintOptions> = {},
   ) {
-    if (options.proportion !== undefined) {
-      assertValidPositiveNumber(
-        options.proportion,
-        "UIHorizontalProportionConstraint.constructor.options.proportion",
-      );
-    }
-
-    super(
-      assertValidConstraintArguments(a, b, "UIHorizontalProportionConstraint.constructor"),
-      options,
-    );
-
-    this.proportionInternal = options.proportion ?? 1;
-    this.constraint = this.solverWrapper.createConstraint(
-      new UIExpression(0),
-      this.buildRHS(),
-      this.relation,
-      this.priority,
-      this.enabled,
-      this,
-    );
-  }
-
-  /** Current proportion multiplier */
-  public get proportion(): number {
-    return this.proportionInternal;
-  }
-
-  /** Updates proportion multiplier */
-  public set proportion(value: number) {
-    this.assertNotDestroyed("UIHorizontalProportionConstraint.proportion");
-    assertValidPositiveNumber(value, "UIHorizontalProportionConstraint.proportion");
-    if (this.proportionInternal !== value) {
-      this.proportionInternal = value;
-      this.solverWrapper.setConstraintRHS(this.constraint, this.buildRHS());
-    }
-  }
-
-  /** Builds constraint expression for proportional relationship */
-  private buildRHS(): UIExpression {
-    return UIExpression.minus(
-      new UIExpression(0, [[this.a.wVariable, this.proportionInternal]]),
-      new UIExpression(0, [[this.b.wVariable, 1]]),
-    );
+    super(a, b, options, false);
   }
 }

@@ -260,7 +260,7 @@ export class UITextureView {
       "UITextureView.setFromAtlasConfig.config.spriteSourceSize.h",
     );
 
-    if (config.scale !== undefined) {
+    if (process.env.NODE_ENV !== "production" && config.scale !== undefined) {
       assertValidPositiveNumber(config.scale, "UITextureView.setFromAtlasConfig.config.scale");
     }
 

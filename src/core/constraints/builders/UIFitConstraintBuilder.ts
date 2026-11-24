@@ -35,10 +35,10 @@ export class UIFitConstraintBuilder {
     /** Height constraint (ensures fitting) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
-    if (options.anchorH !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.anchorH !== undefined) {
       assertValidNumber(options.anchorH, "UIFitConstraintBuilder.build.anchorH");
     }
-    if (options.anchorV !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.anchorV !== undefined) {
       assertValidNumber(options.anchorV, "UIFitConstraintBuilder.build.anchorV");
     }
 

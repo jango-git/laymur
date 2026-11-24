@@ -3,6 +3,18 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
+## Unreleased
+
+### Changed
+
+- `private` class members and members marked `@internal` are emitted with a `_private_` prefix,
+  so that a minifier can shorten them. Add a property mangling rule for the prefix, as described
+  in "Private members" in the README. With the rule the minified library is about 23% smaller
+  than 0.30.1, and without it about 6% larger. Code that reached into such members by name stops
+  working.
+- A change to a destroyed constraint, element or mask is reported only outside production
+  builds, like the other argument checks. A production build no longer rejects it up front.
+
 ## 0.30.1 - 2026-11-23
 
 ### Fixed

@@ -21,6 +21,25 @@ export function assertValidNumber(value: number, subject: string): void {
 }
 
 /**
+ * Validates the object is not destroyed.
+ * @param target Object to validate
+ * @param kind What the object is, for error messages
+ * @param subject Value name for error messages
+ * @throws If the object is destroyed
+ */
+export function assertNotDestroyed(
+  target: { readonly destroyed: boolean },
+  kind: string,
+  subject: string,
+): void {
+  if (process.env.NODE_ENV !== "production") {
+    if (target.destroyed) {
+      throw new Error(`${subject}: ${kind} is destroyed`);
+    }
+  }
+}
+
+/**
  * Validates a shader fits the vertex attribute budget of the device. A program over the budget
  * fails to link, which three.js only logs, and its mesh is not drawn.
  * @param renderer Renderer the shader is drawn with

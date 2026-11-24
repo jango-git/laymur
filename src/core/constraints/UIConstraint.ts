@@ -1,4 +1,5 @@
 import type { UILayer } from "../layers/UILayer/UILayer.js";
+import { assertNotDestroyed } from "../miscellaneous/asserts.js";
 import type { UISolverWrapperView } from "../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
 
 /** Base class for layout constraints */
@@ -43,13 +44,11 @@ export abstract class UIConstraint {
   protected destroyInternal(): void {}
 
   /**
-   * Throws if the constraint is destroyed.
+   * Throws if the constraint is destroyed. Checked outside production builds only.
    * @param subject Name of the changed property for the error message
    */
   protected assertNotDestroyed(subject: string): void {
-    if (this.destroyedInternal) {
-      throw new Error(`${subject}: constraint is destroyed`);
-    }
+    assertNotDestroyed(this, "constraint", subject);
   }
 
   /**

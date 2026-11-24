@@ -44,13 +44,13 @@ const MAIN_PATTERN = /\bvoid\s+main\s*\(\s*(?:void)?\s*\)/g;
 
 const ORIGINAL_MAIN = "void laymurMaskOriginalMain()";
 
-const VERTEX_HEADER = `
+const VERTEX_HEADER = /* glsl */ `
 uniform vec3 laymurMaskRow0;
 uniform vec3 laymurMaskRow1;
 varying vec2 laymurMaskLocal;
 `;
 
-const VERTEX_FOOTER = `
+const VERTEX_FOOTER = /* glsl */ `
 void main() {
     laymurMaskOriginalMain();
     vec3 laymurMaskPoint = vec3((modelMatrix * vec4(position, 1.0)).xy, 1.0);
@@ -61,14 +61,14 @@ void main() {
 }
 `;
 
-const FRAGMENT_HEADER = `
+const FRAGMENT_HEADER = /* glsl */ `
 uniform vec4 laymurMaskShape;
 uniform float laymurMaskMode;
 varying vec2 laymurMaskLocal;
 ${maskSource}
 `;
 
-const FRAGMENT_FOOTER = `
+const FRAGMENT_FOOTER = /* glsl */ `
 void main() {
     laymurMaskOriginalMain();
     if (laymurMaskMode > -0.5) {

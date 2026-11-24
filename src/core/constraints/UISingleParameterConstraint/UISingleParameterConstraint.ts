@@ -1,4 +1,5 @@
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
+import { assertNotDestroyed } from "../../miscellaneous/asserts.js";
 import type { UIOrientation } from "../../miscellaneous/UIOrientation.js";
 import { isOrientationIncluded, resolveOrientation } from "../../miscellaneous/UIOrientation.js";
 import type { UIPriority } from "../../miscellaneous/UIPriority.js";
@@ -63,7 +64,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
 
   /** Updates constraint priority */
   public set priority(value: UIPriority) {
-    this.assertNotDestroyed("UISingleParameterConstraint.priority");
+    assertNotDestroyed(this, "constraint", "UISingleParameterConstraint.priority");
     if (value !== this.priorityInternal) {
       this.priorityInternal = value;
       this.solverWrapper.setConstraintPriority(this.constraint, this.priorityInternal);
@@ -72,7 +73,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
 
   /** Updates constraint relation */
   public set relation(value: UIRelation) {
-    this.assertNotDestroyed("UISingleParameterConstraint.relation");
+    assertNotDestroyed(this, "constraint", "UISingleParameterConstraint.relation");
     if (value !== this.relationInternal) {
       this.relationInternal = value;
       this.solverWrapper.setConstraintRelation(this.constraint, this.relationInternal);
@@ -81,7 +82,7 @@ export abstract class UISingleParameterConstraint extends UIConstraint {
 
   /** Updates the orientations the constraint is active in */
   public set orientation(value: UIOrientation) {
-    this.assertNotDestroyed("UISingleParameterConstraint.orientation");
+    assertNotDestroyed(this, "constraint", "UISingleParameterConstraint.orientation");
     if (value !== this.orientationInternal) {
       this.orientationInternal = value;
       this.onOrientationChange();

@@ -5,7 +5,11 @@ import { MathUtils, Matrix4 } from "three";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import type { UIArea } from "../../miscellaneous/area/UIArea.js";
 import { UIAreaRectangle } from "../../miscellaneous/area/UIAreaRectangle.js";
-import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import {
+  assertNotDestroyed,
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts.js";
 import { computeTransformMatrix } from "../../miscellaneous/computeTransform.js";
 import type { UIMask } from "../../miscellaneous/mask/UIMask.js";
 import type { UIMicro } from "../../miscellaneous/micro/UIMicro.js";
@@ -200,49 +204,49 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
 
   /** Width in world units */
   public set width(value: number) {
-    this.assertNotDestroyed("UIDummy.width");
+    assertNotDestroyed(this, "element", "UIDummy.width");
     assertValidPositiveNumber(value, "UIDummy.width");
     this.solverWrapper.suggestVariableValue(this.wVariable, value);
   }
 
   /** Height in world units */
   public set height(value: number) {
-    this.assertNotDestroyed("UIDummy.height");
+    assertNotDestroyed(this, "element", "UIDummy.height");
     assertValidPositiveNumber(value, "UIDummy.height");
     this.solverWrapper.suggestVariableValue(this.hVariable, value);
   }
 
   /** X coordinate of right edge */
   public set oppositeX(value: number) {
-    this.assertNotDestroyed("UIDummy.oppositeX");
+    assertNotDestroyed(this, "element", "UIDummy.oppositeX");
     assertValidNumber(value, "UIDummy.oppositeX");
     this.x = value - this.width;
   }
 
   /** Y coordinate of top edge */
   public set oppositeY(value: number) {
-    this.assertNotDestroyed("UIDummy.oppositeY");
+    assertNotDestroyed(this, "element", "UIDummy.oppositeY");
     assertValidNumber(value, "UIDummy.oppositeY");
     this.y = value - this.height;
   }
 
   /** X coordinate of horizontal center */
   public set centerX(value: number) {
-    this.assertNotDestroyed("UIDummy.centerX");
+    assertNotDestroyed(this, "element", "UIDummy.centerX");
     assertValidNumber(value, "UIDummy.centerX");
     this.x = value - this.width / 2;
   }
 
   /** Y coordinate of vertical center */
   public set centerY(value: number) {
-    this.assertNotDestroyed("UIDummy.centerY");
+    assertNotDestroyed(this, "element", "UIDummy.centerY");
     assertValidNumber(value, "UIDummy.centerY");
     this.y = value - this.height / 2;
   }
 
   /** Controls visibility and interactivity */
   public set mode(value: UIMode) {
-    this.assertNotDestroyed("UIDummy.mode");
+    assertNotDestroyed(this, "element", "UIDummy.mode");
     if (this.modeInternal !== value) {
       const newInteractivity = isUIModeInteractive(value);
       this.inputWrapper.setActive(this.catcherHandler, newInteractivity);
@@ -258,7 +262,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
    * order of creation, a later one on top.
    */
   public set zIndex(value: number) {
-    this.assertNotDestroyed("UIDummy.zIndex");
+    assertNotDestroyed(this, "element", "UIDummy.zIndex");
     assertValidNumber(value, "UIDummy.zIndex");
     this.inputWrapper.setZIndex(this.catcherHandler, value);
   }
@@ -268,7 +272,7 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
    * @throws If the mask is destroyed or belongs to another layer
    */
   public set mask(value: UIMask | null) {
-    this.assertNotDestroyed("UIDummy.mask");
+    assertNotDestroyed(this, "element", "UIDummy.mask");
     if (value === this.maskInternal) {
       return;
     }

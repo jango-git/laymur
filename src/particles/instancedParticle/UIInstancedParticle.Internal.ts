@@ -181,7 +181,7 @@ export function buildParticleVertexShader(
   varyingDeclarations: string[],
   vertexAssignments: string[],
 ): string {
-  return `
+  return /* glsl */ `
     ${buildBuiltinMacros("a_builtin")}
 
     // User attributes
@@ -239,7 +239,7 @@ export function buildParticleFragmentShader(
     drawCalls += `draw${i}()`;
   }
 
-  return `
+  return /* glsl */ `
     // Defines
     #define PI 3.14159265359
     #define SRGB_SUPPORTED ${checkSRGBSupport() ? "1" : "0"}

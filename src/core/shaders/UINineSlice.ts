@@ -7,7 +7,7 @@
  * - p_sliceBorders: vec4
  * - p_sliceRegions: vec4
  */
-const source: string = `
+const source: string = /* glsl */ `
 vec4 draw() {
     vec2 localUV = p_uv;
 

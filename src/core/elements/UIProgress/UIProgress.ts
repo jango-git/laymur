@@ -40,7 +40,7 @@ export class UIProgress extends UIElement {
    * @param options - Configuration options
    */
   constructor(layer: UILayer, texture: UITextureConfig, options: Partial<UIProgressOptions> = {}) {
-    if (options.progress !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.progress !== undefined) {
       assertValidNumber(options.progress, "UIProgress.constructor.options.progress");
     }
 

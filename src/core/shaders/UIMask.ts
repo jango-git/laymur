@@ -11,7 +11,7 @@
  * only where it asked three.js to enable it. Without derivatives a world unit is taken as the
  * pixel size.
  */
-const source: string = `
+const source: string = /* glsl */ `
 float laymurMaskDistance(vec2 p, vec4 shape, float kind) {
     if (kind > 0.5) {
         // Divided one axis at a time: radii squared overflow mediump on large masks

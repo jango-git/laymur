@@ -6,6 +6,7 @@ import { Vector2 } from "three";
 import { UIAnchor } from "../../core/elements/UIAnchor/UIAnchor.js";
 import type { UIBlendMode, UILayer } from "../../core/index.js";
 import {
+  assertNotDestroyed,
   assertValidNonNegativeNumber,
   assertValidNumber,
   assertValidPositiveNumber,
@@ -265,7 +266,7 @@ export class UIEmitter extends UIAnchor {
 
   /** Visibility mode */
   public set mode(value: UIEmitterMode) {
-    this.assertNotDestroyed("UIEmitter.mode");
+    assertNotDestroyed(this, "element", "UIEmitter.mode");
     if (this.modeInternal !== value) {
       this.modeInternal = value;
       this.mesh.visible = isUIModeVisible(value);
@@ -274,14 +275,14 @@ export class UIEmitter extends UIAnchor {
 
   /** Color blending of the particles with what is drawn under them */
   public set blendMode(value: UIBlendMode) {
-    this.assertNotDestroyed("UIEmitter.blendMode");
+    assertNotDestroyed(this, "element", "UIEmitter.blendMode");
     this.blendModeInternal = value;
     this.mesh.setBlendFactor(blendModeToFactor(value));
   }
 
   /** Coordinate space of particle positions. Live particles keep their place on the layer. */
   public set space(value: UIEmitterSpace) {
-    this.assertNotDestroyed("UIEmitter.space");
+    assertNotDestroyed(this, "element", "UIEmitter.space");
     if (this.spaceInternal === value) {
       return;
     }
@@ -302,7 +303,7 @@ export class UIEmitter extends UIAnchor {
 
   /** Longest frame step in seconds; longer frames are clamped */
   public set maxDeltaTime(value: number) {
-    this.assertNotDestroyed("UIEmitter.maxDeltaTime");
+    assertNotDestroyed(this, "element", "UIEmitter.maxDeltaTime");
     assertValidPositiveNumber(value, "UIEmitter.maxDeltaTime");
     this.maxDeltaTimeInternal = value;
   }
@@ -312,7 +313,7 @@ export class UIEmitter extends UIAnchor {
    * same seed was set before
    */
   public set seed(value: number) {
-    this.assertNotDestroyed("UIEmitter.seed");
+    assertNotDestroyed(this, "element", "UIEmitter.seed");
     assertValidNonNegativeInteger(value, "UIEmitter.seed");
     this.seedInternal = value;
     this.spawnedCount = 0;
@@ -323,7 +324,7 @@ export class UIEmitter extends UIAnchor {
    * values keep the order of creation, a later one on top.
    */
   public set zIndex(value: number) {
-    this.assertNotDestroyed("UIEmitter.zIndex");
+    assertNotDestroyed(this, "element", "UIEmitter.zIndex");
     assertValidNumber(value, "UIEmitter.zIndex");
     this.layer.inputWrapper.setZIndex(this.catcherHandler, value);
   }
@@ -335,7 +336,7 @@ export class UIEmitter extends UIAnchor {
    * @param count - Number of particles to create, a non-negative integer
    */
   public burst(count: number): void {
-    this.assertNotDestroyed("UIEmitter.burst");
+    assertNotDestroyed(this, "element", "UIEmitter.burst");
     assertValidNonNegativeInteger(count, "UIEmitter.burst.count");
     if (count === 0) {
       return;
@@ -353,7 +354,7 @@ export class UIEmitter extends UIAnchor {
    * @param y - Point in layer coordinates
    */
   public burstAt(count: number, x: number, y: number): void {
-    this.assertNotDestroyed("UIEmitter.burstAt");
+    assertNotDestroyed(this, "element", "UIEmitter.burstAt");
     assertValidNonNegativeInteger(count, "UIEmitter.burstAt.count");
     assertValidNumber(x, "UIEmitter.burstAt.x");
     assertValidNumber(y, "UIEmitter.burstAt.y");
@@ -372,7 +373,7 @@ export class UIEmitter extends UIAnchor {
    * @param step - Simulation step in seconds; the last step is shorter if needed
    */
   public prewarm(duration: number, step = EMITTER_DEFAULT_PREWARM_STEP): void {
-    this.assertNotDestroyed("UIEmitter.prewarm");
+    assertNotDestroyed(this, "element", "UIEmitter.prewarm");
     assertValidNonNegativeNumber(duration, "UIEmitter.prewarm.duration");
     assertValidPositiveNumber(step, "UIEmitter.prewarm.step");
 
@@ -383,7 +384,7 @@ export class UIEmitter extends UIAnchor {
 
   /** Removes all active particles */
   public clear(): void {
-    this.assertNotDestroyed("UIEmitter.clear");
+    assertNotDestroyed(this, "element", "UIEmitter.clear");
     this.mesh.drop();
   }
 
@@ -395,14 +396,14 @@ export class UIEmitter extends UIAnchor {
    * @param options - Duration, particles per distance and bursts
    */
   public play(rate: number, options: Partial<UIEmitterPlayOptions> = {}): void {
-    this.assertNotDestroyed("UIEmitter.play");
+    assertNotDestroyed(this, "element", "UIEmitter.play");
     this.emission.start(rate, options);
     this.emissionStarted = true;
   }
 
   /** Stops particle emission; live particles play out */
   public stop(): void {
-    this.assertNotDestroyed("UIEmitter.stop");
+    assertNotDestroyed(this, "element", "UIEmitter.stop");
     this.emission.stop();
   }
 

@@ -79,11 +79,11 @@ export abstract class UILayer implements UIPlaneElement {
    *   omitted
    */
   constructor(options: Partial<UILayerOptions>, orientation?: UILayerOrientation) {
-    if (options.width !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.width !== undefined) {
       assertValidPositiveNumber(options.width, "UILayer.constructor.options.width");
     }
 
-    if (options.height !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.height !== undefined) {
       assertValidPositiveNumber(options.height, "UILayer.constructor.options.height");
     }
 

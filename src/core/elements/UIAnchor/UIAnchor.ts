@@ -1,5 +1,5 @@
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { assertValidNumber } from "../../miscellaneous/asserts.js";
+import { assertNotDestroyed, assertValidNumber } from "../../miscellaneous/asserts.js";
 import type { UILayerElement, UIPointElement } from "../../miscellaneous/shared.js";
 import { UIPriority } from "../../miscellaneous/UIPriority.js";
 import type { UISolverWrapperView } from "../../wrappers/UISolverWrapper/UISolverWrapper.Internal.js";
@@ -63,14 +63,14 @@ export class UIAnchor implements UILayerElement, UIPointElement {
 
   /** X coordinate relative to layer origin (bottom-left) */
   public set x(value: number) {
-    this.assertNotDestroyed("UIAnchor.x");
+    assertNotDestroyed(this, "element", "UIAnchor.x");
     assertValidNumber(value, "UIAnchor.x");
     this.solverWrapper.suggestVariableValue(this.xVariable, value);
   }
 
   /** Y coordinate relative to layer origin (bottom-left) */
   public set y(value: number) {
-    this.assertNotDestroyed("UIAnchor.y");
+    assertNotDestroyed(this, "element", "UIAnchor.y");
     assertValidNumber(value, "UIAnchor.y");
     this.solverWrapper.suggestVariableValue(this.yVariable, value);
   }
@@ -102,12 +102,10 @@ export class UIAnchor implements UILayerElement, UIPointElement {
   }
 
   /**
-   * Throws if the element is destroyed.
+   * Throws if the element is destroyed. Checked outside production builds only.
    * @param subject Name of the changed property for the error message
    */
   protected assertNotDestroyed(subject: string): void {
-    if (this.destroyedInternal) {
-      throw new Error(`${subject}: element is destroyed`);
-    }
+    assertNotDestroyed(this, "element", subject);
   }
 }

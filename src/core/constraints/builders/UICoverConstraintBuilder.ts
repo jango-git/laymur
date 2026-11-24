@@ -35,10 +35,10 @@ export class UICoverConstraintBuilder {
     /** Height constraint (ensures coverage) */
     heightConstraint: UIVerticalProportionConstraint;
   } {
-    if (options.anchorH !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.anchorH !== undefined) {
       assertValidNumber(options.anchorH, "UICoverConstraintBuilder.build.anchorH");
     }
-    if (options.anchorV !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.anchorV !== undefined) {
       assertValidNumber(options.anchorV, "UICoverConstraintBuilder.build.anchorV");
     }
 

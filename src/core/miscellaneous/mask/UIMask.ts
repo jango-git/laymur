@@ -2,7 +2,7 @@ import { Matrix4 } from "three";
 
 import type { UIDummy } from "../../elements/UIDummy/UIDummy.js";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { assertValidNonNegativeNumber, assertValidNumber } from "../asserts.js";
+import { assertNotDestroyed, assertValidNonNegativeNumber, assertValidNumber } from "../asserts.js";
 import { UIInsets } from "../insets/UIInsets.js";
 import type { UIMaskOptions } from "./UIMask.Internal.js";
 import {
@@ -153,39 +153,39 @@ export class UIMask {
 
   /** Shape cut out of the source rectangle */
   public set shape(value: UIMaskShape) {
-    this.assertNotDestroyed("UIMask.shape");
+    assertNotDestroyed(this, "mask", "UIMask.shape");
     this.shapeInternal = value;
   }
 
   /** Corner radius of RECTANGLE in world units */
   public set radius(value: number) {
-    this.assertNotDestroyed("UIMask.radius");
+    assertNotDestroyed(this, "mask", "UIMask.radius");
     assertValidNonNegativeNumber(value, "UIMask.radius");
     this.radiusInternal = value;
   }
 
   /** Width of the soft edge in world units, laid inside the shape */
   public set softness(value: number) {
-    this.assertNotDestroyed("UIMask.softness");
+    assertNotDestroyed(this, "mask", "UIMask.softness");
     assertValidNonNegativeNumber(value, "UIMask.softness");
     this.softnessInternal = value;
   }
 
   /** Whether the mask keeps the outside of the shape instead of the inside */
   public set inverted(value: boolean) {
-    this.assertNotDestroyed("UIMask.inverted");
+    assertNotDestroyed(this, "mask", "UIMask.inverted");
     this.invertedInternal = value;
   }
 
   /** Whether the micro transform of the source moves the mask */
   public set useMicro(value: boolean) {
-    this.assertNotDestroyed("UIMask.useMicro");
+    assertNotDestroyed(this, "mask", "UIMask.useMicro");
     this.useMicroInternal = value;
   }
 
   /** Whether masked elements also stop catching input outside the visible part */
   public set clipInput(value: boolean) {
-    this.assertNotDestroyed("UIMask.clipInput");
+    assertNotDestroyed(this, "mask", "UIMask.clipInput");
     this.clipInputInternal = value;
   }
 
@@ -197,7 +197,7 @@ export class UIMask {
    * @throws If the mask is destroyed
    */
   public containsPoint(x: number, y: number): boolean {
-    this.assertNotDestroyed("UIMask.containsPoint");
+    assertNotDestroyed(this, "mask", "UIMask.containsPoint");
     assertValidNumber(x, "UIMask.containsPoint.x");
     assertValidNumber(y, "UIMask.containsPoint.y");
 
@@ -342,11 +342,5 @@ export class UIMask {
     data[MASK_DATA_SHAPE_OFFSET] = halfWidth;
     data[MASK_DATA_SHAPE_OFFSET + 1] = halfHeight;
     data[MASK_DATA_SHAPE_OFFSET + 2] = Math.min(this.radiusInternal, halfWidth, halfHeight);
-  }
-
-  private assertNotDestroyed(subject: string): void {
-    if (this.destroyedInternal) {
-      throw new Error(`${subject}: mask is destroyed`);
-    }
   }
 }

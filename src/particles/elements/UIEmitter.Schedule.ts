@@ -38,11 +38,11 @@ export class UIEmissionSchedule {
     assertValidNonNegativeNumber(this.ratePerDistance, "UIEmitter.play.options.ratePerDistance");
     // Infinite unless given: endless emission, a single burst
     this.duration = options.duration ?? Infinity;
-    if (options.duration !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.duration !== undefined) {
       assertValidNonNegativeNumber(options.duration, "UIEmitter.play.options.duration");
     }
     this.burstInterval = options.burstInterval ?? Infinity;
-    if (options.burstInterval !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.burstInterval !== undefined) {
       assertValidPositiveNumber(options.burstInterval, "UIEmitter.play.options.burstInterval");
     }
     this.burstCount = options.burstCount ?? 0;

@@ -1,7 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
+import type { UIProportionConstraintOptions } from "../UIProportionConstraint/UIProportionConstraint.Internal.js";
 
-/** Vertical proportion constraint options */
-export interface UIVerticalProportionConstraintOptions extends UISingleParameterConstraintOptions {
-  /** Proportion multiplier (A.height * proportion = B.height) */
-  proportion: number;
-}
+/** Vertical proportion constraint options. The proportion relates the heights (A.height * proportion = B.height). */
+export type UIVerticalProportionConstraintOptions = UIProportionConstraintOptions;

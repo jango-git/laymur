@@ -1,4 +1,4 @@
-import { assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import { assertNotDestroyed, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
 import type { UILayerElement, UIPlaneElement } from "../../miscellaneous/shared.js";
 import { UIExpression } from "../../miscellaneous/UIExpression.js";
 import { assertValidConstraintElement } from "../constraintAsserts.js";
@@ -21,7 +21,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
     public readonly element: UIPlaneElement & UILayerElement,
     options: Partial<UIWidthConstraintOptions> = {},
   ) {
-    if (options.width !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.width !== undefined) {
       assertValidPositiveNumber(options.width, "UIWidthConstraint.constructor.options.width");
     }
 
@@ -45,7 +45,7 @@ export class UIWidthConstraint extends UISingleParameterConstraint {
 
   /** Updates width */
   public set width(value: number) {
-    this.assertNotDestroyed("UIWidthConstraint.width");
+    assertNotDestroyed(this, "constraint", "UIWidthConstraint.width");
     assertValidPositiveNumber(value, "UIWidthConstraint.width");
     if (this.widthInternal !== value) {
       this.widthInternal = value;

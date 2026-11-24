@@ -13,6 +13,7 @@ import {
 import type { UILayerCompilation } from "../../layers/UILayer/UILayer.Internal.js";
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
 import {
+  assertNotDestroyed,
   assertValidNonNegativeInteger,
   assertValidPositiveNumber,
 } from "../../miscellaneous/asserts.js";
@@ -62,7 +63,7 @@ export class UIScene extends UIElement {
    * @throws If resolutionFactor outside range 0.1 to 2.0
    */
   constructor(layer: UILayer, options: Partial<UISceneOptions> = {}) {
-    if (options.resolutionFactor !== undefined) {
+    if (process.env.NODE_ENV !== "production" && options.resolutionFactor !== undefined) {
       assertValidPositiveNumber(options.resolutionFactor, "UIScene.constructor.resolutionFactor");
     }
 
@@ -194,7 +195,7 @@ export class UIScene extends UIElement {
    * frees the render target, which is allocated again and rendered on the next frame.
    */
   public set samples(value: number) {
-    this.assertNotDestroyed("UIScene.samples");
+    assertNotDestroyed(this, "element", "UIScene.samples");
     assertValidNonNegativeInteger(value, "UIScene.samples");
     if (this.renderTarget.samples !== value) {
       this.renderTarget.samples = value;

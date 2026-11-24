@@ -1,144 +1,19 @@
-import { assertValidNumber } from "../../miscellaneous/asserts.js";
 import type { UIPlaneElement, UIPointElement } from "../../miscellaneous/shared.js";
-import { isUIPlaneElement, isUIPointElement } from "../../miscellaneous/shared.js";
-import { UIExpression } from "../../miscellaneous/UIExpression.js";
-import { assertValidConstraintArguments } from "../constraintAsserts.js";
-import { UISingleParameterConstraint } from "../UISingleParameterConstraint/UISingleParameterConstraint.js";
+import { UIDistanceConstraint } from "../UIDistanceConstraint/UIDistanceConstraint.js";
 import type { UIVerticalDistanceConstraintOptions } from "./UIVerticalDistanceConstraint.Internal.js";
-import { DEFAULT_ANCHOR } from "./UIVerticalDistanceConstraint.Internal.js";
 
 /** Maintains vertical distance between elements with configurable anchors */
-export class UIVerticalDistanceConstraint extends UISingleParameterConstraint {
-  protected override readonly constraint: number;
-
-  private anchorAInternal: number;
-  private anchorBInternal: number;
-  private distanceInternal: number;
-
+export class UIVerticalDistanceConstraint extends UIDistanceConstraint {
   /**
    * @param a First element
    * @param b Second element
    * @param options Distance configuration
    */
   constructor(
-    public readonly a: UIPointElement | UIPlaneElement,
-    public readonly b: UIPointElement | UIPlaneElement,
+    a: UIPointElement | UIPlaneElement,
+    b: UIPointElement | UIPlaneElement,
     options: Partial<UIVerticalDistanceConstraintOptions> = {},
   ) {
-    if (options.anchorA !== undefined) {
-      assertValidNumber(
-        options.anchorA,
-        "UIVerticalDistanceConstraint.constructor.options.anchorA",
-      );
-    }
-    if (options.anchorB !== undefined) {
-      assertValidNumber(
-        options.anchorB,
-        "UIVerticalDistanceConstraint.constructor.options.anchorB",
-      );
-    }
-    if (options.distance !== undefined) {
-      assertValidNumber(
-        options.distance,
-        "UIVerticalDistanceConstraint.constructor.options.distance",
-      );
-    }
-
-    super(
-      assertValidConstraintArguments(a, b, "UIVerticalDistanceConstraint.constructor"),
-      options,
-    );
-
-    this.anchorAInternal = options.anchorA ?? DEFAULT_ANCHOR;
-    this.anchorBInternal = options.anchorB ?? DEFAULT_ANCHOR;
-    this.distanceInternal = options.distance ?? 0;
-
-    this.constraint = this.solverWrapper.createConstraint(
-      this.buildLHS(),
-      new UIExpression(this.distanceInternal),
-      this.relation,
-      this.priority,
-      this.enabled,
-      this,
-    );
-  }
-
-  /** Current distance in world units */
-  public get distance(): number {
-    return this.distanceInternal;
-  }
-
-  /** Anchor on element A (0 = bottom, 0.5 = center, 1 = top) */
-  public get anchorA(): number {
-    return this.anchorAInternal;
-  }
-
-  /** Anchor on element B (0 = bottom, 0.5 = center, 1 = top) */
-  public get anchorB(): number {
-    return this.anchorBInternal;
-  }
-
-  /** Updates distance */
-  public set distance(value: number) {
-    this.assertNotDestroyed("UIVerticalDistanceConstraint.distance");
-    assertValidNumber(value, "UIVerticalDistanceConstraint.distance");
-    if (this.distanceInternal !== value) {
-      this.distanceInternal = value;
-      this.solverWrapper.setConstraintRHS(this.constraint, new UIExpression(this.distanceInternal));
-    }
-  }
-
-  /** Updates anchor on element A */
-  public set anchorA(value: number) {
-    this.assertNotDestroyed("UIVerticalDistanceConstraint.anchorA");
-    assertValidNumber(value, "UIVerticalDistanceConstraint.anchorA");
-    if (this.anchorAInternal !== value) {
-      this.anchorAInternal = value;
-      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
-    }
-  }
-
-  /** Updates anchor on element B */
-  public set anchorB(value: number) {
-    this.assertNotDestroyed("UIVerticalDistanceConstraint.anchorB");
-    assertValidNumber(value, "UIVerticalDistanceConstraint.anchorB");
-    if (this.anchorBInternal !== value) {
-      this.anchorBInternal = value;
-      this.solverWrapper.setConstraintLHS(this.constraint, this.buildLHS());
-    }
-  }
-
-  /** Builds constraint expression for distance between anchored positions */
-  private buildLHS(): UIExpression {
-    let aExpression: UIExpression;
-    let bExpression: UIExpression;
-
-    if (isUIPlaneElement(this.a)) {
-      aExpression = new UIExpression(0, [
-        [this.a.yVariable, 1],
-        [this.a.hVariable, this.anchorAInternal],
-      ]);
-    } else if (isUIPointElement(this.a)) {
-      aExpression = new UIExpression().plus(this.a.yVariable, 1);
-    } else {
-      throw new Error(
-        "UIVerticalDistanceConstraint.buildLHS.a: A is neither a point nor a plane element",
-      );
-    }
-
-    if (isUIPlaneElement(this.b)) {
-      bExpression = new UIExpression(0, [
-        [this.b.yVariable, 1],
-        [this.b.hVariable, this.anchorBInternal],
-      ]);
-    } else if (isUIPointElement(this.b)) {
-      bExpression = new UIExpression().plus(this.b.yVariable, 1);
-    } else {
-      throw new Error(
-        "UIVerticalDistanceConstraint.buildLHS.b: B is neither a point nor a plane element",
-      );
-    }
-
-    return UIExpression.minus(bExpression, aExpression);
+    super(a, b, options, true);
   }
 }

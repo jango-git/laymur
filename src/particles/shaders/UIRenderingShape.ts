@@ -6,7 +6,7 @@ import { toGLSLFloat } from "../miscellaneous/miscellaneous.js";
  * below 1 inside the shape, 1 on its edge
  */
 export function buildShapeSource(distanceExpression: string, softness: number): string {
-  return `
+  return /* glsl */ `
 vec4 draw() {
   vec2 p = p_uv * 2.0 - 1.0;
   float shapeDistance = ${distanceExpression};

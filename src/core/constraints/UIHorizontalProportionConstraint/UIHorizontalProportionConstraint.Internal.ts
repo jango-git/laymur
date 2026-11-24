@@ -1,7 +1,4 @@
-import type { UISingleParameterConstraintOptions } from "../UISingleParameterConstraint/UISingleParameterConstraint.Internal.js";
+import type { UIProportionConstraintOptions } from "../UIProportionConstraint/UIProportionConstraint.Internal.js";
 
-/** Horizontal proportion constraint options */
-export interface UIHorizontalProportionConstraintOptions extends UISingleParameterConstraintOptions {
-  /** Proportion multiplier (A.width * proportion = B.width) */
-  proportion: number;
-}
+/** Horizontal proportion constraint options. The proportion relates the widths (A.width * proportion = B.width). */
+export type UIHorizontalProportionConstraintOptions = UIProportionConstraintOptions;
