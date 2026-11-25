@@ -86,7 +86,7 @@ export class UIHorizontalInterpolationDebug implements UIConstraintDebug {
     this.textSprite.scale.set(DEBUG_BADGE_SIZE, DEBUG_BADGE_SIZE * 0.25, 1);
     this.container.add(this.textSprite);
 
-    this.constraint.layer.signalRendering.on(this.onRendering);
+    this.constraint.layer.signalSynchronizing.on(this.onSynchronizing);
     this.constraint.layer.signalOrientationChanged.on(this.onOrientationChanged);
     this.constraint.layer.sceneWrapper.insertCustomObject(this.container);
     this.updateContainerVisibility();
@@ -104,7 +104,7 @@ export class UIHorizontalInterpolationDebug implements UIConstraintDebug {
   }
 
   public destroy(): void {
-    this.constraint.layer.signalRendering.off(this.onRendering);
+    this.constraint.layer.signalSynchronizing.off(this.onSynchronizing);
     this.constraint.layer.signalOrientationChanged.off(this.onOrientationChanged);
     this.constraint.layer.sceneWrapper.removeCustomObject(this.container);
 
@@ -124,7 +124,7 @@ export class UIHorizontalInterpolationDebug implements UIConstraintDebug {
     this.updateContainerVisibility();
   };
 
-  private readonly onRendering = (renderer: WebGLRenderer): void => {
+  private readonly onSynchronizing = (renderer: WebGLRenderer): void => {
     // Also on creation: a constraint is announced before its orientation is set
     this.updateContainerVisibility();
     const tintDirty = this.tint.dirty;

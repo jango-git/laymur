@@ -89,6 +89,7 @@ export abstract class UIElement extends UIDummy {
     );
     this.applyMask();
     this.layer.signalRendering.on(this.handleWillRender);
+    this.layer.signalSynchronizing.on(this.handleSynchronizing);
     this.layer.signalCompiling.on(this.handleCompiling);
   }
 
@@ -195,6 +196,7 @@ export abstract class UIElement extends UIDummy {
   /** Frees resources of the element */
   protected override destroyInternal(): void {
     this.layer.signalRendering.off(this.handleWillRender);
+    this.layer.signalSynchronizing.off(this.handleSynchronizing);
     this.layer.signalCompiling.off(this.handleCompiling);
     this.sceneWrapper.destroyPlane(this.planeHandler);
     super.destroyInternal();
@@ -252,10 +254,20 @@ export abstract class UIElement extends UIDummy {
     this.applyMask();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required by UILayer event interface but not used in base implementation
-  protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
-    this.applyMask();
-    this.setPlaneTransform();
+  /**
+   * Advances the state of the element in time, on `UILayer.signalRendering`. The plane is
+   * written later, in {@link onSynchronize}.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Overridden by elements that change over time
+  protected onWillRender(renderer: WebGLRenderer, deltaTime: number): void {}
+
+  /**
+   * Writes the state of the element into its plane, on `UILayer.signalSynchronizing`, after
+   * every element and handler has changed its state for the frame.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Overridden by elements that draw on the renderer
+  protected onSynchronize(renderer: WebGLRenderer): void {
+    this.writePlane();
   }
 
   /** Creates a plane with the visibility, transparency, blend and color adjustment of the element */
@@ -273,6 +285,12 @@ export abstract class UIElement extends UIDummy {
       blendModeToFactor(this.blendModeInternal),
       packHSL(this.hslValue, this.hueInternal, this.saturationInternal, this.lightnessInternal),
     );
+  }
+
+  /** Brings the mask and the transform of the plane up to date */
+  private writePlane(): void {
+    this.applyMask();
+    this.setPlaneTransform();
   }
 
   private applyHSL(): void {
@@ -304,7 +322,7 @@ export abstract class UIElement extends UIDummy {
     if (mask !== null) {
       mask.resolve();
       if (mask.version !== this.appliedMaskVersion) {
-        this.sceneWrapper.setMask(this.planeHandler, mask.data);
+        this.sceneWrapper.setMask(this.planeHandler, mask);
         this.appliedMaskVersion = mask.version;
       }
     }
@@ -314,12 +332,15 @@ export abstract class UIElement extends UIDummy {
     this.onWillRender(renderer, deltaTime);
   };
 
+  private readonly handleSynchronizing = (renderer: WebGLRenderer): void => {
+    this.onSynchronize(renderer);
+  };
+
   /**
    * Places the plane at the current depth before the programs are built. A plane keeps the depth
    * it was created at until its first frame, and elements created later may have shifted it.
    */
   private readonly handleCompiling = (): void => {
-    this.applyMask();
-    this.setPlaneTransform();
+    this.writePlane();
   };
 }

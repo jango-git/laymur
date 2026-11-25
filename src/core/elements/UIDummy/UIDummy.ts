@@ -492,13 +492,13 @@ export class UIDummy extends UIAnchor implements UIPlaneElement {
   }
 
   /**
-   * Whether a point in layer coordinates hits the element: it is in the visible part of the
-   * mask, if the mask clips input, and in the interaction area of the rectangle as drawn, when
-   * micro affects input.
+   * Whether a point in layer coordinates hits the element. The mask has to let it through, see
+   * UIShapeMask.clipInput, and it has to be in the interaction area of the rectangle as drawn,
+   * when micro affects input.
    */
   private isInputPointInside(x: number, y: number): boolean {
     const mask = this.maskInternal;
-    if (mask !== null && mask.clipInput && !mask.containsPoint(x, y)) {
+    if (mask !== null && !mask.acceptsInputAt(x, y)) {
       return false;
     }
 

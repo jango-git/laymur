@@ -2,12 +2,13 @@ import type { Matrix4, Object3D, Scene } from "three";
 import { Matrix3 } from "three";
 
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
-import type { GLProperty, HSLAdjustment, UIProperty } from "../shared.js";
+import type { GLProperty, HSLAdjustment, PlaneMask, UIProperty } from "../shared.js";
 import {
   cloneGLProperties,
   cloneProperties,
   convertUIPropertiesToGLProperties,
   extractZIndex,
+  isSameMaskVariant,
 } from "../shared.js";
 import { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane.js";
 import type { PlaneDescriptor, PlaneState } from "./UIGenericPlaneRegistry.Internal.js";
@@ -224,22 +225,29 @@ export class UIPlaneRegistry {
 
   /**
    * Updates plane mask; null removes it. Data is copied.
-   * Masked and unmasked planes are different shader variants, so adding or removing the mask
-   * relocates the element on flush(); changing the data of a masked plane is applied immediately.
+   * Each mask program, together with the texture it samples, is a shader variant of its own, so
+   * a change of either relocates the element on flush(). A change of the data alone is applied
+   * immediately.
    */
-  public setMask(handler: number, mask: Readonly<Float32Array> | null): void {
+  public setMask(handler: number, mask: Readonly<PlaneMask> | null): void {
     const state = this.resolveState(handler);
-    const wasMasked = state.mask !== null;
+    const previous = state.mask;
+    const variantChanged = !isSameMaskVariant(previous, mask);
 
     if (mask === null) {
       state.mask = null;
-    } else if (state.mask === null) {
-      state.mask = new Float32Array(mask);
+    } else if (previous?.program === mask.program) {
+      previous.data.set(mask.data);
+      previous.samplerTexture = mask.samplerTexture;
     } else {
-      state.mask.set(mask);
+      state.mask = {
+        program: mask.program,
+        data: new Float32Array(mask.data),
+        samplerTexture: mask.samplerTexture,
+      };
     }
 
-    if (wasMasked !== (mask !== null)) {
+    if (variantChanged) {
       if (!this.pendingCreate.has(handler)) {
         this.pendingRelocate.add(handler);
         this.needsFlush = true;
@@ -250,7 +258,7 @@ export class UIPlaneRegistry {
     if (state.mask !== null) {
       const descriptor = this.handlerToDescriptor.get(handler);
       if (descriptor && !this.pendingRelocate.has(handler)) {
-        descriptor.mesh.setMaskAt(descriptor.instanceIndex, state.mask);
+        descriptor.mesh.setMaskAt(descriptor.instanceIndex, state.mask.data);
       }
     }
   }
@@ -428,7 +436,7 @@ export class UIPlaneRegistry {
   private insertSingleElement(handler: number, state: PlaneState): void {
     const { source, properties, transform, visibility, transparency, blend, hsl, mask, zIndex } =
       state;
-    const masked = mask !== null;
+    const maskData = mask?.data ?? null;
 
     let newMeshIndex = this.orderedMeshes.length;
 
@@ -447,9 +455,9 @@ export class UIPlaneRegistry {
       }
 
       if (zIndex <= meshMaxZ) {
-        if (mesh.isCompatibleWith(source, properties, transparency, masked)) {
+        if (mesh.isCompatibleWith(source, properties, transparency, mask)) {
           const instanceIndex = this.findInstanceIndexInMesh(mesh, zIndex);
-          mesh.insertAt(instanceIndex, properties, transform, visibility, blend, hsl, mask);
+          mesh.insertAt(instanceIndex, properties, transform, visibility, blend, hsl, maskData);
           this.shiftHandlerIndices(mesh, instanceIndex, 1);
           this.handlerToDescriptor.set(handler, { mesh, instanceIndex });
           return;
@@ -475,9 +483,9 @@ export class UIPlaneRegistry {
       source,
       cloneGLProperties(properties),
       transparency,
-      masked,
+      mask,
     );
-    mesh.insertAt(0, properties, transform, visibility, blend, hsl, mask);
+    mesh.insertAt(0, properties, transform, visibility, blend, hsl, maskData);
 
     this.orderedMeshes.splice(newMeshIndex, 0, mesh);
     this.scene.add(mesh);

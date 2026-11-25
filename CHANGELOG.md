@@ -3,10 +3,19 @@
 Every notable change to laymur. Versions follow semver; while the major is 0, a minor release may
 break the API, and patch releases before 0.12.0 sometimes did too. Breaking changes are marked.
 
-## Unreleased
+## 0.31.0 - 2026-11-25
 
 ### Changed
 
+- **Breaking:** `UIMask` is the abstract base of masks, and the analytic mask is `UIShapeMask`
+  with the same options, `UIShapeMaskOptions`. Replace `new UIMask(...)` with
+  `new UIShapeMask(...)`. `UIMaskOptions` keeps `inverted` and `useMicro`, and `clipInput` and
+  `containsPoint` belong to `UIShapeMask`.
+- Elements write their state into the scene on the new `UILayer.signalSynchronizing`, fired
+  after `signalRendering` and before the layer is drawn. A change made in a `signalRendering`
+  handler is drawn on the same frame whatever the order of subscription. Before, an element
+  subscribed ahead of the handler drew it a frame late. A subclass of `UIElement` writes its
+  plane in the new `onSynchronize(renderer)`, and `onWillRender` is left to changes over time.
 - `private` class members and members marked `@internal` are emitted with a `_private_` prefix,
   so that a minifier can shorten them. Add a property mangling rule for the prefix, as described
   in "Private members" in the README. With the rule the minified library is about 23% smaller
@@ -14,6 +23,14 @@ break the API, and patch releases before 0.12.0 sometimes did too. Breaking chan
   working.
 - A change to a destroyed constraint, element or mask is reported only outside production
   builds, like the other argument checks. A production build no longer rejects it up front.
+
+### Added
+
+- `UITextureMask`, a mask taken from a texture or an atlas frame and stretched over the source
+  rectangle, micro transform included. It reads one channel (`UITextureMaskChannel`), with a
+  `threshold`, a `softness` and `inverted`. The frame changes through `mask.texture.set`, and
+  elements masked by frames of one texture keep batching together. It does not clip input.
+- `UIAnimatedImage.frameIndex`, readable and writable, and `UIAnimatedImage.signalFrameChanged`.
 
 ## 0.30.1 - 2026-11-23
 

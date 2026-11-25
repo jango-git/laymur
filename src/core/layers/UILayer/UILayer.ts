@@ -59,6 +59,7 @@ export abstract class UILayer implements UIPlaneElement {
   private readonly signalOrientationChangedInternal = new Ferrsign2<UILayerOrientation, UILayer>();
   private readonly signalModeChangedInternal = new Ferrsign2<UILayerMode, UILayer>();
   private readonly signalRenderingInternal = new Ferrsign3<WebGLRenderer, number, UILayer>();
+  private readonly signalSynchronizingInternal = new Ferrsign2<WebGLRenderer, UILayer>();
   private readonly signalCompilingInternal = new Ferrsign2<UILayerCompilation, UILayer>();
   private readonly signalResizedInternal = new Ferrsign3<number, number, UILayer>();
   private readonly signalContextLostInternal = new Ferrsign1<UILayer>();
@@ -192,9 +193,23 @@ export abstract class UILayer implements UIPlaneElement {
     return this.signalModeChangedInternal;
   }
 
-  /** Signal fired during rendering */
+  /**
+   * Signal fired on every drawn frame with the time since the previous one. State changes here,
+   * such as animations advancing, are drawn on the same frame, since elements write their state
+   * into the scene later, on `signalSynchronizing`.
+   */
   public get signalRendering(): FerrsignView3<WebGLRenderer, number, UILayer> {
     return this.signalRenderingInternal;
+  }
+
+  /**
+   * Signal fired after `signalRendering`, right before the layer is drawn. Elements write their
+   * state into the scene here, so whatever changed on `signalRendering` is drawn on the same
+   * frame, whatever the order of subscription. An object of your own drawn with the layer
+   * catches up with the elements here, and changes its state on `signalRendering`.
+   */
+  public get signalSynchronizing(): FerrsignView2<WebGLRenderer, UILayer> {
+    return this.signalSynchronizingInternal;
   }
 
   /**
@@ -483,6 +498,11 @@ export abstract class UILayer implements UIPlaneElement {
 
     if (isUIModeVisible(this.mode)) {
       this.signalRenderingInternal.emit(renderer, deltaTime, this);
+      if (this.destroyed) {
+        return;
+      }
+      this.signalSynchronizingInternal.emit(renderer, this);
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- A handler may destroy the layer
       if (this.destroyed) {
         return;
       }

@@ -2,6 +2,7 @@ import type { IUniform, ShaderMaterial } from "three";
 import { Matrix3, Matrix4, Texture, Vector2, Vector3, Vector4 } from "three";
 
 import { UIColor } from "../color/UIColor.js";
+import type { UIMaskProgram } from "../mask/UIMask.Internal.js";
 import { UIAffineMatrix3 } from "../UIAffineMatrix3.js";
 import { checkSRGBSupport } from "../webglCapabilities.js";
 
@@ -295,6 +296,28 @@ export function cloneGLProperties(
   return result;
 }
 
+/** Shader variant of a masked plane, made of the mask program and the texture it samples */
+export interface PlaneMaskVariant {
+  program: UIMaskProgram;
+  samplerTexture: Texture | null;
+}
+
+/** Mask applied to a plane, its variant together with the packed data */
+export interface PlaneMask extends PlaneMaskVariant {
+  data: Readonly<Float32Array>;
+}
+
+/** Whether two planes are the same mask variant, both unmasked or with one program and texture */
+export function isSameMaskVariant(
+  a: Readonly<PlaneMaskVariant> | null,
+  b: Readonly<PlaneMaskVariant> | null,
+): boolean {
+  if (a === null || b === null) {
+    return a === b;
+  }
+  return a.program === b.program && a.samplerTexture === b.samplerTexture;
+}
+
 /**
  * Index of the zIndex in Matrix4.elements: the zIndex is carried in translation z rather than as a
  * separate field.
@@ -311,6 +334,7 @@ export function extractZIndex(transform: Matrix4): number {
  * filled from the packed varyings at the start of main (see varyingPacking.ts).
  * @param fieldDeclarations Packed varying and p_* global declarations
  * @param fieldAssignments Statements filling the p_* globals from the packed varyings
+ * @param maskProgram Program of the mask, for masked planes only
  */
 export function buildGenericPlaneFragmentShader(
   uniformDeclarations: string[],
@@ -319,13 +343,13 @@ export function buildGenericPlaneFragmentShader(
   source: string,
   alphaTestValue: number,
   usePremultipliedAlpha: boolean,
-  maskSource?: string,
+  maskProgram?: UIMaskProgram,
 ): string {
   return /* glsl */ `
     // Defines
     #define PI 3.14159265359
     #define SRGB_SUPPORTED ${checkSRGBSupport() ? "1" : "0"}
-    ${maskSource === undefined ? "" : "#define LAYMUR_MASK_DERIVATIVES"}
+    ${maskProgram === undefined ? "" : "#define LAYMUR_MASK_DERIVATIVES"}
 
     // Uniforms
     ${uniformDeclarations.join("\n")}
@@ -408,7 +432,7 @@ export function buildGenericPlaneFragmentShader(
     }
 
     // Mask coverage, masked planes only
-    ${maskSource ?? ""}
+    ${maskProgram?.fragmentSource ?? ""}
 
     // Source must define vec4 draw() function
     ${source}
@@ -422,7 +446,7 @@ export function buildGenericPlaneFragmentShader(
         diffuseColor.rgb = applyInstanceHSL(diffuseColor.rgb);
       }
 
-      ${maskSource === undefined ? "" : "diffuseColor.a *= laymurMaskCoverage(p_instanceMaskLocal, p_instanceMaskShape, p_instanceMaskMode);"}
+      ${maskProgram === undefined ? "" : `diffuseColor.a *= ${maskProgram.coverage};`}
 
       if (diffuseColor.a <= ${alphaTestValue.toFixed(8)}) {
         discard;

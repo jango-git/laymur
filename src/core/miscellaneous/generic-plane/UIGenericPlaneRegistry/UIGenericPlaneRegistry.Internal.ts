@@ -1,7 +1,7 @@
 import type { Matrix4 } from "three";
 
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
-import type { GLProperty, HSLAdjustment } from "../shared.js";
+import type { GLProperty, HSLAdjustment, PlaneMask } from "../shared.js";
 import type { UIGenericInstancedPlane } from "../UIGenericInstancedPlane/UIGenericInstancedPlane.js";
 
 export interface PlaneDescriptor {
@@ -17,7 +17,7 @@ export interface PlaneState {
   transparency: UITransparencyMode;
   blend: number;
   hsl: HSLAdjustment;
-  /** Packed mask data (see UIMask.Internal.ts), null for an unmasked plane */
-  mask: Float32Array | null;
+  /** Mask with its own copy of the data, null for an unmasked plane */
+  mask: (PlaneMask & { data: Float32Array }) | null;
   zIndex: number;
 }

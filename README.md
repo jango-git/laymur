@@ -18,7 +18,7 @@
 - **Cassowary solver** - constraint-based layouts via `@lume/kiwi`
 - **Orientation-aware** - define portrait, landscape and optional square rules in one layout, solver toggles automatically
 - **Micro-transforms** - transforms (scale, rotation, offset) that bypass the solver; input follows them
-- **Masks** - analytic shader masks (rectangle, rounded rectangle, ellipse) with soft edges and input clipping
+- **Masks** - shader masks from analytic shapes (rectangle, rounded rectangle, ellipse) or from textures and atlas frames, with soft edges
 - **Text effects** - gradient fills, stacked outlines, shadows and glows, drawn at screen resolution
 - **Color adjustment** - per-element hue/saturation/lightness and additive blend mode
 - **Resize policies** - Cover, Fit, FixedHeight, FixedWidth, Cross strategies
@@ -114,6 +114,8 @@ const layer = new UIViewportLayer({
 
 Inside the range, constraints for only landscape or only portrait are disabled, so the layout needs rules for the square orientation. Resize policies take an optional square target, and without it a square layer is scaled like a portrait one.
 
+Each frame the layer fires `signalRendering` with the time since the previous frame, then `signalSynchronizing`, and then draws. State changes on `signalRendering`, and elements write it into the scene on `signalSynchronizing`, so a change made by any handler is drawn on the same frame. An object of your own drawn with the layer catches up on `signalSynchronizing`.
+
 ### 2. Constraint System
 
 Cassowary-based constraint solver. Supports priorities, element relationships, orientation-specific rules, and inequality relations.
@@ -174,30 +176,50 @@ button.micro.affectsInput = false;
 
 ### 4. Masks
 
-`UIMask` follows the rectangle of a source element or of the layer, so it is laid out with constraints. Masks are computed in the shader: edges can be soft and masked elements keep batching together.
+A mask follows the rectangle of a source element or of the layer, so it is laid out with constraints. Masks are computed in the shader, so masked elements keep batching together and no stencil buffer is needed. One mask serves any number of elements of the layer of its source, through their `mask` property, and lives as long as its source. `UIShapeMask` cuts an analytic shape, `UITextureMask` takes the shape from a texture.
 
 ```typescript
-import { UIDummy, UIMask, UIMaskShape } from "laymur";
+import { UIDummy, UIMaskShape, UIShapeMask } from "laymur";
 
 // Scroll view: content moves, the viewport stays
 const viewport = new UIDummy(layer);
-const mask = new UIMask(viewport, { radius: 24, softness: 8, padding: 10 });
+const mask = new UIShapeMask(viewport, { radius: 24, softness: 8, padding: 10 });
 for (const item of items) {
   item.mask = mask;
 }
 
 // Round avatar
-avatar.mask = new UIMask(avatarFrame, { shape: UIMaskShape.ELLIPSE, softness: 2 });
+avatar.mask = new UIShapeMask(avatarFrame, { shape: UIMaskShape.ELLIPSE, softness: 2 });
 
 // Tutorial spotlight: taps inside the hole reach the button below the overlay
-dimOverlay.mask = new UIMask(ctaButton, {
+dimOverlay.mask = new UIShapeMask(ctaButton, {
   shape: UIMaskShape.ELLIPSE,
   inverted: true,
   softness: 40,
 });
 ```
 
-A mask also clips input and lives as long as its source. Particles are not clipped; three.js materials of your own can be, through `UIMaskMaterialPatch`.
+A shape mask also clips input, unless created with `clipInput: false`. Particles are not clipped. Three.js materials of your own can be clipped by a shape mask through `UIMaskMaterialPatch`.
+
+`UITextureMask` stretches a texture or an atlas frame over the source rectangle the way a `UIImage` of the source size would draw it, and follows the micro transform of the source, rotation and mirroring included. It reads one channel, alpha by default. `threshold` and `softness` remap the mask values. By default the values are taken as they are, and with `softness: 0` the mask cuts at the threshold.
+
+```typescript
+import { UIAnimatedImage, UITextureMask } from "laymur";
+
+const lightning = new UIAnimatedImage(layer, lightningFrames, { playByDefault: true });
+const mask = new UITextureMask(lightning, lightningMaskFrames[0]);
+glow.mask = mask;
+
+// The mask frame changes on the frame the animation does
+lightning.signalFrameChanged.on((frameIndex) => {
+  mask.texture.set(lightningMaskFrames[frameIndex]);
+});
+```
+
+- Elements masked by frames of one texture batch together, and a frame change only updates their instance data. A mask texture of its own puts an element into a batch of its own.
+- Nothing outside the frame is read, so atlas neighbours do not leak in. Bilinear filtering still reaches half a texel past the frame edge, so mask frames need the usual atlas padding or extrusion.
+- The red, green and blue channels of an sRGB texture are decoded only where the hardware supports sRGB. A mask in those channels belongs in a texture without a color space. Alpha is never decoded.
+- Texture masks do not clip input, and `UIMaskMaterialPatch` does not take them.
 
 ### 5. Color Adjustment
 
@@ -390,7 +412,7 @@ Most commonly used exports (not exhaustive):
 
 ### Core
 
-UIViewportLayer, UIImage, UIAnimatedImage, UIText, UIGraphics, UINineSlice, UIProgress, UIMask, UILinearGradient, UIRadialGradient
+UIViewportLayer, UIImage, UIAnimatedImage, UIText, UIGraphics, UINineSlice, UIProgress, UIShapeMask, UITextureMask, UILinearGradient, UIRadialGradient
 
 ### Constraints
 
@@ -398,7 +420,7 @@ UIAspectConstraint, UIHorizontalDistanceConstraint, UIVerticalDistanceConstraint
 
 ### Extension Points
 
-UIElement, UIArea, UIGradient, UIResizePolicy, UIViewport, UIProgressMaskFunction, UIMaskMaterialPatch, UIAffineMatrix3
+UIElement, UIArea, UIGradient, UIResizePolicy, UIViewport, UIProgressMaskFunction, UIMask, UIMaskMaterialPatch, UIAffineMatrix3
 
 UIRenderingModule, UISpawnModule, UIBehaviorModule (laymur/particles)
 

@@ -1,6 +1,10 @@
 import type { Matrix4, Object3D } from "three";
 
-import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import type {
+  HSLAdjustment,
+  PlaneMask,
+  UIProperty,
+} from "../../miscellaneous/generic-plane/shared.js";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
 
 export interface UISceneWrapperView {
@@ -21,8 +25,8 @@ export interface UISceneWrapperView {
   setTransparency(handler: number, transparency: UITransparencyMode): void;
   setBlend(handler: number, blend: number): void;
   setHSL(handler: number, hsl: HSLAdjustment): void;
-  /** Packed mask data (see UIMask.Internal.ts) or null to remove the mask */
-  setMask(handler: number, mask: Readonly<Float32Array> | null): void;
+  /** Mask of the plane, see UIMask.Internal.ts, or null to remove it */
+  setMask(handler: number, mask: Readonly<PlaneMask> | null): void;
 
   insertOrderedObject(object: Object3D, depth: number): void;
   setOrderedObjectDepth(object: Object3D, depth: number): void;

@@ -1,9 +1,13 @@
-import type { FerrsignView0 } from "ferrsign";
-import { Ferrsign0 } from "ferrsign";
+import type { FerrsignView0, FerrsignView2 } from "ferrsign";
+import { Ferrsign0, Ferrsign2 } from "ferrsign";
 import type { Matrix3, WebGLRenderer } from "three";
 
 import type { UILayer } from "../../layers/UILayer/UILayer.js";
-import { assertValidNumber, assertValidPositiveNumber } from "../../miscellaneous/asserts.js";
+import {
+  assertValidNonNegativeInteger,
+  assertValidNumber,
+  assertValidPositiveNumber,
+} from "../../miscellaneous/asserts.js";
 import type { UIColorConfig } from "../../miscellaneous/color/UIColor.Internal.js";
 import { UIColor } from "../../miscellaneous/color/UIColor.js";
 import { computeTrimmedTransformMatrix, scaleTrim } from "../../miscellaneous/computeTransform.js";
@@ -38,6 +42,7 @@ export class UIAnimatedImage extends UIElement {
   private readonly signalPlayedInternal = new Ferrsign0();
   private readonly signalPausedInternal = new Ferrsign0();
   private readonly signalStoppedInternal = new Ferrsign0();
+  private readonly signalFrameChangedInternal = new Ferrsign2<number, UIAnimatedImage>();
 
   /**
    * Creates a new UIAnimatedImage instance.
@@ -117,6 +122,11 @@ export class UIAnimatedImage extends UIElement {
     return this.sequenceInternal;
   }
 
+  /** Index of the displayed frame in the sequence */
+  public get frameIndex(): number {
+    return this.sequenceFrameIndex;
+  }
+
   /** Playback speed multiplier. Can be negative for reverse playback. */
   public get timeScale(): number {
     return this.timeScaleInternal;
@@ -135,6 +145,15 @@ export class UIAnimatedImage extends UIElement {
   /** Signal fired when animation stops and resets */
   public get signalStopped(): FerrsignView0 {
     return this.signalStoppedInternal;
+  }
+
+  /**
+   * Signal fired with the new frame index when the displayed frame changes. Playback fires it
+   * at most once per layer frame, on `UILayer.signalRendering`, so a mask frame set from it is
+   * drawn together with the new frame.
+   */
+  public get signalFrameChanged(): FerrsignView2<number, UIAnimatedImage> {
+    return this.signalFrameChangedInternal;
   }
 
   /** Multiplicative tint. Alpha channel controls opacity. */
@@ -180,6 +199,22 @@ export class UIAnimatedImage extends UIElement {
     }
   }
 
+  /**
+   * Index of the displayed frame in the sequence. Playback goes on from this frame, its time
+   * within the frame reset.
+   * @throws If the index is not an integer within the sequence
+   */
+  public set frameIndex(value: number) {
+    assertValidNonNegativeInteger(value, "UIAnimatedImage.frameIndex");
+    if (value >= this.sequenceInternal.length) {
+      throw new Error(
+        `UIAnimatedImage.frameIndex: index ${value} is out of the sequence of ${this.sequenceInternal.length} frames`,
+      );
+    }
+    this.accumulatedTime = 0;
+    this.setFrameIndex(value);
+  }
+
   /** Playback speed multiplier. Can be negative for reverse playback. */
   public set timeScale(value: number) {
     assertValidNumber(value, "UIAnimatedImage.timeScale");
@@ -207,8 +242,7 @@ export class UIAnimatedImage extends UIElement {
     if (this.isPlaying || this.accumulatedTime > 0 || this.sequenceFrameIndex > 0) {
       this.isPlaying = false;
       this.accumulatedTime = 0;
-      this.sequenceFrameIndex = 0;
-      this.currentFrameIndexDirty = true;
+      this.setFrameIndex(0);
       this.signalStoppedInternal.emit();
     }
   }
@@ -220,6 +254,8 @@ export class UIAnimatedImage extends UIElement {
   }
 
   protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
+    const previousFrameIndex = this.sequenceFrameIndex;
+
     if (this.isPlaying && this.timeScaleInternal !== 0) {
       this.accumulatedTime += deltaTime * this.timeScaleInternal;
       const frameDuration = 1 / this.frameRateInternal;
@@ -269,6 +305,10 @@ export class UIAnimatedImage extends UIElement {
           this.currentFrameIndexDirty = true;
         }
       }
+    }
+
+    if (this.sequenceFrameIndex !== previousFrameIndex) {
+      this.signalFrameChangedInternal.emit(this.sequenceFrameIndex, this);
     }
 
     super.onWillRender(renderer, deltaTime);
@@ -334,6 +374,14 @@ export class UIAnimatedImage extends UIElement {
       this.micro.setDirtyFalse();
       frame.setTrimDirtyFalse();
       this.setPlacementDirtyFalse();
+    }
+  }
+
+  private setFrameIndex(value: number): void {
+    if (value !== this.sequenceFrameIndex) {
+      this.sequenceFrameIndex = value;
+      this.currentFrameIndexDirty = true;
+      this.signalFrameChangedInternal.emit(value, this);
     }
   }
 

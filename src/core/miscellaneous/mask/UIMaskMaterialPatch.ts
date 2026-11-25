@@ -1,15 +1,16 @@
 import type { IUniform } from "three";
 import { GLSL3, Material, RawShaderMaterial, ShaderMaterial, Vector3, Vector4 } from "three";
 
-import maskSource from "../../shaders/UIMask.js";
-import {
-  MASK_DATA_MODE_OFFSET,
-  MASK_DATA_ROW0_OFFSET,
-  MASK_DATA_ROW1_OFFSET,
-  MASK_DATA_SHAPE_OFFSET,
-  MASK_MODE_DISABLED,
-} from "./UIMask.Internal.js";
+import maskSource from "../../shaders/UIShapeMask.js";
 import type { UIMask } from "./UIMask.js";
+import {
+  SHAPE_MASK_DATA_MODE_OFFSET,
+  SHAPE_MASK_DATA_ROW0_OFFSET,
+  SHAPE_MASK_DATA_ROW1_OFFSET,
+  SHAPE_MASK_DATA_SHAPE_OFFSET,
+  SHAPE_MASK_MODE_DISABLED,
+  SHAPE_MASK_PROGRAM,
+} from "./UIShapeMask.Internal.js";
 
 /**
  * onBeforeCompile of the installed three.js. Its shader argument is `Shader` in the typings before
@@ -122,7 +123,7 @@ function createUniforms(): MaskUniforms {
     laymurMaskRow0: { value: new Vector3() },
     laymurMaskRow1: { value: new Vector3() },
     laymurMaskShape: { value: new Vector4() },
-    laymurMaskMode: { value: MASK_MODE_DISABLED },
+    laymurMaskMode: { value: SHAPE_MASK_MODE_DISABLED },
   };
 }
 
@@ -171,7 +172,7 @@ function install(
 }
 
 /**
- * Applies a UIMask to three.js materials that laymur does not build itself, such as those of a
+ * Applies a UIShapeMask to three.js materials that laymur does not build itself, such as those of a
  * Spine skeleton or a custom object placed among the planes.
  *
  * The patch wraps the main() functions of the shaders: the vertex shader computes the
@@ -247,13 +248,14 @@ export class UIMaskMaterialPatch {
     }
 
     state.owner = null;
-    state.uniforms.laymurMaskMode.value = MASK_MODE_DISABLED;
+    state.uniforms.laymurMaskMode.value = SHAPE_MASK_MODE_DISABLED;
     this.materials.delete(material);
   }
 
   /**
    * Writes the mask into the uniforms of every patched material; null turns masking off.
    * Call it every frame before rendering: the mask follows its source.
+   * @throws If the mask is not a UIShapeMask
    */
   public update(mask: UIMask | null): void {
     if (mask !== this.appliedMask) {
@@ -263,9 +265,13 @@ export class UIMaskMaterialPatch {
 
     if (mask === null || mask.destroyed) {
       for (const material of this.materials) {
-        this.resolveUniforms(material).laymurMaskMode.value = MASK_MODE_DISABLED;
+        this.resolveUniforms(material).laymurMaskMode.value = SHAPE_MASK_MODE_DISABLED;
       }
       return;
+    }
+
+    if (mask.program.name !== SHAPE_MASK_PROGRAM.name) {
+      throw new Error(`UIMaskMaterialPatch.update.mask: only UIShapeMask is supported`);
     }
 
     mask.resolve();
@@ -277,10 +283,10 @@ export class UIMaskMaterialPatch {
     const data = mask.data;
     for (const material of this.materials) {
       const uniforms = this.resolveUniforms(material);
-      uniforms.laymurMaskRow0.value.fromArray(data, MASK_DATA_ROW0_OFFSET);
-      uniforms.laymurMaskRow1.value.fromArray(data, MASK_DATA_ROW1_OFFSET);
-      uniforms.laymurMaskShape.value.fromArray(data, MASK_DATA_SHAPE_OFFSET);
-      uniforms.laymurMaskMode.value = data[MASK_DATA_MODE_OFFSET];
+      uniforms.laymurMaskRow0.value.fromArray(data, SHAPE_MASK_DATA_ROW0_OFFSET);
+      uniforms.laymurMaskRow1.value.fromArray(data, SHAPE_MASK_DATA_ROW1_OFFSET);
+      uniforms.laymurMaskShape.value.fromArray(data, SHAPE_MASK_DATA_SHAPE_OFFSET);
+      uniforms.laymurMaskMode.value = data[SHAPE_MASK_DATA_MODE_OFFSET];
     }
   }
 

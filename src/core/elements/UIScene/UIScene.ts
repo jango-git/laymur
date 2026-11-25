@@ -233,7 +233,7 @@ export class UIScene extends UIElement {
     super.destroyInternal();
   }
 
-  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
+  protected override onSynchronize(renderer: WebGLRenderer): void {
     this.evenFrame = !this.evenFrame;
 
     // Compared every frame rather than on layout changes, so a size change is kept until a frame
@@ -281,7 +281,7 @@ export class UIScene extends UIElement {
       this.propertyDirty = false;
       this.updateRequired = false;
     }
-    super.onWillRender(renderer, deltaTime);
+    super.onSynchronize(renderer);
   }
 
   /** Render target contents live on the GPU only and are gone after a context loss */

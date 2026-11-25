@@ -12,10 +12,10 @@ import {
   Vector4,
 } from "three";
 
-import maskSource from "../../../shaders/UIMask.js";
 import { UIColor } from "../../color/UIColor.js";
+import type { UIMaskProgram } from "../../mask/UIMask.Internal.js";
 import { UITransparencyMode } from "../../UITransparencyMode.js";
-import type { GLProperty, UIProperty } from "../shared.js";
+import type { GLProperty, PlaneMaskVariant, UIProperty } from "../shared.js";
 import { buildGenericPlaneFragmentShader, resolveGLSLTypeInfo } from "../shared.js";
 import type { VaryingFieldSpec } from "../varyingPacking.js";
 import { isIdentifierReferenced, packVaryings } from "../varyingPacking.js";
@@ -99,24 +99,15 @@ export const BUILTIN_VISIBILITY = "instanceVisibility";
 export const BUILTIN_BLEND = "instanceBlend";
 export const BUILTIN_HSL = "instanceHSL";
 
-/** Rows of the layer -> mask-local map, see MASK_DATA_SIZE; present on masked planes only */
-export const BUILTIN_MASK_ROW0 = "instanceMaskRow0";
-export const BUILTIN_MASK_ROW1 = "instanceMaskRow1";
-/** Half width, half height, corner radius and softness of the mask */
-export const BUILTIN_MASK_SHAPE = "instanceMaskShape";
-/** Mask shape + 2 when inverted */
-export const BUILTIN_MASK_MODE = "instanceMaskMode";
-
 /**
  * Builtin fields only the vertex shader reads. Every other field, builtin blend and HSL included,
- * is passed on to the fragment shader as a p_* varying.
+ * is passed on to the fragment shader as a p_* varying, unless the mask program marks it as
+ * vertex only.
  */
-const BUILTIN_VERTEX_ONLY: readonly string[] = [
-  BUILTIN_TRANSFORM,
-  BUILTIN_VISIBILITY,
-  BUILTIN_MASK_ROW0,
-  BUILTIN_MASK_ROW1,
-];
+const BUILTIN_VERTEX_ONLY: readonly string[] = [BUILTIN_TRANSFORM, BUILTIN_VISIBILITY];
+
+/** Name of the uniform a textured mask program samples */
+const MASK_TEXTURE_UNIFORM = "laymurMaskTexture";
 
 /**
  * The transform is a Matrix4, but the plane is a unit quad at z = 0 and every element transform
@@ -138,7 +129,7 @@ const BUILTIN_TRANSFORM_SPEC: PackedFieldSpec = {
 
 export function buildPlaneLayout(
   varyingProperties: Record<string, GLProperty>,
-  masked: boolean,
+  maskProgram: UIMaskProgram | null,
 ): PackedLayout {
   const specs: PackedFieldSpec[] = [
     BUILTIN_TRANSFORM_SPEC,
@@ -147,13 +138,10 @@ export function buildPlaneLayout(
     buildPackedFieldSpec(BUILTIN_HSL, resolveGLSLTypeInfo("Vector3")),
   ];
 
-  if (masked) {
-    specs.push(
-      buildPackedFieldSpec(BUILTIN_MASK_ROW0, resolveGLSLTypeInfo("Vector3")),
-      buildPackedFieldSpec(BUILTIN_MASK_ROW1, resolveGLSLTypeInfo("Vector3")),
-      buildPackedFieldSpec(BUILTIN_MASK_SHAPE, resolveGLSLTypeInfo("Vector4")),
-      buildPackedFieldSpec(BUILTIN_MASK_MODE, resolveGLSLTypeInfo("number")),
-    );
+  if (maskProgram !== null) {
+    for (const { name, type } of maskProgram.fields) {
+      specs.push(buildPackedFieldSpec(name, resolveGLSLTypeInfo(type)));
+    }
   }
 
   for (const name in varyingProperties) {
@@ -172,7 +160,7 @@ export function buildMaterial(
   uniformProperties: Record<string, GLProperty>,
   layout: PackedLayout,
   transparency: UITransparencyMode,
-  masked: boolean,
+  mask: PlaneMaskVariant | null,
 ): { material: ShaderMaterial; varyingRowCount: number } {
   const uniforms: Record<string, { value: unknown }> = {};
   const uniformDeclarations: string[] = [];
@@ -185,12 +173,21 @@ export function buildMaterial(
     uniformDeclarations.push(`uniform ${glslTypeInfo.glslTypeName} p_${name};`);
   }
 
+  const maskProgram = mask?.program;
+  if (maskProgram?.textured === true) {
+    uniforms[MASK_TEXTURE_UNIFORM] = { value: mask?.samplerTexture ?? null };
+  }
+
   // Every value the fragment shader may read, as p_* fields
   const candidates: VaryingFieldSpec[] = [
     { name: "p_uv", glslTypeName: "vec2", components: ["uv.x", "uv.y"] },
   ];
+  const vertexOnly = [
+    ...BUILTIN_VERTEX_ONLY,
+    ...(maskProgram?.fields.filter((field) => field.vertexOnly).map(({ name }) => name) ?? []),
+  ];
   for (const [name, field] of layout.fields) {
-    if (!BUILTIN_VERTEX_ONLY.includes(name)) {
+    if (!vertexOnly.includes(name)) {
       candidates.push({
         name: `p_${name}`,
         glslTypeName: field.glslTypeName,
@@ -204,24 +201,17 @@ export function buildMaterial(
   const transform = resolvePackedField(layout, BUILTIN_TRANSFORM).expression;
 
   let maskVertex = "";
-  if (masked) {
-    const row0 = resolvePackedField(layout, BUILTIN_MASK_ROW0).expression;
-    const row1 = resolvePackedField(layout, BUILTIN_MASK_ROW1).expression;
-    candidates.push({
-      name: "p_instanceMaskLocal",
-      glslTypeName: "vec2",
-      components: ["maskLocal.x", "maskLocal.y"],
-    });
+  if (maskProgram !== undefined) {
+    candidates.push(...maskProgram.varyings);
     // worldPosition.z carries the zIndex, the mask map only takes the plane position
     maskVertex = /* glsl */ `
       vec3 maskPoint = vec3(worldPosition.xy, 1.0);
-      vec2 maskLocal = vec2(dot(${row0}, maskPoint), dot(${row1}, maskPoint));
+      ${maskProgram.buildVertex((name) => resolvePackedField(layout, name).expression)}
     `;
   }
 
   const alphaTestValue = 0.0075;
   const premultipliedAlpha = transparency === UITransparencyMode.BLEND;
-  const maskFragment = masked ? maskSource : undefined;
 
   // Only fields the fragment shader reads take varyings: the blend factor, for one, is read by
   // premultiplied shaders only. The shader without fields tells which ones it reads.
@@ -232,7 +222,7 @@ export function buildMaterial(
     source,
     alphaTestValue,
     premultipliedAlpha,
-    maskFragment,
+    maskProgram,
   );
   const fields = candidates.filter(({ name }) => isIdentifierReferenced(unpackedFragment, name));
   const packed = packVaryings(fields);
@@ -274,7 +264,7 @@ export function buildMaterial(
     source,
     alphaTestValue,
     premultipliedAlpha,
-    maskFragment,
+    maskProgram,
   );
 
   const material = new ShaderMaterial({
@@ -291,7 +281,7 @@ export function buildMaterial(
     premultipliedAlpha,
   });
 
-  if (masked) {
+  if (maskProgram !== undefined) {
     // fwidth on WebGL1 (three.js before r163); WebGL2 has derivatives built in. The typings of
     // r163 and later no longer declare the flag
     (material.extensions as { derivatives?: boolean }).derivatives = true;

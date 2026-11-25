@@ -8,17 +8,12 @@ import type {
 import { Mesh } from "three";
 
 import { assertVaryingBudget, assertVertexAttributeBudget } from "../../asserts.js";
-import {
-  MASK_DATA_MODE_OFFSET,
-  MASK_DATA_ROW0_OFFSET,
-  MASK_DATA_ROW1_OFFSET,
-  MASK_DATA_SHAPE_OFFSET,
-} from "../../mask/UIMask.Internal.js";
 import type { UITransparencyMode } from "../../UITransparencyMode.js";
-import type { GLProperty, HSLAdjustment } from "../shared.js";
+import type { GLProperty, HSLAdjustment, PlaneMaskVariant } from "../shared.js";
 import {
   arePropertiesPartiallyCompatible,
   cloneGLProperties,
+  isSameMaskVariant,
   resolvePropertyUniform,
   TRANSFORM_ZINDEX_OFFSET,
 } from "../shared.js";
@@ -28,10 +23,6 @@ import {
   buildPlaneLayout,
   BUILTIN_BLEND,
   BUILTIN_HSL,
-  BUILTIN_MASK_MODE,
-  BUILTIN_MASK_ROW0,
-  BUILTIN_MASK_ROW1,
-  BUILTIN_MASK_SHAPE,
   BUILTIN_TRANSFORM,
   BUILTIN_VISIBILITY,
   CAPACITY_STEP,
@@ -56,15 +47,16 @@ const TEMP_FIELD_VALUES = new Float32Array(16);
  * property) is packed into as few vertex attributes as possible, see
  * UIGenericInstancedPlane.Layout.ts. The zIndex is read back from the packed transform.
  *
- * A masked plane is a separate shader variant with the builtin mask fields added; unmasked
- * planes pay nothing for masking. See UIMask.Internal.ts for the mask data.
+ * A masked plane is a separate shader variant with the fields of its mask program added, and
+ * a textured program samples one texture per plane. Unmasked planes pay nothing for masking.
+ * See UIMask.Internal.ts for the mask programs.
  *
  * @internal
  */
 export class UIGenericInstancedPlane extends Mesh {
   public readonly source: string;
   public readonly transparency: UITransparencyMode;
-  public readonly masked: boolean;
+  public readonly mask: PlaneMaskVariant | null;
 
   private readonly instancedGeometry: InstancedBufferGeometry;
   private readonly shaderMaterial: ShaderMaterial;
@@ -77,7 +69,8 @@ export class UIGenericInstancedPlane extends Mesh {
   private readonly visibilityField: PackedField;
   private readonly blendField: PackedField;
   private readonly hslField: PackedField;
-  private readonly maskFields: readonly PackedField[] | undefined;
+  /** Fields of the mask program with their offsets in the packed mask data */
+  private readonly maskFields: readonly { field: PackedField; offset: number }[];
 
   private readonly zIndexAttributeIndex: number;
   private readonly zIndexComponentOffset: number;
@@ -93,7 +86,7 @@ export class UIGenericInstancedPlane extends Mesh {
     source: string,
     properties: Record<string, GLProperty>,
     transparency: UITransparencyMode,
-    masked: boolean,
+    mask: PlaneMaskVariant | null,
     initialCapacity: number = INITIAL_CAPACITY,
   ) {
     const uniformProperties: Record<string, GLProperty> = {};
@@ -108,14 +101,14 @@ export class UIGenericInstancedPlane extends Mesh {
       }
     }
 
-    const layout = buildPlaneLayout(varyingProperties, masked);
+    const layout = buildPlaneLayout(varyingProperties, mask?.program ?? null);
     const instancedGeometry = INSTANCED_PLANE_GEOMETRY.clone();
     const { material: shaderMaterial, varyingRowCount } = buildMaterial(
       source,
       uniformProperties,
       layout,
       transparency,
-      masked,
+      mask,
     );
 
     super(instancedGeometry, shaderMaterial);
@@ -126,7 +119,8 @@ export class UIGenericInstancedPlane extends Mesh {
 
     this.source = source;
     this.transparency = transparency;
-    this.masked = masked;
+    this.mask =
+      mask === null ? null : { program: mask.program, samplerTexture: mask.samplerTexture };
     this.instancedGeometry = instancedGeometry;
     this.shaderMaterial = shaderMaterial;
     this.properties = properties;
@@ -138,15 +132,14 @@ export class UIGenericInstancedPlane extends Mesh {
     this.visibilityField = resolvePackedField(layout, BUILTIN_VISIBILITY);
     this.blendField = resolvePackedField(layout, BUILTIN_BLEND);
     this.hslField = resolvePackedField(layout, BUILTIN_HSL);
-    // Same order as the mask data: row 0, row 1, shape, mode
-    this.maskFields = masked
-      ? [
-          resolvePackedField(layout, BUILTIN_MASK_ROW0),
-          resolvePackedField(layout, BUILTIN_MASK_ROW1),
-          resolvePackedField(layout, BUILTIN_MASK_SHAPE),
-          resolvePackedField(layout, BUILTIN_MASK_MODE),
-        ]
-      : undefined;
+    const maskFields: { field: PackedField; offset: number }[] = [];
+    let maskOffset = 0;
+    for (const { name } of mask?.program.fields ?? []) {
+      const field = resolvePackedField(layout, name);
+      maskFields.push({ field, offset: maskOffset });
+      maskOffset += field.columns.reduce((sum, { size }) => sum + size, 0);
+    }
+    this.maskFields = maskFields;
 
     const zIndexColumn = this.transformField.columns.find(
       ({ sourceOffset, size }) =>
@@ -383,7 +376,7 @@ export class UIGenericInstancedPlane extends Mesh {
       this.source,
       cloneGLProperties(this.properties),
       this.transparency,
-      this.masked,
+      this.mask,
       tailCount,
     );
 
@@ -419,12 +412,12 @@ export class UIGenericInstancedPlane extends Mesh {
     source: string,
     properties: Record<string, GLProperty>,
     transparency: UITransparencyMode,
-    masked: boolean,
+    mask: PlaneMaskVariant | null,
   ): boolean {
     return (
       this.source === source &&
       this.transparency === transparency &&
-      this.masked === masked &&
+      isSameMaskVariant(this.mask, mask) &&
       arePropertiesPartiallyCompatible(this.properties, properties)
     );
   }
@@ -437,7 +430,7 @@ export class UIGenericInstancedPlane extends Mesh {
     return (
       this.source === other.source &&
       this.transparency === other.transparency &&
-      this.masked === other.masked &&
+      isSameMaskVariant(this.mask, other.mask) &&
       this.layout.signature === other.layout.signature &&
       arePropertiesPartiallyCompatible(this.uniformProperties, other.uniformProperties) &&
       arePropertiesPartiallyCompatible(other.uniformProperties, this.uniformProperties)
@@ -551,14 +544,12 @@ export class UIGenericInstancedPlane extends Mesh {
   }
 
   private writeMask(index: number, mask: Readonly<Float32Array>): void {
-    if (this.maskFields === undefined) {
+    if (this.mask === null) {
       throw new Error(`UIGenericInstancedPlane.writeMask: plane is not masked`);
     }
-    const [row0Field, row1Field, shapeField, modeField] = this.maskFields;
-    this.writeField(index, row0Field, mask.subarray(MASK_DATA_ROW0_OFFSET));
-    this.writeField(index, row1Field, mask.subarray(MASK_DATA_ROW1_OFFSET));
-    this.writeField(index, shapeField, mask.subarray(MASK_DATA_SHAPE_OFFSET));
-    this.writeField(index, modeField, mask.subarray(MASK_DATA_MODE_OFFSET));
+    for (const { field, offset } of this.maskFields) {
+      this.writeField(index, field, mask.subarray(offset));
+    }
   }
 
   private writeField(index: number, field: PackedField, values: ArrayLike<number>): void {

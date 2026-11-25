@@ -2,7 +2,11 @@ import type { Matrix4, Object3D, WebGLRenderer } from "three";
 import { Color, OrthographicCamera, Scene } from "three";
 
 import { compileObject } from "../../miscellaneous/compileObject.js";
-import type { HSLAdjustment, UIProperty } from "../../miscellaneous/generic-plane/shared.js";
+import type {
+  HSLAdjustment,
+  PlaneMask,
+  UIProperty,
+} from "../../miscellaneous/generic-plane/shared.js";
 import { UIPlaneRegistry } from "../../miscellaneous/generic-plane/UIGenericPlaneRegistry/UIGenericPlaneRegistry.js";
 import type { UITransparencyMode } from "../../miscellaneous/UITransparencyMode.js";
 import type { UISceneWrapperView } from "./UISceneWrapper.Internal.js";
@@ -73,7 +77,7 @@ export class UISceneWrapper implements UISceneWrapperView {
     this.planeRegistry.setHSL(handler, hsl);
   }
 
-  public setMask(handler: number, mask: Readonly<Float32Array> | null): void {
+  public setMask(handler: number, mask: Readonly<PlaneMask> | null): void {
     this.planeRegistry.setMask(handler, mask);
   }
 

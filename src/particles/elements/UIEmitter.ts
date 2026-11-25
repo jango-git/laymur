@@ -192,6 +192,7 @@ export class UIEmitter extends UIAnchor {
     );
 
     this.layer.signalRendering.on(this.onRendering);
+    this.layer.signalSynchronizing.on(this.onSynchronizing);
     this.layer.signalCompiling.on(this.onCompiling);
     this.layer.sceneWrapper.insertOrderedObject(
       this.mesh,
@@ -410,6 +411,7 @@ export class UIEmitter extends UIAnchor {
   /** Frees the particles and the input catcher, optionally destroys modules */
   protected override destroyInternal(): void {
     this.layer.signalRendering.off(this.onRendering);
+    this.layer.signalSynchronizing.off(this.onSynchronizing);
     this.layer.signalCompiling.off(this.onCompiling);
     this.layer.sceneWrapper.removeOrderedObject(this.mesh);
     this.mesh.destroy();
@@ -596,9 +598,12 @@ export class UIEmitter extends UIAnchor {
   }
 
   private readonly onRendering = (renderer: WebGLRenderer, rawDeltaTime: number): void => {
-    this.updateDepth();
-
     this.simulate(Math.min(rawDeltaTime, this.maxDeltaTimeInternal));
+  };
+
+  /** Places the particles and uploads them once the frame has changed everything it changes */
+  private readonly onSynchronizing = (): void => {
+    this.updateDepth();
 
     if (this.mesh.instanceCount === 0) {
       return;

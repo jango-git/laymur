@@ -78,7 +78,7 @@ export abstract class UICanvasElement extends UIElement {
     super.destroyInternal();
   }
 
-  protected override onWillRender(renderer: WebGLRenderer, deltaTime: number): void {
+  protected override onSynchronize(renderer: WebGLRenderer): void {
     const layoutChanged = this.consumeLayoutChange();
     const contentChanged = this.updateContent(layoutChanged);
     const pixelDensity = this.layer.pixelDensity;
@@ -107,7 +107,7 @@ export abstract class UICanvasElement extends UIElement {
       this.colorInternal.setDirtyFalse();
     }
 
-    super.onWillRender(renderer, deltaTime);
+    super.onSynchronize(renderer);
   }
 
   /**

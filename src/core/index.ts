@@ -99,9 +99,14 @@ export type {
 export type { UIInsetsConfig } from "./miscellaneous/insets/UIInsets.Internal.js";
 export { UIInsets } from "./miscellaneous/insets/UIInsets.js";
 export type { UIMaskOptions } from "./miscellaneous/mask/UIMask.Internal.js";
-export { UIMaskShape } from "./miscellaneous/mask/UIMask.Internal.js";
 export { UIMask } from "./miscellaneous/mask/UIMask.js";
 export { UIMaskMaterialPatch } from "./miscellaneous/mask/UIMaskMaterialPatch.js";
+export type { UIShapeMaskOptions } from "./miscellaneous/mask/UIShapeMask.Internal.js";
+export { UIMaskShape } from "./miscellaneous/mask/UIShapeMask.Internal.js";
+export { UIShapeMask } from "./miscellaneous/mask/UIShapeMask.js";
+export type { UITextureMaskOptions } from "./miscellaneous/mask/UITextureMask.Internal.js";
+export { UITextureMaskChannel } from "./miscellaneous/mask/UITextureMask.Internal.js";
+export { UITextureMask } from "./miscellaneous/mask/UITextureMask.js";
 export { UIProgressMaskFunction } from "./miscellaneous/mask-function/UIProgressMaskFunction.js";
 export { UIProgressMaskFunctionCircular } from "./miscellaneous/mask-function/UIProgressMaskFunctionCircular.js";
 export { UIProgressMaskFunctionDirectional } from "./miscellaneous/mask-function/UIProgressMaskFunctionDirectional.js";
